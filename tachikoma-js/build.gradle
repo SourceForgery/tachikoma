@@ -1,0 +1,58 @@
+buildscript {
+    ext.kotlin_version = '1.2.0-rc-39'
+
+    repositories {
+        maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
+        maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.23"
+    }
+}
+apply plugin: 'kotlin-platform-js'
+//apply plugin: 'kotlin2js'
+apply plugin: 'org.jetbrains.kotlin.frontend'
+
+repositories {
+    maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    implement project(":")
+    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+}
+
+kotlinFrontend {
+    downloadNodeJsVersion = 'latest'
+
+    npm {
+        //dependency("kotlin", "1.1.0-dev-4546")
+        dependency "style-loader" // production dependency
+
+        devDependency "karma"     // development dependency
+    }
+
+    sourceMaps = true
+
+    webpackBundle {
+        bundleName = "main"
+        publicPath = "/static/"
+        sourceMapEnabled = true
+        contentPath = file('src/main/web')
+        port = 9090
+        proxyUrl = "http://localhost:9091"
+    }
+}
+
+
+compileKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.outputFile = "$project.buildDir.path/js/${project.name}.js"
+    kotlinOptions.sourceMap = true
+    kotlinOptions.moduleKind = 'commonjs'
+    kotlinOptions.main = "call"
+}

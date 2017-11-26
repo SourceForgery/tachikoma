@@ -1,0 +1,6 @@
+rootProject.name = 'tachikoma'
+rootProject.name = 'tachikoma'
+
+include 'tachikoma-jvm', 'tachikoma-js'
+include 'tachikoma-war'
+
