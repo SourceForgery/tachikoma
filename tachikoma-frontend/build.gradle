@@ -2,12 +2,9 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.23"
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
         project(':tachikoma-backend-api')
     }
 }
-apply plugin: 'java'
-apply plugin: 'com.google.protobuf'
 
 apply plugin: 'kotlin-platform-js'
 apply plugin: 'org.jetbrains.kotlin.frontend'
@@ -36,16 +33,6 @@ kotlinFrontend {
         contentPath = file('src/main/web')
         port = 9090
         proxyUrl = "http://localhost:9091"
-    }
-}
-
-protobuf {
-    protobuf {
-        generateProtoTasks {
-            all()*.builtins {
-                js {}
-            }
-        }
     }
 }
 

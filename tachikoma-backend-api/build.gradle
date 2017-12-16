@@ -1,11 +1,9 @@
-apply plugin: "base"
+apply plugin: 'java'
 
-task assembleArtifact(type: Zip) {
-    archiveName 'backend-api-grpc.zip'
-    from "src/main/proto"
-    description "Assemble archive $archiveName into ${relativePath(destinationDir)}"
+sourceSets {
+    main {
+        resources {
+            srcDirs= ["src/main/proto"]
+        }
+    }
 }
-
-
-assemble.dependsOn assembleArtifact
-build.dependsOn assemble

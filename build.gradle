@@ -2,12 +2,10 @@ plugins {
     id 'net.researchgate.release' version '2.6.0'
 }
 
-apply plugin: 'base'
+apply plugin: 'java'
 
 allprojects {
     buildscript {
-        ext.kotlin_version = '1.2.10'
-
         repositories {
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
@@ -20,8 +18,13 @@ allprojects {
         maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
         mavenCentral()
     }
+
+    ext.kotlin_version = '1.2.10'
+    ext.java_version = 1.8
+    sourceCompatibility = java_version
+    targetCompatibility = java_version
 }
 
-group 'com.sourceforgery'
+group 'com.sourceforgery.tachikoma'
 version '0.0.1-SNAPSHOT'
 
