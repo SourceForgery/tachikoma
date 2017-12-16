@@ -1,6 +1,8 @@
 rootProject.name = 'tachikoma'
 
 include 'tachikoma-backend-api'
+include 'tachikoma-backend-api/tachikoma-backend-api-jvm'
+include 'tachikoma-backend-api/tachikoma-backend-api-js'
 include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-war'

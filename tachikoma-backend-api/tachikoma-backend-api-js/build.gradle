@@ -1,0 +1,35 @@
+plugins {
+    id "com.google.protobuf" version "0.8.3"
+    id 'java'
+}
+
+dependencies {
+    protobuf project(':tachikoma-backend-api')
+    compile 'io.grpc:grpc-protobuf:1.8.0'
+    compile'io.grpc:grpc-stub:1.8.0'
+}
+
+sourceCompatibility = java_version
+targetCompatibility = java_version
+
+protobuf {
+    protoc {
+        // The artifact spec for the Protobuf Compiler
+        artifact = 'com.google.protobuf:protoc:3.0.0'
+    }
+    generateProtoTasks {
+        ofSourceSet('main')*.builtins {
+            remove java
+            js {}
+        }
+    }
+}
+
+
+jar {
+    exclude('**/*.class')
+    exclude('**/*.proto')
+    from('build/generated/source/') {
+        include 'proto/main/js/**/*.js'
+    }
+}
