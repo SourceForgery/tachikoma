@@ -1,6 +1,6 @@
 apply plugin: "base"
 
-task assembleArtifact(type: Zip, group: 'DB') {
+task assembleArtifact(type: Zip) {
     archiveName 'backend-api-grpc.zip'
     from "src/main/proto"
     description "Assemble archive $archiveName into ${relativePath(destinationDir)}"

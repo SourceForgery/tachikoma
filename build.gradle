@@ -14,9 +14,13 @@ allprojects {
             mavenCentral()
         }
     }
+
+    repositories {
+        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
+        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
+        mavenCentral()
+    }
 }
-
-
 
 group 'com.sourceforgery'
 version '0.0.1-SNAPSHOT'

@@ -1,6 +1,3 @@
-group 'com.sourceforgery'
-version '0.0.1-SNAPSHOT'
-
 apply plugin: 'war'
 
 repositories {
