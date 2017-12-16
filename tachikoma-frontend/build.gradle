@@ -8,6 +8,7 @@ buildscript {
 
 apply plugin: 'kotlin-platform-js'
 apply plugin: 'org.jetbrains.kotlin.frontend'
+//apply plugin: 'kotlin-dce-js'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
@@ -19,7 +20,8 @@ kotlinFrontend {
     downloadNodeJsVersion = 'latest'
 
     npm {
-        //dependency("kotlin", "1.1.0-dev-4546")
+        //dependency("kotlin", "1.2.10")
+        dependency("protobufjs", "6.8.3")
         dependency "style-loader" // production dependency
 
         devDependency "karma"     // development dependency

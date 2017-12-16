@@ -6,7 +6,7 @@ plugins {
 dependencies {
     protobuf project(':tachikoma-backend-api-proto')
     compile 'io.grpc:grpc-protobuf:1.8.0'
-    compile'io.grpc:grpc-stub:1.8.0'
+    compile 'io.grpc:grpc-stub:1.8.0'
 }
 
 sourceCompatibility = java_version
@@ -18,9 +18,11 @@ protobuf {
         artifact = 'com.google.protobuf:protoc:3.0.0'
     }
     generateProtoTasks {
-        ofSourceSet('main')*.builtins {
-            remove java
-            js {}
+        ofSourceSet('main').each { task ->
+            task.builtins {
+                remove java
+                js {}
+            }
         }
     }
 }
