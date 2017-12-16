@@ -1,11 +1,11 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "com.sourceforgery";
+option java_package = "com.sourceforgery.tachikoma";
 option java_outer_classname = "HelloWorldProto";
 option objc_class_prefix = "HLW";
 
-package helloworld;
+package com.sourceforgery.tachikoma;
 
 // The greeting service definition.
 service Greeter {

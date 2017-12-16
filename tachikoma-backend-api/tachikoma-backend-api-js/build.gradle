@@ -29,7 +29,8 @@ protobuf {
 jar {
     exclude('**/*.class')
     exclude('**/*.proto')
-    from('build/generated/source/') {
-        include 'proto/main/js/**/*.js'
+    from('build/generated/source/proto/main/js/') {
+        into 'protobuf'
+        include '**/*.js'
     }
 }
