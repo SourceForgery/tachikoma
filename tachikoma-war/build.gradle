@@ -1,25 +1,13 @@
-buildscript {
-    ext.kotlin_version = '1.2.10'
+group 'com.sourceforgery'
+version '0.0.1-SNAPSHOT'
 
-    repositories {
-        maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-apply plugin: 'kotlin-platform-jvm'
+apply plugin: 'war'
 
 repositories {
-    maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
     mavenCentral()
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implement project(":")
-    testCompile "junit:junit:4.12"
-    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-    testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    compile project(':tachikoma-frontend')
+    compile project(':tachikoma-rest')
 }

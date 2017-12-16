@@ -1,29 +1,22 @@
-buildscript {
-    ext.kotlin_version = '1.2.10'
-
-    repositories {
-        maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-
-    ext.kotlin_version = '1.1.61'
-
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
 plugins {
     id 'net.researchgate.release' version '2.6.0'
 }
 
-apply plugin: 'kotlin-platform-common'
+apply plugin: 'base'
+
+allprojects {
+    buildscript {
+        ext.kotlin_version = '1.2.10'
+
+        repositories {
+            maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
+            maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
+            mavenCentral()
+        }
+    }
+}
+
+
 
 group 'com.sourceforgery'
 version '0.0.1-SNAPSHOT'
