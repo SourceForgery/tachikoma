@@ -5,11 +5,20 @@ plugins {
 apply plugin: 'java'
 
 allprojects {
+    apply plugin: 'idea'
+
     buildscript {
         repositories {
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
             mavenCentral()
+        }
+    }
+
+    idea {
+        module {
+            outputDir = file('build/idea-out')
+            outputDir = file('build/idea-testout')
         }
     }
 
