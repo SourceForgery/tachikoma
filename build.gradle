@@ -4,6 +4,9 @@ plugins {
 
 apply plugin: 'java'
 
+//rootProject.name = 'tachikoma'
+
+
 allprojects {
     buildscript {
         repositories {

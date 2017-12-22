@@ -1,8 +1,7 @@
-rootProject.name = 'tachikoma'
-
-include 'tachikoma-backend-api'
-include 'tachikoma-backend-api/tachikoma-backend-api-jvm'
-include 'tachikoma-backend-api/tachikoma-backend-api-js'
+include 'tachikoma-backend-api-proto'
+include 'tachikoma-backend-api-proto:tachikoma-backend-api-jvm'
+include 'tachikoma-backend-api-proto:tachikoma-backend-api-js'
+include 'tachikoma-grpc-backend'
 include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-war'

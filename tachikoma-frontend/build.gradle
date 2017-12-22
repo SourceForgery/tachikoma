@@ -2,7 +2,7 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.23"
-        project(':tachikoma-backend-api')
+         project(':tachikoma-backend-api-proto:tachikoma-backend-api-js')
     }
 }
 
@@ -12,7 +12,7 @@ apply plugin: 'org.jetbrains.kotlin.frontend'
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
     testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
-    project(':tachikoma-backend-api/tachikoma-backend-api-js')
+    runtime project(':tachikoma-backend-api-proto:tachikoma-backend-api-js')
 }
 
 kotlinFrontend {
