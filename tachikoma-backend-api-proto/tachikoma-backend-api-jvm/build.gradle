@@ -16,7 +16,7 @@ targetCompatibility = java_version
 
 idea {
     module {
-        sourceDirs += file("${projectDir}/build/generated/source/proto/main/java/")
+        sourceDirs += file("${buildDir}/generated/source/proto/main/java/")
     }
 }
 
