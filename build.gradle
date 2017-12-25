@@ -28,12 +28,9 @@ allprojects {
         mavenCentral()
     }
 
-    ext.kotlin_version = '1.2.10'
-    ext.java_version = 1.8
-    sourceCompatibility = java_version
-    targetCompatibility = java_version
+    sourceCompatibility = ext.java_version
+    targetCompatibility = ext.java_version
 }
 
 group 'com.sourceforgery.tachikoma'
-version '0.0.1-SNAPSHOT'
 
