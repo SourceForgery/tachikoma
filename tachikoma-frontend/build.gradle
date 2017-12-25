@@ -2,7 +2,6 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.23"
-         project(':tachikoma-backend-api-proto:tachikoma-backend-api-js')
     }
 }
 

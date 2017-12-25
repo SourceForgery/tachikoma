@@ -1,3 +1,4 @@
+include 'tachikoma-internal-api'
 
 include 'tachikoma-backend-api-proto'
 include 'tachikoma-backend-api-proto:tachikoma-backend-api-jvm'
@@ -9,3 +10,4 @@ include 'tachikoma-database'
 include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-war'
+include 'tachikoma-startup'
