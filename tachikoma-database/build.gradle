@@ -10,7 +10,6 @@ apply plugin: 'ebean'
 
 dependencies {
     compile project(":tachikoma-internal-api")
-    //compile "org.postgresql:postgresql:$postgresql_driver_version"
     compile "io.ebean:ebean:$ebean_version"
     compile "io.ebean:ebean-querybean:11.1.1"
 

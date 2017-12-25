@@ -9,6 +9,7 @@ apply plugin: 'kotlin'
 dependencies {
     compile project(":tachikoma-rest")
     compile project(":tachikoma-database")
+    compile "org.postgresql:postgresql:$postgresql_driver_version"
 }
 
 compileKotlin {
