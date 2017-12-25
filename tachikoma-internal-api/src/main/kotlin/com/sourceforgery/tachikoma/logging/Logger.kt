@@ -14,7 +14,7 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package com.sourceforgery.tachikoma.logging;
+package com.sourceforgery.tachikoma.logging
 
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -211,8 +211,12 @@ class FunctionalLogger(val log: ExtendedLogger): Logger by log {
  * Logger instantiation. Use: `val log = logger()`.
  */
 @Suppress("unused")
-inline fun <reified T : Any> T.logger(): FunctionalLogger =
+inline fun <reified T : Any> T.logger() =
         FunctionalLogger(LogManager.getContext(T::class.java.classLoader, false).getLogger(unwrapCompanionClass(T::class.java).name))
+
+@Suppress("unused")
+inline fun <reified T : Any> T.logger(loggerName: String) =
+        FunctionalLogger(LogManager.getContext(T::class.java.classLoader, false).getLogger(loggerName))
 
 // unwrap companion class to enclosing class given a Java Class
 fun <T : Any> unwrapCompanionClass(ofClass: Class<T>): Class<*> {
