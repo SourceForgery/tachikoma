@@ -1,5 +1,6 @@
 plugins {
     id "com.jtitor.rust" version "0.1.4"
+	id "base"
 }
 
 
@@ -12,13 +13,14 @@ dependencies {
 }
 
 
-task build([type:Copy, dependsOn: rustBuildTop]) {
+task apiCopy([type:Copy]) {
     configurations.api.asFileTree.each {
         from(zipTree(it))
     }
     into file("${buildDir}/api/")
 }
 
-task assemble([dependsOn: build]) {}
+build.dependsOn apiCopy
+build.dependsOn rustBuildTop
 
-task check([dependsOn: rustTestTop]) {}
+check.dependsOn rustTestTop
