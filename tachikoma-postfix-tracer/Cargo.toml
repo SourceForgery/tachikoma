@@ -1,6 +1,10 @@
 [package]
-name = "tachikoma-postfix-tracer"
-version = "0.1.0"
+name = "tachikoma_postfix_tracer"
+version = "0.0.1-SNAPSHOT"
+license = "Apache-2.0"
+description = "Replaces the tracer socket in postfix and send those messages to tachikoma"
+repository = "https://github.com/SourceForgery/tachikoma/tree/master/tachikoma-postfix-tracer"
+readme = "../README.md"
 authors = ["Tobias <tobias@olsson.be>"]
 
 [dependencies]

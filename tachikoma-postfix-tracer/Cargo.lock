@@ -1,6 +1,6 @@
 [root]
-name = "tachikoma-postfix-tracer"
-version = "0.1.0"
+name = "tachikoma_postfix_tracer"
+version = "0.0.1-SNAPSHOT"
 dependencies = [
  "unix_socket 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
