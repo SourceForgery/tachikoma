@@ -11,8 +11,8 @@ const SOCKET_PATH: &'static str = "/var/spool/postfix/private/tracer_tachikoma";
 
 
 fn handle_client(stream: UnixStream) {
-    let bufReader = BufReader::new(stream);
-    let mut splt = bufReader.split(0);
+    let buf_reader = BufReader::new(stream);
+    let mut splt = buf_reader.split(0);
 
     let mut map = HashMap::new();
 
