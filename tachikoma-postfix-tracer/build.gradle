@@ -3,3 +3,5 @@ plugins {
 }
 
 task build([dependsOn: rustBuildTop]) {}
+
+task assemble([dependsOn: build]) {}
