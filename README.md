@@ -41,7 +41,7 @@ it in IntelliJ.
 
 * [Rustup](https://www.rustup.rs/) is necessary for IntelliJ and an
   easy way to get rust build env up. Run as user, *not* root
-* [gRPC Compiler (protoc)](https://developers.google.com/protocol-buffers/docs/downloads). Also
+* [gRPC Compiler (protoc) 3.x](https://developers.google.com/protocol-buffers/docs/downloads). Also
   available via ```apt install protobuf-compiler```
 * JDK 8 (JRE is untested)
 * Plugin for Rust
