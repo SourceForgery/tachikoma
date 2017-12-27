@@ -5,7 +5,6 @@ use std::thread;
 use std::collections::HashMap;
 use std::io::BufReader;
 use std::io::BufRead;
-use std::net::Shutdown;
 
 const SOCKET_PATH: &'static str = "/var/spool/postfix/private/tracer_tachikoma";
 
