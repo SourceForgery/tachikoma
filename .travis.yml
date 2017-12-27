@@ -7,3 +7,4 @@ before_install:
 cache:
   - cargo
   - $HOME/.gradle
+  - .gradle
