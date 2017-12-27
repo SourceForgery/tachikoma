@@ -8,4 +8,9 @@ readme = "../README.md"
 authors = ["Tobias <tobias@olsson.be>"]
 
 [dependencies]
-unix_socket = "0.5.0"
+unix_socket     = "0.5.0"
+
+grpc            = "0.*"
+protobuf        = "1.*"
+futures         = "0.1"
+futures-cpupool = "0.1"
