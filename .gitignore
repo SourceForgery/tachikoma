@@ -3,5 +3,5 @@
 
 # Gradle
 /build/
-/.gradle/
+.gradle/
 /*/build/
