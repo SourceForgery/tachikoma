@@ -4,7 +4,9 @@ jdk:
 before_install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
   - export PATH=$PATH:$HOME/.cargo/bin/
+  - sudo apt install protobuf-compiler
 cache:
+  directories:
+    - $HOME/.gradle
+    - .gradle
   - cargo
-  - $HOME/.gradle
-  - .gradle
