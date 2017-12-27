@@ -2,7 +2,22 @@ plugins {
     id "com.jtitor.rust" version "0.1.4"
 }
 
-task build([dependsOn: rustBuildTop]) {}
+
+configurations {
+    api
+}
+
+dependencies {
+    api project(":tachikoma-backend-api-proto")
+}
+
+
+task build([type:Copy, dependsOn: rustBuildTop]) {
+    configurations.api.asFileTree.each {
+        from(zipTree(it))
+    }
+    into file("${buildDir}/api/")
+}
 
 task assemble([dependsOn: build]) {}
 
