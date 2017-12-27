@@ -11,8 +11,8 @@ const SOCKET_PATH: &'static str = "/var/spool/postfix/private/tracer_tachikoma";
 
 
 fn handle_client(stream: UnixStream) {
-    let mut splt = BufReader::new(stream)
-        .split(0);
+    let bufReader = BufReader::new(stream);
+    let mut splt = bufReader.split(0);
 
     let mut map = HashMap::new();
 
@@ -21,13 +21,13 @@ fn handle_client(stream: UnixStream) {
         if vec.is_empty() {
             if !map.is_empty() {
                 // Do stuff
-                println!(map.to_string());
+                println!("{:?}", map);
                 map = HashMap::new();
             }
         } else {
             let str = match String::from_utf8(vec) {
                 Ok(str) => str,
-                Err(error) => break
+                Err(_error) => break
             };
             if key.is_empty() {
                 key = str;
@@ -42,8 +42,9 @@ fn handle_client(stream: UnixStream) {
 
 
 fn main() {
+
     let listener = UnixListener::bind(SOCKET_PATH)
-        .expect(format!("Couldn't open socket {}", SOCKET_PATH));
+        .expect(&format!("Couldn't open socket {}", SOCKET_PATH));
 
     for stream in listener.incoming() {
         match stream {
@@ -51,13 +52,11 @@ fn main() {
                 /* connection succeeded */
                 thread::spawn(|| handle_client(stream));
             }
-            Err(err) => {
+            Err(_err) => {
                 /* connection failed */
+                println!("Failed connection {}", _err.to_string());
                 break;
             }
         }
     }
-
-
-    println!("Hello, world!");
 }
