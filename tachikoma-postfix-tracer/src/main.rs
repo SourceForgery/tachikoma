@@ -37,7 +37,6 @@ fn handle_client(stream: UnixStream) {
             }
         }
     }
-    stream.shutdown(Shutdown::Both);
 }
 
 
