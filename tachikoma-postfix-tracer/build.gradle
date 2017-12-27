@@ -5,3 +5,5 @@ plugins {
 task build([dependsOn: rustBuildTop]) {}
 
 task assemble([dependsOn: build]) {}
+
+task check([dependsOn: rustTestTop]) {}
