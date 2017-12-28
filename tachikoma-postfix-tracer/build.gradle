@@ -20,8 +20,5 @@ task apiCopy([type:Copy]) {
     into file("${buildDir}/grpc-api/")
 }
 
-build.dependsOn apiCopy
-build.dependsOn rustBuildTop
-
-check.dependsOn apiCopy
-check.dependsOn rustTestTop
+assemble.dependsOn apiCopy
+assemble.dependsOn rustBuildTop
