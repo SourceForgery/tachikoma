@@ -12,6 +12,7 @@ dependencies {
     compile project(':tachikoma-frontend')
     compile project(':tachikoma-rest')
     compile "com.linecorp.armeria:armeria:$armeria_version"
+    compile "com.linecorp.armeria:armeria-grpc:$armeria_version"
 }
 
 mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
