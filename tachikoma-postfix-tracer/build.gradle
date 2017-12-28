@@ -17,7 +17,7 @@ task apiCopy([type:Copy]) {
     configurations.api.asFileTree.each {
         from(zipTree(it))
     }
-    into file("${buildDir}/api/")
+    into file("${buildDir}/grpc-api/")
 }
 
 build.dependsOn apiCopy
