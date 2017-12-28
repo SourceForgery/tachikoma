@@ -46,7 +46,8 @@ it in IntelliJ.
 * JDK 8 (JRE is untested)
 * Plugin for Rust
 
-Getting around IntelliJ quirk:
+**Getting around IntelliJ quirk**
 1. Build with ```./gradlew build``` in the root (should build cleanly).
 2. Manually mark ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/java```
    as Generated source root in IntelliJ. (```Mark Directory as``` in the context menu)
+3. (May not work) ```File -> New -> Module from Existing Sources...```. Add tachikoma-postfix-tracer project as Rust
