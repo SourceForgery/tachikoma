@@ -20,7 +20,7 @@ fn main() {
     let v2: Vec<&str> = list.iter().map(|s| &**s).collect();
 
     protoc_rust_grpc::run(protoc_rust_grpc::Args {
-        out_dir: "src",
+        out_dir: "src/generated-grpc",
         includes: &[DIR],
         input: v2.as_slice(),
         rust_protobuf: true, // also generate protobuf messages, not just services
