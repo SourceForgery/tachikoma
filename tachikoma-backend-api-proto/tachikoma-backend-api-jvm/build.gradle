@@ -26,6 +26,18 @@ protobuf {
         // The artifact spec for the Protobuf Compiler
         artifact = 'com.google.protobuf:protoc:3.0.0'
     }
+
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.8.0'
+        }
+    }
+
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
 }
 
 processResources {
