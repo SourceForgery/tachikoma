@@ -23,4 +23,5 @@ task apiCopy([type:Copy]) {
 build.dependsOn apiCopy
 build.dependsOn rustBuildTop
 
+check.dependsOn apiCopy
 check.dependsOn rustTestTop
