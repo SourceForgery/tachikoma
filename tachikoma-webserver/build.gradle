@@ -1,0 +1,38 @@
+buildscript {
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+dependencies {
+    compile project(':tachikoma-grpc-backend')
+    compile project(':tachikoma-frontend')
+    compile project(':tachikoma-rest')
+    compile "com.linecorp.armeria:armeria:$armeria_version"
+}
+
+mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
+
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Tachikoma ESP Webserver',
+                'Implementation-Version': version,
+                'Main-Class': mainClassName
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "$java_version"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "$java_version"
+}
+
+assemble.dependsOn fatJar

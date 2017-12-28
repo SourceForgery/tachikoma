@@ -9,6 +9,6 @@ include 'tachikoma-database'
 
 include 'tachikoma-rest'
 include 'tachikoma-frontend'
-include 'tachikoma-war'
 include 'tachikoma-startup'
+include 'tachikoma-webserver'
 include 'tachikoma-postfix-tracer'
