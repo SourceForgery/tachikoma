@@ -15,11 +15,11 @@ protobuf            = "1.4.3"
 futures             = "0.1"
 futures-cpupool     = "0.1"
 tls-api             = "0.*"
+url                 = "1.6.0"
 
 [build-dependencies]
 protoc-rust-grpc    = "0.2.1"
 glob                = "0.2.11"
-regex               = "0.2"
 
 [[bin]]
 path = "src/main.rs"
