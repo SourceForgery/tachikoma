@@ -3,8 +3,9 @@ jdk:
   - oraclejdk8
 before_install:
   - curl https://sh.rustup.rs -sSf | sh -s -- -y
-  - export PATH=$PATH:$HOME/.cargo/bin/
-  - sudo apt install protobuf-compiler
+  - curl -Lo /tmp/protobuf.zip https://github.com/google/protobuf/releases/download/v3.5.1/protoc-3.5.1-linux-x86_64.zip
+  - unzip /tmp/protobuf.zip -d $HOME
+  - export PATH=$PATH:$HOME/.cargo/bin/:$HOME/bin/
 cache:
   - directories:
     - $HOME/.gradle
