@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.sourceforgery.tachikoma";
+option java_outer_classname = "MTAMailTransferProto";
+
+package com.sourceforgery.tachikoma;
+
+import "google/protobuf/empty.proto";
+
+
+service MTAEmailQueue {
+    rpc getEmails(google.protobuf.Empty) returns (stream EmailMessage);
+    rpc emailMTAQueued(MTAQueuedNotification) returns (google.protobuf.Empty);
+}
+
+message EmailMessage {
+    repeated string emailAddress = 1;
+    string body = 2;
+}
+
+message MTAQueuedNotification {
+    string messageId = 1;
+}

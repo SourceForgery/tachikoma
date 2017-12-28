@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 option java_package = "com.sourceforgery.tachikoma";
-option java_outer_classname = "MTADeliveryNotificaionProto";
+option java_outer_classname = "MTADeliveryNotificationProto";
 
 package com.sourceforgery.tachikoma;
 
@@ -10,12 +10,10 @@ import "google/protobuf/empty.proto";
 
 
 service MTADeliveryNotifications {
-    rpc softBounce (SoftBounceNotification) returns (google.protobuf.Empty) {
-    }
-    rpc hardBounce (HardBounceNotification) returns (google.protobuf.Empty) {
-    }
-    rpc delivered (DeliveredNotification) returns (google.protobuf.Empty) {
-    }
+    rpc softBounce (SoftBounceNotification) returns (google.protobuf.Empty);
+    rpc hardBounce (HardBounceNotification) returns (google.protobuf.Empty);
+    rpc delivered (DeliveredNotification) returns (google.protobuf.Empty);
+    rpc setDeliveryStatus (stream DeliveryNotification) returns (google.protobuf.Empty);
 }
 
 message SoftBounceNotification {
@@ -27,5 +25,9 @@ message HardBounceNotification {
 }
 
 message DeliveredNotification {
+    string messageId = 1;
+}
+
+message DeliveryNotification {
     string messageId = 1;
 }
