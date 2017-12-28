@@ -6,7 +6,7 @@ before_install:
   - export PATH=$PATH:$HOME/.cargo/bin/
   - sudo apt install protobuf-compiler
 cache:
-  directories:
+  - directories:
     - $HOME/.gradle
     - .gradle
   - cargo
