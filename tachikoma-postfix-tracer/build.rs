@@ -40,7 +40,6 @@ fn main() {
     let path = Path::new(&path_name);
     let file = options.open(&path).expect(format!("Couldn't open {} for writing", path_name).as_ref());
     let mut writer = BufWriter::new(&file);
-    writer.write(b"extern crate protobuf;\n\n").expect("Couldn't write to lib.rs");
 
     let glob_pattern = String::from(OUTPUT_DIR) + "/*.rs";
     for entry in glob::glob(glob_pattern.as_ref()).expect(format!("{} is not found.", INPUT_DIR).as_ref()) {
@@ -48,7 +47,7 @@ fn main() {
             let pth: PathBuf = path;
             let file_stem = pth.file_stem().expect("No good filename!?").to_str().expect("No good filename2!?");
             if file_stem != "mod" {
-                writer.write(format!("pub mod {};\n", file_stem).as_bytes());
+                writer.write(format!("pub mod {};\n", file_stem).as_bytes()).expect("Could not write to file");
             }
         }
     }
