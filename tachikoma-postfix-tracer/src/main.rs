@@ -1,10 +1,16 @@
 extern crate unix_socket;
+extern crate protobuf;
+extern crate grpc;
+extern crate tls_api;
 
 use unix_socket::{UnixStream, UnixListener};
 use std::thread;
 use std::collections::HashMap;
 use std::io::BufReader;
 use std::io::BufRead;
+use generated_grpc::empty::Empty;
+
+mod generated_grpc;
 
 const SOCKET_PATH: &'static str = "/var/spool/postfix/private/tracer_tachikoma";
 
