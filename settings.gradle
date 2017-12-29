@@ -2,13 +2,17 @@ include 'tachikoma-internal-api'
 
 include 'tachikoma-backend-api-proto'
 include 'tachikoma-backend-api-proto:tachikoma-backend-api-jvm'
-include 'tachikoma-backend-api-proto:tachikoma-backend-api-js'
-include 'tachikoma-grpc-backend'
+
+include 'tachikoma-frontend-api-proto'
+include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm'
+include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-js'
 
 include 'tachikoma-database'
-
+include 'tachikoma-grpc-backend'
 include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-startup'
 include 'tachikoma-webserver'
 include 'tachikoma-postfix-tracer'
+include 'tachikoma-frontent-api-proto'
+
