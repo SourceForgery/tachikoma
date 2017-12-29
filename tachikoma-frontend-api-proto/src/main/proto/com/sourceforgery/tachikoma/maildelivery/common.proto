@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_outer_classname = "Commons";
+
+package com.sourceforgery.tachikoma.maildelivery;
+
+
+message Email {
+    string email = 1;
+}
+
+enum DeliveryStatus {
+    QUEUED = 0;
+    SCHEDULED = 1;
+    DELIVERED = 2;
+    REJECTED = 3;
+    INVALID = 4;
+}
+
+enum RejectReason {
+    HARD_BOUNCE = 0;
+    SPAM = 1;
+    SOFT_BOUNCE = 2;
+    UNSUBSCRIBE = 3;
+    CUSTOM = 4;
+    INVALID_SENDER = 5;
+    UNSIGNED = 6;
+    RULE = 7;
+}
+
+message NamedEmail {
+    string email = 1;
+    string name = 2;
+}
+
+message MessageId {
+    string id = 1;
+}
+
+message MessageStatus {
+    Email recipient = 1;
+    DeliveryStatus deliveryStatus = 2;
+    // Optional and only available if the message has at least one delivery attempt
+    RejectReason rejectReason = 3;
+    MessageId id = 4;
+}
