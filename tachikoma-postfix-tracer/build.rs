@@ -13,7 +13,7 @@ use std::io;
 const INPUT_DIR: &'static str = "build/grpc-api/";
 const OUTPUT_DIR: &'static str = "src/generated_grpc/";
 
-const PROTOC_BIN: &'static str = "/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protoc/3.0.0/201dfa4737accd4cf6fbed76a7467e321e47983c/protoc-3.0.0-linux-x86_64.exe";
+const PROTOC_BIN: &'static str = "/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protoc/3.0.0/**/*.exe";
 
 
 fn main() {
@@ -64,13 +64,18 @@ fn main() {
         let protoc_bin = temp_dir.path().join("protoc");
 
         let home = std::env::var("HOME").map_err(|_| String::from("Expected HOME env variable to be set"))?;
-        let gradle_protoc_binary = home + PROTOC_BIN;
-
+        let gradle_protoc_glob: String = home + PROTOC_BIN;
 
         let path = std::env::var("PATH").expect("Expected PATH env variable to be set");
         let temp_dir_string = String::from(temp_dir.path().to_str().expect("Couldn't create path of path"));
 
-        std::fs::soft_link(gradle_protoc_binary, protoc_bin);
+        for entry in glob::glob(gradle_protoc_glob.as_str()).expect("Working file system") {
+            if let Ok(path) = entry {
+                println!("{:?}", path);
+                std::fs::soft_link( path, protoc_bin.as_path()).expect("Failed to create symlink");
+            }
+        }
+
 
         let new_path = temp_dir_string + ":" + path.as_str();
         std::env::set_var("PATH", new_path);
