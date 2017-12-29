@@ -45,7 +45,7 @@ it in IntelliJ.
   available via ```apt install protobuf-compiler``` on Ubuntu 17.10 or later
 * JDK 8 (JRE is untested)
 * IntelliJ plugin for Rust
-* TOML plugin
+* IntelliJ TOML plugin
 
 **Recommendations**
 * Add the function ```gw () { $(git rev-parse --show-toplevel)/gradlew "$@" }``` to avoid having to do ```../../../gradlew```
