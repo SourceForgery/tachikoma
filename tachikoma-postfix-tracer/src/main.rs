@@ -21,19 +21,18 @@ use url::Url;
 const SOCKET_PATH: &'static str = "/var/spool/postfix/private/tracer_tachikoma";
 
 
-fn handle_client(stream: UnixStream) {
+fn handle_client(stream: UnixStream, mta_notifier: &MTADeliveryNotificationsClient) {
     let buf_reader = BufReader::new(stream);
     let mut splt = buf_reader.split(0);
 
-    let mut map = HashMap::new();
+    let mut message = HashMap::new();
 
     let mut key: String = String::new();
     while let Some(Ok(vec)) = splt.next() {
         if vec.is_empty() {
-            if !map.is_empty() {
-                // Do stuff
-                println!("{:?}", map);
-                map = HashMap::new();
+            if !message.is_empty() {
+                handle_trace_message(message, &mta_notifier);
+                message = HashMap::new();
             }
         } else {
             let str = match String::from_utf8(vec) {
@@ -43,11 +42,16 @@ fn handle_client(stream: UnixStream) {
             if key.is_empty() {
                 key = str;
             } else {
-                map.insert(key, str);
+                message.insert(key, str);
                 key = String::new();
             }
         }
     }
+}
+
+fn handle_trace_message(message: HashMap<String, String>, mta_notifier: &MTADeliveryNotificationsClient) {
+    println!("{:?}", message);
+    // Decipher what kind of message it is, and send it to mta_notifier
 }
 
 fn setup_grpc() -> MTADeliveryNotificationsClient {
@@ -70,7 +74,7 @@ fn setup_grpc() -> MTADeliveryNotificationsClient {
 
 
 fn main() {
-    setup_grpc();
+    let mta_notifier = setup_grpc();
 
     let listener = UnixListener::bind(SOCKET_PATH)
         .expect(&format!("Couldn't open socket {}", SOCKET_PATH));
@@ -79,7 +83,7 @@ fn main() {
         match stream {
             Ok(stream) => {
                 /* connection succeeded */
-                thread::spawn(|| handle_client(stream));
+//                thread::spawn(|| handle_client(stream, &mta_notifier));
             }
             Err(_err) => {
                 /* connection failed */
