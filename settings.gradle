@@ -8,7 +8,7 @@ include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm'
 include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-js'
 
 include 'tachikoma-database'
-include 'tachikoma-grpc-backend'
+include 'tachikoma-grpc'
 include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-startup'

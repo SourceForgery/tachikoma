@@ -7,7 +7,6 @@ buildscript {
 apply plugin: 'kotlin'
 
 dependencies {
-    compile project(':tachikoma-grpc-backend')
 }
 
 compileKotlin {

@@ -8,7 +8,7 @@ apply plugin: 'kotlin'
 apply plugin: 'application'
 
 dependencies {
-    compile project(':tachikoma-grpc-backend')
+    compile project(':tachikoma-grpc')
     compile project(':tachikoma-frontend')
     compile project(':tachikoma-rest')
     compile "com.linecorp.armeria:armeria:$armeria_version"
