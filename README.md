@@ -16,7 +16,7 @@ Primary features
 
 Possible later improvements:
 * Queue outgoing emails until a specific time
-* Web API 
+* Web API
 * Template support
 
 
@@ -42,12 +42,20 @@ it in IntelliJ.
 * [Rustup](https://www.rustup.rs/) is necessary for IntelliJ and an
   easy way to get rust build env up. Run as user, *not* root
 * [gRPC Compiler (protoc) 3.x](https://developers.google.com/protocol-buffers/docs/downloads). Also
-  available via ```apt install protobuf-compiler```
+  available via ```apt install protobuf-compiler``` on Ubuntu 17.10 or later
 * JDK 8 (JRE is untested)
-* Plugin for Rust
+* IntelliJ plugin for Rust
+* TOML plugin
 
-**Getting around IntelliJ quirk**
+**Recommendations**
+* Add the function ```gw () { $(git rev-parse --show-toplevel)/gradlew "$@" }``` to avoid having to do ```../../../gradlew```
+* Only run ```gradlew build```, ```gradlew clean build``` should not be necessary and slows down development a *lot*.
+
+**Getting around IntelliJ quirks**
 1. Build with ```./gradlew build``` in the root (should build cleanly).
-2. Manually mark ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/java```
-   as Generated source root in IntelliJ. (```Mark Directory as``` in the context menu)
-3. (May not work) ```File -> New -> Module from Existing Sources...```. Add tachikoma-postfix-tracer project as Rust
+2. Manually mark all these as Generated sources in the ```Mark Directory as``` context menu.
+  * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/java```
+  * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/grpc```
+  * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/java```
+  * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/grpc```
+3. Open ```View -> Tool Windows -> Cargo``` and add tachikoma-postfix-tracer as a cargo project
