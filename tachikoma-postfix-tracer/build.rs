@@ -1,5 +1,6 @@
 extern crate protoc_rust_grpc;
 extern crate glob;
+extern crate tempdir;
 
 use std::path::PathBuf;
 use std::path::Path;
@@ -7,9 +8,12 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::BufWriter;
 use std::io::Write;
+use std::io;
 
 const INPUT_DIR: &'static str = "build/grpc-api/";
 const OUTPUT_DIR: &'static str = "src/generated_grpc/";
+
+const PROTOC_BIN: &'static str = "/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protoc/3.0.0/201dfa4737accd4cf6fbed76a7467e321e47983c/protoc-3.0.0-linux-x86_64.exe";
 
 
 fn main() {
@@ -26,6 +30,8 @@ fn main() {
 
     fs::remove_dir_all(OUTPUT_DIR).is_err();
     fs::create_dir_all(OUTPUT_DIR).expect(format!("Could not create directory {}", OUTPUT_DIR).as_ref());
+
+    let gradle_protoc_path = add_gradle_protoc_to_path();
 
     protoc_rust_grpc::run(protoc_rust_grpc::Args {
         out_dir: OUTPUT_DIR,
@@ -50,5 +56,24 @@ fn main() {
                 writer.write(format!("pub mod {};\n", file_stem).as_bytes()).expect("Could not write to file");
             }
         }
+    }
+
+
+    fn add_gradle_protoc_to_path() -> Result<tempdir::TempDir, String> {
+        let temp_dir = tempdir::TempDir::new("protoc-rust").map_err(|f| String::from("Couldn't create temp directory"))?;
+        let protoc_bin = temp_dir.path().join("protoc");
+
+        let home = std::env::var("HOME").map_err(|_| String::from("Expected HOME env variable to be set"))?;
+        let gradle_protoc_binary = home + PROTOC_BIN;
+
+
+        let path = std::env::var("PATH").expect("Expected PATH env variable to be set");
+        let temp_dir_string = String::from(temp_dir.path().to_str().expect("Couldn't create path of path"));
+
+        std::fs::soft_link(gradle_protoc_binary, protoc_bin);
+
+        let new_path = temp_dir_string + ":" + path.as_str();
+        std::env::set_var("PATH", new_path);
+        Ok(temp_dir)
     }
 }
