@@ -10,6 +10,7 @@ dependencies {
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
     compile project(':tachikoma-internal-api')
+    compile project(':tachikoma-database')
 }
 
 compileKotlin {

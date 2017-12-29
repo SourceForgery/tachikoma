@@ -14,7 +14,7 @@ service MailDeliveryService {
 
 message EmailRecipient {
     oneof to {
-        NamedEmail named = 1;
+        NamedEmail namedEmail = 1;
         Email email = 2;
     }
 
