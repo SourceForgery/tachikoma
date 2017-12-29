@@ -24,7 +24,7 @@ fn main() {
     }
     let v2: Vec<&str> = list.iter().map(|s| &**s).collect();
 
-    fs::remove_dir_all(OUTPUT_DIR).expect(format!("Could not remove directory {}", OUTPUT_DIR).as_ref());
+    fs::remove_dir_all(OUTPUT_DIR).is_err();
     fs::create_dir_all(OUTPUT_DIR).expect(format!("Could not create directory {}", OUTPUT_DIR).as_ref());
 
     protoc_rust_grpc::run(protoc_rust_grpc::Args {
