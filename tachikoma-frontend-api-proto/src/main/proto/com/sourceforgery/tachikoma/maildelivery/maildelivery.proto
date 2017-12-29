@@ -5,6 +5,7 @@ option java_outer_classname = "MailDelivery";
 
 package com.sourceforgery.tachikoma.maildelivery;
 
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "com/sourceforgery/tachikoma/maildelivery/common.proto";
 
@@ -18,7 +19,7 @@ message EmailRecipient {
         Email email = 2;
     }
 
-    map<string, string> templateMergeVars = 3;
+    google.protobuf.Struct templateMergeVars = 3;
     map<string, string> metadata = 4;
 }
 
@@ -39,7 +40,7 @@ message TrackingData {
 message TemplateBody {
     string htmlTemplate = 1;
     string plaintextTemplate = 2;
-    map<string, string> globalMergeVars = 3;
+    google.protobuf.Struct globalMergeVars = 3;
 }
 
 enum TemplateEngine {
