@@ -3,6 +3,7 @@ extern crate protobuf;
 extern crate grpc;
 extern crate tls_api;
 extern crate url;
+extern crate tls_api_rustls;
 
 mod generated_grpc;
 
@@ -17,6 +18,8 @@ use std::env;
 use unix_socket::UnixListener;
 use unix_socket::UnixStream;
 use url::Url;
+use tls_api_rustls::TlsConnector;
+
 
 const SOCKET_PATH: &'static str = "/var/spool/postfix/private/tracer_tachikoma";
 
@@ -66,7 +69,7 @@ fn setup_grpc() -> MTADeliveryNotificationsClient {
     let client = match url.scheme() {
         "http" => Client::new_plain(host, port.unwrap_or(80), conf),
         // TODO Unable to get this code working fix this
-//        "https" => Client::new_tls(host, port.unwrap_or(443), conf),
+        "https" => Client::new_tls::<TlsConnector>(host, port.unwrap_or(443), conf),
         _ => panic!("Neither http nor https!")
     }.expect(format!("Could not connect to {}", url).as_ref());
     return MTADeliveryNotificationsClient::with_client(client);
