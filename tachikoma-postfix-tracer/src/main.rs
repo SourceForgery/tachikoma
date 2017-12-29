@@ -68,7 +68,6 @@ fn setup_grpc() -> MTADeliveryNotificationsClient {
 
     let client = match url.scheme() {
         "http" => Client::new_plain(host, port.unwrap_or(80), conf),
-        // TODO Unable to get this code working fix this
         "https" => Client::new_tls::<TlsConnector>(host, port.unwrap_or(443), conf),
         _ => panic!("Neither http nor https!")
     }.expect(format!("Could not connect to {}", url).as_ref());
