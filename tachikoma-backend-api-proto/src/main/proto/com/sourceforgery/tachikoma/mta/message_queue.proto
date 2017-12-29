@@ -1,10 +1,9 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "com.sourceforgery.tachikoma.mta";
 option java_outer_classname = "MTAMailTransferProto";
 
-package com.sourceforgery.tachikoma;
+package com.sourceforgery.tachikoma.mta;
 
 import "google/protobuf/empty.proto";
 
