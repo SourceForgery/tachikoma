@@ -1,11 +1,11 @@
 package com.sourceforgery.tachikoma.mta.grpc
 
 import com.google.protobuf.Empty
-import com.sourceforgery.tachikoma.DeliveredNotification
-import com.sourceforgery.tachikoma.DeliveryNotification
-import com.sourceforgery.tachikoma.HardBounceNotification
-import com.sourceforgery.tachikoma.MTADeliveryNotificationsGrpc
-import com.sourceforgery.tachikoma.SoftBounceNotification
+import com.sourceforgery.tachikoma.mta.DeliveredNotification
+import com.sourceforgery.tachikoma.mta.DeliveryNotification
+import com.sourceforgery.tachikoma.mta.HardBounceNotification
+import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpc
+import com.sourceforgery.tachikoma.mta.SoftBounceNotification
 import io.grpc.stub.StreamObserver
 
 class MTADeliveryService : MTADeliveryNotificationsGrpc.MTADeliveryNotificationsImplBase() {
