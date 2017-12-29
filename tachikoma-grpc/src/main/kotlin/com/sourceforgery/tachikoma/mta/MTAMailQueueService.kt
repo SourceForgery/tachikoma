@@ -1,9 +1,6 @@
-package com.sourceforgery.tachikoma.mta.grpc
+package com.sourceforgery.tachikoma.mta
 
 import com.google.protobuf.Empty
-import com.sourceforgery.tachikoma.mta.EmailMessage
-import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
-import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import io.grpc.stub.StreamObserver
 
 class MTAEmailQueueService : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {

@@ -5,8 +5,8 @@ import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
 import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
-import com.sourceforgery.tachikoma.mta.grpc.MTADeliveryService
-import com.sourceforgery.tachikoma.mta.grpc.MTAEmailQueueService
+import com.sourceforgery.tachikoma.mta.MTADeliveryService
+import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
 
 fun main() {
     val grpcService = GrpcServiceBuilder()
