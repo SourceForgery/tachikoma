@@ -8,7 +8,6 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::BufWriter;
 use std::io::Write;
-use std::io;
 
 const INPUT_DIR: &'static str = "build/grpc-api/";
 const OUTPUT_DIR: &'static str = "src/generated_grpc/";
@@ -31,7 +30,7 @@ fn main() {
     fs::remove_dir_all(OUTPUT_DIR).is_err();
     fs::create_dir_all(OUTPUT_DIR).expect(format!("Could not create directory {}", OUTPUT_DIR).as_ref());
 
-    let gradle_protoc_path = add_gradle_protoc_to_path();
+    let _gradle_protoc_path = add_gradle_protoc_to_path();
 
     protoc_rust_grpc::run(protoc_rust_grpc::Args {
         out_dir: OUTPUT_DIR,
@@ -60,19 +59,23 @@ fn main() {
 
 
     fn add_gradle_protoc_to_path() -> Result<tempdir::TempDir, String> {
-        let temp_dir = tempdir::TempDir::new("protoc-rust").map_err(|f| String::from("Couldn't create temp directory"))?;
+        let temp_dir = tempdir::TempDir::new("protoc-rust").map_err(|_| String::from("Couldn't create temp directory"))?;
         let protoc_bin = temp_dir.path().join("protoc");
 
         let home = std::env::var("HOME").map_err(|_| String::from("Expected HOME env variable to be set"))?;
         let gradle_protoc_glob: String = home + PROTOC_BIN;
 
-        let path = std::env::var("PATH").expect("Expected PATH env variable to be set");
-        let temp_dir_string = String::from(temp_dir.path().to_str().expect("Couldn't create path of path"));
+        let path = std::env::var("PATH").map_err(|_| "Expected PATH env variable to be set")?;
+        let temp_dir_string = temp_dir
+            .path()
+            .to_str()
+            .ok_or("")
+            .map(String::from)?;
 
-        for entry in glob::glob(gradle_protoc_glob.as_str()).expect("Working file system") {
+        for entry in glob::glob(gradle_protoc_glob.as_str()).map_err(|_| "Pattern error")? {
             if let Ok(path) = entry {
                 println!("{:?}", path);
-                std::fs::soft_link( path, protoc_bin.as_path()).expect("Failed to create symlink");
+                std::os::unix::fs::symlink( path, protoc_bin.as_path()).map_err(|_| "Failed to create symlink")?;
             }
         }
 
