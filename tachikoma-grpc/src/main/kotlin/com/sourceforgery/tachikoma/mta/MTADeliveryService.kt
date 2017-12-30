@@ -27,7 +27,6 @@ class MTADeliveryService : MTADeliveryNotificationsGrpc.MTADeliveryNotifications
             override fun onNext(value: DeliveryNotification?) {
                 TODO("Set delivery message to this") //To change body of created functions use File | Settings | File Templates.
             }
-
         }
     }
 

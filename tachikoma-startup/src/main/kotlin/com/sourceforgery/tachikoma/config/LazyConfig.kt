@@ -1,4 +1,4 @@
-package com.sourceforgery.tachikoma.config;
+package com.sourceforgery.tachikoma.config
 
 import com.sun.xml.internal.ws.spi.db.BindingContextFactory.LOGGER
 import java.io.File
@@ -30,7 +30,6 @@ fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
                 .name + ".valueOf((" + configKey + ") " + stringValue + ")", e)
     }
 }
-
 
 fun readConfig(configKey: String, default: Boolean) =
         readConfig(configKey, default.toString(), Boolean::class.java)
@@ -64,9 +63,6 @@ fun lazyConfig(configKey: String, default: Int) =
 
 fun lazyConfig(configKey: String, default: Long) =
         lazyConfig(configKey, default.toString(), Long::class.java)
-
-
-
 
 private object ConfigData {
     val properties = Properties()

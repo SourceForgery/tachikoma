@@ -53,9 +53,9 @@ import kotlin.reflect.full.companionObject
  * One known limitation of the Kotlin logging API is that location aware logging does not work
  */
 @Suppress("NOTHING_TO_INLINE", "OVERRIDE_BY_INLINE", "UNUSED")
-class FunctionalLogger(val log: ExtendedLogger): Logger by log {
+class FunctionalLogger(val log: ExtendedLogger) : Logger by log {
     companion object {
-        inline fun <T: Any?> (() -> T).asLog4jSupplier(): Supplier<T> = Supplier { invoke() }
+        inline fun <T : Any?> (() -> T).asLog4jSupplier(): Supplier<T> = Supplier { invoke() }
     }
 
     inline fun trace(t: Throwable, crossinline supplier: () -> Any?) {
@@ -154,7 +154,7 @@ class FunctionalLogger(val log: ExtendedLogger): Logger by log {
         val entry = traceEntry()
         try {
             val result = block()
-            when(result) {
+            when (result) {
                 is Unit -> traceExit(entry)
                 else -> traceExit(entry, result)
             }
@@ -169,7 +169,7 @@ class FunctionalLogger(val log: ExtendedLogger): Logger by log {
         val entry = traceEntry(supplier.asLog4jSupplier())
         try {
             val result = block()
-            when(result) {
+            when (result) {
                 is Unit -> traceExit(entry)
                 else -> traceExit(entry, result)
             }
@@ -185,22 +185,27 @@ class FunctionalLogger(val log: ExtendedLogger): Logger by log {
     override inline fun trace(messageSupplier: MessageSupplier?) {
         log.debug(messageSupplier)
     }
+
     @Deprecated("Use lambda methods.", ReplaceWith("log.debug(Supplier<Message>)"))
     override inline fun debug(messageSupplier: MessageSupplier?) {
         log.trace(messageSupplier)
     }
+
     @Deprecated("Use lambda methods.", ReplaceWith("log.info(Supplier<Message>)"))
     override inline fun info(messageSupplier: MessageSupplier?) {
         log.info(messageSupplier)
     }
+
     @Deprecated("Use lambda methods.", ReplaceWith("log.warn(Supplier<Message>)"))
     override inline fun warn(messageSupplier: MessageSupplier?) {
         log.warn(messageSupplier)
     }
+
     @Deprecated("Use lambda methods.", ReplaceWith("log.error(Supplier<Message>)"))
     override inline fun error(messageSupplier: MessageSupplier?) {
         log.error(messageSupplier)
     }
+
     @Deprecated("Use lambda methods.", ReplaceWith("log.fatal(Supplier<Message>)"))
     override inline fun fatal(messageSupplier: MessageSupplier?) {
         log.fatal(messageSupplier)

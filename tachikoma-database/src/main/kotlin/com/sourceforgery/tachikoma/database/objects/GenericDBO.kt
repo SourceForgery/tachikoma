@@ -18,8 +18,8 @@ abstract class GenericDBO {
 
     @Id
     @Column(columnDefinition = "DECIMAL(20)")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="unique_id_seq")
-    @SequenceGenerator(name="unique_id_seq", sequenceName="unique_id_seq", allocationSize=100)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unique_id_seq")
+    @SequenceGenerator(name = "unique_id_seq", sequenceName = "unique_id_seq", allocationSize = 100)
     lateinit var id: Number
 
     @field:Version

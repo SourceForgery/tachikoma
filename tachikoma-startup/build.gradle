@@ -4,6 +4,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'org.jmailen.kotlinter' version '1.6.0'
+}
+
 apply plugin: 'kotlin'
 
 dependencies {

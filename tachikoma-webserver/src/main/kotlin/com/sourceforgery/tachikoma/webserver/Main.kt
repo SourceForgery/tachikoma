@@ -8,6 +8,7 @@ import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
 import com.sourceforgery.tachikoma.mta.MTADeliveryService
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
 
+@Suppress("unused")
 fun main() {
     val grpcService = GrpcServiceBuilder()
             .addService(MTADeliveryService())
@@ -15,13 +16,11 @@ fun main() {
             .supportedSerializationFormats(GrpcSerializationFormats.values())
             .build()!!
 
-
     val healthService = CorsServiceBuilder
             .forAnyOrigin()
             .allowNullOrigin()
             .allowCredentials()
             .build(object : HttpHealthCheckService() {})
-
 
     // Order matters!
     val server = ServerBuilder()
@@ -32,5 +31,4 @@ fun main() {
     server
             .start()
             .join()
-
 }

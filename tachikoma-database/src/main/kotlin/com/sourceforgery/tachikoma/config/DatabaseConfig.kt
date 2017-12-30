@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.config
 
-
 import java.net.URI
 
 interface DatabaseConfig {

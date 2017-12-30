@@ -35,15 +35,12 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
         request.toString()
 
-
         val static = request.static!!
         val mailMessageBody = SentMailMessageBodyDBO(
                 wrapAndPackBody(request, static.htmlBody, static.plaintextBody)
         )
 
         val emailSent = request.recipientsList.map {
-
-
             EmailDBO(
                     recipient = it.toNamedEmail(),
                     transaction = transaction,
@@ -67,7 +64,6 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
         val template = request.template!!
         val emailSent = request.recipientsList.map {
-
             val mailMessageBody = SentMailMessageBodyDBO(
                     wrapAndPackBody(
                             request = request,
@@ -91,7 +87,6 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
         responseObserver.onCompleted()
     }
 
-
     private fun mergeTemplate(template: String?, vararg scopes: Any) =
             StringWriter().use {
                 DefaultMustacheFactory()
@@ -100,15 +95,12 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
                 it.toString()
             }
 
-
     private fun wrapAndPackBody(request: OutgoingEmail, htmlBody: String?, plaintextBody: String?): String {
         TODO("not implemented. Should merge html, plaintext and basically create the email body WITH headers") //To change body of created functions use File | Settings | File Templates.
     }
 
     companion object {
         val PRINTER = JsonFormat.printer()!!
-
-
     }
 }
 
