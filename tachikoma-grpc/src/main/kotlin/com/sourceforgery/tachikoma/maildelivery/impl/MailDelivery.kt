@@ -25,7 +25,7 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
             OutgoingEmail.BodyCase.TEMPLATE -> sendTemplatedEmail(request, responseObserver)
             else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
         }
-
+        TODO("Save all objects and actually send them on queue etc")
     }
 
     private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<MessageStatus>) {
