@@ -1,0 +1,24 @@
+plugins {
+    id "com.jtitor.rust" version "0.1.4"
+    id "base"
+}
+
+
+configurations {
+    api
+}
+
+dependencies {
+    api project(":tachikoma-backend-api-proto")
+}
+
+
+task apiCopy([type:Copy]) {
+    configurations.api.asFileTree.each {
+        from(zipTree(it))
+    }
+    into file("${buildDir}/grpc-api/")
+}
+
+assemble.dependsOn apiCopy
+assemble.dependsOn rustBuildTop
