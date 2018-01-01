@@ -7,16 +7,17 @@ extern crate url;
 extern crate lettre;
 
 mod generated_grpc;
+mod common;
 
-use generated_grpc::empty::Empty;
 use generated_grpc::message_queue::EmailMessage;
 use generated_grpc::message_queue::IncomingEmailMessage;
 use generated_grpc::message_queue::MTAQueuedNotification;
 use generated_grpc::message_queue_grpc::MTAEmailQueueClient;
 use generated_grpc::message_queue_grpc::MTAEmailQueue;
 
-use grpc::Client;
-use grpc::StreamingRequest;
+use common::setup_grpc::setup_grpc;
+
+//use grpc::StreamingRequest;
 use lettre::EmailAddress;
 use lettre::EmailTransport;
 use lettre::SimpleSendableEmail;
@@ -29,13 +30,12 @@ use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
 use std::vec::Vec;
-use tls_api_rustls::TlsConnector;
 use unix_socket::UnixListener;
 use unix_socket::UnixStream;
-use url::Url;
 
 const LMTP_SOCKET_PATH: &'static str = "/var/spool/postfix/private/incoming_tachikoma";
-const SMTP_PORT: u16 = 465;
+#[allow(dead_code)]
+const SMTP_OUTGOING_PORT: u16 = 465;
 
 
 fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
@@ -48,32 +48,16 @@ fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
     mta_queue_client.incoming_email(grpc::RequestOptions::new(), incoming_email_message);
 }
 
-fn setup_grpc() -> MTAEmailQueueClient {
-    let args: Vec<String> = env::args().collect();
 
-    let url = Url::parse(&args[0]).expect("First argument must be the url of the server");
-
-    let host = url.host_str().expect("URL needs to have a hostname");
-    let port = url.port();
-    let conf = grpc::ClientConf::new();
-
-    let client = match url.scheme() {
-        "http" => Client::new_plain(host, port.unwrap_or(80), conf),
-        "https" => Client::new_tls::<TlsConnector>(host, port.unwrap_or(443), conf),
-        _ => panic!("Neither http nor https!")
-    }.expect(format!("Could not connect to {}", url).as_ref());
-    return MTAEmailQueueClient::with_client(client);
-}
-
+#[allow(dead_code)]
 fn send_email(mut email_message: EmailMessage) -> Result<Vec<MTAQueuedNotification>, lettre::smtp::error::Error> {
     let from = EmailAddress::new(email_message.take_from());
     let body = email_message.take_body();
-    let sender_domain = email_message.take_senderDomain();
 
     let result = Vec::new();
 
     // Open a local connection on port 25
-    let mut mailer = SmtpTransportBuilder::new(("localhost", SMTP_PORT), ClientSecurity::None)?
+    let mut mailer = SmtpTransportBuilder::new(("localhost", SMTP_OUTGOING_PORT), ClientSecurity::None)?
         .connection_reuse(ConnectionReuseParameters::NoReuse)
         .build();
 
@@ -84,13 +68,13 @@ fn send_email(mut email_message: EmailMessage) -> Result<Vec<MTAQueuedNotificati
             from.clone(),
             vec![EmailAddress::new(receiver.clone())],
             "".to_string(),
-            "Hello ß☺ example".to_string(),
+            body.clone(),
         );
 
         let mailer_result = mailer.send(&email);
 
         if let Ok(mailer_response) = mailer_result {
-            let result_lines_with_message_id = mailer_response.message;
+            let _result_lines_with_message_id = mailer_response.message;
             println!("Email sent");
         } else {
             println!("Could not send email: {:?}", mailer_result);
@@ -102,7 +86,7 @@ fn send_email(mut email_message: EmailMessage) -> Result<Vec<MTAQueuedNotificati
     return Ok(result);
 }
 
-fn listen_for_emails(mta_queue_client: &MTAEmailQueueClient) {
+fn listen_for_emails(_mta_queue_client: &MTAEmailQueueClient) {
     // TODO Doesn't work at all since I can't set up a StreamingRequest
 //    let stream = grpc::GrpcStream::new();
 //    let mta_delivery_notifications_stream = StreamingRequest::new();
@@ -111,7 +95,8 @@ fn listen_for_emails(mta_queue_client: &MTAEmailQueueClient) {
 }
 
 fn main() {
-    let mta_queue_client = Arc::new(setup_grpc());
+    let args: Vec<String> = env::args().collect();
+    let mta_queue_client = Arc::new(MTAEmailQueueClient::with_client(setup_grpc(args)));
 
     let reference_counted = Arc::clone(&mta_queue_client);
     thread::spawn(move || listen_for_emails(reference_counted.deref()));

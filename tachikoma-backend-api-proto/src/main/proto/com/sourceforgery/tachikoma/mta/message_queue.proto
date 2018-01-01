@@ -16,9 +16,8 @@ service MTAEmailQueue {
 message EmailMessage {
     repeated string emailAddresses = 101;
     string from = 102;
-    string senderDomain = 103;
 
-    bytes body = 201;
+    string body = 201;
 }
 
 message IncomingEmailMessage {
