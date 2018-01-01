@@ -30,6 +30,13 @@ allprojects {
 
     sourceCompatibility = ext.java_version
     targetCompatibility = ext.java_version
+
+    // Add better deprecation warnings
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
 }
 
 group 'com.sourceforgery.tachikoma'

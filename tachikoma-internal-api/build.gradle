@@ -14,6 +14,9 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.apache.logging.log4j:log4j-api:$log4j2_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
+    compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
+
 }
 
 compileKotlin {
