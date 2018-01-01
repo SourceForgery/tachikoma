@@ -28,4 +28,6 @@ message IncomingEmailMessage {
 
 message MTAQueuedNotification {
     string messageId = 101;
+    bool success = 102;
+    string recipientEmailAddress = 103;
 }
