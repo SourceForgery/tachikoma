@@ -25,5 +25,5 @@ glob                = "0.2.11"
 tempdir             = "0.3.5"
 
 [[bin]]
-path = "src/main.rs"
+path = "src/mailer.rs"
 name = "tachikoma_mailer"
