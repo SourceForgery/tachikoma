@@ -11,21 +11,31 @@ mod generated_grpc;
 use generated_grpc::empty::Empty;
 use generated_grpc::message_queue::EmailMessage;
 use generated_grpc::message_queue::IncomingEmailMessage;
+use generated_grpc::message_queue::MTAQueuedNotification;
 use generated_grpc::message_queue_grpc::MTAEmailQueueClient;
 use generated_grpc::message_queue_grpc::MTAEmailQueue;
 
 use grpc::Client;
+use grpc::StreamingRequest;
+use lettre::EmailAddress;
+use lettre::EmailTransport;
+use lettre::SimpleSendableEmail;
+use lettre::smtp::ConnectionReuseParameters;
+use lettre::smtp::ClientSecurity;
+use lettre::smtp::SmtpTransportBuilder;
 use std::env;
 use std::io::BufReader;
 use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
+use std::vec::Vec;
 use tls_api_rustls::TlsConnector;
 use unix_socket::UnixListener;
 use unix_socket::UnixStream;
 use url::Url;
 
 const LMTP_SOCKET_PATH: &'static str = "/var/spool/postfix/private/incoming_tachikoma";
+const SMTP_PORT: u16 = 465;
 
 
 fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
@@ -34,7 +44,7 @@ fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
 
     let mut incoming_email_message = IncomingEmailMessage::new();
     incoming_email_message.set_emailAddress(String::from("foobar@example.com"));
-    incoming_email_message.set_body(String::from("Long freaking body"));
+    incoming_email_message.set_body(b"Long freaking body".to_vec());
     mta_queue_client.incoming_email(grpc::RequestOptions::new(), incoming_email_message);
 }
 
@@ -55,14 +65,49 @@ fn setup_grpc() -> MTAEmailQueueClient {
     return MTAEmailQueueClient::with_client(client);
 }
 
-fn send_email(email_message: EmailMessage) {
+fn send_email(mut email_message: EmailMessage) -> Result<Vec<MTAQueuedNotification>, lettre::smtp::error::Error> {
+    let from = EmailAddress::new(email_message.take_from());
+    let body = email_message.take_body();
+    let sender_domain = email_message.take_senderDomain();
+
+    let result = Vec::new();
+
+    // Open a local connection on port 25
+    let mut mailer = SmtpTransportBuilder::new(("localhost", SMTP_PORT), ClientSecurity::None)?
+        .connection_reuse(ConnectionReuseParameters::NoReuse)
+        .build();
+
+
+    // Send the emails
+    for receiver in email_message.get_emailAddresses() {
+        let email = SimpleSendableEmail::new(
+            from.clone(),
+            vec![EmailAddress::new(receiver.clone())],
+            "".to_string(),
+            "Hello ß☺ example".to_string(),
+        );
+
+        let mailer_result = mailer.send(&email);
+
+        if let Ok(mailer_response) = mailer_result {
+            let result_lines_with_message_id = mailer_response.message;
+            println!("Email sent");
+        } else {
+            println!("Could not send email: {:?}", mailer_result);
+        }
+    }
 
     println!("Should've sent message {:?}", email_message);
+
+    return Ok(result);
 }
 
 fn listen_for_emails(mta_queue_client: &MTAEmailQueueClient) {
-    let email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), Empty::new());
-    email_stream.map_items( |email_message| send_email(email_message));
+    // TODO Doesn't work at all since I can't set up a StreamingRequest
+//    let stream = grpc::GrpcStream::new();
+//    let mta_delivery_notifications_stream = StreamingRequest::new();
+//    let email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), Empty::new());
+//    email_stream.map_items(move |email_message| send_email(email_message, mta_delivery_notifications_stream));
 }
 
 fn main() {

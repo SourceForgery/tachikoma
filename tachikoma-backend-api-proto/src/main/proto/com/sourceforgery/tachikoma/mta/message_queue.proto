@@ -9,21 +9,24 @@ import "google/protobuf/empty.proto";
 
 
 service MTAEmailQueue {
-    rpc getEmails(google.protobuf.Empty) returns (stream EmailMessage);
-    rpc emailMTAQueued(MTAQueuedNotification) returns (google.protobuf.Empty);
+    rpc getEmails(stream MTAQueuedNotification) returns (stream EmailMessage);
     rpc incomingEmail(IncomingEmailMessage) returns (google.protobuf.Empty);
 }
 
 message EmailMessage {
-    repeated string emailAddresses = 1;
-    string body = 2;
+    repeated string emailAddresses = 101;
+    string from = 102;
+    string senderDomain = 103;
+
+    bytes body = 201;
 }
 
 message IncomingEmailMessage {
-    string emailAddress = 1;
-    string body = 2;
+    string emailAddress = 101;
+
+    bytes body = 201;
 }
 
 message MTAQueuedNotification {
-    string messageId = 1;
+    string messageId = 101;
 }
