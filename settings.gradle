@@ -8,6 +8,7 @@ include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-js'
 
 include 'tachikoma-internal-api'
 
+include 'tachikoma-mq'
 include 'tachikoma-database'
 include 'tachikoma-grpc'
 include 'tachikoma-rest'
