@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_outer_classname = "Jobs";
+
+package com.sourceforgery.tachikoma.mq;
+
+message JobMessage {
+    oneof jobData {
+        SendEmailJob sendEmailJob = 101;
+    }
+}
+
+// Job sending the message
+message SendEmailJob {
+    // Lots of EmailDBO.ids. Some can fail and have to be retried, thus,
+    // needs to be more fine grained than EmailSendTransactionDBO.id
+    repeated sint64 emailId = 101;
+}

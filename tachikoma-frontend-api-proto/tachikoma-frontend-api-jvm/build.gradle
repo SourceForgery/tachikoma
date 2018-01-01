@@ -39,7 +39,3 @@ protobuf {
         }
     }
 }
-
-processResources {
-    exclude('**/*.proto')
-}
