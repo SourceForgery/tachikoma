@@ -21,7 +21,6 @@ idea {
     }
 }
 
-
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler

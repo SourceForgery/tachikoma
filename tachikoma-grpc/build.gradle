@@ -12,9 +12,8 @@ apply plugin: 'kotlin'
 
 dependencies {
     compile 'com.github.spullara.mustache.java:compiler:0.9.5'
+    compile "org.glassfish.hk2:hk2-api:$hk2_version"
 
-    compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
-    compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
     compile project(':tachikoma-internal-api')
     compile project(':tachikoma-database')
 }
