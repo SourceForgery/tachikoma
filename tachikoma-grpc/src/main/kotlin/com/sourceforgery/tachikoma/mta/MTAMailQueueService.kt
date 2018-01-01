@@ -8,11 +8,11 @@ class MTAEmailQueueService
 @Inject
 private constructor(
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
-    override fun emailMTAQueued(request: MTAQueuedNotification?, responseObserver: StreamObserver<Empty>?) {
-        super.emailMTAQueued(request, responseObserver)
+    override fun getEmails(responseObserver: StreamObserver<EmailMessage>?): StreamObserver<MTAQueuedNotification> {
+        return super.getEmails(responseObserver)
     }
 
-    override fun getEmails(request: Empty?, responseObserver: StreamObserver<EmailMessage>?) {
-        super.getEmails(request, responseObserver)
+    override fun incomingEmail(request: IncomingEmailMessage?, responseObserver: StreamObserver<Empty>?) {
+        super.incomingEmail(request, responseObserver)
     }
 }

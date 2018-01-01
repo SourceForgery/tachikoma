@@ -14,5 +14,5 @@ include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-startup'
 include 'tachikoma-webserver'
-include 'tachikoma-postfix-tracer'
+include 'tachikoma-postfix-binaries'
 
