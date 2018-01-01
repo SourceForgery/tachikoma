@@ -2,8 +2,12 @@ package com.sourceforgery.tachikoma.mta
 
 import com.google.protobuf.Empty
 import io.grpc.stub.StreamObserver
+import javax.inject.Inject
 
-class MTADeliveryService : MTADeliveryNotificationsGrpc.MTADeliveryNotificationsImplBase() {
+class MTADeliveryService
+@Inject
+private constructor(
+) : MTADeliveryNotificationsGrpc.MTADeliveryNotificationsImplBase() {
     override fun delivered(request: DeliveredNotification?, responseObserver: StreamObserver<Empty>) {
         super.delivered(request, responseObserver)
         responseObserver.onCompleted()

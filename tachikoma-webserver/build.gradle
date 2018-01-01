@@ -15,12 +15,13 @@ dependencies {
     compile project(':tachikoma-grpc')
     compile project(':tachikoma-frontend')
     compile project(':tachikoma-rest')
+    compile project(':tachikoma-startup')
     compile "com.linecorp.armeria:armeria:$armeria_version"
     compile "com.linecorp.armeria:armeria-grpc:$armeria_version"
+
 }
 
 mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
-
 
 task fatJar(type: Jar) {
     manifest {
