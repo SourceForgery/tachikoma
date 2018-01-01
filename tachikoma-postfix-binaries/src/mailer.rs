@@ -17,7 +17,7 @@ use generated_grpc::message_queue_grpc::MTAEmailQueue;
 
 use common::setup_grpc::setup_grpc;
 
-//use grpc::StreamingRequest;
+use grpc::StreamingRequest;
 use lettre::EmailAddress;
 use lettre::EmailTransport;
 use lettre::SimpleSendableEmail;
@@ -50,7 +50,7 @@ fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
 
 
 #[allow(dead_code)]
-fn send_email(mut email_message: EmailMessage) -> Result<Vec<MTAQueuedNotification>, lettre::smtp::error::Error> {
+fn send_email(mut email_message: EmailMessage, email_stream: StreamingRequest<MTAQueuedNotification>) -> Result<Vec<MTAQueuedNotification>, lettre::smtp::error::Error> {
     let from = EmailAddress::new(email_message.take_from());
     let body = email_message.take_body();
 
@@ -86,12 +86,12 @@ fn send_email(mut email_message: EmailMessage) -> Result<Vec<MTAQueuedNotificati
     return Ok(result);
 }
 
-fn listen_for_emails(_mta_queue_client: &MTAEmailQueueClient) {
+fn listen_for_emails(mta_queue_client: &MTAEmailQueueClient) {
     // TODO Doesn't work at all since I can't set up a StreamingRequest
-//    let stream = grpc::GrpcStream::new();
-//    let mta_delivery_notifications_stream = StreamingRequest::new();
-//    let email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), Empty::new());
-//    email_stream.map_items(move |email_message| send_email(email_message, mta_delivery_notifications_stream));
+    let stream = grpc::GrpcStream::new();
+    let mta_delivery_notifications_stream = StreamingRequest::new(stream);
+    let email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), mta_delivery_notifications_stream);
+    email_stream.map_items(move |email_message| send_email(email_message, mta_delivery_notifications_stream));
 }
 
 fn main() {
