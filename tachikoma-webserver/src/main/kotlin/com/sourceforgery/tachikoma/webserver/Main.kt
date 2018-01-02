@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma.webserver
 
+import com.linecorp.armeria.common.HttpMethod
+import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
@@ -13,13 +15,13 @@ import io.grpc.BindableService
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 
 @Suppress("unused")
-fun main() {
+fun main(vararg args: String) {
 
     val serviceLocator = bindCommon()
     ServiceLocatorUtilities.bind(serviceLocator, GrpcBinder(), RestBinder())
 
     val grpcServiceBuilder = GrpcServiceBuilder()
-            .supportedSerializationFormats(GrpcSerializationFormats.values())
+            .supportedSerializationFormats(GrpcSerializationFormats.values())!!
     for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
         grpcServiceBuilder.addService(grpcService)
     }
@@ -28,7 +30,8 @@ fun main() {
             .forAnyOrigin()
             .allowNullOrigin()
             .allowCredentials()
-            .build(object : HttpHealthCheckService() {})
+            .allowRequestMethods(HttpMethod.GET)
+            .build(object : HttpHealthCheckService() {})!!
 
     // Order matters!
     val serverBuilder = ServerBuilder()
@@ -41,6 +44,7 @@ fun main() {
     serverBuilder
             // Grpc must be last
             .serviceUnder("/", grpcServiceBuilder.build()!!)
+            .port(8070, SessionProtocol.HTTP)
             .build()
             .start()
             .join()

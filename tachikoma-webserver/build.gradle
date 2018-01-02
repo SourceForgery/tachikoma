@@ -8,7 +8,8 @@ dependencies {
     compile project(':tachikoma-startup')
     compile "com.linecorp.armeria:armeria:$armeria_version"
     compile "com.linecorp.armeria:armeria-grpc:$armeria_version"
-
+    compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
+    compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4j2_version"
 }
 
 mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
