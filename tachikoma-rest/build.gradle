@@ -1,24 +1,7 @@
-buildscript {
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-plugins {
-    id 'org.jmailen.kotlinter' version '1.6.0'
-}
-
 apply plugin: 'kotlin'
 
 dependencies {
     compile "org.glassfish.hk2:hk2-api:$hk2_version"
     compile "com.linecorp.armeria:armeria:$armeria_version"
     compile project(':tachikoma-internal-api')
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "$java_version"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "$java_version"
 }

@@ -6,7 +6,7 @@ import com.sourceforgery.tachikoma.trackingdata.UrlTrackingData
 import java.util.Base64
 import javax.inject.Inject
 
-class TrackingDecoderImpl
+internal class TrackingDecoderImpl
 @Inject
 private constructor(
         val trackingConfig: TrackingConfig

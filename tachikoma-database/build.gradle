@@ -1,14 +1,8 @@
 buildscript {
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "io.ebean:ebean-gradle-plugin:10.2.3"
     }
 }
-
-plugins {
-    id 'org.jmailen.kotlinter' version '1.6.0'
-}
-
 
 apply plugin: 'kotlin'
 apply plugin: 'ebean'
@@ -34,13 +28,6 @@ ebean {
 
 kapt {
     generateStubs = true
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = java_version
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = java_version
 }
 
 test {

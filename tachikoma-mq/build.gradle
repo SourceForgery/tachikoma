@@ -1,0 +1,7 @@
+apply plugin: 'kotlin'
+
+dependencies {
+    compile project(':tachikoma-internal-api')
+
+    compile 'com.rabbitmq:amqp-client:5.1.1'
+}

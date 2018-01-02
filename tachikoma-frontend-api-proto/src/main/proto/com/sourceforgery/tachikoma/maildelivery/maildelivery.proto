@@ -46,6 +46,10 @@ message TemplateBody {
 enum TemplateEngine {
     HANDLEBARS = 0;
     MUSTASCH = 1;
+    RYTHM = 2;
+    // PEBBLE = 3; // Insecure?
+    // VELOCITY = 4; // Insecure!
+    // THYMELEAF = 5; // Insecure?
 }
 
 message StaticBody {

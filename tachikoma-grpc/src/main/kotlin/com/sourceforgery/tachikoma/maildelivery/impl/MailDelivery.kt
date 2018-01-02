@@ -96,7 +96,7 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
             }
 
     private fun wrapAndPackBody(request: OutgoingEmail, htmlBody: String?, plaintextBody: String?): String {
-        TODO("not implemented. Should merge html, plaintext and basically create the email body WITH headers") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented. Should merge html, plaintext and basically create the email body WITH headers")
     }
 
     companion object {

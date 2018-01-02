@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_outer_classname = "Notifications";
+
+import "google/protobuf/timestamp.proto";
+
+package com.sourceforgery.tachikoma.mq;
+
+// All messages that can be queued/broadcasted to the MQ
+message NotificationMessage {
+    google.protobuf.Timestamp creationTimestamp = 101;
+    oneof notificationData {
+        MessageDelivered messageDelivered = 201;
+        MessageSoftBounced messageSoftBounced = 202;
+        MessageHardBounced messageHardBounced = 203;
+        MessageOpened messageOpened = 204;
+        MessageClicked messageClicked = 205;
+    }
+}
+
+// This represents a single email delivered by the Postfix server to the next MTA
+message MessageDelivered {
+    sint64 emailId = 101;
+}
+
+// This represents a single email has softbounced (e.g. graylisted)
+message MessageSoftBounced {
+    sint64 emailId = 101;
+}
+
+// This represents a single email has hardbounced.
+message MessageHardBounced {
+    sint64 emailId = 101;
+}
+
+// This represents a single email that has been opened(via tracking pixel)
+message MessageOpened {
+    sint64 emailId = 101;
+}
+
+// This represents a single email that has been opened(link has been clicked)
+message MessageClicked {
+    sint64 emailId = 101;
+}
