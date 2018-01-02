@@ -25,7 +25,7 @@ idea {
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler
-        artifact = 'com.google.protobuf:protoc:3.0.0'
+        artifact = "com.google.protobuf:protoc:$protoc_version"
     }
 
     plugins {
