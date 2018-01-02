@@ -44,6 +44,7 @@ it in IntelliJ.
 * JDK 8 (JRE is untested)
 * IntelliJ plugin for Rust
 * IntelliJ TOML plugin
+* ssl headers (libssl-dev on Ubuntu)
 
 **Recommendations**
 * Add the function ```gw () { $(git rev-parse --show-toplevel)/gradlew "$@" }``` to avoid having to do ```../../../gradlew```
@@ -55,9 +56,9 @@ it in IntelliJ.
 
 **Getting around IntelliJ quirks**
 1. Build with ```./gradlew build``` in the root (should build cleanly).
-2. Manually mark all these as Generated sources in the ```Mark Directory as``` context menu.
+2. (May not be necessary) Manually mark all these as Generated sources in the ```Mark Directory as``` context menu.
   * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/java```
   * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/grpc```
   * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/java```
   * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/grpc```
-3. Open ```View -> Tool Windows -> Cargo``` and add tachikoma-postfix-tracer as a cargo project
+3. Open ```View -> Tool Windows -> Cargo``` and add tachikoma-postfix-binaries as a cargo project
