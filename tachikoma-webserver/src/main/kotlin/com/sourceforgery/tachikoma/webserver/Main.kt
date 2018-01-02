@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.webserver
 
 import com.linecorp.armeria.common.HttpMethod
+import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
@@ -43,6 +44,7 @@ fun main(vararg args: String) {
     serverBuilder
             // Grpc must be last
             .serviceUnder("/", grpcServiceBuilder.build()!!)
+            .port(8070, SessionProtocol.HTTP)
             .build()
             .start()
             .join()
