@@ -1,16 +1,33 @@
+buildscript {
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:3.0.0"
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
+        classpath "gradle.plugin.org.jmailen.gradle:kotlinter-gradle:1.6.0"
+    }
+    repositories {
+        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
+        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
+        maven { url "https://plugins.gradle.org/m2/" }
+        mavenCentral()
+    }
+}
+
 plugins {
     id 'net.researchgate.release' version '2.6.0'
 }
 
 apply plugin: 'java'
+apply plugin: 'kotlin'
 
-allprojects {
+subprojects {
     apply plugin: 'idea'
 
     buildscript {
         repositories {
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
+            maven { url "https://plugins.gradle.org/m2/" }
             mavenCentral()
         }
     }
@@ -37,7 +54,28 @@ allprojects {
             options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
         }
     }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        apply plugin: 'org.jlleitschuh.gradle.ktlint'
+        apply plugin: "org.jmailen.kotlinter"
+
+        kotlinOptions {
+            languageVersion = "1.2"
+            apiVersion = "1.2"
+            jvmTarget = "1.8"
+            //javaParameters = true   // Useful for reflection.
+        }
+
+        ktlint {
+            debug = false
+            verbose = true
+            android = false
+            reporter = "checkstyle"
+            ignoreFailures = true
+        }
+    }
 }
+
 
 group 'com.sourceforgery.tachikoma'
 

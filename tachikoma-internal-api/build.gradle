@@ -1,60 +1,24 @@
-buildscript {
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-plugins {
-    id "com.google.protobuf" version "0.8.3"
-    id 'org.jmailen.kotlinter' version '1.6.0'
-    id "idea"
-}
 
 sourceSets {
     main {
         resources {
-            srcDirs= ["src/main/proto"]
+            srcDirs = ["src/main/proto"]
         }
     }
 }
 
+apply plugin: 'idea'
 apply plugin: 'kotlin'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile "org.apache.logging.log4j:log4j-api:$log4j2_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile "org.apache.logging.log4j:log4j-api:$log4j2_version"
 
-    compile 'io.grpc:grpc-protobuf:1.8.0'
-    compile'io.grpc:grpc-stub:1.8.0'
+    compile "org.glassfish.hk2:hk2-api:$hk2_version"
 
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
+    compile project(':tachikoma-internal-proto-jvm')
 
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "$java_version"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "$java_version"
-}
-
-protobuf {
-    protoc {
-        // The artifact spec for the Protobuf Compiler
-        artifact = 'com.google.protobuf:protoc:3.0.0'
-    }
-
-    plugins {
-        grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.8.0'
-        }
-    }
-
-    generateProtoTasks {
-        all()*.plugins {
-            grpc {}
-        }
-    }
 }

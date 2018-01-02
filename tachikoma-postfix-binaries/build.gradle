@@ -3,7 +3,6 @@ plugins {
 	id "base"
 }
 
-
 configurations {
     api
 }

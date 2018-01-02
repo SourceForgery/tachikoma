@@ -6,6 +6,7 @@ include 'tachikoma-frontend-api-proto'
 include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm'
 include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-js'
 
+include 'tachikoma-internal-proto-jvm'
 include 'tachikoma-internal-api'
 
 include 'tachikoma-mq'
