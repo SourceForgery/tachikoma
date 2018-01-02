@@ -13,7 +13,7 @@ import io.grpc.BindableService
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 
 @Suppress("unused")
-fun main() {
+fun main(vararg args: String) {
 
     val serviceLocator = bindCommon()
     ServiceLocatorUtilities.bind(serviceLocator, GrpcBinder(), RestBinder())
