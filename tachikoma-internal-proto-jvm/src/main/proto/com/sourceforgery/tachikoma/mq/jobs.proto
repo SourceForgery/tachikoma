@@ -3,11 +3,17 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_outer_classname = "Jobs";
 
+import "google/protobuf/timestamp.proto";
+
 package com.sourceforgery.tachikoma.mq;
 
 message JobMessage {
+    // When this job was queued
+    google.protobuf.Timestamp creationTimestamp = 101;
+    // Executed within 1 minute from this. Jobs without this, will be executed asap
+    google.protobuf.Timestamp requestedExecutionTime= 102;
     oneof jobData {
-        SendEmailJob sendEmailJob = 101;
+        SendEmailJob sendEmailJob = 201;
     }
 }
 
