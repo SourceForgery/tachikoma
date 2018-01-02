@@ -19,7 +19,7 @@ fun main(vararg args: String) {
     ServiceLocatorUtilities.bind(serviceLocator, GrpcBinder(), RestBinder())
 
     val grpcServiceBuilder = GrpcServiceBuilder()
-            .supportedSerializationFormats(GrpcSerializationFormats.values())
+            .supportedSerializationFormats(GrpcSerializationFormats.values())!!
     for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
         grpcServiceBuilder.addService(grpcService)
     }
@@ -28,7 +28,7 @@ fun main(vararg args: String) {
             .forAnyOrigin()
             .allowNullOrigin()
             .allowCredentials()
-            .build(object : HttpHealthCheckService() {})
+            .build(object : HttpHealthCheckService() {})!!
 
     // Order matters!
     val serverBuilder = ServerBuilder()
