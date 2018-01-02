@@ -68,7 +68,7 @@ private object ConfigData {
     val properties = Properties()
 
     init {
-        if (java.lang.Boolean.getBoolean("com.yobify.read.config")) {
+        if (java.lang.Boolean.getBoolean("com.tachikoma.read.config")) {
             val configFile = File(System.getProperty("user.home"), ".tachikoma.config")
             try {
                 InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)
