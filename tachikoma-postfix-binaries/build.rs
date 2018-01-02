@@ -1,6 +1,9 @@
 extern crate protoc_rust_grpc;
 extern crate glob;
 extern crate tempdir;
+extern crate ini;
+
+use ini::Ini;
 
 use std::path::PathBuf;
 use std::path::Path;
@@ -8,12 +11,10 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::BufWriter;
 use std::io::Write;
+use std::error::Error;
 
 const INPUT_DIR: &'static str = "build/grpc-api/";
 const OUTPUT_DIR: &'static str = "src/generated_grpc/";
-
-const PROTOC_BIN: &'static str = "/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protoc/3.0.0/**/*.exe";
-
 
 fn main() {
     let mut list: Vec<String> = Vec::new();
@@ -63,7 +64,16 @@ fn main() {
         let protoc_bin = temp_dir.path().join("protoc");
 
         let home = std::env::var("HOME").map_err(|_| String::from("Expected HOME env variable to be set"))?;
-        let gradle_protoc_glob: String = home + PROTOC_BIN;
+        let ini = Ini::load_from_file("../gradle.properties").map_err(|e| format!("Error loading ../gradle.properties: {}", e.description()))?;
+        let version = ini
+            .general_section()
+            .get("protoc_version")
+            .ok_or("Didn't find protoc_version in gradle.properties")?;
+        let gradle_protoc_glob: String = format!(
+            "{}/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protoc/{}/**/*.exe",
+            home,
+            version
+        );
 
         let path = std::env::var("PATH").map_err(|_| "Expected PATH env variable to be set")?;
         let temp_dir_string = temp_dir
@@ -72,10 +82,11 @@ fn main() {
             .ok_or("")
             .map(String::from)?;
 
+        println!("Finding protoc binaries in directory {:?}", gradle_protoc_glob);
         for entry in glob::glob(gradle_protoc_glob.as_str()).map_err(|_| "Pattern error")? {
             if let Ok(path) = entry {
-                println!("{:?}", path);
-                std::os::unix::fs::symlink( path, protoc_bin.as_path()).map_err(|_| "Failed to create symlink")?;
+                println!("Found {:?}", path);
+                std::os::unix::fs::symlink(path, protoc_bin.as_path()).map_err(|_| "Failed to create symlink")?;
             }
         }
 

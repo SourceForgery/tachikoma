@@ -16,18 +16,26 @@ fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
         return if (clazz == UUID::class.java) {
             @Suppress("UNCHECKED_CAST")
             UUID.fromString(stringValue) as T
+        } else if (clazz.isPrimitive) {
+            val boxed = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(clazz, 1), 0)::class.java
+            @Suppress("UNCHECKED_CAST")
+            valueOf(boxed, stringValue) as T
         } else {
-            try {
-                val method = clazz.getMethod("valueOf", stringValue.javaClass)
-                clazz.cast(method.invoke(null, stringValue)) as T
-            } catch (e: NoSuchMethodException) {
-                val c = clazz.getConstructor(stringValue.javaClass)
-                c.newInstance(stringValue)
-            }
+            valueOf(clazz, stringValue)
         }
     } catch (e: Exception) {
         throw RuntimeException("Error running " + clazz
                 .name + ".valueOf((" + configKey + ") " + stringValue + ")", e)
+    }
+}
+
+private fun <T> valueOf(clazz: Class<T>, stringValue: String): T {
+    return try {
+        val method = clazz.getMethod("valueOf", stringValue.javaClass)
+        clazz.cast(method.invoke(null, stringValue)) as T
+    } catch (e: NoSuchMethodException) {
+        val c = clazz.getConstructor(stringValue.javaClass)
+        c.newInstance(stringValue)
     }
 }
 
@@ -68,7 +76,7 @@ private object ConfigData {
     val properties = Properties()
 
     init {
-        if (java.lang.Boolean.getBoolean("com.yobify.read.config")) {
+        if (java.lang.Boolean.getBoolean("com.tachikoma.read.config")) {
             val configFile = File(System.getProperty("user.home"), ".tachikoma.config")
             try {
                 InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)

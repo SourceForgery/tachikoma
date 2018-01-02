@@ -1,9 +1,18 @@
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/proto"]
+        }
+    }
+}
+
 apply plugin: 'com.google.protobuf'
 apply plugin: 'java'
 apply plugin: 'idea'
 
+
 dependencies {
-    protobuf project(':tachikoma-frontend-api-proto')
     compile "io.grpc:grpc-protobuf:$grpc_version"
     compile "io.grpc:grpc-stub:$grpc_version"
 }

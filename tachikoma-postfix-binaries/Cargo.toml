@@ -23,6 +23,7 @@ lettre              = "0.7"
 protoc-rust-grpc    = "0.2.1"
 glob                = "0.2.11"
 tempdir             = "0.3.5"
+rust-ini            = "0.9"
 
 [[bin]]
 # Handle sending and receiving emails
