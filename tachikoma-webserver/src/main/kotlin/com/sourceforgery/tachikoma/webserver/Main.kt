@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.webserver
 
+import com.linecorp.armeria.common.HttpMethod
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
@@ -28,6 +29,7 @@ fun main(vararg args: String) {
             .forAnyOrigin()
             .allowNullOrigin()
             .allowCredentials()
+            .allowRequestMethods(HttpMethod.GET)
             .build(object : HttpHealthCheckService() {})!!
 
     // Order matters!
