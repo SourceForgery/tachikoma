@@ -6,6 +6,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import io.ebean.EbeanServer
 import io.ebean.config.ServerConfig
+import io.ebean.config.dbplatform.h2.H2Platform
+import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.avaje.datasource.DataSourceConfig
@@ -18,7 +20,7 @@ import java.util.HashMap
 import javax.inject.Inject
 import javax.sql.DataSource
 
-class EbeanServerFactory @Inject constructor(
+internal class EbeanServerFactory @Inject constructor(
         private val databaseConfig: DatabaseConfig,
         private val counter: InvokeCounter
 ) : Factory<EbeanServer> {
@@ -62,12 +64,24 @@ class EbeanServerFactory @Inject constructor(
         dataSourceConfig.heartbeatSql = "select 1"
         dataSourceConfig.isAutoCommit = false
         dataSourceConfig.isolationLevel = Connection.TRANSACTION_READ_COMMITTED
+        //serverConfig.addPackage("com.sourceforgery.tachikoma.database.objects")
         serverConfig.addPackage("com.sourceforgery.tachikoma.database.sql.objects")
         serverConfig.dataSourceConfig = dataSourceConfig
         serverConfig.isDefaultServer = false
         serverConfig.isRegister = false
         serverConfig.objectMapper = createObjectMapper()
-        if (databaseConfig.testDatabase) {
+        when (databaseConfig.sqlUrl.scheme) {
+            "h2" -> {
+                dataSourceConfig.driver = "org.h2.Driver"
+                serverConfig.databasePlatform = H2Platform()
+            }
+            "postgres" -> {
+                dataSourceConfig.driver = "org.postgresql.Driver"
+                serverConfig.databasePlatform = PostgresPlatform()
+            }
+            else -> throw IllegalArgumentException("Don't know anything about the database ${databaseConfig.sqlUrl.scheme}.")
+        }
+        if (databaseConfig.wipeAndCreateDatabase) {
             serverConfig.isDdlCreateOnly = false
             serverConfig.isDdlGenerate = true
             serverConfig.isDdlRun = true

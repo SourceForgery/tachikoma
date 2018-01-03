@@ -9,6 +9,6 @@ internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig {
     override val createDatabase = readConfig("CREATE_DATABASE", true)
     override val trackingEncryptionKey: String = readConfig("TRACKING_ENCRYPTION_KEY", "peilieK6RoomaiPhainocool6ebezai0ox7qui4p")
     override val mqUrl: URI = readConfig("MQ_URL", "amqp://guest:guest@localhost/tachikoma", URI::class.java)
-    override val testDatabase: Boolean = readConfig("TEST_DATABASE", false)
+    override val wipeAndCreateDatabase: Boolean = readConfig("WIPE_AND_CREATE_DATABASE", false)
     override val timeDatabaseQueries: Boolean = readConfig("TIME_DATABASE_QUERIES", true)
 }
