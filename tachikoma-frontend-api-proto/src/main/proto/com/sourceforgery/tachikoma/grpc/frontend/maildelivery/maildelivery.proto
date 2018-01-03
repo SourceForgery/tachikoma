@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_outer_classname = "MailDelivery";
 
 package com.sourceforgery.tachikoma.grpc.frontend.maildelivery;
 
@@ -10,13 +9,13 @@ import "google/protobuf/timestamp.proto";
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 
 service MailDeliveryService {
-    rpc sendEmail(OutgoingEmail) returns (stream com.sourceforgery.tachikoma.grpc.frontend.MessageStatus);
+    rpc sendEmail(OutgoingEmail) returns (stream QueueStatus);
 }
 
 message EmailRecipient {
     oneof to {
-        com.sourceforgery.tachikoma.grpc.frontend.NamedEmail namedEmail = 1;
-        com.sourceforgery.tachikoma.grpc.frontend.Email email = 2;
+        NamedEmail namedEmail = 1;
+        Email email = 2;
     }
 
     google.protobuf.Struct templateMergeVars = 3;
@@ -61,8 +60,8 @@ message StaticBody {
 message OutgoingEmail {
     // Recipients of the email
     repeated EmailRecipient recipients = 101;
-    com.sourceforgery.tachikoma.grpc.frontend.Email bcc = 102;
-    com.sourceforgery.tachikoma.grpc.frontend.NamedEmail from = 103;
+    Email bcc = 102;
+    NamedEmail from = 103;
 
     oneof body {
         StaticBody static = 201;
@@ -76,4 +75,43 @@ message OutgoingEmail {
     google.protobuf.Timestamp sendAt = 304;
     string signingDomain = 305;
     string returnPathDomain = 306;
+}
+
+// Every email sent will generate one or more of these
+// representing the status of delivering to outgoing email server
+message QueueStatus {
+    // The recipient of this email
+    Email recipient = 101;
+
+    oneof deliveryStatus {
+        Rejected rejected = 201;
+        Queued queued = 202;
+        Scheduled scheduled = 203;
+    }
+
+    // Only exists if DeliveryStatus is NOT rejected
+    EmailMessageId id = 103;
+    // The transaction the
+    EmailTransactionId transactionId = 104;
+}
+
+message Rejected {
+    // Free text description on why the email wasn't queued
+    string rejectionReason = 105;
+
+    // What this combination of recipient email and
+    // the enumerated reason of why the email was rejected (if it was)
+    RejectReason rejectReason = 106;
+    enum RejectReason {
+        UNKNOWN = 0;
+        SPAM_MARKED = 1;
+        UNSUBSCRIBED = 2;
+    }
+}
+
+message Queued {
+}
+
+message Scheduled {
+    google.protobuf.Timestamp scheduledTo = 101;
 }

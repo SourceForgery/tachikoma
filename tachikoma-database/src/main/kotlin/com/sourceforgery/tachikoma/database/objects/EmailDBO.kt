@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.database.objects
 
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
+import com.sourceforgery.tachikoma.identifiers.EmailId
 import javax.persistence.Entity
 
 @Entity
@@ -23,3 +24,6 @@ constructor(
             sentEmailMessageBodyDBO = sentEmailMessageBodyDBO
     )
 }
+
+val EmailDBO.id: EmailId
+        get() = EmailId(realId as Long)

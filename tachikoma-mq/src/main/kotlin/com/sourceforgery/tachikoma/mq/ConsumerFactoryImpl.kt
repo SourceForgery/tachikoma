@@ -7,8 +7,8 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.MessageProperties
-import com.sourceforgery.tachikoma.common.AccountId
-import com.sourceforgery.tachikoma.common.UserId
+import com.sourceforgery.tachikoma.identifiers.AccountId
+import com.sourceforgery.tachikoma.identifiers.UserId
 import com.sourceforgery.tachikoma.common.delay
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
@@ -97,14 +97,14 @@ private constructor(
                 }
     }
 
-    override fun listen(userId: UserId, callback: (NotificationMessage) -> Unit): Closeable {
+    override fun listenForDeliveryNotifications(userId: UserId, callback: (DeliveryNotificationMessage) -> Unit): Closeable {
         val channel = connection
                 .createChannel()!!
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
                 var worked = false
                 try {
-                    callback(NotificationMessage.parseFrom(body))
+                    callback(DeliveryNotificationMessage.parseFrom(body))
                     channel.basicAck(envelope.deliveryTag, false)
                     worked = true
                 } finally {
@@ -190,8 +190,8 @@ private constructor(
         )
     }
 
-    override fun queueNotification(accountId: AccountId, notificationMessage: NotificationMessage) {
-        val notificationMessageClone = NotificationMessage.newBuilder(notificationMessage)
+    override fun queueNotification(accountId: AccountId, notificationMessage: DeliveryNotificationMessage) {
+        val notificationMessageClone = DeliveryNotificationMessage.newBuilder(notificationMessage)
                 .setCreationTimestamp(clock.instant().toTimestamp())
                 .build()
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC

@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.tracking
 
 import com.google.protobuf.ByteString
-import com.sourceforgery.tachikoma.trackingdata.UrlSignedMessage
-import com.sourceforgery.tachikoma.trackingdata.UrlTrackingData
+import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlSignedMessage
+import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import java.util.Base64
 import javax.inject.Inject
 

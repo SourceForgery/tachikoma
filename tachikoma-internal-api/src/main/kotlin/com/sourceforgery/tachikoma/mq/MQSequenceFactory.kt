@@ -1,9 +1,9 @@
 package com.sourceforgery.tachikoma.mq
 
-import com.sourceforgery.tachikoma.common.UserId
+import com.sourceforgery.tachikoma.identifiers.UserId
 import java.io.Closeable
 
 interface MQSequenceFactory {
-    fun listen(userId: UserId, callback: (NotificationMessage) -> Unit): Closeable
+    fun listenForDeliveryNotifications(userId: UserId, callback: (DeliveryNotificationMessage) -> Unit): Closeable
     fun listenForJobs(callback: (JobMessage) -> Unit): Closeable
 }
