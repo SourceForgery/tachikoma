@@ -5,6 +5,8 @@ import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.GrpcBinder
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.hk2.RequestContext
+import com.sourceforgery.tachikoma.hk2.RequestScoped
 import com.sourceforgery.tachikoma.mq.MqBinder
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
@@ -17,6 +19,8 @@ class StartupBinder : AbstractBinder() {
                 .to(DatabaseConfig::class.java)
                 .to(TrackingConfig::class.java)
                 .`in`(Singleton::class.java)
+        bind(RequestContext::class.java)
+                .to(RequestScoped::class.java)
     }
 }
 
