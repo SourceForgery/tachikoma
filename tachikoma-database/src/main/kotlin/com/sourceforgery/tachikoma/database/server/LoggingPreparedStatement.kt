@@ -42,7 +42,6 @@ class LoggingPreparedStatement(
         }
     }
 
-
     @Throws(SQLException::class)
     override fun execute(sql: String): Boolean {
         val millis = System.currentTimeMillis()
@@ -62,7 +61,6 @@ class LoggingPreparedStatement(
             counter.inc(sql, System.currentTimeMillis() - millis)
         }
     }
-
 
     @Throws(SQLException::class)
     override fun getMoreResults(@MagicConstant(intValues = longArrayOf(Statement.CLOSE_CURRENT_RESULT.toLong(), Statement.KEEP_CURRENT_RESULT.toLong(), Statement.CLOSE_ALL_RESULTS.toLong())) current: Int): Boolean {

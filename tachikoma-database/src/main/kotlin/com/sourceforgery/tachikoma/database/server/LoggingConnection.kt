@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.database.server
 
 import java.sql.CallableStatement
-import java.sql.Clob
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.SQLException
@@ -50,7 +49,6 @@ class LoggingConnection(
             counter.inc(sql, System.currentTimeMillis() - millis)
         }
     }
-
 
     @Throws(SQLException::class)
     override fun createStatement(resultSetType: Int, resultSetConcurrency: Int): Statement {

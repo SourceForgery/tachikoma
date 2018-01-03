@@ -147,4 +147,3 @@ class RequestContext : Context<RequestScoped> {
         val LOGGER = logger()
     }
 }
-
