@@ -7,10 +7,16 @@ import com.sourceforgery.tachikoma.logging.logger
 import org.glassfish.hk2.api.ActiveDescriptor
 import org.glassfish.hk2.api.Context
 import org.glassfish.hk2.api.ServiceHandle
+import org.glassfish.hk2.api.ServiceLocator
 import java.util.HashMap
 import java.util.UUID
+import javax.inject.Inject
 
-class RequestContext : Context<RequestScoped> {
+class RequestContext
+@Inject
+private constructor(
+        private val serviceLocator: ServiceLocator
+) : Context<RequestScoped> {
 
     private val currentScopeInstance = ThreadLocal<Instance>()
     @Volatile private var isActive = true
@@ -24,7 +30,7 @@ class RequestContext : Context<RequestScoped> {
             root: ServiceHandle<*>
     ): U? {
 
-        val instance = current()!!
+        val instance = current()
 
         var retVal: U? = instance[activeDescriptor]
         if (retVal == null) {
@@ -35,7 +41,7 @@ class RequestContext : Context<RequestScoped> {
     }
 
     override fun containsKey(descriptor: ActiveDescriptor<*>): Boolean {
-        return current()!!.contains(descriptor)
+        return current().contains(descriptor)
     }
 
     override fun supportsNullCreation(): Boolean {
@@ -47,20 +53,20 @@ class RequestContext : Context<RequestScoped> {
     }
 
     override fun destroyOne(descriptor: ActiveDescriptor<*>) {
-        current()!!.remove(descriptor)
+        current().remove(descriptor)
     }
 
     override fun shutdown() {
         isActive = false
     }
 
-    private fun current(): Instance? {
+    private fun current(): Instance {
         checkState(isActive, "Request scope has been already shut down.")
 
         val scopeInstance = currentScopeInstance.get()
         checkState(scopeInstance != null, "Not inside a request scope.")
 
-        return scopeInstance
+        return scopeInstance!!
     }
 
     private fun retrieveCurrent(): Instance? {
@@ -81,11 +87,12 @@ class RequestContext : Context<RequestScoped> {
         return Instance()
     }
 
-    fun <T> runInScope(task: () -> T) {
+    fun <T> runInScope(task: (ServiceLocator) -> T): T {
         val oldInstance = retrieveCurrent()
         val instance = createInstance()
         try {
             setCurrent(instance)
+            return task(serviceLocator)
         } finally {
             instance.release()
             resumeCurrent(oldInstance)
@@ -93,7 +100,7 @@ class RequestContext : Context<RequestScoped> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private class Instance internal constructor() {
+    internal class Instance internal constructor() {
         private val id by lazy {
             UUID.randomUUID()
         }
@@ -115,10 +122,8 @@ class RequestContext : Context<RequestScoped> {
         }
 
         internal fun <T> remove(descriptor: ActiveDescriptor<T>) {
-            val removed = store.remove(descriptor) as T
-            if (removed != null) {
-                descriptor.dispose(removed)
-            }
+            store.remove(descriptor)
+                    ?.let { descriptor.dispose(it as T) }
         }
 
         fun <T> contains(provider: ActiveDescriptor<T>): Boolean {

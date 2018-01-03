@@ -19,6 +19,7 @@ import com.sourceforgery.tachikoma.webserver.hk2.RequestScopedService
 import com.sourceforgery.tachikoma.webserver.hk2.WebBinder
 import io.grpc.BindableService
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
+import java.util.function.Function
 
 @Suppress("unused")
 fun main(vararg args: String) {
@@ -32,6 +33,8 @@ fun main(vararg args: String) {
             DatabaseBinder(),
             WebBinder()
     )!!
+
+    val requestContext = serviceLocator.getService(RequestContext::class.java)
 
     val grpcServiceBuilder = GrpcServiceBuilder()
             .supportedSerializationFormats(GrpcSerializationFormats.values())!!
@@ -49,14 +52,17 @@ fun main(vararg args: String) {
     // Order matters!
     val serverBuilder = ServerBuilder()
             .serviceUnder("/health", healthService)
-
     for (restService in serviceLocator.getAllServices(RestService::class.java)) {
-        serverBuilder.annotatedService(restService)
+        serverBuilder.annotatedService("/", restService, Function { RequestScopedService(it, requestContext) })
     }
+
+    val grpcService = grpcServiceBuilder.build()!!
+
+    val requestContextGrpc = RequestScopedService(grpcService, requestContext)
 
     serverBuilder
             // Grpc must be last
-            .serviceUnder("/", grpcServiceBuilder.build()!!)
+            .serviceUnder("/", requestContextGrpc)
             .port(8070, SessionProtocol.HTTP)
             .build()
             .start()
