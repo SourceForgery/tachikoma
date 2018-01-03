@@ -7,12 +7,12 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.MessageProperties
-import com.sourceforgery.tachikoma.identifiers.AccountId
-import com.sourceforgery.tachikoma.identifiers.UserId
 import com.sourceforgery.tachikoma.common.delay
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
+import com.sourceforgery.tachikoma.identifiers.AccountId
+import com.sourceforgery.tachikoma.identifiers.UserId
 import com.sourceforgery.tachikoma.logging.logger
 import java.io.Closeable
 import java.time.Clock
@@ -20,7 +20,7 @@ import java.time.Duration
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 
-class ConsumerFactoryImpl
+internal class ConsumerFactoryImpl
 @Inject
 private constructor(
         mqConfig: MqConfig,
@@ -76,11 +76,11 @@ private constructor(
                             ?.let { arguments["x-max-length"] = it }
 
                     if (messageQueue.delay > Duration.ZERO) {
-                        arguments["x-message-ttl"] = messageQueue.delay.toMillis().toString()
+                        arguments["x-message-ttl"] = messageQueue.delay.toMillis()
                     }
                     messageQueue.nextDestination
                             ?.let {
-                                arguments["x-dead-letter-routing-key"] = it
+                                arguments["x-dead-letter-routing-key"] = it.name
                                 arguments["x-dead-letter-exchangeType"] = ""
                                 arguments["x-dead-letter-exchange"] = ""
                             }
