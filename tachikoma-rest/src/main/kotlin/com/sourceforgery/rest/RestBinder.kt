@@ -6,7 +6,7 @@ import javax.inject.Singleton
 
 class RestBinder : AbstractBinder() {
     override fun configure() {
-        bind(TrackingRest::class.java)
+        bindAsContract(TrackingRest::class.java)
                 .to(RestService::class.java)
                 .`in`(Singleton::class.java)
     }

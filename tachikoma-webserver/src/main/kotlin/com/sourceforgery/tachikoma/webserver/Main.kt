@@ -9,16 +9,29 @@ import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
 import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
 import com.sourceforgery.rest.RestBinder
 import com.sourceforgery.rest.RestService
+import com.sourceforgery.tachikoma.CommonBinder
+import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
-import com.sourceforgery.tachikoma.startup.bindCommon
+import com.sourceforgery.tachikoma.hk2.RequestContext
+import com.sourceforgery.tachikoma.mq.MqBinder
+import com.sourceforgery.tachikoma.startup.StartupBinder
+import com.sourceforgery.tachikoma.webserver.hk2.RequestScopedService
+import com.sourceforgery.tachikoma.webserver.hk2.WebBinder
 import io.grpc.BindableService
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 
 @Suppress("unused")
 fun main(vararg args: String) {
 
-    val serviceLocator = bindCommon()
-    ServiceLocatorUtilities.bind(serviceLocator, GrpcBinder(), RestBinder())
+    val serviceLocator = ServiceLocatorUtilities.bind(
+            CommonBinder(),
+            StartupBinder(),
+            RestBinder(),
+            MqBinder(),
+            GrpcBinder(),
+            DatabaseBinder(),
+            WebBinder()
+    )!!
 
     val grpcServiceBuilder = GrpcServiceBuilder()
             .supportedSerializationFormats(GrpcSerializationFormats.values())!!

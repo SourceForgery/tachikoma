@@ -5,7 +5,7 @@ import javax.inject.Singleton
 
 class MqBinder : AbstractBinder() {
     override fun configure() {
-        bind(ConsumerFactoryImpl::class.java)
+        bindAsContract(ConsumerFactoryImpl::class.java)
                 .to(MQSequenceFactory::class.java)
                 .to(MQSender::class.java)
                 .`in`(Singleton::class.java)
