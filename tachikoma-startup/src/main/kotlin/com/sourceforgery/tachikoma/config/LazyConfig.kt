@@ -76,14 +76,12 @@ private object ConfigData {
     val properties = Properties()
 
     init {
-        if (java.lang.Boolean.getBoolean("com.tachikoma.read.config")) {
-            val configFile = File(System.getProperty("user.home"), ".tachikoma.config")
-            try {
-                InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)
-                        .use { reader -> properties.load(reader) }
-            } catch (e: IOException) {
-                LOGGER.info { "Couldn't find '$configFile'" }
-            }
+        val configFile = File(System.getProperty("user.home"), ".tachikoma.config")
+        try {
+            InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)
+                    .use { reader -> properties.load(reader) }
+        } catch (e: IOException) {
+            LOGGER.info { "Couldn't find '$configFile'" }
         }
     }
 
