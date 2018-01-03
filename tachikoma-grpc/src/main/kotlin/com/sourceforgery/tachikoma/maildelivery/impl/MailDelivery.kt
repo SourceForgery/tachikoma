@@ -17,7 +17,7 @@ import io.grpc.stub.StreamObserver
 import java.io.StringReader
 import java.io.StringWriter
 
-class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
+internal class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
         when (request.bodyCase!!) {

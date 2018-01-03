@@ -4,7 +4,7 @@ import com.google.protobuf.Empty
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
-class MTADeliveryService
+internal class MTADeliveryService
 @Inject
 private constructor(
 ) : MTADeliveryNotificationsGrpc.MTADeliveryNotificationsImplBase() {

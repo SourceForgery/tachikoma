@@ -19,7 +19,7 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
-class DeliveryNotificationService
+internal class DeliveryNotificationService
 @Inject
 private constructor(
         private val mqSequenceFactory: MQSequenceFactory,
