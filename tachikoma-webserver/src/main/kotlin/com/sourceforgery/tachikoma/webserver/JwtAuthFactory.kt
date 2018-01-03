@@ -21,5 +21,4 @@ private constructor(
 
     override fun dispose(instance: JwtAuth?) {
     }
-
 }

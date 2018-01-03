@@ -32,11 +32,10 @@ private constructor(
         }
     }
 
-
     override fun inc(sql: String?, millis: Long) {
         sql?.let {
             LOGGER.trace { "$millis for $sql" }
-            loggedQueries.compute(it, { k, v -> (v ?: 0) + millis })
+            loggedQueries.compute(it, { _, v -> (v ?: 0) + millis })
         }
     }
 

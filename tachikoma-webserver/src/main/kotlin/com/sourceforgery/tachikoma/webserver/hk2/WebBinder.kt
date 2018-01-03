@@ -1,4 +1,4 @@
-package com.sourceforgery.tachikoma.webserver.hk2;
+package com.sourceforgery.tachikoma.webserver.hk2
 
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.server.ServiceRequestContext
