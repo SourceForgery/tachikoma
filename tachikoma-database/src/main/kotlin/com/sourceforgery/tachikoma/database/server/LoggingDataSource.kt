@@ -4,7 +4,7 @@ import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource
 
-open class LoggingDataSource(
+internal open class LoggingDataSource(
         private val originalDataSource: DataSource,
         private val sandbox: Boolean,
         private val counter: InvokeCounter

@@ -4,7 +4,7 @@ import org.avaje.datasource.DataSourcePool
 import org.avaje.datasource.PoolStatistics
 import org.avaje.datasource.PoolStatus
 
-class LoggingDataSourcePool(
+internal class LoggingDataSourcePool(
         private val originalDataSourcePool: DataSourcePool,
         sandbox: Boolean,
         counter: InvokeCounter

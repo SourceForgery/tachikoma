@@ -6,7 +6,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 
-class LoggingPreparedStatement(
+internal class LoggingPreparedStatement(
         private val preparedStatement: PreparedStatement,
         private val sql: String,
         private val counter: InvokeCounter

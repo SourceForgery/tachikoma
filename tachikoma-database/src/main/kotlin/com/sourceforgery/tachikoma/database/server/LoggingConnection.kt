@@ -6,7 +6,7 @@ import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.Statement
 
-class LoggingConnection(
+internal class LoggingConnection(
         private val realConnection: Connection,
         private val counter: InvokeCounter
 ) : Connection by realConnection {
