@@ -3,20 +3,20 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_outer_classname = "MailDelivery";
 
-package com.sourceforgery.tachikoma.maildelivery;
+package com.sourceforgery.tachikoma.grpc.frontend.maildelivery;
 
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
-import "com/sourceforgery/tachikoma/maildelivery/common.proto";
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 
 service MailDeliveryService {
-    rpc sendEmail(OutgoingEmail) returns (stream MessageStatus);
+    rpc sendEmail(OutgoingEmail) returns (stream com.sourceforgery.tachikoma.grpc.frontend.MessageStatus);
 }
 
 message EmailRecipient {
     oneof to {
-        NamedEmail namedEmail = 1;
-        Email email = 2;
+        com.sourceforgery.tachikoma.grpc.frontend.NamedEmail namedEmail = 1;
+        com.sourceforgery.tachikoma.grpc.frontend.Email email = 2;
     }
 
     google.protobuf.Struct templateMergeVars = 3;
@@ -61,8 +61,8 @@ message StaticBody {
 message OutgoingEmail {
     // Recipients of the email
     repeated EmailRecipient recipients = 101;
-    Email bcc = 102;
-    NamedEmail from = 103;
+    com.sourceforgery.tachikoma.grpc.frontend.Email bcc = 102;
+    com.sourceforgery.tachikoma.grpc.frontend.NamedEmail from = 103;
 
     oneof body {
         StaticBody static = 201;

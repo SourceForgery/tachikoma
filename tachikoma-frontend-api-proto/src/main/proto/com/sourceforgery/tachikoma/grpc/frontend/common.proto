@@ -3,7 +3,7 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_outer_classname = "Commons";
 
-package com.sourceforgery.tachikoma.maildelivery;
+package com.sourceforgery.tachikoma.grpc.frontend;
 
 
 message Email {

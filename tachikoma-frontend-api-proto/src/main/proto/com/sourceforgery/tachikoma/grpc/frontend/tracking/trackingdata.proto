@@ -3,12 +3,14 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_outer_classname = "TrackingDataMessages";
 
-package com.sourceforgery.tachikoma.trackingdata;
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+
+package com.sourceforgery.tachikoma.grpc.frontend.tracking;
 
 
 // Message to be url-encoded with signature
 message UrlTrackingData {
-    sint64 messageId = 101;
+    com.sourceforgery.tachikoma.grpc.frontend.MessageId messageId = 101;
     string redirectUrl = 102;
 }
 
