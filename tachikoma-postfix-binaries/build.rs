@@ -57,42 +57,41 @@ fn main() {
             }
         }
     }
+}
 
+fn add_gradle_protoc_to_path() -> Result<tempdir::TempDir, String> {
+    let temp_dir = tempdir::TempDir::new("protoc-rust").map_err(|_| String::from("Couldn't create temp directory"))?;
+    let protoc_bin = temp_dir.path().join("protoc");
 
-    fn add_gradle_protoc_to_path() -> Result<tempdir::TempDir, String> {
-        let temp_dir = tempdir::TempDir::new("protoc-rust").map_err(|_| String::from("Couldn't create temp directory"))?;
-        let protoc_bin = temp_dir.path().join("protoc");
+    let home = std::env::var("HOME").map_err(|_| String::from("Expected HOME env variable to be set"))?;
+    let ini = Ini::load_from_file("../gradle.properties").map_err(|e| format!("Error loading ../gradle.properties: {}", e.description()))?;
+    let version = ini
+        .general_section()
+        .get("protoc_version")
+        .ok_or("Didn't find protoc_version in gradle.properties")?;
+    let gradle_protoc_glob: String = format!(
+        "{}/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protoc/{}/**/*.exe",
+        home,
+        version
+    );
 
-        let home = std::env::var("HOME").map_err(|_| String::from("Expected HOME env variable to be set"))?;
-        let ini = Ini::load_from_file("../gradle.properties").map_err(|e| format!("Error loading ../gradle.properties: {}", e.description()))?;
-        let version = ini
-            .general_section()
-            .get("protoc_version")
-            .ok_or("Didn't find protoc_version in gradle.properties")?;
-        let gradle_protoc_glob: String = format!(
-            "{}/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protoc/{}/**/*.exe",
-            home,
-            version
-        );
+    let path = std::env::var("PATH").map_err(|_| "Expected PATH env variable to be set")?;
+    let temp_dir_string = temp_dir
+        .path()
+        .to_str()
+        .ok_or("")
+        .map(String::from)?;
 
-        let path = std::env::var("PATH").map_err(|_| "Expected PATH env variable to be set")?;
-        let temp_dir_string = temp_dir
-            .path()
-            .to_str()
-            .ok_or("")
-            .map(String::from)?;
-
-        println!("Finding protoc binaries in directory {:?}", gradle_protoc_glob);
-        for entry in glob::glob(gradle_protoc_glob.as_str()).map_err(|_| "Pattern error")? {
-            if let Ok(path) = entry {
-                println!("Found {:?}", path);
-                std::os::unix::fs::symlink(path, protoc_bin.as_path()).map_err(|_| "Failed to create symlink")?;
-            }
+    println!("Finding protoc binaries in directory {:?}", gradle_protoc_glob);
+    for entry in glob::glob(gradle_protoc_glob.as_str()).map_err(|_| "Pattern error")? {
+        if let Ok(path) = entry {
+            println!("Found {:?}", path);
+            std::os::unix::fs::symlink(path, protoc_bin.as_path()).map_err(|_| "Failed to create symlink")?;
         }
-
-
-        let new_path = temp_dir_string + ":" + path.as_str();
-        std::env::set_var("PATH", new_path);
-        Ok(temp_dir)
     }
+
+
+    let new_path = temp_dir_string + ":" + path.as_str();
+    std::env::set_var("PATH", new_path);
+    Ok(temp_dir)
 }
