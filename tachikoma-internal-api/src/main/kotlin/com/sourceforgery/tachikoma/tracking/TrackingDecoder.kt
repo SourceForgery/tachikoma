@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.tracking
 
-import com.sourceforgery.tachikoma.trackingdata.UrlTrackingData
+import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 
 interface TrackingDecoder {
     fun decodeTrackingData(trackingData: String): UrlTrackingData

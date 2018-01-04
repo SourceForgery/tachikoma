@@ -8,7 +8,7 @@
     </DynamicThresholdFilter>
     <Appenders>
 	<Console name="StdOut" target="SYSTEM_OUT">
-	    <PatternLayout pattern="%-5p - [%t] %-26.26c{1} - %X{tag} - %m\n"/>
+	    <PatternLayout pattern="%d{ISO8601} %-5p - [%t] %-26.26c{1} - %X{tag} - %m\n"/>
 	</Console>
     </Appenders>
     <Loggers>

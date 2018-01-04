@@ -15,7 +15,7 @@ import java.text.MessageFormat
 import java.util.Base64
 import javax.inject.Inject
 
-class TrackingRest
+internal class TrackingRest
 @Inject
 private constructor(
         val trackingDecoder: TrackingDecoder

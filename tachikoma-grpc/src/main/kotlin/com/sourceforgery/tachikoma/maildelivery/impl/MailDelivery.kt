@@ -6,20 +6,20 @@ import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.SentMailMessageBodyDBO
-import com.sourceforgery.tachikoma.maildelivery.EmailRecipient
-import com.sourceforgery.tachikoma.maildelivery.MailDeliveryServiceGrpc
-import com.sourceforgery.tachikoma.maildelivery.MessageId
-import com.sourceforgery.tachikoma.maildelivery.MessageStatus
-import com.sourceforgery.tachikoma.maildelivery.OutgoingEmail
+import com.sourceforgery.tachikoma.grpc.frontend.EmailMessageId
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.QueueStatus
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import java.io.StringReader
 import java.io.StringWriter
 
-class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
+internal class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
-    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<MessageStatus>) {
+    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
         when (request.bodyCase!!) {
             OutgoingEmail.BodyCase.STATIC -> sendStaticEmail(request, responseObserver)
             OutgoingEmail.BodyCase.TEMPLATE -> sendTemplatedEmail(request, responseObserver)
@@ -28,7 +28,7 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
         TODO("Save all objects and actually send them on queue etc")
     }
 
-    private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<MessageStatus>) {
+    private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = PRINTER.print(request)!!
         )
@@ -47,9 +47,9 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
                     sentEmailMessageBodyDBO = mailMessageBody
             )
             responseObserver.onNext(
-                    MessageStatus.newBuilder()
+                    QueueStatus.newBuilder()
                             .setId(
-                                    MessageId.newBuilder().setId("foobar").build()
+                                    EmailMessageId.newBuilder().setId(100).build()
                             )
                             .build()
             )
@@ -57,7 +57,7 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
         responseObserver.onCompleted()
     }
 
-    private fun sendTemplatedEmail(request: OutgoingEmail, responseObserver: StreamObserver<MessageStatus>) {
+    private fun sendTemplatedEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = PRINTER.print(request)!!
         )
@@ -77,9 +77,9 @@ class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
                     sentEmailMessageBodyDBO = mailMessageBody
             )
             responseObserver.onNext(
-                    MessageStatus.newBuilder()
+                    QueueStatus.newBuilder()
                             .setId(
-                                    MessageId.newBuilder().setId("foobar").build()
+                                    EmailMessageId.newBuilder().setId(100).build()
                             )
                             .build()
             )
