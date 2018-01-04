@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+package com.sourceforgery.tachikoma.grpc.frontend.maildelivery;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+
+service MailDeliveryService {
+    rpc sendEmail(OutgoingEmail) returns (stream QueueStatus);
+}
+
+message EmailRecipient {
+    oneof to {
+        NamedEmail namedEmail = 1;
+        Email email = 2;
+    }
+
+    google.protobuf.Struct templateMergeVars = 3;
+    map<string, string> metadata = 4;
+}
+
+message TrackingData {
+    string trackingDomain = 1;
+
+    // Not sent, but used in search and as metadata
+    repeated string tags = 2;
+
+    // Data for e.g. callback processing
+    map<string, string> metadata = 3;
+
+    // Add these options as query parameters to all links
+    repeated string googleAnalyticsDomains = 4;
+    repeated string googleAnalyticsCampaign = 5;
+}
+
+message TemplateBody {
+    string htmlTemplate = 1;
+    string plaintextTemplate = 2;
+    google.protobuf.Struct globalMergeVars = 3;
+}
+
+enum TemplateEngine {
+    HANDLEBARS = 0;
+    MUSTASCH = 1;
+    RYTHM = 2;
+    // PEBBLE = 3; // Insecure?
+    // VELOCITY = 4; // Insecure!
+    // THYMELEAF = 5; // Insecure?
+}
+
+message StaticBody {
+    string htmlBody = 1;
+    string plaintextBody = 2;
+    string subject = 3;
+}
+
+message OutgoingEmail {
+    // Recipients of the email
+    repeated EmailRecipient recipients = 101;
+    Email bcc = 102;
+    NamedEmail from = 103;
+
+    oneof body {
+        StaticBody static = 201;
+        TemplateBody template = 202;
+    }
+
+    map<string, string> headers = 301;
+    TrackingData trackingData = 302;
+    bool preserveRecipients = 303;
+    // Not used atm
+    google.protobuf.Timestamp sendAt = 304;
+    string signingDomain = 305;
+    string returnPathDomain = 306;
+}
+
+// Every email sent will generate one or more of these
+// representing the status of delivering to outgoing email server
+message QueueStatus {
+    // The recipient of this email
+    Email recipient = 101;
+
+    oneof deliveryStatus {
+        Rejected rejected = 201;
+        Queued queued = 202;
+        Scheduled scheduled = 203;
+    }
+
+    // Only exists if DeliveryStatus is NOT rejected
+    EmailMessageId id = 103;
+    // The transaction the
+    EmailTransactionId transactionId = 104;
+}
+
+message Rejected {
+    // Free text description on why the email wasn't queued
+    string rejectionReason = 105;
+
+    // What this combination of recipient email and
+    // the enumerated reason of why the email was rejected (if it was)
+    RejectReason rejectReason = 106;
+    enum RejectReason {
+        UNKNOWN = 0;
+        SPAM_MARKED = 1;
+        UNSUBSCRIBED = 2;
+    }
+}
+
+message Queued {
+}
+
+message Scheduled {
+    google.protobuf.Timestamp scheduledTo = 101;
+}

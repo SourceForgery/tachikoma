@@ -1,18 +1,12 @@
-plugins {
-    id "com.google.protobuf" version "0.8.3"
-    id 'java'
-    id "idea"
-}
+apply plugin: 'com.google.protobuf'
+apply plugin: 'java'
+apply plugin: 'idea'
 
 dependencies {
     protobuf project(':tachikoma-frontend-api-proto')
-    compile 'io.grpc:grpc-protobuf:1.8.0'
-    compile'io.grpc:grpc-stub:1.8.0'
+    compile "io.grpc:grpc-protobuf:$grpc_version"
+    compile "io.grpc:grpc-stub:$grpc_version"
 }
-
-sourceCompatibility = java_version
-targetCompatibility = java_version
-
 
 idea {
     module {
@@ -24,12 +18,12 @@ idea {
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler
-        artifact = 'com.google.protobuf:protoc:3.0.0'
+        artifact = "com.google.protobuf:protoc:$protoc_version"
     }
 
     plugins {
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.8.0'
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpc_version"
         }
     }
 
@@ -38,8 +32,4 @@ protobuf {
             grpc {}
         }
     }
-}
-
-processResources {
-    exclude('**/*.proto')
 }

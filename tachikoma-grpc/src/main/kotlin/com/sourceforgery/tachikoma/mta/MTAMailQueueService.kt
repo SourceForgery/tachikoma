@@ -4,7 +4,7 @@ import com.google.protobuf.Empty
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
-class MTAEmailQueueService
+internal class MTAEmailQueueService
 @Inject
 private constructor(
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {

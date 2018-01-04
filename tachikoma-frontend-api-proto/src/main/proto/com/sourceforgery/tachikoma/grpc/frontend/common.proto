@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+package com.sourceforgery.tachikoma.grpc.frontend;
+
+
+// Email without recipient name
+message Email {
+    string email = 1;
+}
+
+// Email with recipient name
+message NamedEmail {
+    string email = 1;
+    string name = 2;
+}
+
+// Represents an email transaction (tuple of all the recipient email addresses and an email body)
+message EmailTransactionId {
+    sint64 id = 1;
+}
+
+// Represents an email (tuple of a single recipient email address and an email body)
+message EmailMessageId {
+    sint64 id = 1;
+}

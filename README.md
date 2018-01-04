@@ -44,6 +44,17 @@ it in IntelliJ.
 * JDK 8 (JRE is untested)
 * IntelliJ plugin for Rust
 * IntelliJ TOML plugin
+* ssl headers (libssl-dev on Ubuntu)
+
+** Running **
+
+To build and start, run
+```
+./gradlew run
+```
+
+That will start the webpack-dev-server at port 8080 (liable to change) and
+the webserver (for e.g. gRPC) at port 8070.
 
 **Recommendations**
 * Add the function ```gw () { $(git rev-parse --show-toplevel)/gradlew "$@" }``` to avoid having to do ```../../../gradlew```
@@ -55,9 +66,12 @@ it in IntelliJ.
 
 **Getting around IntelliJ quirks**
 1. Build with ```./gradlew build``` in the root (should build cleanly).
-2. Manually mark all these as Generated sources in the ```Mark Directory as``` context menu.
+2. (May not be necessary) Manually mark all these as Generated sources in the ```Mark Directory as``` context menu.
   * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/java```
   * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/grpc```
   * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/java```
   * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/grpc```
-3. Open ```View -> Tool Windows -> Cargo``` and add tachikoma-postfix-tracer as a cargo project
+3. Open ```View -> Tool Windows -> Cargo``` and add tachikoma-postfix-binaries as a cargo project
+4. When IntelliJ flakes out and complains about trying to use 1.8 stuff on 1.6, go ```Open Module Settings```,
+  go ```Facets``` and add Kotlin Facet to _all_ modules (and their partial modules, e.g. main and test) you're having
+  problems with. Problem will persist until you catch 'em all.

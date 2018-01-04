@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="5">
+    <DynamicThresholdFilter key="tachikoma.extraLogging" onMatch="ACCEPT" onMismatch="NEUTRAL">
+	<KeyValuePair key="true" value="DEBUG"/>
+    </DynamicThresholdFilter>
+    <DynamicThresholdFilter key="tachikoma.deadSilent" onMatch="NEUTRAL" onMismatch="DENY">
+	<KeyValuePair key="true" value="ERROR"/>
+    </DynamicThresholdFilter>
+    <Appenders>
+	<Console name="StdOut" target="SYSTEM_OUT">
+	    <PatternLayout pattern="%d{ISO8601} %-5p - [%t] %-26.26c{1} - %X{tag} - %m\n"/>
+	</Console>
+    </Appenders>
+    <Loggers>
+	<Root level="info">
+	    <AppenderRef ref="StdOut"/>
+	</Root>
+    </Loggers>
+</Configuration>

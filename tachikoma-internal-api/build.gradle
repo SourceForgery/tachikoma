@@ -1,27 +1,24 @@
-buildscript {
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/proto"]
+        }
     }
 }
 
-plugins {
-    id 'org.jmailen.kotlinter' version '1.6.0'
-}
-
+apply plugin: 'idea'
 apply plugin: 'kotlin'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile "org.apache.logging.log4j:log4j-api:$log4j2_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile "org.apache.logging.log4j:log4j-api:$log4j2_version"
+
+    compile "org.glassfish.hk2:hk2-api:$hk2_version"
+
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
+    compile project(':tachikoma-internal-proto-jvm')
 
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "$java_version"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "$java_version"
 }

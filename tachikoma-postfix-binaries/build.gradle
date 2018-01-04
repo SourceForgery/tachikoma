@@ -3,19 +3,20 @@ plugins {
 	id "base"
 }
 
-
 configurations {
     api
 }
 
 dependencies {
     api project(":tachikoma-backend-api-proto")
+    api "com.google.protobuf:protobuf-java:$protoc_version"
 }
 
 
 task apiCopy([type:Copy]) {
     configurations.api.asFileTree.each {
         from(zipTree(it))
+        include '**/*.proto'
     }
     into file("${buildDir}/grpc-api/")
 }
