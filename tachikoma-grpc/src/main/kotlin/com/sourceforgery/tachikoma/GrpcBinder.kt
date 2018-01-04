@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma
 
-import com.sourceforgery.tachikoma.hk2.RequestContext
+import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import com.sourceforgery.tachikoma.mta.MTADeliveryService
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
@@ -25,7 +25,7 @@ class GrpcBinder : AbstractBinder() {
         bindAsContract(TrackingDecoderImpl::class.java)
                 .to(TrackingDecoder::class.java)
                 .`in`(Singleton::class.java)
-        bindAsContract(RequestContext::class.java)
+        bindAsContract(HK2RequestContext::class.java)
                 .to(RequestScoped::class.java)
     }
 }

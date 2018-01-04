@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma
 
+import com.sourceforgery.tachikoma.database.dao.UserDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDAO
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
@@ -15,6 +16,8 @@ class DatabaseBinder : AbstractBinder() {
                 .to(EbeanServer::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(EmailDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(UserDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(LogEverything::class.java)
                 .to(InvokeCounter::class.java)

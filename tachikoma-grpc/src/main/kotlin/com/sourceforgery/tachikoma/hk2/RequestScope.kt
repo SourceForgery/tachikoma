@@ -12,7 +12,7 @@ import java.util.HashMap
 import java.util.UUID
 import javax.inject.Inject
 
-class RequestContext
+class HK2RequestContext
 @Inject
 private constructor(
         private val serviceLocator: ServiceLocator
