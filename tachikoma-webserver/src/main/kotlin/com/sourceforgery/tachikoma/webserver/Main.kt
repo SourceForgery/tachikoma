@@ -41,8 +41,6 @@ fun main(vararg args: String) {
     )!!
     val hK2RequestContext = serviceLocator.getService(HK2RequestContext::class.java)
 
-
-
     val scopedHttpRequest = serviceLocator.getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
     val scopedServiceRequestContext = serviceLocator.getService<SettableReference<ServiceRequestContext>>(REQUEST_CONTEXT_TYPE)
 

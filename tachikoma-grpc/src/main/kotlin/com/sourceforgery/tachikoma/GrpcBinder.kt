@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.RequestScoped
-import com.sourceforgery.tachikoma.hk2.SettableReference
 import com.sourceforgery.tachikoma.mta.MTADeliveryService
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
 import com.sourceforgery.tachikoma.tracking.DeliveryNotificationService
@@ -30,7 +29,7 @@ class GrpcBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(HK2RequestContext::class.java)
                 .to(RequestScoped::class.java)
-                .to(object: TypeLiteral<Context<RequestScoped>>() {}.type)
+                .to(object : TypeLiteral<Context<RequestScoped>>() {}.type)
                 .`in`(Singleton::class.java)
     }
 }
