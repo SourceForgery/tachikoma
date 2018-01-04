@@ -12,8 +12,11 @@ dependencies {
     api "com.google.protobuf:protobuf-java:$protoc_version"
 }
 
+artifacts {
+    archives file: file("$buildDir/${archivesBaseName}-${project.version}.zip"), name: archivesBaseName, type: 'zip'
+}
 
-task apiCopy([type: Copy]) {
+task apiCopy(type: Copy) {
     configurations.api.asFileTree.each {
         from(zipTree(it))
         include '**/*.proto'
@@ -21,9 +24,18 @@ task apiCopy([type: Copy]) {
     into file("${buildDir}/grpc-api/")
 }
 
-task myZip(type: Zip) {
-    from 'somedir'
+task zipBinaries(type: Zip) {
+    if (file('target/debug').exists() && file('target/release').exists()) {
+        throw new Exception("Pick target/debug or target/release")
+    }
+    from 'target/debug/'
+    from 'target/release/'
+    include 'tachikoma_*'
+    exclude '*.d'
+    archiveName "${archivesBaseName}-${version}.zip"
+    destinationDir(buildDir)
 }
-
 assemble.dependsOn apiCopy
 assemble.dependsOn rustBuildTop
+assemble.dependsOn zipBinaries
+zipBinaries.shouldRunAfter rustBuildTop
