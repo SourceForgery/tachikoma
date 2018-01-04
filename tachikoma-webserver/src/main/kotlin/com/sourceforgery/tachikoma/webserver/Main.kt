@@ -43,10 +43,11 @@ fun main(vararg args: String) {
 
 
 
+    val scopedHttpRequest = serviceLocator.getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
+    val scopedServiceRequestContext = serviceLocator.getService<SettableReference<ServiceRequestContext>>(REQUEST_CONTEXT_TYPE)
+
     val requestScoped = DecoratingServiceFunction<HttpRequest, HttpResponse> { delegate, ctx, req ->
         hK2RequestContext.runInScope {
-            val scopedHttpRequest = serviceLocator.getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
-            val scopedServiceRequestContext = serviceLocator.getService<SettableReference<ServiceRequestContext>>(REQUEST_CONTEXT_TYPE)
             scopedHttpRequest.value = req
             scopedServiceRequestContext.value = ctx
             delegate.serve(ctx, req)
