@@ -1,6 +1,6 @@
 plugins {
     id "com.jtitor.rust" version "0.1.4"
-	id "base"
+    id "base"
 }
 
 configurations {
@@ -13,12 +13,16 @@ dependencies {
 }
 
 
-task apiCopy([type:Copy]) {
+task apiCopy([type: Copy]) {
     configurations.api.asFileTree.each {
         from(zipTree(it))
         include '**/*.proto'
     }
     into file("${buildDir}/grpc-api/")
+}
+
+task myZip(type: Zip) {
+    from 'somedir'
 }
 
 assemble.dependsOn apiCopy
