@@ -30,23 +30,23 @@ private constructor(
                     ?: parseApiTokenHeader()
                     ?: NO_AUTHENTICATION
 
-    private fun parseApiTokenHeader(): Authentication? {
-        return httpHeaders[APITOKEN_HEADER]
-                ?.let {
-                    userDAO.validateApiToken(it)
-                }
-                ?.let {
-                    AuthenticationImpl(
-                            // No webtoken should allow backend
-                            allowBackend = false,
-                            userId = it.id,
-                            accountId = it.account?.id
-                    )
-                }
-    }
+    private fun parseApiTokenHeader() =
+            httpHeaders[APITOKEN_HEADER]
+            ?.let {
+                userDAO.validateApiToken(it)
+            }
+            ?.let {
+                AuthenticationImpl(
+                        // No webtoken should allow backend
+                        allowBackend = false,
+                        userId = it.id,
+                        accountId = it.account?.id
+                )
+            }
 
     private fun parseWebTokenHeader(): Authentication? {
         val webtokenHeader = httpHeaders[WEBTOKEN_HEADER]
+                ?: return null
         val splitToken = webtokenHeader.split(
                 delimiters = *charArrayOf('.'),
                 limit = 2

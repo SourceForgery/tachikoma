@@ -13,8 +13,10 @@ class WebBinder : AbstractBinder() {
     override fun configure() {
         bindFactory(ReferencingFactory<HttpRequest>())
                 .to(HTTP_REQUEST_TYPE)
+                .`in`(RequestScoped::class.java)
         bindFactory(ReferencingFactory<ServiceRequestContext>())
                 .to(REQUEST_CONTEXT_TYPE)
+                .`in`(RequestScoped::class.java)
         bindFactory(HttpRequestFactory::class.java)
                 .to(HttpRequest::class.java)
                 .`in`(RequestScoped::class.java)

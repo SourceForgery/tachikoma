@@ -26,7 +26,6 @@ private constructor(
     @ProduceType("image/gif")
     fun trackOpen(@Param("trackingData") trackingDataString: String): HttpResponse {
         try {
-            LOGGER.error { authentication.valid }
             @Suppress("UNUSED_VARIABLE")
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
             // TODO Do tracking stuff here, possibly in another thread
@@ -42,7 +41,6 @@ private constructor(
     @ProduceType("text/html")
     fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
         try {
-            System.err.println(authentication.valid)
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
             // Do tracking stuff here, possibly in another thread

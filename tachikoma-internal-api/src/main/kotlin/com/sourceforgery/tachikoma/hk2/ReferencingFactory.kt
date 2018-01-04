@@ -15,4 +15,11 @@ interface SettableReference<T> {
 
 internal class SettableReferenceImpl<T> : SettableReference<T> {
     override var value: T? = null
+        get() {
+            return field
+        }
+        set(value) {
+            field = value
+        }
+
 }
