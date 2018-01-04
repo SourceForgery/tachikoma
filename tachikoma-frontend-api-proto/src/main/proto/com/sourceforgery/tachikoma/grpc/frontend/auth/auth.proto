@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+package com.sourceforgery.tachikoma.grpc.frontend.auth;
+
+// The x-webtoken header is divided into two parts divided by a dot (.) (both base64 encoded)
+// The first part is the SHA1 HMAC
+// The second is this message
+message WebTokenAuthData {
+    sint64 userId = 101;
+    sint64 accountId = 102;
+}

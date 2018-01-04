@@ -1,6 +1,9 @@
 package com.sourceforgery.tachikoma.grpc.frontend
 
+import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
+import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.EmailId
+import com.sourceforgery.tachikoma.identifiers.UserId
 
 fun com.sourceforgery.tachikoma.common.Email.toGrpcInternal() =
         Email.newBuilder().setEmail(address).build()
@@ -25,3 +28,19 @@ fun EmailId.toGrpcInternal() =
 
 fun com.sourceforgery.tachikoma.identifiers.EmailTransactionId.toGrpcInternal() =
         EmailTransactionId.newBuilder().setId(emailTransactionId).build()
+
+fun WebTokenAuthData.toAccountId(): AccountId? {
+    return if (accountId == 0L) {
+        null
+    } else {
+        AccountId(accountId)
+    }
+}
+
+fun WebTokenAuthData.toUserId(): UserId? {
+    return if (userId == 0L) {
+        null
+    } else {
+        UserId(userId)
+    }
+}

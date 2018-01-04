@@ -12,7 +12,7 @@ import java.util.HashMap
 import java.util.UUID
 import javax.inject.Inject
 
-class RequestContext
+class HK2RequestContext
 @Inject
 private constructor(
         private val serviceLocator: ServiceLocator
@@ -27,7 +27,7 @@ private constructor(
 
     override fun <U : Any> findOrCreate(
             activeDescriptor: ActiveDescriptor<U>,
-            root: ServiceHandle<*>
+            root: ServiceHandle<*>?
     ): U? {
 
         val instance = current()
@@ -111,14 +111,14 @@ private constructor(
             return store[descriptor] as T
         }
 
-        internal fun <T : Any> put(descriptor: ActiveDescriptor<T>, value: T): T {
+        internal fun <T : Any> put(descriptor: ActiveDescriptor<T>, value: T): T? {
             checkState(!store.containsKey(descriptor),
                     "An instance for the descriptor %s was already seeded in this scope. Old instance: %s New instance: %s",
                     descriptor,
                     store[descriptor],
                     value)
 
-            return store.put(descriptor, value) as T
+            return store.put(descriptor, value) as T?
         }
 
         internal fun <T> remove(descriptor: ActiveDescriptor<T>) {
