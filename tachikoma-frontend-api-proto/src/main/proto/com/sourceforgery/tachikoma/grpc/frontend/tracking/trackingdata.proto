@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+
+package com.sourceforgery.tachikoma.grpc.frontend.tracking;
+
+// Message to be url-encoded with signature.
+// Will not be sent as part of any API, but may prove useful
+// in debugging.
+message UrlTrackingData {
+    // The sending email
+    EmailMessageId messageId = 101;
+    // The url to redirect to (if any)
+    // This is to avoid breaking existing emails for any reason.
+    string redirectUrl = 102;
+}
+
+message UrlSignedMessage {
+    // Data (UrlTrackingData) to be signed by signature
+    bytes message = 101;
+    // Signature (HMAC SHA-1)
+    bytes signature = 102;
+}

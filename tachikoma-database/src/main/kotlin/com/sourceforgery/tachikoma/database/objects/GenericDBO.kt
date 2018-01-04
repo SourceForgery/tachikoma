@@ -17,10 +17,10 @@ import javax.persistence.Version
 abstract class GenericDBO {
 
     @Id
-    @Column(columnDefinition = "DECIMAL(20)")
+    @Column(columnDefinition = "DECIMAL(20)", name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unique_id_seq")
     @SequenceGenerator(name = "unique_id_seq", sequenceName = "unique_id_seq", allocationSize = 100)
-    lateinit var id: Number
+    internal lateinit var realId: Number
 
     @field:Version
     var version: Long = 0L

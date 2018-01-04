@@ -10,7 +10,7 @@ import java.util.Locale
 import java.util.Properties
 import java.util.UUID
 
-fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
+internal fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
     val stringValue = ConfigData.getProperty(configKey, default)
     try {
         return if (clazz == UUID::class.java) {
@@ -39,19 +39,19 @@ private fun <T> valueOf(clazz: Class<T>, stringValue: String): T {
     }
 }
 
-fun readConfig(configKey: String, default: Boolean) =
+internal fun readConfig(configKey: String, default: Boolean) =
         readConfig(configKey, default.toString(), Boolean::class.java)
 
-fun readConfig(configKey: String, default: String) =
+internal fun readConfig(configKey: String, default: String) =
         readConfig(configKey, default, String::class.java)
 
-fun readConfig(configKey: String, default: Int) =
+internal fun readConfig(configKey: String, default: Int) =
         readConfig(configKey, default.toString(), Int::class.java)
 
-fun readConfig(configKey: String, default: Long) =
+internal fun readConfig(configKey: String, default: Long) =
         readConfig(configKey, default.toString(), Long::class.java)
 
-fun <T> lazyConfig(configKey: String, default: String, clazz: Class<T>): Lazy<T> {
+internal fun <T> lazyConfig(configKey: String, default: String, clazz: Class<T>): Lazy<T> {
     if (configKey.toUpperCase(Locale.US) != configKey) {
         throw IllegalArgumentException("Only accepts uppercase")
     }
@@ -60,30 +60,28 @@ fun <T> lazyConfig(configKey: String, default: String, clazz: Class<T>): Lazy<T>
     }
 }
 
-fun lazyConfig(configKey: String, default: Boolean) =
+internal fun lazyConfig(configKey: String, default: Boolean) =
         lazyConfig(configKey, default.toString(), Boolean::class.java)
 
-fun lazyConfig(configKey: String, default: String) =
+internal fun lazyConfig(configKey: String, default: String) =
         lazyConfig(configKey, default, String::class.java)
 
-fun lazyConfig(configKey: String, default: Int) =
+internal fun lazyConfig(configKey: String, default: Int) =
         lazyConfig(configKey, default.toString(), Int::class.java)
 
-fun lazyConfig(configKey: String, default: Long) =
+internal fun lazyConfig(configKey: String, default: Long) =
         lazyConfig(configKey, default.toString(), Long::class.java)
 
 private object ConfigData {
     val properties = Properties()
 
     init {
-        if (java.lang.Boolean.getBoolean("com.tachikoma.read.config")) {
-            val configFile = File(System.getProperty("user.home"), ".tachikoma.config")
-            try {
-                InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)
-                        .use { reader -> properties.load(reader) }
-            } catch (e: IOException) {
-                LOGGER.info { "Couldn't find '$configFile'" }
-            }
+        val configFile = File(System.getProperty("user.home"), ".tachikoma.config")
+        try {
+            InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)
+                    .use { reader -> properties.load(reader) }
+        } catch (e: IOException) {
+            LOGGER.info { "Couldn't find '$configFile'" }
         }
     }
 
