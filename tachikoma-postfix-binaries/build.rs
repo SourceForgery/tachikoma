@@ -31,8 +31,11 @@ fn main() {
     fs::remove_dir_all(OUTPUT_DIR).is_err();
     fs::create_dir_all(OUTPUT_DIR).expect(format!("Could not create directory {}", OUTPUT_DIR).as_ref());
 
-    let _gradle_protoc_path = add_gradle_protoc_to_path();
+    generate_protobuf_files()
+}
 
+fn generate_protobuf_files() -> () {
+    let _gradle_protoc_path = add_gradle_protoc_to_path();
     protoc_rust_grpc::run(protoc_rust_grpc::Args {
         out_dir: OUTPUT_DIR,
         includes: &[INPUT_DIR],
@@ -40,13 +43,11 @@ fn main() {
         rust_protobuf: true, // also generate protobuf messages, not just services
     }).expect("protoc-rust-grpc");
 
-
     let options = OpenOptions::new().write(true).create(true).to_owned();
     let path_name = String::from(OUTPUT_DIR) + "mod.rs";
     let path = Path::new(&path_name);
     let file = options.open(&path).expect(format!("Couldn't open {} for writing", path_name).as_ref());
     let mut writer = BufWriter::new(&file);
-
     let glob_pattern = String::from(OUTPUT_DIR) + "/*.rs";
     for entry in glob::glob(glob_pattern.as_ref()).expect(format!("{} is not found.", INPUT_DIR).as_ref()) {
         if let Ok(path) = entry {
