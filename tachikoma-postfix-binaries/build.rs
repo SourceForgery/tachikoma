@@ -26,20 +26,20 @@ fn main() {
             list.push(pth2);
         }
     }
-    let v2: Vec<&str> = list.iter().map(|s| &**s).collect();
+    let proto_files: Vec<&str> = list.iter().map(|s| &**s).collect();
 
     fs::remove_dir_all(OUTPUT_DIR).is_err();
     fs::create_dir_all(OUTPUT_DIR).expect(format!("Could not create directory {}", OUTPUT_DIR).as_ref());
 
-    generate_protobuf_files()
+    generate_protobuf_files(proto_files)
 }
 
-fn generate_protobuf_files() -> () {
+fn generate_protobuf_files(proto_files: Vec<&str>) -> () {
     let _gradle_protoc_path = add_gradle_protoc_to_path();
     protoc_rust_grpc::run(protoc_rust_grpc::Args {
         out_dir: OUTPUT_DIR,
         includes: &[INPUT_DIR],
-        input: v2.as_slice(),
+        input: proto_files.as_slice(),
         rust_protobuf: true, // also generate protobuf messages, not just services
     }).expect("protoc-rust-grpc");
 
