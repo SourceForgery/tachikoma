@@ -1,10 +1,18 @@
 plugins {
     id "com.jtitor.rust" version "0.1.4"
-    id "base"
+    id "java"
 }
 
 configurations {
     api
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs= ["$buildDir/jarContents"]
+        }
+    }
 }
 
 dependencies {
@@ -12,19 +20,16 @@ dependencies {
     api "com.google.protobuf:protobuf-java:$protoc_version"
 }
 
-artifacts {
-    archives file: file("$buildDir/${archivesBaseName}-${project.version}.zip"), name: archivesBaseName, type: 'zip'
-}
-
 task apiCopy(type: Copy) {
     configurations.api.asFileTree.each {
-        from(zipTree(it))
-        include '**/*.proto'
+        from(zipTree(it)) {
+            include '**/*.proto'
+        }
     }
-    into file("${buildDir}/grpc-api/")
+    into file("$buildDir/grpc-api/")
 }
 
-task zipBinaries(type: Zip) {
+task copyBinaries(type: Copy) {
     if (file('target/debug').exists() && file('target/release').exists()) {
         throw new Exception("Pick target/debug or target/release")
     }
@@ -32,10 +37,8 @@ task zipBinaries(type: Zip) {
     from 'target/release/'
     include 'tachikoma_*'
     exclude '*.d'
-    archiveName "${archivesBaseName}-${version}.zip"
-    destinationDir(buildDir)
+    into file("$buildDir/jarContents")
 }
-assemble.dependsOn apiCopy
-assemble.dependsOn rustBuildTop
-assemble.dependsOn zipBinaries
-zipBinaries.shouldRunAfter rustBuildTop
+rustBuildTop.dependsOn apiCopy
+copyBinaries.dependsOn rustBuildTop
+assemble.dependsOn copyBinaries
