@@ -1,9 +1,13 @@
 package com.sourceforgery.tachikoma.webserver
 
 import com.linecorp.armeria.common.HttpMethod
+import com.linecorp.armeria.common.HttpRequest
+import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
+import com.linecorp.armeria.server.DecoratingServiceFunction
 import com.linecorp.armeria.server.ServerBuilder
+import com.linecorp.armeria.server.ServiceRequestContext
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
 import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
@@ -12,10 +16,12 @@ import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
-import com.sourceforgery.tachikoma.hk2.RequestContext
+import com.sourceforgery.tachikoma.hk2.HK2RequestContext
+import com.sourceforgery.tachikoma.hk2.SettableReference
 import com.sourceforgery.tachikoma.mq.MqBinder
 import com.sourceforgery.tachikoma.startup.StartupBinder
-import com.sourceforgery.tachikoma.webserver.hk2.RequestScopedService
+import com.sourceforgery.tachikoma.webserver.hk2.HTTP_REQUEST_TYPE
+import com.sourceforgery.tachikoma.webserver.hk2.REQUEST_CONTEXT_TYPE
 import com.sourceforgery.tachikoma.webserver.hk2.WebBinder
 import io.grpc.BindableService
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
@@ -33,8 +39,18 @@ fun main(vararg args: String) {
             DatabaseBinder(),
             WebBinder()
     )!!
+    val hK2RequestContext = serviceLocator.getService(HK2RequestContext::class.java)
 
-    val requestContext = serviceLocator.getService(RequestContext::class.java)
+    val scopedHttpRequest = serviceLocator.getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
+    val scopedServiceRequestContext = serviceLocator.getService<SettableReference<ServiceRequestContext>>(REQUEST_CONTEXT_TYPE)
+
+    val requestScoped = DecoratingServiceFunction<HttpRequest, HttpResponse> { delegate, ctx, req ->
+        hK2RequestContext.runInScope {
+            scopedHttpRequest.value = req
+            scopedServiceRequestContext.value = ctx
+            delegate.serve(ctx, req)
+        }
+    }
 
     val grpcServiceBuilder = GrpcServiceBuilder()
             .supportedSerializationFormats(GrpcSerializationFormats.values())!!
@@ -53,16 +69,15 @@ fun main(vararg args: String) {
     val serverBuilder = ServerBuilder()
             .serviceUnder("/health", healthService)
     for (restService in serviceLocator.getAllServices(RestService::class.java)) {
-        serverBuilder.annotatedService("/", restService, Function { RequestScopedService(it, requestContext) })
+        serverBuilder.annotatedService("/", restService, Function { it.decorate(requestScoped) })
     }
 
     val grpcService = grpcServiceBuilder.build()!!
-
-    val requestContextGrpc = RequestScopedService(grpcService, requestContext)
+    grpcService.decorate(requestScoped)
 
     serverBuilder
             // Grpc must be last
-            .serviceUnder("/", requestContextGrpc)
+            .serviceUnder("/", grpcService)
             .port(8070, SessionProtocol.HTTP)
             .build()
             .start()

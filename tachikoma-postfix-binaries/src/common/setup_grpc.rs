@@ -8,7 +8,7 @@ use url::Url;
 
 
 pub fn setup_grpc(args: Vec<String>) -> Client {
-    let url = Url::parse(&args[0]).expect("First argument must be the url of the server");
+    let url = Url::parse(&args[1]).expect("First argument must be the url of the server");
 
     let host = url.host_str().expect("URL needs to have a hostname");
     let port = url.port();

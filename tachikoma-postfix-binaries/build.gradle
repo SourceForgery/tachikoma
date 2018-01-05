@@ -1,25 +1,45 @@
 plugins {
     id "com.jtitor.rust" version "0.1.4"
-	id "base"
+    id "java"
 }
 
 configurations {
-    api
+    protobuf
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["$buildDir/jarContents"]
+        }
+    }
 }
 
 dependencies {
-    api project(":tachikoma-backend-api-proto")
-    api "com.google.protobuf:protobuf-java:$protoc_version"
+    protobuf project(":tachikoma-backend-api-proto")
+    protobuf "com.google.protobuf:protobuf-java:$protoc_version"
 }
 
-
-task apiCopy([type:Copy]) {
-    configurations.api.asFileTree.each {
-        from(zipTree(it))
-        include '**/*.proto'
+task protobufCopy(type: Copy) {
+    configurations.protobuf.each {
+        from(zipTree(it)) {
+            include '**/*.proto'
+        }
     }
-    into file("${buildDir}/grpc-api/")
+    into file("$buildDir/grpc-api/")
 }
 
-assemble.dependsOn apiCopy
-assemble.dependsOn rustBuildTop
+task copyBinaries(type: Copy) {
+    if (file('target/debug').exists() && file('target/release').exists()) {
+        throw new Exception("Pick target/debug or target/release")
+    }
+    from 'target/debug/'
+    from 'target/release/'
+    include 'tachikoma_*'
+    exclude '*.d'
+    into file("$buildDir/jarContents")
+}
+
+rustBuildTop.dependsOn protobufCopy
+copyBinaries.dependsOn rustBuildTop
+assemble.dependsOn copyBinaries

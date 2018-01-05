@@ -8,6 +8,7 @@ import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.ProduceType
 import com.sourceforgery.rest.RestService
+import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import io.netty.util.AsciiString
@@ -18,7 +19,8 @@ import javax.inject.Inject
 internal class TrackingRest
 @Inject
 private constructor(
-        val trackingDecoder: TrackingDecoder
+        val trackingDecoder: TrackingDecoder,
+        val authentication: Authentication
 ) : RestService {
     @Get("regex:^/t/(?<trackingData>.*)")
     @ProduceType("image/gif")
@@ -26,9 +28,9 @@ private constructor(
         try {
             @Suppress("UNUSED_VARIABLE")
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
-
             // TODO Do tracking stuff here, possibly in another thread
         } catch (e: Exception) {
+            e.printStackTrace()
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
         }
@@ -40,6 +42,7 @@ private constructor(
     fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
+
             // Do tracking stuff here, possibly in another thread
             return HttpResponse.of(
                     HttpStatus.TEMPORARY_REDIRECT,
@@ -48,6 +51,7 @@ private constructor(
                     HttpHeaders.of(LOCATION, trackingData.redirectUrl)
             )
         } catch (e: Exception) {
+            e.printStackTrace()
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
             return HttpResponse.of(

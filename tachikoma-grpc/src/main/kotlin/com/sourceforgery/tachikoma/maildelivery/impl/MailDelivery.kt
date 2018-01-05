@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_VARIABLE")
+
 package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.github.mustachejava.DefaultMustacheFactory
