@@ -26,8 +26,8 @@ use lettre::smtp::ConnectionReuseParameters;
 use lettre::smtp::ClientSecurity;
 use lettre::smtp::SmtpTransportBuilder;
 use std::env;
+use std::fs::{remove_file};
 use std::io::BufReader;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
 use std::vec::Vec;
@@ -76,7 +76,7 @@ fn send_email(email_message: &EmailMessage, mta_queue_client: &MTAEmailQueueClie
 
         if let Ok(mailer_response) = mailer_result {
             let _result_lines_with_message_id = mailer_response.message;
-            notification.set_messageId("Here should be something".to_string());
+            notification.set_queueId("Here should be something".to_string());
             notification.set_success(true);
             println!("Email sent");
         } else {
@@ -94,12 +94,18 @@ fn listen_for_emails(mta_queue_client: Arc<MTAEmailQueueClient>) {
     let reference_counted = Arc::clone(&mta_queue_client);
     email_stream.map_items(
         move |email_message| {
-            send_email(&email_message, reference_counted.deref())
+            send_email(&email_message, &reference_counted)
         }
     );
 }
 
 fn main() {
+    println!("Started mailer service");
+
+    if let Err(_) = remove_file(LMTP_SOCKET_PATH) {
+        println!("Could not delete file {}", LMTP_SOCKET_PATH);
+    }
+
     let args: Vec<String> = env::args().collect();
     let mta_queue_client = Arc::new(MTAEmailQueueClient::with_client(setup_grpc(args)));
 
@@ -110,11 +116,13 @@ fn main() {
         .expect(&format!("Couldn't open socket {}", LMTP_SOCKET_PATH));
 
     for stream in listener.incoming() {
+        println!("Mailer LMTP connection received");
+
         match stream {
             Ok(stream) => {
                 /* connection succeeded */
                 let reference_counted = Arc::clone(&mta_queue_client);
-                thread::spawn(move || handle_client(stream, reference_counted.deref()));
+                thread::spawn(move || handle_client(stream, &reference_counted));
             }
             Err(_err) => {
                 /* connection failed */

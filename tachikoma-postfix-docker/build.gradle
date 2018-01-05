@@ -29,13 +29,12 @@ task postfixDocker(type: Docker) {
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y install supervisor postfix && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi supervisor postfix && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     addFile(file('src/assets/'))
 
     runCommand('chmod +x postfix.sh')
 
-    runCommand('postconf -e myhostname=$MAIL_DOMAIN')
 //    runCommand("postconf -F '*/*/chroot = n'")
     runCommand('postconf -e trace_service_name=tracer_tachikoma')
 

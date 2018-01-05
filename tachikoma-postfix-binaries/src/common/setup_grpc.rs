@@ -19,5 +19,8 @@ pub fn setup_grpc(args: Vec<String>) -> Client {
         "https" => Client::new_tls::<TlsConnector>(host, port.unwrap_or(443), conf),
         _ => panic!("Neither http nor https!")
     }.expect(format!("Could not connect to {}", url).as_ref());
+
+    println!("Started gRPC");
+
     return client;
 }
