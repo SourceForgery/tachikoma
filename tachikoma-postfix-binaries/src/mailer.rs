@@ -55,7 +55,7 @@ fn send_email(email_message: &EmailMessage, mta_queue_client: &MTAEmailQueueClie
     let from = EmailAddress::new(email_message.get_from().to_string());
     let body = email_message.get_body().to_string();
 
-    // Open a local connection on port 25
+    // Open a local connection on port SMTP_OUTGOING_PORT
     let mut mailer = SmtpTransportBuilder::new(("localhost", SMTP_OUTGOING_PORT), ClientSecurity::None).unwrap()
         .connection_reuse(ConnectionReuseParameters::NoReuse)
         .build();
