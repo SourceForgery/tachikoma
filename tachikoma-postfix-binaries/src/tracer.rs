@@ -14,7 +14,7 @@ use generated_grpc::delivery_notifications_grpc::MTADeliveryNotifications;
 
 use common::setup_grpc::setup_grpc;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::env;
 use std::fs::{remove_file};
 use std::io::BufRead;
@@ -31,14 +31,14 @@ fn handle_client(stream: UnixStream, mta_notifier: &MTADeliveryNotificationsClie
     let buf_reader = BufReader::new(stream);
     let mut splt = buf_reader.split(0);
 
-    let mut message = HashMap::new();
+    let mut message = BTreeMap::new();
 
     let mut key: String = String::new();
     while let Some(Ok(vec)) = splt.next() {
         if vec.is_empty() {
             if !message.is_empty() {
                 handle_trace_message(message, mta_notifier);
-                message = HashMap::new();
+                message = BTreeMap::new();
             }
         } else {
             let str = match String::from_utf8(vec) {
@@ -55,14 +55,14 @@ fn handle_client(stream: UnixStream, mta_notifier: &MTADeliveryNotificationsClie
     }
 }
 
-fn handle_trace_message(message: HashMap<String, String>, mta_notifier: &MTADeliveryNotificationsClient) {
-    println!("{:?}", message);
+fn handle_trace_message(mut message: BTreeMap<String, String>, mta_notifier: &MTADeliveryNotificationsClient) {
+    println!("tracer: {:?}", message);
     // Decipher what kind of message it is, and send it to mta_notifier
-    // {"queue_id": "458182054", "original_recipient": "foo@example.net", "notify_flags": "0", "dsn_orig_rcpt": "rfc822;foo@example.net", "flags": "1024", "nrequest": "0", "offset": "258", "recipient": "foo@example.net", "status": "4.4.1"}
+    // {"dsn_orig_rcpt": "rfc822;foo@example.net", "flags": "1024", "notify_flags": "0", "nrequest": "0","offset": "258", "original_recipient": "foo@example.net", "queue_id": "458182054", "recipient": "foo@example.net", "status": "4.4.1"}
     // {"diag_type": "diag_text"}
     // {"mta_type": "mta_mname"}
-    // {"reason": "connect to example.net[93.184.216.34]:25: Connection timed out", "action": "delayed"}
-    // {"original_recipient": "foo@toface.com", "offset": "256", "status": "2.0.0", "flags": "1024", "action": "relayed", "diag_text": "250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "dsn_orig_rcpt": "rfc822;foo@toface.com", "mta_mname": "aspmx.l.google.com", "recipient": "foo@toface.com", "mta_type": "dns", "queue_id": "2061D205A", "reason": "delivery via aspmx.l.google.com[173.194.222.27]:25: 250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "nrequest": "0", "notify_flags": "0", "diag_type": "smtp"}
+    // {"action": "delayed", "reason": "connect to example.net[93.184.216.34]:25: Connection timed out"}
+    // {"action": "relayed", "diag_text": "250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "diag_type": "smtp", "dsn_orig_rcpt": "rfc822;foo@toface.com", "flags": "1024", "mta_mname": "aspmx.l.google.com", "mta_type": "dns", "notify_flags": "0", "nrequest": "0", "offset": "256", "original_recipient": "foo@toface.com", "queue_id": "2061D205A", "reason": "delivery via aspmx.l.google.com[173.194.222.27]:25: 250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "recipient": "foo@toface.com", "status": "2.0.0"}
 
     if let Some(status) = message.remove("status") {
         if let Some(queue_id) = message.remove("queue_id") {
