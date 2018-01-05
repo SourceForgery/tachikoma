@@ -4,24 +4,24 @@ plugins {
 }
 
 configurations {
-    api
+    protobuf
 }
 
 sourceSets {
     main {
         resources {
-            srcDirs= ["$buildDir/jarContents"]
+            srcDirs = ["$buildDir/jarContents"]
         }
     }
 }
 
 dependencies {
-    api project(":tachikoma-backend-api-proto")
-    api "com.google.protobuf:protobuf-java:$protoc_version"
+    protobuf project(":tachikoma-backend-api-proto")
+    protobuf "com.google.protobuf:protobuf-java:$protoc_version"
 }
 
-task apiCopy(type: Copy) {
-    configurations.api.asFileTree.each {
+task protobufCopy(type: Copy) {
+    configurations.protobuf.each {
         from(zipTree(it)) {
             include '**/*.proto'
         }
@@ -39,6 +39,7 @@ task copyBinaries(type: Copy) {
     exclude '*.d'
     into file("$buildDir/jarContents")
 }
-rustBuildTop.dependsOn apiCopy
+
+rustBuildTop.dependsOn protobufCopy
 copyBinaries.dependsOn rustBuildTop
 assemble.dependsOn copyBinaries
