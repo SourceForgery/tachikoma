@@ -8,7 +8,7 @@ extern crate url;
 mod generated_grpc;
 mod common;
 
-use generated_grpc::delivery_notifications::DeliveredNotification;
+use generated_grpc::delivery_notifications::DeliveryNotification;
 use generated_grpc::delivery_notifications_grpc::MTADeliveryNotificationsClient;
 use generated_grpc::delivery_notifications_grpc::MTADeliveryNotifications;
 
@@ -65,10 +65,20 @@ fn handle_trace_message(message: HashMap<String, String>, mta_notifier: &MTADeli
     // {"reason": "connect to example.net[93.184.216.34]:25: Connection timed out", "action": "delayed"}
     // {"original_recipient": "foo@toface.com", "offset": "256", "status": "2.0.0", "flags": "1024", "action": "relayed", "diag_text": "250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "dsn_orig_rcpt": "rfc822;foo@toface.com", "mta_mname": "aspmx.l.google.com", "recipient": "foo@toface.com", "mta_type": "dns", "queue_id": "2061D205A", "reason": "delivery via aspmx.l.google.com[173.194.222.27]:25: 250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "nrequest": "0", "notify_flags": "0", "diag_type": "smtp"}
 
-    if message.contains_key("status") {
-        let mut notification = DeliveredNotification::new();
-        notification.set_messageId(String::from("foobar"));
-        mta_notifier.delivered(grpc::RequestOptions::new(), notification);
+    if let Some(status) = message.remove("status") {
+        if let Some(queue_id) = message.remove("queue_id") {
+            if let Some(original_recipient) = message.remove("original_recipient") {
+                let mut notification = DeliveryNotification::new();
+                notification.set_queueId(queue_id);
+                notification.set_status(status);
+                notification.set_originalRecipient(original_recipient);
+
+                notification.set_diagnoseText(message.remove("diag_text").unwrap_or_else(|| String::new()));
+                notification.set_reason(message.remove("reason").unwrap_or_else(|| String::new()));
+
+                mta_notifier.set_delivery_status(grpc::RequestOptions::new(), notification);
+            }
+        }
     }
 }
 

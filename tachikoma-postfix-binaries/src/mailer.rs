@@ -77,7 +77,7 @@ fn send_email(email_message: &EmailMessage, mta_queue_client: &MTAEmailQueueClie
 
         if let Ok(mailer_response) = mailer_result {
             let _result_lines_with_message_id = mailer_response.message;
-            notification.set_messageId("Here should be something".to_string());
+            notification.set_queueId("Here should be something".to_string());
             notification.set_success(true);
             println!("Email sent");
         } else {

@@ -9,28 +9,21 @@ import "google/protobuf/empty.proto";
 
 
 service MTADeliveryNotifications {
-    rpc softBounce (SoftBounceNotification) returns (google.protobuf.Empty);
-    rpc hardBounce (HardBounceNotification) returns (google.protobuf.Empty);
-    rpc delivered (DeliveredNotification) returns (google.protobuf.Empty);
-    rpc setDeliveryStatus (stream DeliveryNotification) returns (google.protobuf.Empty);
+    // Used to tell webserver the latest status of a queued message
+    rpc setDeliveryStatus (DeliveryNotification) returns (google.protobuf.Empty);
 }
 
-message SoftBounceNotification {
-    string messageId = 1;
-}
-
-message HardBounceNotification {
-    string messageId = 1;
-}
-
-message DeliveredNotification {
-    string messageId = 1;
-}
-
+// Use to signal that there's news about a message status
 message DeliveryNotification {
-    string messageId = 101;
-    string queueId = 102;
-    string originalRecipient = 103;
-    string flags = 104;
+    // The queue_id (same as in MTAQueuedNotification.queueId)
+    string queueId = 101;
+    // The origin recipient email address
+    string originalRecipient = 102;
+    // Postfix result code e.g. "2.0.0" for ok (remove the dots to get a code that is
+    // SIMILAR to smtp reply codes)
     string status = 105;
+
+    // Optional and freetext
+    string diagnoseText = 201;
+    string reason = 202;
 }
