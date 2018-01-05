@@ -59,10 +59,17 @@ fn handle_client(stream: UnixStream, mta_notifier: &MTADeliveryNotificationsClie
 fn handle_trace_message(message: HashMap<String, String>, mta_notifier: &MTADeliveryNotificationsClient) {
     println!("{:?}", message);
     // Decipher what kind of message it is, and send it to mta_notifier
+    // {"queue_id": "458182054", "original_recipient": "foo@example.net", "notify_flags": "0", "dsn_orig_rcpt": "rfc822;foo@example.net", "flags": "1024", "nrequest": "0", "offset": "258", "recipient": "foo@example.net", "status": "4.4.1"}
+    // {"diag_type": "diag_text"}
+    // {"mta_type": "mta_mname"}
+    // {"reason": "connect to example.net[93.184.216.34]:25: Connection timed out", "action": "delayed"}
+    // {"original_recipient": "foo@toface.com", "offset": "256", "status": "2.0.0", "flags": "1024", "action": "relayed", "diag_text": "250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "dsn_orig_rcpt": "rfc822;foo@toface.com", "mta_mname": "aspmx.l.google.com", "recipient": "foo@toface.com", "mta_type": "dns", "queue_id": "2061D205A", "reason": "delivery via aspmx.l.google.com[173.194.222.27]:25: 250 2.0.0 OK 1515166737 d71si1945550lfg.282 - gsmtp", "nrequest": "0", "notify_flags": "0", "diag_type": "smtp"}
 
-    let mut notification = DeliveredNotification::new();
-    notification.set_messageId(String::from("foobar"));
-    mta_notifier.delivered(grpc::RequestOptions::new(), notification);
+    if message.contains_key("status") {
+        let mut notification = DeliveredNotification::new();
+        notification.set_messageId(String::from("foobar"));
+        mta_notifier.delivered(grpc::RequestOptions::new(), notification);
+    }
 }
 
 fn main() {

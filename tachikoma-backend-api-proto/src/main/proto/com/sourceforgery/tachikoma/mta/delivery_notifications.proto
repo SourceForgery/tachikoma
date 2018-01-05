@@ -28,5 +28,9 @@ message DeliveredNotification {
 }
 
 message DeliveryNotification {
-    string messageId = 1;
+    string messageId = 101;
+    string queueId = 102;
+    string originalRecipient = 103;
+    string flags = 104;
+    string status = 105;
 }
