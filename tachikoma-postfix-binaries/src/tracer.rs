@@ -19,7 +19,6 @@ use std::env;
 use std::fs::{remove_file};
 use std::io::BufRead;
 use std::io::BufReader;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
 use unix_socket::UnixListener;
@@ -102,7 +101,7 @@ fn main() {
             Ok(stream) => {
                 /* connection succeeded */
                 let reference_counted = Arc::clone(&mta_notifier);
-                thread::spawn(move || handle_client(stream, reference_counted.deref()));
+                thread::spawn(move || handle_client(stream, &reference_counted));
             }
             Err(_err) => {
                 /* connection failed */

@@ -28,7 +28,6 @@ use lettre::smtp::SmtpTransportBuilder;
 use std::env;
 use std::fs::{remove_file};
 use std::io::BufReader;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
 use std::vec::Vec;
@@ -95,7 +94,7 @@ fn listen_for_emails(mta_queue_client: Arc<MTAEmailQueueClient>) {
     let reference_counted = Arc::clone(&mta_queue_client);
     email_stream.map_items(
         move |email_message| {
-            send_email(&email_message, reference_counted.deref())
+            send_email(&email_message, &reference_counted)
         }
     );
 }
@@ -123,7 +122,7 @@ fn main() {
             Ok(stream) => {
                 /* connection succeeded */
                 let reference_counted = Arc::clone(&mta_queue_client);
-                thread::spawn(move || handle_client(stream, reference_counted.deref()));
+                thread::spawn(move || handle_client(stream, &reference_counted));
             }
             Err(_err) => {
                 /* connection failed */
