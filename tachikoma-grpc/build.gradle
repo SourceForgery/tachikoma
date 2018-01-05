@@ -6,34 +6,3 @@ dependencies {
     compile project(':tachikoma-internal-api')
     compile project(':tachikoma-database')
 }
-
-// setup the plugin
-buildscript {
-    dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
-    }
-}
-
-apply plugin: 'org.junit.platform.gradle.plugin'
-
-junitPlatform {
-    filters {
-        engines {
-            include 'spek'
-        }
-    }
-}
-
-repositories {
-    maven { url "http://dl.bintray.com/jetbrains/spek" }
-}
-
-// setup dependencies
-dependencies {
-    testCompile 'junit:junit:4.11'
-    testCompile 'org.jetbrains.spek:spek-api:1.1.5'
-    testRuntime 'org.jetbrains.spek:spek-junit-platform-engine:1.1.5'
-    testCompile "org.jetbrains.kotlin:kotlin-test"
-    testCompile "org.jetbrains.kotlin:kotlin-test-junit"
-    testCompile 'org.junit.platform:junit-platform-runner:1.0.2'
-}

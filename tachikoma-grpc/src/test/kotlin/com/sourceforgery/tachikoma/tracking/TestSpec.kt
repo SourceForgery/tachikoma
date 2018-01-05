@@ -8,8 +8,8 @@ import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 
 @RunWith(JUnitPlatform::class)
-object TestSpec: Spek({
-    describe("a calculator") {
+object TestSpec : Spek({
+    describe("Dummy test") {
         it("should add") {
             val sum = 2 + 4
             assertEquals(6, sum)
