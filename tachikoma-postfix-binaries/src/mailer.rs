@@ -53,7 +53,7 @@ fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
 
 #[allow(dead_code)]
 fn send_email(email_message: &EmailMessage, mta_queue_client: &MTAEmailQueueClient) {
-    let from = EmailAddress::new(email_message.take_from());
+    let from = EmailAddress::new(email_message.get_from().to_string());
     let body = email_message.get_body().to_string();
 
     // Open a local connection on port 25
