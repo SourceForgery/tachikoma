@@ -3,9 +3,11 @@ buildscript {
 
     repositories {
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'se.transmode.gradle:gradle-docker:1.2'
     }
 }
 
@@ -13,6 +15,8 @@ group 'com.sourceforgery.tachikoma'
 version '0.0.1-SNAPSHOT'
 
 apply plugin: 'kotlin'
+apply plugin: 'application'
+apply plugin: 'docker'
 
 repositories {
     mavenCentral()
@@ -27,4 +31,18 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+task postfixDocker(type: Docker) {
+
+    dockerfile = file('Dockerfile')
+
+    applicationName = "tachikoma-postfix"
+
+    addFile(file('assets/install.sh'), '/opt/install.sh')
+
+    runCommand('chmod +x /opt/install.sh')
+    runCommand('/opt/install.sh')
+
+    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 }
