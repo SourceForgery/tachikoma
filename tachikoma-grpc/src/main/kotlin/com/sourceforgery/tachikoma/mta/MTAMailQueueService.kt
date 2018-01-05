@@ -8,8 +8,12 @@ internal class MTAEmailQueueService
 @Inject
 private constructor(
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
-    override fun getEmails(responseObserver: StreamObserver<EmailMessage>?): StreamObserver<MTAQueuedNotification> {
-        return super.getEmails(responseObserver)
+    override fun emailNotified(request: MTAQueuedNotification?, responseObserver: StreamObserver<Empty>?) {
+        super.emailNotified(request, responseObserver)
+    }
+
+    override fun getEmails(request: Empty?, responseObserver: StreamObserver<EmailMessage>?) {
+        super.getEmails(request, responseObserver)
     }
 
     override fun incomingEmail(request: IncomingEmailMessage?, responseObserver: StreamObserver<Empty>?) {

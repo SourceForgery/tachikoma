@@ -10,6 +10,7 @@ extern crate url;
 mod generated_grpc;
 mod common;
 
+use generated_grpc::empty::Empty;
 use generated_grpc::message_queue::EmailMessage;
 use generated_grpc::message_queue::IncomingEmailMessage;
 use generated_grpc::message_queue::MTAQueuedNotification;
@@ -19,9 +20,6 @@ use generated_grpc::message_queue_grpc::MTAEmailQueue;
 use common::setup_grpc::setup_grpc;
 
 use futures::stream::Stream;
-use futures::stream::IterOk;
-use std::collections::VecDeque;
-use grpc::StreamingRequest;
 use lettre::EmailAddress;
 use lettre::EmailTransport;
 use lettre::SimpleSendableEmail;
@@ -54,15 +52,14 @@ fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
 
 
 #[allow(dead_code)]
-fn send_email(mut email_message: EmailMessage, mut queued_notifier: VecDeque<MTAQueuedNotification>) {
+fn send_email(email_message: &EmailMessage, mta_queue_client: &MTAEmailQueueClient) {
     let from = EmailAddress::new(email_message.take_from());
-    let body = email_message.take_body();
+    let body = email_message.get_body().to_string();
 
     // Open a local connection on port 25
     let mut mailer = SmtpTransportBuilder::new(("localhost", SMTP_OUTGOING_PORT), ClientSecurity::None).unwrap()
         .connection_reuse(ConnectionReuseParameters::NoReuse)
         .build();
-
 
     // Send the emails
     for receiver in email_message.get_emailAddresses() {
@@ -70,7 +67,7 @@ fn send_email(mut email_message: EmailMessage, mut queued_notifier: VecDeque<MTA
             from.clone(),
             vec![EmailAddress::new(receiver.clone())],
             "".to_string(),
-            body.clone(),
+            body,
         );
 
         let mailer_result = mailer.send(&email);
@@ -87,19 +84,17 @@ fn send_email(mut email_message: EmailMessage, mut queued_notifier: VecDeque<MTA
             notification.set_success(false);
             println!("Could not send email: {:?}", mailer_result);
         }
-        queued_notifier.push_back(notification);
+        mta_queue_client.email_notified(grpc::RequestOptions::new(), notification);
     }
 
     println!("Should've sent message {:?}", email_message);
 }
 
 fn listen_for_emails(mta_queue_client: &MTAEmailQueueClient) {
-    // TODO Doesn't work at all since I can't set up a StreamingRequest
-    let queue = VecDeque::new();
-    let stream: grpc::GrpcStream<MTAQueuedNotification> = grpc::GrpcStream::new(futures::stream::iter_ok::<_, ()>(queue.iter()));
-    let mta_delivery_notifications_stream = StreamingRequest::new(stream);
-    let email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), mta_delivery_notifications_stream);
-    email_stream.map_items(move |email_message| send_email(email_message, queue));
+    let mut email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), Empty::new());
+    email_stream.map_items(
+        |email_message| send_email(&email_message, &mta_queue_client)
+    );
 }
 
 fn main() {
