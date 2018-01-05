@@ -116,7 +116,7 @@ fn main() {
         .expect(&format!("Couldn't open socket {}", LMTP_SOCKET_PATH));
 
     for stream in listener.incoming() {
-        println!("Mailer connection received");
+        println!("Mailer LMTP connection received");
 
         match stream {
             Ok(stream) => {
