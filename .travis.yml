@@ -1,5 +1,4 @@
 sudo: required
-bundler_args: --retry 0
 language: java
 jdk:
   - oraclejdk8

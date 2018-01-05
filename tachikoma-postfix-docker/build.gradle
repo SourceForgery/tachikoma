@@ -42,7 +42,7 @@ task postfixDocker(type: Docker) {
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
     addFile {
-        configurations.binaries.asFileTree.each {
+        configurations.binaries.each {
             from(zipTree(it)) {
                 exclude 'META-INF/**'
                 rename '(.*)', "$workDir/\$1"
