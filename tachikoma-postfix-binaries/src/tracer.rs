@@ -16,6 +16,7 @@ use common::setup_grpc::setup_grpc;
 
 use std::collections::HashMap;
 use std::env;
+use std::fs::{remove_file};
 use std::io::BufRead;
 use std::io::BufReader;
 use std::ops::Deref;
@@ -65,6 +66,12 @@ fn handle_trace_message(message: HashMap<String, String>, mta_notifier: &MTADeli
 }
 
 fn main() {
+    println!("Started tracer service");
+
+    if let Err(_) = remove_file(SOCKET_PATH) {
+        println!("Could not delete file {}", SOCKET_PATH);
+    }
+
     let args: Vec<String> = env::args().collect();
     let mta_notifier = Arc::new(MTADeliveryNotificationsClient::with_client(setup_grpc(args)));
 
@@ -72,6 +79,8 @@ fn main() {
         .expect(&format!("Couldn't open socket {}", SOCKET_PATH));
 
     for stream in listener.incoming() {
+        println!("Tracer connection received");
+
         match stream {
             Ok(stream) => {
                 /* connection succeeded */

@@ -26,6 +26,7 @@ use lettre::smtp::ConnectionReuseParameters;
 use lettre::smtp::ClientSecurity;
 use lettre::smtp::SmtpTransportBuilder;
 use std::env;
+use std::fs::{remove_file};
 use std::io::BufReader;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -100,6 +101,12 @@ fn listen_for_emails(mta_queue_client: Arc<MTAEmailQueueClient>) {
 }
 
 fn main() {
+    println!("Started mailer service");
+
+    if let Err(_) = remove_file(LMTP_SOCKET_PATH) {
+        println!("Could not delete file {}", LMTP_SOCKET_PATH);
+    }
+
     let args: Vec<String> = env::args().collect();
     let mta_queue_client = Arc::new(MTAEmailQueueClient::with_client(setup_grpc(args)));
 
@@ -110,6 +117,8 @@ fn main() {
         .expect(&format!("Couldn't open socket {}", LMTP_SOCKET_PATH));
 
     for stream in listener.incoming() {
+        println!("Mailer connection received");
+
         match stream {
             Ok(stream) => {
                 /* connection succeeded */
