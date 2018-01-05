@@ -1,0 +1,56 @@
+buildscript {
+    dependencies {
+        classpath 'se.transmode.gradle:gradle-docker:1.2'
+    }
+}
+
+configurations {
+    binaries
+}
+
+dependencies {
+    binaries project(":tachikoma-postfix-binaries")
+}
+
+
+apply plugin: 'base'
+apply plugin: 'docker'
+
+def workDir = 'opt'
+
+task postfixDocker(type: Docker) {
+    applicationName = 'tachikoma-postfix'
+
+    baseImage 'ubuntu:xenial'
+
+    maintainer 'tachikoma@sourceforgery.com'
+
+    workingDir("/$workDir")
+
+    setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
+
+    runCommand('apt-get update && apt-get -y install supervisor postfix && apt-get clean && rm -rf /var/lib/apt/lists/*')
+
+    addFile(file('src/assets/'))
+
+    runCommand('chmod +x postfix.sh')
+
+    runCommand('postconf -e myhostname=$MAIL_DOMAIN')
+//    runCommand("postconf -F '*/*/chroot = n'")
+    runCommand('postconf -e trace_service_name=tracer_tachikoma')
+
+    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
+
+    addFile {
+        configurations.binaries.asFileTree.each {
+            from(zipTree(it)) {
+                exclude 'META-INF/**'
+                rename '(.*)', "$workDir/\$1"
+            }
+        }
+    }
+
+    runCommand('chmod +x tachikoma*')
+}
+
+assemble.dependsOn postfixDocker
