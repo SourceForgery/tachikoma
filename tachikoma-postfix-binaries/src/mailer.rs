@@ -19,7 +19,6 @@ use generated_grpc::message_queue_grpc::MTAEmailQueue;
 
 use common::setup_grpc::setup_grpc;
 
-use futures::stream::Stream;
 use lettre::EmailAddress;
 use lettre::EmailTransport;
 use lettre::SimpleSendableEmail;
@@ -67,7 +66,7 @@ fn send_email(email_message: &EmailMessage, mta_queue_client: &MTAEmailQueueClie
             from.clone(),
             vec![EmailAddress::new(receiver.clone())],
             "".to_string(),
-            body,
+            body.clone(),
         );
 
         let mailer_result = mailer.send(&email);
@@ -90,10 +89,13 @@ fn send_email(email_message: &EmailMessage, mta_queue_client: &MTAEmailQueueClie
     println!("Should've sent message {:?}", email_message);
 }
 
-fn listen_for_emails(mta_queue_client: &MTAEmailQueueClient) {
-    let mut email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), Empty::new());
+fn listen_for_emails(mta_queue_client: Arc<MTAEmailQueueClient>) {
+    let email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), Empty::new());
+    let reference_counted = Arc::clone(&mta_queue_client);
     email_stream.map_items(
-        |email_message| send_email(&email_message, &mta_queue_client)
+        move |email_message| {
+            send_email(&email_message, reference_counted.deref())
+        }
     );
 }
 
@@ -102,7 +104,7 @@ fn main() {
     let mta_queue_client = Arc::new(MTAEmailQueueClient::with_client(setup_grpc(args)));
 
     let reference_counted = Arc::clone(&mta_queue_client);
-    thread::spawn(move || listen_for_emails(reference_counted.deref()));
+    thread::spawn(move || listen_for_emails(reference_counted));
 
     let listener = UnixListener::bind(LMTP_SOCKET_PATH)
         .expect(&format!("Couldn't open socket {}", LMTP_SOCKET_PATH));
