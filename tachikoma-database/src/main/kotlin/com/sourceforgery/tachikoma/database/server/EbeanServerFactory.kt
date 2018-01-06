@@ -24,7 +24,8 @@ import javax.sql.DataSource
 
 internal class EbeanServerFactory @Inject constructor(
         private val databaseConfig: DatabaseConfig,
-        private val counter: InvokeCounter
+        private val counter: InvokeCounter,
+        private val dbObjectMapper: DBObjectMapper
 ) : Factory<EbeanServer> {
 
     private inner class LoggingServerConfig : ServerConfig() {
@@ -72,7 +73,7 @@ internal class EbeanServerFactory @Inject constructor(
         serverConfig.isDefaultServer = false
         serverConfig.isRegister = false
         serverConfig.encryptKeyManager = EncryptKeyManager { _, _ -> EncryptKey { databaseConfig.databaseEncryptionKey } }
-        serverConfig.objectMapper = createObjectMapper()
+        serverConfig.objectMapper = dbObjectMapper
         when (databaseConfig.sqlUrl.scheme) {
             "h2" -> {
                 dataSourceConfig.driver = "org.h2.Driver"
@@ -91,11 +92,6 @@ internal class EbeanServerFactory @Inject constructor(
         }
         return io.ebean.EbeanServerFactory.create(serverConfig)
     }
-
-    private fun createObjectMapper() =
-            ObjectMapper()
-                    .registerModule(JavaTimeModule())
-                    .registerKotlinModule()
 
     override fun dispose(instance: EbeanServer) {
         instance.shutdown(true, false)

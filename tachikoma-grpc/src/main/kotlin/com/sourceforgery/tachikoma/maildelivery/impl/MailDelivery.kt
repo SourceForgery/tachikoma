@@ -2,12 +2,15 @@
 
 package com.sourceforgery.tachikoma.maildelivery.impl
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.SentMailMessageBodyDBO
+import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.EmailMessageId
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
@@ -18,8 +21,14 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import java.io.StringReader
 import java.io.StringWriter
+import javax.inject.Inject
+import javax.inject.Named
 
-internal class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
+internal class DeliveryService
+@Inject
+private constructor(
+        private val dbObjectMapper: DBObjectMapper
+) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
         when (request.bodyCase!!) {
@@ -32,7 +41,7 @@ internal class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImpl
 
     private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
         val transaction = EmailSendTransactionDBO(
-                jsonRequest = PRINTER.print(request)!!
+                jsonRequest = dbObjectMapper.convertValue(PRINTER.print(request)!!, ObjectNode::class.java)
         )
 
         request.toString()
@@ -61,7 +70,7 @@ internal class DeliveryService : MailDeliveryServiceGrpc.MailDeliveryServiceImpl
 
     private fun sendTemplatedEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
         val transaction = EmailSendTransactionDBO(
-                jsonRequest = PRINTER.print(request)!!
+                jsonRequest = dbObjectMapper.convertValue(PRINTER.print(request)!!, ObjectNode::class.java)
         )
 
         val template = request.template!!

@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.database.dao.UserDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
 import com.sourceforgery.tachikoma.database.server.LogEverything
@@ -22,5 +23,7 @@ class DatabaseBinder : AbstractBinder() {
         bindAsContract(LogEverything::class.java)
                 .to(InvokeCounter::class.java)
                 .`in`(RequestScoped::class.java)
+        bindAsContract(DBObjectMapper::class.java)
+                .`in`(Singleton::class.java)
     }
 }
