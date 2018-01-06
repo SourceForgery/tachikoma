@@ -105,9 +105,11 @@ message OutgoingEmail {
         TemplateBody template = 202;
     }
 
+    // Optional
     // Extra email headers sent as is
     map<string, string> headers = 301;
 
+    // Optional
     // Structure for setting up tracking
     TrackingData trackingData = 302;
 
