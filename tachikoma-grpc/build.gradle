@@ -2,6 +2,10 @@ apply plugin: 'kotlin'
 
 dependencies {
     compile 'com.github.spullara.mustache.java:compiler:0.9.5'
+    compile 'javax.mail:mail:1.4.7'
+    compile 'net.htmlparser.jericho:jericho-html:3.4'
+    compile "com.linecorp.armeria:armeria:$armeria_version"
+    compile "com.linecorp.armeria:armeria-grpc:$armeria_version"
 
     compile project(':tachikoma-internal-api')
     compile project(':tachikoma-database')

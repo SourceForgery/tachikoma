@@ -1,12 +1,10 @@
-@file:Suppress("UNUSED_VARIABLE")
-
 package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
+import com.linecorp.armeria.common.RequestContext
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
@@ -14,21 +12,32 @@ import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.SentMailMessageBodyDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
+import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
+import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobFactory
 import com.sourceforgery.tachikoma.mq.MQSender
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
+import net.htmlparser.jericho.Source
+import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
+import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.Properties
 import javax.inject.Inject
+import javax.mail.Session
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeBodyPart
+import javax.mail.internet.MimeMessage
+import javax.mail.internet.MimeMultipart
 
 internal class MailDeliveryService
 @Inject
@@ -54,7 +63,7 @@ private constructor(
 
         val static = request.static!!
         val mailMessageBody = SentMailMessageBodyDBO(
-                body = wrapAndPackBody(request, static.htmlBody, static.plaintextBody)
+                body = wrapAndPackBody(request, static.htmlBody.emptyToNull(), static.plaintextBody.emptyToNull(), static.subject)
         )
         val requestedSendTime =
                 if (request.hasSendAt()) {
@@ -63,19 +72,19 @@ private constructor(
                     Instant.EPOCH
                 }
 
-        val emailSent = request.recipientsList.map {
+        for (recipient in request.recipientsList) {
             // TODO Check if recipient is blocked
 
             val emailDBO = EmailDBO(
-                    recipient = it.toNamedEmail(),
+                    recipient = recipient.toNamedEmail(),
                     transaction = transaction,
                     sentEmailMessageBodyDBO = mailMessageBody
             )
+            emailDAO.save(emailDBO)
             mqSender.queueJob(jobFactory.createSendEmailJob(
                     requestedSendTime = requestedSendTime,
                     emailId = emailDBO.id
             ))
-            emailDAO.save(emailDBO)
             responseObserver.onNext(
                     EmailQueueStatus.newBuilder()
                             .setEmailId(
@@ -106,35 +115,36 @@ private constructor(
                     Instant.EPOCH
                 }
 
-        val globalVars: Struct =
+        val globalVars =
                 if (template.hasGlobalVars()) {
                     template.globalVars
                 } else {
                     Struct.getDefaultInstance()
                 }
-        val emailSent = request.recipientsList.map {
+        for (recipient in request.recipientsList) {
             // TODO Check if recipient is blocked
-            val templateVars = it.templateVars ?: Struct.getDefaultInstance()
-            val htmlBody = mergeTemplate(template.htmlTemplate, globalVars, templateVars)
-            val plaintextBody = mergeTemplate(template.plaintextTemplate, globalVars, templateVars)
+            val recipientVars = recipient.templateVars
+            val htmlBody = mergeTemplate(template.htmlTemplate, globalVars, recipientVars)
+            val plaintextBody = mergeTemplate(template.plaintextTemplate, globalVars, recipientVars)
             val mailMessageBody = SentMailMessageBodyDBO(
                     wrapAndPackBody(
                             request = request,
-                            htmlBody = htmlBody,
-                            plaintextBody = plaintextBody
+                            htmlBody = htmlBody.emptyToNull(),
+                            plaintextBody = plaintextBody.emptyToNull(),
+                            subject = mergeTemplate(template.subject, globalVars, recipientVars)
                     )
             )
             val emailDBO = EmailDBO(
-                    recipient = it.toNamedEmail(),
+                    recipient = recipient.toNamedEmail(),
                     transaction = transaction,
                     sentEmailMessageBodyDBO = mailMessageBody
             )
 
-            emailDAO.save(emailDBO)
             mqSender.queueJob(jobFactory.createSendEmailJob(
                     requestedSendTime = requestedSendTime,
                     emailId = emailDBO.id
             ))
+            emailDAO.save(emailDBO)
 
             responseObserver.onNext(
                     EmailQueueStatus.newBuilder()
@@ -162,11 +172,41 @@ private constructor(
                 it.toString()
             }
 
-    private fun wrapAndPackBody(request: OutgoingEmail, htmlBody: String?, plaintextBody: String?): String {
-        TODO("not implemented. Should merge html, plaintext and basically create the email body WITH headers")
+    private fun wrapAndPackBody(request: OutgoingEmail, htmlBody: String?, plaintextBody: String?, subject: String): String {
+        val plainTextString = plaintextBody
+                ?: htmlBody?.let { stripHtml(it) }
+                ?: throw IllegalArgumentException("Needs at least one of plaintext or html")
+
+        // TODO add headers here
+        val session = Session.getDefaultInstance(Properties())
+        val message = MimeMessage(session)
+        message.setFrom(InternetAddress(request.from.email, request.from.name))
+        message.subject = subject
+
+        val multipart = MimeMultipart("alternative");
+
+        val plaintextPart = MimeBodyPart()
+        plaintextPart.setContent(plainTextString, "text/plain")
+        multipart.addBodyPart(plaintextPart)
+
+        if (htmlBody != null) {
+            val htmlPart = MimeBodyPart()
+            htmlPart.setContent(htmlBody, "text/html")
+            multipart.addBodyPart(htmlPart)
+        }
+
+        message.setContent(multipart)
+
+        val result = ByteArrayOutputStream()
+        message.writeTo(result)
+        return result.toString(StandardCharsets.UTF_8.name())
     }
+
+    private fun stripHtml(html: String) =
+            Source(html).textExtractor.toString()
 
     companion object {
         val PRINTER = JsonFormat.printer()!!
+        val LOGGER = logger()
     }
 }

@@ -51,3 +51,11 @@ fun EmailRecipient.toNamedEmail() =
                 address = namedEmail.email!!,
                 name = namedEmail.name!!
         )
+
+
+fun String.emptyToNull() =
+        if (this.isEmpty()) {
+            null
+        } else {
+            this
+        }
