@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.database.dao.UserDAO
-import com.sourceforgery.tachikoma.database.objects.EmailDAO
+import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
 import com.sourceforgery.tachikoma.database.server.LogEverything

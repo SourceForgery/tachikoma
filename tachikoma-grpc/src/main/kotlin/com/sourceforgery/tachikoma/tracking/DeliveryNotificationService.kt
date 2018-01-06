@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.tracking
 
 import com.google.protobuf.Empty
-import com.sourceforgery.tachikoma.database.objects.EmailDAO
+import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.ClickedEvent
