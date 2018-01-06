@@ -81,11 +81,9 @@ subprojects {
         }
 
         dependencies {
-            testCompile 'junit:junit:4.11'
-            testCompile "org.jetbrains.spek:spek-api:$spec_version"
-            testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spec_version"
+            testCompile "org.jetbrains.spek:spek-api:$spek_version"
+            testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
             testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-            testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
             testCompile 'org.junit.platform:junit-platform-runner:1.0.2'
             compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
         }
