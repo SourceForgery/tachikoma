@@ -44,6 +44,7 @@ private constructor(
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request)
         )
+        val transactionId = transaction.id.toGrpcInternal()
 
         val static = request.static!!
         val mailMessageBody = SentMailMessageBodyDBO(
@@ -51,6 +52,7 @@ private constructor(
         )
 
         val emailSent = request.recipientsList.map {
+
             val emailDBO = EmailDBO(
                     recipient = it.toNamedEmail(),
                     transaction = transaction,
@@ -63,6 +65,8 @@ private constructor(
                                     emailDBO.id.toGrpcInternal()
                             )
                             .setQueued(Queued.getDefaultInstance())
+                            .setTransactionId(transactionId)
+                            .setRecipient(emailDBO.recipient.toGrpcInternal())
                             .build()
             )
         }
@@ -78,6 +82,7 @@ private constructor(
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request)
         )
+        val transactionId = transaction.id.toGrpcInternal()
 
         val globalVars: Struct = template.globalVars ?: Struct.getDefaultInstance()
         val emailSent = request.recipientsList.map {
@@ -103,6 +108,9 @@ private constructor(
                             .setEmailId(
                                     emailDBO.id.toGrpcInternal()
                             )
+                            .setQueued(Queued.getDefaultInstance())
+                            .setTransactionId(transactionId)
+                            .setRecipient(emailDBO.recipient.toGrpcInternal())
                             .build()
             )
         }
