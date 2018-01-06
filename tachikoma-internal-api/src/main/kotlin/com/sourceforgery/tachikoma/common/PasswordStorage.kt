@@ -160,7 +160,7 @@ object PasswordStorage {
     @Throws(CannotPerformOperationException::class)
     private fun pbkdf2(password: CharArray, salt: ByteArray, iterations: Int, bytes: Int): ByteArray {
         try {
-            val spec = PBEKeySpec(password, salt, iterations, bytes * 8)
+            val spec = PBEKeySpec(password, salt!!, iterations, bytes * 8)
             val skf = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
             return skf.generateSecret(spec).encoded
         } catch (ex: NoSuchAlgorithmException) {
