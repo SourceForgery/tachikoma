@@ -14,7 +14,7 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.QueueStatus
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import io.grpc.Status
@@ -31,7 +31,7 @@ private constructor(
         private val emailDAO: EmailDAO
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
-    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
+    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         when (request.bodyCase!!) {
             OutgoingEmail.BodyCase.STATIC -> sendStaticEmail(request, responseObserver)
             OutgoingEmail.BodyCase.TEMPLATE -> sendTemplatedEmail(request, responseObserver)
@@ -39,7 +39,7 @@ private constructor(
         }
     }
 
-    private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
+    private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request)
         )
@@ -57,8 +57,8 @@ private constructor(
             )
             emailDAO.save(emailDBO)
             responseObserver.onNext(
-                    QueueStatus.newBuilder()
-                            .setId(
+                    EmailQueueStatus.newBuilder()
+                            .setEmailId(
                                     emailDBO.id.toGrpcInternal()
                             )
                             .build()
@@ -67,7 +67,7 @@ private constructor(
         responseObserver.onCompleted()
     }
 
-    private fun sendTemplatedEmail(request: OutgoingEmail, responseObserver: StreamObserver<QueueStatus>) {
+    private fun sendTemplatedEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         val template = request.template!!
         if (template.htmlTemplate == null && template.plaintextTemplate == null) {
             throw IllegalArgumentException("Needs at least one template (plaintext or html)")
@@ -97,8 +97,8 @@ private constructor(
             emailDAO.save(emailDBO)
 
             responseObserver.onNext(
-                    QueueStatus.newBuilder()
-                            .setId(
+                    EmailQueueStatus.newBuilder()
+                            .setEmailId(
                                     emailDBO.id.toGrpcInternal()
                             )
                             .build()

@@ -11,7 +11,7 @@ import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 service MailDeliveryService {
     // Send emails. This will always succeed unless spam marked.
     // Failures can only be detected via DeliveryNotificationService.notificationStream()
-    rpc sendEmail (OutgoingEmail) returns (stream QueueStatus);
+    rpc sendEmail (OutgoingEmail) returns (stream EmailQueueStatus);
 }
 
 // A recipient
@@ -45,7 +45,7 @@ message TrackingData {
 // When sending with template
 message TemplateBody {
     // Which templating enging to use
-    TemplateEngine engine = 101;
+    TemplateEngine templatingEngine = 101;
 
     // Subject template
     string subject = 102;
@@ -122,27 +122,28 @@ message OutgoingEmail {
 
 // Every email sent will generate one or more of these
 // representing the status of delivering to outgoing email server
-message QueueStatus {
+message EmailQueueStatus {
     // The recipient of this email
     Email recipient = 101;
+
+    // Only exists if DeliveryStatus is NOT rejected
+    EmailMessageId emailId = 103;
+
+    // The transaction the
+    EmailTransactionId transactionId = 104;
 
     // Possible outcomes of the attempt to queue
     oneof deliveryStatus {
         // Rejected outright because recipient email is blocked
-        Rejected rejected = 201;
+        Rejected rejected = 301;
         // Message will be sent to outgoing SMTP server asap.
         // This can happen if either sendAt is set or too many emails have been sent
         // during a short interval.
-        Queued queued = 202;
         // Message will be sent to outgoing SMTP server at a certain time (+/- 1 minute)
-        Scheduled scheduled = 203;
+        Queued queuedXx = 302;
+        Scheduled scheduled = 303;
     }
 
-    // Only exists if DeliveryStatus is NOT rejected
-    EmailMessageId id = 103;
-
-    // The transaction the
-    EmailTransactionId transactionId = 104;
 }
 
 // Message was rejected outright with this reason
