@@ -92,8 +92,10 @@ private constructor(
         val instance = createInstance()
         try {
             setCurrent(instance)
+            LOGGER.trace { "Entering request scope" }
             return task(serviceLocator)
         } finally {
+            LOGGER.trace { "Leaving request scope" }
             instance.release()
             resumeCurrent(oldInstance)
         }
