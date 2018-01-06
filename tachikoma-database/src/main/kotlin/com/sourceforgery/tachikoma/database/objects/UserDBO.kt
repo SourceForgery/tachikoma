@@ -1,14 +1,22 @@
 package com.sourceforgery.tachikoma.database.objects
 
 import com.sourceforgery.tachikoma.identifiers.UserId
+import io.ebean.annotation.Encrypted
 import javax.persistence.Column
+import javax.persistence.Entity
 import javax.persistence.ManyToOne
+import javax.persistence.Table
 
+@Table(name = "e_user")
+@Entity
+// One user with
 class UserDBO(
-        // val password: String
+        @Column
+        var encryptedPassword: String? = null,
 
         @Column(unique = true)
-        var apiToken: String,
+        @Encrypted
+        var apiToken: String? = null,
 
         @Column
         val backend: Boolean = false,
