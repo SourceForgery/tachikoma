@@ -64,8 +64,7 @@ internal class EbeanServerFactory @Inject constructor(
         dataSourceConfig.heartbeatSql = "select 1"
         dataSourceConfig.isAutoCommit = false
         dataSourceConfig.isolationLevel = Connection.TRANSACTION_READ_COMMITTED
-        //serverConfig.addPackage("com.sourceforgery.tachikoma.database.objects")
-        serverConfig.addPackage("com.sourceforgery.tachikoma.database.sql.objects")
+        serverConfig.addPackage("com.sourceforgery.tachikoma.database.objects")
         serverConfig.dataSourceConfig = dataSourceConfig
         serverConfig.isDefaultServer = false
         serverConfig.isRegister = false
