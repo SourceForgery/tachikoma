@@ -31,6 +31,7 @@ private constructor(
     private fun parseApiTokenHeader() =
             httpHeaders[APITOKEN_HEADER]
             ?.let {
+                // TODO Needs to be handled better. This is slow and hits the database too much
                 authenticationDAO.validateApiToken(it)
             }
             ?.let {
