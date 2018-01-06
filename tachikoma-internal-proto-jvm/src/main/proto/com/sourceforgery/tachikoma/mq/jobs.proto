@@ -11,7 +11,7 @@ message JobMessage {
     // When this job was queued
     google.protobuf.Timestamp creationTimestamp = 101;
     // Executed within 1 minute from this. Jobs without this, will be executed asap
-    google.protobuf.Timestamp requestedExecutionTime= 102;
+    google.protobuf.Timestamp requestedExecutionTime = 102;
     oneof jobData {
         SendEmailJob sendEmailJob = 201;
     }
