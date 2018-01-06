@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.webserver
 
 import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.common.HmacUtil.validateHmacSha1
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.dao.UserDAO
 import com.sourceforgery.tachikoma.database.objects.id
@@ -12,10 +13,7 @@ import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.UserId
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
-import java.nio.charset.StandardCharsets
 import java.util.Base64
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
 
 class AuthenticationFactory
@@ -56,8 +54,7 @@ private constructor(
         }
         val payloadSignature = splitToken[0]
         val payload = BASE64_DECODER.decode(splitToken[1])
-        val hmac = hmac(webServerConfig.webtokenSignKey, payload)
-        if (hmac != payloadSignature) {
+        if (!validateHmacSha1(webServerConfig.webtokenSignKey, payload, payloadSignature)) {
             return null
         }
         val tokenAuthData = WebTokenAuthData.parseFrom(payload)
@@ -84,26 +81,6 @@ private constructor(
         val WEBTOKEN_HEADER = AsciiString("x-webtoken")
         val APITOKEN_HEADER = AsciiString("x-apitoken")
     }
-}
-
-fun hmac(
-        key: ByteArray,
-        payload: ByteArray,
-        urlSafe: Boolean = false
-): String {
-    val algorithm = "HmacSHA1"
-    val signingKey = SecretKeySpec(key, algorithm)
-    val mac = Mac.getInstance(algorithm)
-    mac.init(signingKey)
-
-    val rawHmac = mac.doFinal(payload)
-    val baseEncoded =
-            if (urlSafe) {
-                Base64.getUrlEncoder()
-            } else {
-                Base64.getEncoder()
-            }.encode(rawHmac)
-    return String(baseEncoded, StandardCharsets.UTF_8)
 }
 
 internal class AuthenticationImpl(
