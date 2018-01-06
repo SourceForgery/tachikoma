@@ -13,7 +13,7 @@ import javax.persistence.Table
 // Every user = one account
 class AccountDBO : GenericDBO() {
     @OneToMany
-    val allowedSendingEmails: List<AllowedSendingEmailDBO> = BeanList();
+    val allowedSendingEmails: List<AllowedSendingEmailDBO> = BeanList()
     @OneToMany
     @Column(unique = true)
     val authentications: List<AuthenticationDBO> = BeanList()

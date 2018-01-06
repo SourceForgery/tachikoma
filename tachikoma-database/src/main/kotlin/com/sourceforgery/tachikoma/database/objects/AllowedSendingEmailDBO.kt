@@ -14,6 +14,4 @@ class AllowedSendingEmailDBO(
         val localPart: String? = null,
         @OneToMany
         val account: AccountDBO
-) : GenericDBO() {
-}
-
+) : GenericDBO()
