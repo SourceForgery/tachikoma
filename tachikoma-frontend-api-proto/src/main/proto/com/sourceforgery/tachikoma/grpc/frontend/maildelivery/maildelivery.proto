@@ -140,7 +140,7 @@ message EmailQueueStatus {
         // This can happen if either sendAt is set or too many emails have been sent
         // during a short interval.
         // Message will be sent to outgoing SMTP server at a certain time (+/- 1 minute)
-        Queued queuedXx = 302;
+        Queued queued = 302;
         Scheduled scheduled = 303;
     }
 

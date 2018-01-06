@@ -15,6 +15,7 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import io.grpc.Status
@@ -61,6 +62,7 @@ private constructor(
                             .setEmailId(
                                     emailDBO.id.toGrpcInternal()
                             )
+                            .setQueued(Queued.getDefaultInstance())
                             .build()
             )
         }
