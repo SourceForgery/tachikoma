@@ -5,6 +5,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import io.ebean.EbeanServer
+import io.ebean.config.EncryptKey
+import io.ebean.config.EncryptKeyManager
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.h2.H2Platform
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
@@ -69,6 +71,7 @@ internal class EbeanServerFactory @Inject constructor(
         serverConfig.dataSourceConfig = dataSourceConfig
         serverConfig.isDefaultServer = false
         serverConfig.isRegister = false
+        serverConfig.encryptKeyManager = EncryptKeyManager { _, _ -> EncryptKey { databaseConfig.databaseEncryptionKey } }
         serverConfig.objectMapper = createObjectMapper()
         when (databaseConfig.sqlUrl.scheme) {
             "h2" -> {
