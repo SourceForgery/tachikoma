@@ -76,7 +76,7 @@ subprojects {
             debug = false
             verbose = true
             android = false
-            reporter = "checkstyle"
+//            reporter = "checkstyle"
             ignoreFailures = false
         }
 

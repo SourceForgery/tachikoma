@@ -3,7 +3,6 @@ package com.sourceforgery.tachikoma.database.objects
 import io.ebean.common.BeanList
 import javax.persistence.Column
 import javax.persistence.Entity
-import javax.persistence.ManyToMany
 import javax.persistence.ManyToOne
 import javax.persistence.Table
 

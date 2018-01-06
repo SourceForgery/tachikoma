@@ -40,7 +40,6 @@ constructor(
             sentEmailMessageBodyDBO = sentEmailMessageBodyDBO,
             mtaQueueId = mtaQueueId
     )
-
 }
 
 val EmailDBO.id: EmailId

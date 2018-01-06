@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.database.objects
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 import io.ebean.annotation.DbJsonB
