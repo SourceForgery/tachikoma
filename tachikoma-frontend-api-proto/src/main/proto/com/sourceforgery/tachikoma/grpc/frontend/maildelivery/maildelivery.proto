@@ -9,72 +9,115 @@ import "google/protobuf/timestamp.proto";
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 
 service MailDeliveryService {
-    rpc sendEmail(OutgoingEmail) returns (stream QueueStatus);
+    // Send emails. This will always succeed unless spam marked.
+    // Failures can only be detected via DeliveryNotificationService.notificationStream()
+    rpc sendEmail (OutgoingEmail) returns (stream QueueStatus);
 }
 
+// A recipient
 message EmailRecipient {
-    oneof to {
-        NamedEmail namedEmail = 1;
-        Email email = 2;
-    }
+    // Recipient email with name
+    NamedEmail namedEmail = 101;
 
-    google.protobuf.Struct templateMergeVars = 3;
-    map<string, string> metadata = 4;
+    // Template variables (if using a template)
+    google.protobuf.Struct templateVars = 102;
+
+    // Optional
+    // Metadata variables. These are sent back with callbacks.
+    // These overwrite the email metadata on conflicting keys
+    map<string, string> metadata = 103;
 }
 
+// Tracking data structure
 message TrackingData {
-    string trackingDomain = 1;
+    // Special domain used to track links. Used instead of the normal host.
+    // See future documentation on how to set up with e.g. nginx/apache httpd/lighttpd which
+    // is necessary for HSTS domains.
+    string trackingDomain = 101;
 
-    // Not sent, but used in search and as metadata
-    repeated string tags = 2;
+    // Not sent, but used in search and in callbacks
+    repeated string tags = 102;
 
     // Data for e.g. callback processing
-    map<string, string> metadata = 3;
-
-    // Add these options as query parameters to all links
-    repeated string googleAnalyticsDomains = 4;
-    repeated string googleAnalyticsCampaign = 5;
+    map<string, string> metadata = 103;
 }
 
+// When sending with template
 message TemplateBody {
-    string htmlTemplate = 1;
-    string plaintextTemplate = 2;
-    google.protobuf.Struct globalMergeVars = 3;
+    // Which templating enging to use
+    TemplateEngine engine = 101;
+
+    // Subject template
+    string subject = 102;
+
+    // Optional (required if plaintextTemplate is not set)
+    // This template will generate the html body
+    string htmlTemplate = 201;
+
+    // Optional (required if htmlTemplate is not set)
+    // This template will generate the plaintext body
+    string plaintextTemplate = 202;
+
+    // Optional
+    // Variables available in the template. Will only be used as defaults for the recipient ones
+    google.protobuf.Struct globalVars = 301;
 }
 
 enum TemplateEngine {
-    HANDLEBARS = 0;
-    MUSTASCH = 1;
-    RYTHM = 2;
-    // PEBBLE = 3; // Insecure?
-    // VELOCITY = 4; // Insecure!
-    // THYMELEAF = 5; // Insecure?
+    INVALID = 0;
+    HANDLEBARS = 1;
+    MUSTASCH = 2;
+    RYTHM = 3;
+    // PEBBLE = 4; // Insecure?
+    // VELOCITY = 5; // Insecure!
+    // THYMELEAF = 6; // Insecure?
 }
 
 message StaticBody {
-    string htmlBody = 1;
-    string plaintextBody = 2;
-    string subject = 3;
+    // Optional (required if plaintextBody is not set)
+    // The html body to use
+    string htmlBody = 101;
+
+    // The plain text body to use
+    // Optional (required if htmlBody is not set)
+    string plaintextBody = 102;
+
+    // The subject of the email
+    string subject = 103;
 }
 
 message OutgoingEmail {
     // Recipients of the email
     repeated EmailRecipient recipients = 101;
+
+    // Optional
+    // Blind CC of ALL emails for e.g. debugging. This will get one email per recipient
     Email bcc = 102;
+
+    // From address
     NamedEmail from = 103;
 
+    // Choose one of
     oneof body {
+        // All emails will be identical except for the recipient
         StaticBody static = 201;
+        // All emails will be using this template to generate the bodies
         TemplateBody template = 202;
     }
 
+    // Extra email headers sent as is
     map<string, string> headers = 301;
+
+    // Structure for setting up tracking
     TrackingData trackingData = 302;
-    bool preserveRecipients = 303;
-    // Not used atm
+
+    // Optional
+    // For delayed sending
     google.protobuf.Timestamp sendAt = 304;
+
+    // Optional
+    // Used for DKIM signing emails
     string signingDomain = 305;
-    string returnPathDomain = 306;
 }
 
 // Every email sent will generate one or more of these
@@ -83,35 +126,51 @@ message QueueStatus {
     // The recipient of this email
     Email recipient = 101;
 
+    // Possible outcomes of the attempt to queue
     oneof deliveryStatus {
+        // Rejected outright because recipient email is blocked
         Rejected rejected = 201;
+        // Message will be sent to outgoing SMTP server asap.
+        // This can happen if either sendAt is set or too many emails have been sent
+        // during a short interval.
         Queued queued = 202;
+        // Message will be sent to outgoing SMTP server at a certain time (+/- 1 minute)
         Scheduled scheduled = 203;
     }
 
     // Only exists if DeliveryStatus is NOT rejected
     EmailMessageId id = 103;
+
     // The transaction the
     EmailTransactionId transactionId = 104;
 }
 
+// Message was rejected outright with this reason
 message Rejected {
     // Free text description on why the email wasn't queued
-    string rejectionReason = 105;
+    string rejectionReason = 101;
 
     // What this combination of recipient email and
     // the enumerated reason of why the email was rejected (if it was)
-    RejectReason rejectReason = 106;
+    RejectReason rejectReason = 201;
     enum RejectReason {
+        // Some reason not known. Hints may be available in rejectionReason
         UNKNOWN = 0;
+        // Recipient has marked sender email as spam.
+        // Please note that only this particular recipient+sender pair is blocked
         SPAM_MARKED = 1;
+        // Recipient has unsubscribed.
+        // Please note that only this particular recipient+sender pair is blocked
         UNSUBSCRIBED = 2;
     }
 }
 
+// Message is queued for send asap
 message Queued {
 }
 
+// Message was delayed. This is when the message will be sent
 message Scheduled {
+    // When the message is scheduled to be sent
     google.protobuf.Timestamp scheduledTo = 101;
 }
