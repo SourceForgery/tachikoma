@@ -3,6 +3,7 @@
 package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
@@ -50,7 +51,6 @@ private constructor(
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request)
         )
-        val transactionId = transaction.id.toGrpcInternal()
 
         val static = request.static!!
         val mailMessageBody = SentMailMessageBodyDBO(
@@ -82,7 +82,7 @@ private constructor(
                                     emailDBO.id.toGrpcInternal()
                             )
                             .setQueued(Queued.getDefaultInstance())
-                            .setTransactionId(transactionId)
+                            .setTransactionId(transaction.id.toGrpcInternal())
                             .setRecipient(emailDBO.recipient.toGrpcInternal())
                             .build()
             )
@@ -99,7 +99,6 @@ private constructor(
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request)
         )
-        val transactionId = transaction.id.toGrpcInternal()
         val requestedSendTime =
                 if (request.hasSendAt()) {
                     request.sendAt.toInstant()
@@ -143,7 +142,7 @@ private constructor(
                                     emailDBO.id.toGrpcInternal()
                             )
                             .setQueued(Queued.getDefaultInstance())
-                            .setTransactionId(transactionId)
+                            .setTransactionId(transaction.id.toGrpcInternal())
                             .setRecipient(emailDBO.recipient.toGrpcInternal())
                             .build()
             )
@@ -153,7 +152,7 @@ private constructor(
 
     // Store the request for later debugging
     private fun getRequestData(request: OutgoingEmail) =
-            dbObjectMapper.convertValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
+            dbObjectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
 
     private fun mergeTemplate(template: String?, vararg scopes: Any) =
             StringWriter().use {
