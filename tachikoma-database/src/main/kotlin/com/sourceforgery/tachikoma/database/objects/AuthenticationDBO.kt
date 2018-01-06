@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.database.objects
 
-import com.sourceforgery.tachikoma.identifiers.UserId
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.ebean.annotation.Encrypted
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -10,7 +10,7 @@ import javax.persistence.Table
 @Table(name = "e_user")
 @Entity
 // One user with
-class UserDBO(
+class AuthenticationDBO(
         @Column
         var encryptedPassword: String? = null,
 
@@ -25,6 +25,8 @@ class UserDBO(
         val account: AccountDBO? = null
 ) : GenericDBO() {
 
+    private constructor() : this(backend = true)
+
     init {
         if (backend && account != null) {
             throw RuntimeException("Should not be both backend and have accountId")
@@ -35,5 +37,5 @@ class UserDBO(
     }
 }
 
-val UserDBO.id: UserId
-    get() = UserId(realId as Long)
+val AuthenticationDBO.id: AuthenticationId
+    get() = AuthenticationId(realId!!)

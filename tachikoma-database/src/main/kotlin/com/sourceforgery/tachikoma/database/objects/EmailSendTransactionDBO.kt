@@ -23,4 +23,4 @@ constructor(
 }
 
 val EmailSendTransactionDBO.id: EmailTransactionId
-    get() = EmailTransactionId(realId as Long)
+    get() = EmailTransactionId(realId!!)

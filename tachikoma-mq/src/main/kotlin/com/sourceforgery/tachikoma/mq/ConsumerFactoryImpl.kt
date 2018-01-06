@@ -12,7 +12,7 @@ import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.identifiers.AccountId
-import com.sourceforgery.tachikoma.identifiers.UserId
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.logging.logger
 import java.io.Closeable
 import java.time.Clock
@@ -97,7 +97,7 @@ private constructor(
                 }
     }
 
-    override fun listenForDeliveryNotifications(userId: UserId, callback: (DeliveryNotificationMessage) -> Unit): Closeable {
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): Closeable {
         val channel = connection
                 .createChannel()!!
         val consumer = object : DefaultConsumer(channel) {
@@ -116,7 +116,7 @@ private constructor(
                 }
             }
         }
-        channel.basicConsume("user.${userId.userId}", false, consumer)
+        channel.basicConsume("user.${authenticationId.userId}", false, consumer)
         return Closeable {
             channel.close()
         }

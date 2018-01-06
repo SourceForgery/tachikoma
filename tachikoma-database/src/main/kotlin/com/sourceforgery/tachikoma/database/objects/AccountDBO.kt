@@ -13,9 +13,11 @@ import javax.persistence.Table
 // Every user = one account
 class AccountDBO : GenericDBO() {
     @OneToMany
+    val allowedSendingEmails: List<AllowedSendingEmailDBO> = BeanList();
+    @OneToMany
     @Column(unique = true)
-    val users: List<UserDBO> = BeanList()
+    val authentications: List<AuthenticationDBO> = BeanList()
 }
 
 val AccountDBO.id: AccountId
-    get() = AccountId(realId as Long)
+    get() = AccountId(realId!!)

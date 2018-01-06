@@ -12,7 +12,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.tracking.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.OpenedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.SoftBouncedEvent
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import com.sourceforgery.tachikoma.identifiers.UserId
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
@@ -26,7 +26,7 @@ private constructor(
         private val emailDAO: EmailDAO
 ) : DeliveryNotificationServiceGrpc.DeliveryNotificationServiceImplBase() {
     override fun notificationStream(request: Empty?, responseObserver: StreamObserver<EmailNotification>) {
-        mqSequenceFactory.listenForDeliveryNotifications(UserId(100), {
+        mqSequenceFactory.listenForDeliveryNotifications(AuthenticationId(100), {
             val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(it.emailMessageId))
             if (emailData == null) {
                 LOGGER.error("Got event with non-existing email " + it.emailMessageId)

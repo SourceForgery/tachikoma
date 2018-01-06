@@ -6,7 +6,9 @@ import com.sourceforgery.tachikoma.identifiers.EmailId
 import io.ebean.common.BeanList
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Entity
@@ -18,15 +20,15 @@ constructor(
         val recipient: Email,
         @Column
         val recipientName: String,
-        @Column
+        @ManyToOne
         val transaction: EmailSendTransactionDBO,
-        @Column
+        @ManyToOne
         val sentEmailMessageBodyDBO: SentMailMessageBodyDBO,
         @Column
         var mtaQueueId: String? = null
 ) : GenericDBO() {
     @OneToMany
-    val emailStatuses: List<EmailStatusDBO> = BeanList()
+    val emailStatusEvents: List<EmailStatusEventDBO> = BeanList()
 
     constructor(
             recipient: NamedEmail,
@@ -43,4 +45,4 @@ constructor(
 }
 
 val EmailDBO.id: EmailId
-    get() = EmailId(realId as Long)
+    get() = EmailId(realId!!)

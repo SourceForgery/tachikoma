@@ -4,13 +4,13 @@ import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.HmacUtil.validateHmacSha1
 import com.sourceforgery.tachikoma.config.WebServerConfig
-import com.sourceforgery.tachikoma.database.dao.UserDAO
+import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.toAccountId
-import com.sourceforgery.tachikoma.grpc.frontend.toUserId
+import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.identifiers.AccountId
-import com.sourceforgery.tachikoma.identifiers.UserId
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
 import java.util.Base64
@@ -21,7 +21,7 @@ class AuthenticationFactory
 private constructor(
         private val httpHeaders: HttpHeaders,
         private val webServerConfig: WebServerConfig,
-        private val userDAO: UserDAO
+        private val authenticationDAO: AuthenticationDAO
 ) : Factory<Authentication> {
     override fun provide() =
             parseWebTokenHeader()
@@ -31,13 +31,13 @@ private constructor(
     private fun parseApiTokenHeader() =
             httpHeaders[APITOKEN_HEADER]
             ?.let {
-                userDAO.validateApiToken(it)
+                authenticationDAO.validateApiToken(it)
             }
             ?.let {
                 AuthenticationImpl(
                         // No webtoken should allow backend
                         allowBackend = false,
-                        userId = it.id,
+                        authenticationId = it.id,
                         accountId = it.account?.id
                 )
             }
@@ -61,7 +61,7 @@ private constructor(
         return AuthenticationImpl(
                 // No webtoken should allow backend
                 allowBackend = false,
-                userId = tokenAuthData.toUserId(),
+                authenticationId = tokenAuthData.toAuthenticationId(),
                 accountId = tokenAuthData.toAccountId()
         )
     }
@@ -72,7 +72,7 @@ private constructor(
     companion object {
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION = object : Authentication {
-            override val userId: UserId? = null
+            override val authenticationId: AuthenticationId? = null
             override val accountId: AccountId? = null
             override val allowBackend: Boolean = false
             override val valid: Boolean = false
@@ -85,7 +85,7 @@ private constructor(
 
 internal class AuthenticationImpl(
         override var allowBackend: Boolean = false,
-        override var userId: UserId? = null,
+        override var authenticationId: AuthenticationId? = null,
         override var accountId: AccountId? = null
 ) : Authentication {
     override val valid: Boolean = true

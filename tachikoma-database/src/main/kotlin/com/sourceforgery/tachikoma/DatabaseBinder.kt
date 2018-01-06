@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma
 
-import com.sourceforgery.tachikoma.database.dao.UserDAO
+import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
@@ -18,7 +18,7 @@ class DatabaseBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(EmailDAO::class.java)
                 .`in`(Singleton::class.java)
-        bindAsContract(UserDAO::class.java)
+        bindAsContract(AuthenticationDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(LogEverything::class.java)
                 .to(InvokeCounter::class.java)

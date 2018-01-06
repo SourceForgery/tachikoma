@@ -1,11 +1,11 @@
 package com.sourceforgery.tachikoma.auth
 
 import com.sourceforgery.tachikoma.identifiers.AccountId
-import com.sourceforgery.tachikoma.identifiers.UserId
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 
 interface Authentication {
     val valid: Boolean
-    val userId: UserId?
+    val authenticationId: AuthenticationId?
     val allowBackend: Boolean
     val accountId: AccountId?
 }
