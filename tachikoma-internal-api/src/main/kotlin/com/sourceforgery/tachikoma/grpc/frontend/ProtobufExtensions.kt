@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.grpc.frontend
 
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
@@ -44,3 +45,9 @@ fun WebTokenAuthData.toAuthenticationId(): AuthenticationId? {
         AuthenticationId(userId)
     }
 }
+
+fun EmailRecipient.toNamedEmail() =
+        com.sourceforgery.tachikoma.common.NamedEmail(
+                address = namedEmail.email!!,
+                name = namedEmail.name!!
+        )

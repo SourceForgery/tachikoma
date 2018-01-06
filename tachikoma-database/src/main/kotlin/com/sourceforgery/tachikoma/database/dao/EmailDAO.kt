@@ -12,4 +12,6 @@ private constructor(
 ) {
     fun fetchEmailData(emailMessageId: EmailId) =
             ebeanServer.find(EmailDBO::class.java, emailMessageId.emailId)
+
+    fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
 }
