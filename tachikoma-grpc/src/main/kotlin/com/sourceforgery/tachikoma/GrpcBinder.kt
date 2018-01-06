@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.RequestScoped
+import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.mta.MTADeliveryService
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
 import com.sourceforgery.tachikoma.tracking.DeliveryNotificationService
@@ -24,6 +25,10 @@ class GrpcBinder : AbstractBinder() {
         bindAsContract(DeliveryNotificationService::class.java)
                 .to(BindableService::class.java)
                 .`in`(Singleton::class.java)
+        bindAsContract(MailDeliveryService::class.java)
+                .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+
         bindAsContract(TrackingDecoderImpl::class.java)
                 .to(TrackingDecoder::class.java)
                 .`in`(Singleton::class.java)
