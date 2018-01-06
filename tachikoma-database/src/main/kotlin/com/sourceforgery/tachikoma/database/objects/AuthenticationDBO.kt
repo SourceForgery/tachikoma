@@ -25,6 +25,7 @@ class AuthenticationDBO(
         val account: AccountDBO? = null
 ) : GenericDBO() {
 
+    // 'Fake' constructor for Ebean
     private constructor() : this(backend = true)
 
     init {

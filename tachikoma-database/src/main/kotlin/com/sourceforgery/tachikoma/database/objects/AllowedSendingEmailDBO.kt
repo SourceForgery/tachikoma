@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.database.objects
 
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
@@ -12,6 +13,6 @@ class AllowedSendingEmailDBO(
         val domainPart: String,
         @Column
         val localPart: String? = null,
-        @OneToMany
+        @ManyToOne
         val account: AccountDBO
 ) : GenericDBO()
