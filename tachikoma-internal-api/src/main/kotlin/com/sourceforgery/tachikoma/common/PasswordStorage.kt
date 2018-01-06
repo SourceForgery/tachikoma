@@ -1,12 +1,10 @@
 package com.sourceforgery.tachikoma.common
 
-import com.sourceforgery.tachikoma.common.PasswordStorage.PBKDF2_ITERATIONS
-import com.sourceforgery.tachikoma.common.PasswordStorage.toBase64
-import java.security.SecureRandom
-import javax.crypto.spec.PBEKeySpec
-import javax.crypto.SecretKeyFactory
 import java.security.NoSuchAlgorithmException
+import java.security.SecureRandom
 import java.security.spec.InvalidKeySpecException
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 import javax.xml.bind.DatatypeConverter
 import kotlin.experimental.xor
 
@@ -85,15 +83,15 @@ object PasswordStorage {
             )
         }
 
-        var iterations = 0
-        try {
-            iterations = Integer.parseInt(params[ITERATION_INDEX])
-        } catch (ex: NumberFormatException) {
-            throw InvalidHashException(
-                    "Could not parse the iteration count as an integer.",
-                    ex
-            )
-        }
+        val iterations =
+                try {
+                    Integer.parseInt(params[ITERATION_INDEX])
+                } catch (ex: NumberFormatException) {
+                    throw InvalidHashException(
+                            "Could not parse the iteration count as an integer.",
+                            ex
+                    )
+                }
 
         if (iterations < 1) {
             throw InvalidHashException(
@@ -101,37 +99,35 @@ object PasswordStorage {
             )
         }
 
+        val salt =
+                try {
+                    fromBase64(params[SALT_INDEX])
+                } catch (ex: IllegalArgumentException) {
+                    throw InvalidHashException(
+                            "Base64 decoding of salt failed.",
+                            ex
+                    )
+                }
 
-        var salt: ByteArray? = null
-        try {
-            salt = fromBase64(params[SALT_INDEX])
-        } catch (ex: IllegalArgumentException) {
-            throw InvalidHashException(
-                    "Base64 decoding of salt failed.",
-                    ex
-            )
-        }
+        val hash =
+                try {
+                    fromBase64(params[PBKDF2_INDEX])
+                } catch (ex: IllegalArgumentException) {
+                    throw InvalidHashException(
+                            "Base64 decoding of pbkdf2 output failed.",
+                            ex
+                    )
+                }
 
-        var hash: ByteArray? = null
-        try {
-            hash = fromBase64(params[PBKDF2_INDEX])
-        } catch (ex: IllegalArgumentException) {
-            throw InvalidHashException(
-                    "Base64 decoding of pbkdf2 output failed.",
-                    ex
-            )
-        }
-
-
-        var storedHashSize = 0
-        try {
-            storedHashSize = Integer.parseInt(params[HASH_SIZE_INDEX])
-        } catch (ex: NumberFormatException) {
-            throw InvalidHashException(
-                    "Could not parse the hash size as an integer.",
-                    ex
-            )
-        }
+        val storedHashSize =
+                try {
+                    Integer.parseInt(params[HASH_SIZE_INDEX])
+                } catch (ex: NumberFormatException) {
+                    throw InvalidHashException(
+                            "Could not parse the hash size as an integer.",
+                            ex
+                    )
+                }
 
         if (storedHashSize != hash.size) {
             throw InvalidHashException(
@@ -160,7 +156,7 @@ object PasswordStorage {
     @Throws(CannotPerformOperationException::class)
     private fun pbkdf2(password: CharArray, salt: ByteArray, iterations: Int, bytes: Int): ByteArray {
         try {
-            val spec = PBEKeySpec(password, salt!!, iterations, bytes * 8)
+            val spec = PBEKeySpec(password, salt, iterations, bytes * 8)
             val skf = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
             return skf.generateSecret(spec).encoded
         } catch (ex: NoSuchAlgorithmException) {
@@ -184,5 +180,4 @@ object PasswordStorage {
     private fun toBase64(array: ByteArray): String {
         return DatatypeConverter.printBase64Binary(array)
     }
-
 }

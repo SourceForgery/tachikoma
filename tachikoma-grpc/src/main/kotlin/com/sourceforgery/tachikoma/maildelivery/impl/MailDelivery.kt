@@ -2,7 +2,6 @@
 
 package com.sourceforgery.tachikoma.maildelivery.impl
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.util.JsonFormat
@@ -22,7 +21,6 @@ import io.grpc.stub.StreamObserver
 import java.io.StringReader
 import java.io.StringWriter
 import javax.inject.Inject
-import javax.inject.Named
 
 internal class DeliveryService
 @Inject
