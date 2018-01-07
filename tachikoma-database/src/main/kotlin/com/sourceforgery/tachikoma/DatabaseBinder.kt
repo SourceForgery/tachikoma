@@ -2,6 +2,8 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.hooks.CreateSequence
+import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
@@ -24,6 +26,9 @@ class DatabaseBinder : AbstractBinder() {
                 .to(InvokeCounter::class.java)
                 .`in`(RequestScoped::class.java)
         bindAsContract(DBObjectMapper::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(CreateSequence::class.java)
+                .to(EbeanHook::class.java)
                 .`in`(Singleton::class.java)
     }
 }

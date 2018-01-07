@@ -1,6 +1,8 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.database.hooks.EbeanHook
+import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import io.ebean.EbeanServer
 import io.ebean.config.EncryptKey
 import io.ebean.config.EncryptKeyManager
@@ -12,6 +14,7 @@ import org.apache.logging.log4j.io.IoBuilder
 import org.avaje.datasource.DataSourceConfig
 import org.avaje.datasource.DataSourcePool
 import org.glassfish.hk2.api.Factory
+import org.glassfish.hk2.api.IterableProvider
 import java.net.URI
 import java.sql.Connection
 import java.sql.DriverManager
@@ -22,7 +25,9 @@ import javax.sql.DataSource
 internal class EbeanServerFactory @Inject constructor(
         private val databaseConfig: DatabaseConfig,
         private val counter: InvokeCounter,
-        private val dbObjectMapper: DBObjectMapper
+        private val dbObjectMapper: DBObjectMapper,
+        private val ebeanHooks: IterableProvider<EbeanHook>,
+        private val hK2RequestContext: HK2RequestContext
 ) : Factory<EbeanServer> {
 
     private inner class LoggingServerConfig : ServerConfig() {
@@ -86,7 +91,12 @@ internal class EbeanServerFactory @Inject constructor(
             serverConfig.isDdlGenerate = true
             serverConfig.isDdlRun = true
         }
-        return io.ebean.EbeanServerFactory.create(serverConfig)
+
+        return hK2RequestContext.runInScope {
+            val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
+            ebeanHooks.forEach { it.postStart(ebeanServer) }
+            ebeanServer
+        }
     }
 
     override fun dispose(instance: EbeanServer) {
