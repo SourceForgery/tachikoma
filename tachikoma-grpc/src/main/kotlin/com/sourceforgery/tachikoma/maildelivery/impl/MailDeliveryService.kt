@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
-import com.linecorp.armeria.common.RequestContext
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
@@ -183,7 +182,7 @@ private constructor(
         message.setFrom(InternetAddress(request.from.email, request.from.name))
         message.subject = subject
 
-        val multipart = MimeMultipart("alternative");
+        val multipart = MimeMultipart("alternative")
 
         val plaintextPart = MimeBodyPart()
         plaintextPart.setContent(plainTextString, "text/plain")
@@ -207,6 +206,5 @@ private constructor(
 
     companion object {
         val PRINTER = JsonFormat.printer()!!
-        val LOGGER = logger()
     }
 }
