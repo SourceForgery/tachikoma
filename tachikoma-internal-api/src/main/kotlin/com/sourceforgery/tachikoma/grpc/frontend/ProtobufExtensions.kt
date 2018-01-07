@@ -52,7 +52,6 @@ fun EmailRecipient.toNamedEmail() =
                 name = namedEmail.name!!
         )
 
-
 fun String.emptyToNull() =
         if (this.isEmpty()) {
             null

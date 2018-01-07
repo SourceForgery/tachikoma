@@ -12,11 +12,11 @@ import java.util.HashMap
 import java.util.UUID
 import javax.inject.Inject
 
-class HK2RequestContext
+class HK2RequestContextImpl
 @Inject
 private constructor(
         private val serviceLocator: ServiceLocator
-) : Context<RequestScoped> {
+) : Context<RequestScoped>, HK2RequestContext {
 
     private val currentScopeInstance = ThreadLocal<Instance>()
     @Volatile private var isActive = true
@@ -87,7 +87,7 @@ private constructor(
         return Instance()
     }
 
-    fun <T> runInScope(task: (ServiceLocator) -> T): T {
+    override fun <T> runInScope(task: (ServiceLocator) -> T): T {
         val oldInstance = retrieveCurrent()
         val instance = createInstance()
         try {
