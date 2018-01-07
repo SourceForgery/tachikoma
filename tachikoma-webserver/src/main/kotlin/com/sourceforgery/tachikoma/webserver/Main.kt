@@ -8,7 +8,6 @@ import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.DecoratingServiceFunction
 import com.linecorp.armeria.server.ServerBuilder
-import com.linecorp.armeria.server.ServiceRequestContext
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
 import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
@@ -33,7 +32,6 @@ import io.grpc.ServerInterceptor
 import io.grpc.ServerInterceptors
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import java.util.function.Function
-
 
 @Suppress("unused")
 fun main(vararg args: String) {
