@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 import io.ebean.annotation.DbJsonB
 import io.ebean.common.BeanList
+import javax.persistence.CascadeType
 import javax.persistence.Entity
 import javax.persistence.OneToMany
 import javax.persistence.Table
@@ -18,7 +19,7 @@ constructor(
         @DbJsonB
         val jsonRequest: ObjectNode
 ) : GenericDBO() {
-    @OneToMany
+    @OneToMany(cascade = [CascadeType.ALL])
     val emails: List<EmailDBO> = BeanList()
 }
 

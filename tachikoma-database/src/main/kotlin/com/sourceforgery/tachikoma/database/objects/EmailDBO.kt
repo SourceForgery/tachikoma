@@ -4,6 +4,7 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import io.ebean.common.BeanList
+import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.ManyToOne
@@ -19,9 +20,9 @@ constructor(
         val recipient: Email,
         @Column
         val recipientName: String,
-        @ManyToOne
+        @ManyToOne(cascade = [CascadeType.ALL])
         val transaction: EmailSendTransactionDBO,
-        @ManyToOne
+        @ManyToOne(cascade = [CascadeType.ALL])
         val sentEmailMessageBodyDBO: SentMailMessageBodyDBO,
         @Column
         var mtaQueueId: String? = null
