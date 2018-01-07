@@ -23,7 +23,7 @@ constructor(
         @ManyToOne(cascade = [CascadeType.ALL])
         val transaction: EmailSendTransactionDBO,
         @ManyToOne(cascade = [CascadeType.ALL])
-        val sentEmailMessageBodyDBO: SentMailMessageBodyDBO,
+        val sentMailMessageBody: SentMailMessageBodyDBO,
         @Column
         var mtaQueueId: String? = null
 ) : GenericDBO() {
@@ -33,16 +33,16 @@ constructor(
     constructor(
             recipient: NamedEmail,
             transaction: EmailSendTransactionDBO,
-            sentEmailMessageBodyDBO: SentMailMessageBodyDBO,
+            sentMailMessageBody: SentMailMessageBodyDBO,
             mtaQueueId: String? = null
     ) : this(
             recipient = recipient.address,
             recipientName = recipient.name,
             transaction = transaction,
-            sentEmailMessageBodyDBO = sentEmailMessageBodyDBO,
+            sentMailMessageBody = sentMailMessageBody,
             mtaQueueId = mtaQueueId
     )
 }
 
 val EmailDBO.id: EmailId
-    get() = EmailId(realId!!)
+    get() = EmailId(dbId!!)

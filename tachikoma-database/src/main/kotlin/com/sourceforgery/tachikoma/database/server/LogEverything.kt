@@ -34,7 +34,7 @@ private constructor(
 
     override fun inc(sql: String?, millis: Long) {
         sql?.let {
-            LOGGER.trace { "$millis for $sql" }
+            LOGGER.trace { "${millis}ms for $sql" }
             loggedQueries.compute(it, { _, v -> (v ?: 0) + millis })
         }
     }

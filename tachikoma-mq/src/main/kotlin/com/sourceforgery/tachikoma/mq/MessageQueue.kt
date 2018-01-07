@@ -5,9 +5,10 @@ import java.time.Duration
 enum class JobMessageQueue(
         override val delay: Duration = Duration.ZERO,
         override val maxLength: Int? = null,
-        override val nextDestination: MessageQueue? = null
-) : MessageQueue {
+        override val nextDestination: MessageQueue<JobMessage>? = null
+) : MessageQueue<JobMessage> {
     JOBS,
+    JOBS_30_SEC(delay = Duration.ofSeconds(30), nextDestination = JOBS),
     JOBS_1_MIN(delay = Duration.ofMinutes(1), nextDestination = JOBS),
     JOBS_2_MIN(delay = Duration.ofMinutes(2), nextDestination = JOBS),
     JOBS_4_MIN(delay = Duration.ofMinutes(4), nextDestination = JOBS),
@@ -22,24 +23,29 @@ enum class JobMessageQueue(
     JOBS_1_DAY(delay = Duration.ofDays(1), nextDestination = JOBS),
     ;
 
+    override val parser: (ByteArray) -> JobMessage = JobMessage::parseFrom
+
     init {
         assert((delay == Duration.ZERO) == (nextDestination == null))
     }
 }
 
-interface MessageQueue {
-    val delay: Duration
-    val maxLength: Int?
-    val nextDestination: MessageQueue?
-    val name: String
+enum class OutgoingEmailsMessageQueue : MessageQueue<OutgoingEmailMessage> {
+    OUTGOING_EMAILS;
+    override val delay: Duration = Duration.ZERO
+    override val maxLength: Int? = null
+    override val nextDestination: MessageQueue<OutgoingEmailMessage>? = null
+    override val parser: (ByteArray) -> OutgoingEmailMessage = OutgoingEmailMessage::parseFrom
 }
 
-class MessageQueueImpl(
-        override val delay: Duration = Duration.ZERO,
+class DeliveryNotificationMessageQueue(
         override val maxLength: Int? = null,
-        override val nextDestination: MessageQueue? = null,
         override val name: String
-) : MessageQueue {
+) : MessageQueue<DeliveryNotificationMessage> {
+    override val delay: Duration = Duration.ZERO
+    override val nextDestination: MessageQueue<DeliveryNotificationMessage>? = null
+    override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
+
     init {
         assert((delay == Duration.ZERO) == (nextDestination == null))
     }

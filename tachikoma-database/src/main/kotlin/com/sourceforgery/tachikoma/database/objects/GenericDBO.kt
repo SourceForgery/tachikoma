@@ -20,7 +20,7 @@ abstract class GenericDBO {
     @Column(columnDefinition = "DECIMAL(20)", name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unique_id_seq")
     @SequenceGenerator(name = "unique_id_seq", sequenceName = "unique_id_seq", allocationSize = 100)
-    internal var realId: Long? = null
+    internal var dbId: Long? = null
 
     @field:Version
     var version: Long = 0L
