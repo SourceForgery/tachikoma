@@ -95,6 +95,8 @@ fun main(vararg args: String) {
             .join()
 }
 
+// TODO could be replaced by registering an onEnter() and onExit() on RequestContext
+// thanks @anuraaga
 internal class HK2RequestServerInterceptor(
         private val hK2RequestContext: HK2RequestContext,
         private val scopedHttpRequest: SettableReference<HttpRequest>,
