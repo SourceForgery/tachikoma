@@ -45,4 +45,4 @@ constructor(
 }
 
 val EmailDBO.id: EmailId
-    get() = EmailId(realId!!)
+    get() = EmailId(dbId!!)

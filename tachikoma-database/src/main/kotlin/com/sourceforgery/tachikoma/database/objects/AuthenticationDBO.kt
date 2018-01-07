@@ -39,4 +39,4 @@ class AuthenticationDBO(
 }
 
 val AuthenticationDBO.id: AuthenticationId
-    get() = AuthenticationId(realId!!)
+    get() = AuthenticationId(dbId!!)

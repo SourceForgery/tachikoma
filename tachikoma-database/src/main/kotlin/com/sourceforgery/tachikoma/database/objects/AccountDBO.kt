@@ -20,4 +20,4 @@ class AccountDBO : GenericDBO() {
 }
 
 val AccountDBO.id: AccountId
-    get() = AccountId(realId!!)
+    get() = AccountId(dbId!!)

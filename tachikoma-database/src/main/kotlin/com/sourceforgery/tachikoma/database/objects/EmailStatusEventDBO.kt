@@ -30,7 +30,7 @@ class EmailStatusEventDBO(
     @Column(columnDefinition = "DECIMAL(20)", name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unique_id_seq")
     @SequenceGenerator(name = "unique_id_seq", sequenceName = "unique_id_seq", allocationSize = 100)
-    internal var realId: Long? = null
+    internal var dbId: Long? = null
 
     @field:CreatedTimestamp
     var dateCreated: Instant? = null
@@ -42,4 +42,4 @@ class EmailStatusEventDBO(
 }
 
 val EmailStatusEventDBO.id: EmailStatusId
-    get() = EmailStatusId(realId!!)
+    get() = EmailStatusId(dbId!!)
