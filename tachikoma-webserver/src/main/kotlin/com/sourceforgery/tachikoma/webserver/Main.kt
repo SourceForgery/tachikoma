@@ -18,6 +18,8 @@ import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.SettableReference
+import com.sourceforgery.tachikoma.mq.JobWorker
+import com.sourceforgery.tachikoma.mq.MessageQueue
 import com.sourceforgery.tachikoma.mq.MqBinder
 import com.sourceforgery.tachikoma.startup.StartupBinder
 import com.sourceforgery.tachikoma.webserver.hk2.HTTP_REQUEST_TYPE
@@ -84,6 +86,8 @@ fun main(vararg args: String) {
     }
 
     val grpcService = grpcServiceBuilder.build()!!
+
+    serviceLocator.getService(JobWorker::class.java).work()
 
     serverBuilder
             // Grpc must be last

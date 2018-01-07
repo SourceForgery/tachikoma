@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma.mq
 
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
@@ -7,16 +9,16 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.MessageProperties
-import com.sourceforgery.tachikoma.common.delay
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
+import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.logging.logger
-import java.io.Closeable
 import java.time.Clock
 import java.time.Duration
+import java.util.concurrent.Executors
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 
@@ -24,12 +26,14 @@ internal class ConsumerFactoryImpl
 @Inject
 private constructor(
         mqConfig: MqConfig,
-        val clock: Clock
+        private val clock: Clock,
+        private val hK2RequestContext: HK2RequestContext
 ) : MQSequenceFactory, MQSender {
     @Volatile
-    var thread = 0
-    val connection: Connection
-    val sendChannel: Channel
+    private var thread = 0
+    private val connection: Connection
+    private val sendChannel: Channel
+    private val closeExecutor = Executors.newSingleThreadExecutor()!!
 
     init {
         val connectionFactory = ConnectionFactory()
@@ -40,6 +44,9 @@ private constructor(
         sendChannel = connection.createChannel()
 
         for (messageQueue in JobMessageQueue.values()) {
+            createQueue(messageQueue)
+        }
+        for (messageQueue in OutgoingEmailsMessageQueue.values()) {
             createQueue(messageQueue)
         }
         for (messageExchange in MessageExchange.values()) {
@@ -53,7 +60,7 @@ private constructor(
         connection.close()
     }
 
-    private class WorkerThread
+    private inner class WorkerThread
     internal constructor(
             runnable: Runnable,
             private val threadName: String
@@ -65,9 +72,15 @@ private constructor(
             }
             super.start()
         }
+
+        override fun run() {
+            hK2RequestContext.runInScope {
+                super.run()
+            }
+        }
     }
 
-    private fun createQueue(messageQueue: MessageQueue) {
+    private fun createQueue(messageQueue: MessageQueue<*>) {
         connection
                 .createChannel()
                 .use { channel ->
@@ -97,65 +110,56 @@ private constructor(
                 }
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): Closeable {
+    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
         val channel = connection
                 .createChannel()!!
+
+        val future = SettableFuture.create<Void>()
+        future.addListener(Runnable { connection.close() }, closeExecutor)
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
-                var worked = false
+                var handledResult = false
                 try {
-                    callback(DeliveryNotificationMessage.parseFrom(body))
-                    channel.basicAck(envelope.deliveryTag, false)
-                    worked = true
+                    val parsedMessage = messageQueue.parser(body)
+                    callback(parsedMessage)
+                    handledResult = true
+                } catch (e: Exception) {
+                    future.setException(e)
+                    handledResult = true
                 } finally {
-                    if (!worked) {
-                        delay(500, {
-                            channel.basicNack(envelope.deliveryTag, false, true)
-                        })
+                    if (!handledResult) {
+                        // Will be NACK'd by closing channel when Future completes
+                        future.cancel(true)
                     }
                 }
             }
         }
-        channel.basicConsume("user.${authenticationId.userId}", false, consumer)
-        return Closeable {
-            channel.close()
-        }
+        channel.basicConsume(messageQueue.name, false, consumer)
+        return future
     }
 
-    override fun listenForJobs(callback: (JobMessage) -> Unit): Closeable {
-        val channel = connection
-                .createChannel()!!
-        val consumer = object : DefaultConsumer(channel) {
-            override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
-                val jobMessage = JobMessage.parseFrom(body)!!
-                val messageQueue = getRequeueQueue(jobMessage)
-                if (messageQueue == null) {
-                    // Message has waited long enough
-                    var worked = false
-                    try {
-                        callback(jobMessage)
-                        channel.basicAck(envelope.deliveryTag, false)
-                        worked = true
-                    } finally {
-                        if (!worked) {
-                            delay(500, {
-                                channel.basicNack(envelope.deliveryTag, false, true)
-                            })
-                        }
-                    }
-                } else {
-                    queueJob(jobMessage)
-                    channel.basicAck(envelope.deliveryTag, false)
-                }
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+        val queue = DeliveryNotificationMessageQueue(name = "user.${authenticationId.userId}")
+        return listenOnQueue(queue, callback)
+    }
+
+    override fun listenForOutgoingEmails(callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+        return listenOnQueue(OutgoingEmailsMessageQueue.OUTGOING_EMAILS, callback)
+    }
+
+    override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
+        return listenOnQueue(JobMessageQueue.JOBS, { it ->
+            val messageQueue = getRequeueQueueByRequestedExecutionTime(it)
+            if (messageQueue == null) {
+                // Message has waited long enough
+                callback(it)
+            } else {
+                queueJob(it)
             }
-        }
-        channel.basicConsume(JobMessageQueue.JOBS.name, false, consumer)
-        return Closeable {
-            channel.close()
-        }
+        })
     }
 
-    private fun getRequeueQueue(jobMessage: JobMessage): JobMessageQueue? {
+    private fun getRequeueQueueByRequestedExecutionTime(jobMessage: JobMessage): JobMessageQueue? {
         val expectedDelay = Duration.between(
                 clock.instant(),
                 jobMessage.requestedExecutionTime.toInstant()
@@ -167,11 +171,22 @@ private constructor(
     }
 
     override fun queueJob(jobMessage: JobMessage) {
-        val queue = getRequeueQueue(jobMessage) ?: JobMessageQueue.JOBS
+        val queue = getRequeueQueueByRequestedExecutionTime(jobMessage) ?: JobMessageQueue.JOBS
         val jobMessageClone = JobMessage.newBuilder(jobMessage)
                 .setCreationTimestamp(clock.timestamp())
                 .build()
         queueJob(jobMessageClone, queue)
+    }
+
+    override fun queueOutgoingEmail(outgoingEmailMessage: OutgoingEmailMessage) {
+        val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
+        sendChannel.basicPublish(
+                "",
+                OutgoingEmailsMessageQueue.OUTGOING_EMAILS.name,
+                true,
+                basicProperties,
+                outgoingEmailMessage.toByteArray()
+        )
     }
 
     private fun queueJob(jobMessage: JobMessage, jobMessageQueue: JobMessageQueue) {
