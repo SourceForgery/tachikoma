@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
+import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
@@ -18,8 +19,10 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
-import com.sourceforgery.tachikoma.mq.JobFactory
+import com.sourceforgery.tachikoma.identifiers.EmailId
+import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
+import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
@@ -43,7 +46,8 @@ private constructor(
         private val dbObjectMapper: DBObjectMapper,
         private val emailDAO: EmailDAO,
         private val mqSender: MQSender,
-        private val jobFactory: JobFactory
+        private val jobMessageFactory: JobMessageFactory,
+        private val ebeanServer: EbeanServer
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
@@ -56,7 +60,8 @@ private constructor(
 
     private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         val transaction = EmailSendTransactionDBO(
-                jsonRequest = getRequestData(request)
+                jsonRequest = getRequestData(request),
+                fromEmail = request.from.toNamedEmail().address
         )
 
         val static = request.static!!
@@ -70,29 +75,38 @@ private constructor(
                     Instant.EPOCH
                 }
 
-        for (recipient in request.recipientsList) {
-            // TODO Check if recipient is blocked
+        ebeanServer.createTransaction().use {
+            val emailIds = LinkedHashMap<EmailId, Email>()
+            for (recipient in request.recipientsList) {
+                // TODO Check if recipient is blocked
 
-            val emailDBO = EmailDBO(
-                    recipient = recipient.toNamedEmail(),
-                    transaction = transaction,
-                    sentEmailMessageBodyDBO = mailMessageBody
-            )
-            emailDAO.save(emailDBO)
-            mqSender.queueJob(jobFactory.createSendEmailJob(
+                val emailDBO = EmailDBO(
+                        recipient = recipient.toNamedEmail(),
+                        transaction = transaction,
+                        sentMailMessageBody = mailMessageBody
+                )
+                emailDAO.save(emailDBO)
+                emailIds[emailDBO.id] = emailDBO.recipient
+            }
+
+            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
                     requestedSendTime = requestedSendTime,
-                    emailId = emailDBO.id
+                    sentMailMessageBodyId = mailMessageBody.id,
+                    emailIds = emailIds.keys
             ))
-            responseObserver.onNext(
-                    EmailQueueStatus.newBuilder()
-                            .setEmailId(
-                                    emailDBO.id.toGrpcInternal()
-                            )
-                            .setQueued(Queued.getDefaultInstance())
-                            .setTransactionId(transaction.id.toGrpcInternal())
-                            .setRecipient(emailDBO.recipient.toGrpcInternal())
-                            .build()
-            )
+            val grpcEmailTransactionId = transaction.id.toGrpcInternal()
+            for ((emailId, recipient) in emailIds) {
+                responseObserver.onNext(
+                        EmailQueueStatus.newBuilder()
+                                .setEmailId(
+                                        emailId.toGrpcInternal()
+                                )
+                                .setQueued(Queued.getDefaultInstance())
+                                .setTransactionId(grpcEmailTransactionId)
+                                .setRecipient(recipient.toGrpcInternal())
+                                .build()
+                )
+            }
         }
         responseObserver.onCompleted()
     }
@@ -104,7 +118,8 @@ private constructor(
         }
 
         val transaction = EmailSendTransactionDBO(
-                jsonRequest = getRequestData(request)
+                jsonRequest = getRequestData(request),
+                fromEmail = request.from.toNamedEmail().address
         )
         val requestedSendTime =
                 if (request.hasSendAt()) {
@@ -135,12 +150,13 @@ private constructor(
             val emailDBO = EmailDBO(
                     recipient = recipient.toNamedEmail(),
                     transaction = transaction,
-                    sentEmailMessageBodyDBO = mailMessageBody
+                    sentMailMessageBody = mailMessageBody
             )
 
-            mqSender.queueJob(jobFactory.createSendEmailJob(
+            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
                     requestedSendTime = requestedSendTime,
-                    emailId = emailDBO.id
+                    sentMailMessageBodyId = mailMessageBody.id,
+                    emailIds = listOf(emailDBO.id)
             ))
             emailDAO.save(emailDBO)
 
