@@ -21,11 +21,11 @@ fun main(args: Array<String>) {
                             .setSubject("Test email " + Instant.now())
             )
             .addRecipients(EmailRecipient.newBuilder()
-                        .setNamedEmail(
-                                NamedEmail.newBuilder()
-                                        .setEmail("test@example.com")
-                                        .setName("This won't work")
-                        )
+                    .setNamedEmail(
+                            NamedEmail.newBuilder()
+                                    .setEmail("test@example.com")
+                                    .setName("This won't work")
+                    )
             )
             .setFrom(NamedEmail.newBuilder()
                     .setEmail("test@example.com")

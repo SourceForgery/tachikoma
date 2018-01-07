@@ -18,7 +18,6 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobFactory
 import com.sourceforgery.tachikoma.mq.MQSender
 import io.grpc.Status
