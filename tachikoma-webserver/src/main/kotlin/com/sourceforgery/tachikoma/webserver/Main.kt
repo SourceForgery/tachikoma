@@ -25,6 +25,7 @@ import com.sourceforgery.tachikoma.startup.StartupBinder
 import com.sourceforgery.tachikoma.webserver.hk2.HTTP_REQUEST_TYPE
 import com.sourceforgery.tachikoma.webserver.hk2.REQUEST_CONTEXT_TYPE
 import com.sourceforgery.tachikoma.webserver.hk2.WebBinder
+import io.ebean.EbeanServer
 import io.grpc.BindableService
 import io.grpc.ForwardingServerCallListener
 import io.grpc.Metadata
@@ -49,13 +50,21 @@ fun main(vararg args: String) {
     )!!
     val hK2RequestContext = serviceLocator.getService(HK2RequestContext::class.java)
 
+    listOf(
+            MessageQueue::class.java,
+            EbeanServer::class.java
+    )
+            // Yes, parallal stream is broken by design, but here it should work
+            .parallelStream()
+            .forEach({ serviceLocator.getService(it) })
+
     val scopedHttpRequest = serviceLocator.getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
     val scopedRequestContext = serviceLocator.getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
 
     val requestScoped = DecoratingServiceFunction<HttpRequest, HttpResponse> { delegate, ctx, req ->
         hK2RequestContext.runInScope {
             scopedHttpRequest.value = req
-            scopedRequestContext.value = ctx
+            scopedRequestContext.value = ctx!!
             delegate.serve(ctx, req)
         }
     }
