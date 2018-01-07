@@ -1,10 +1,11 @@
 package com.sourceforgery.tachikoma.database.server
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.database.hooks.EbeanHook
+import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import io.ebean.EbeanServer
+import io.ebean.config.EncryptKey
+import io.ebean.config.EncryptKeyManager
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.h2.H2Platform
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
@@ -13,6 +14,7 @@ import org.apache.logging.log4j.io.IoBuilder
 import org.avaje.datasource.DataSourceConfig
 import org.avaje.datasource.DataSourcePool
 import org.glassfish.hk2.api.Factory
+import org.glassfish.hk2.api.IterableProvider
 import java.net.URI
 import java.sql.Connection
 import java.sql.DriverManager
@@ -22,7 +24,10 @@ import javax.sql.DataSource
 
 internal class EbeanServerFactory @Inject constructor(
         private val databaseConfig: DatabaseConfig,
-        private val counter: InvokeCounter
+        private val counter: InvokeCounter,
+        private val dbObjectMapper: DBObjectMapper,
+        private val ebeanHooks: IterableProvider<EbeanHook>,
+        private val hK2RequestContext: HK2RequestContext
 ) : Factory<EbeanServer> {
 
     private inner class LoggingServerConfig : ServerConfig() {
@@ -64,12 +69,12 @@ internal class EbeanServerFactory @Inject constructor(
         dataSourceConfig.heartbeatSql = "select 1"
         dataSourceConfig.isAutoCommit = false
         dataSourceConfig.isolationLevel = Connection.TRANSACTION_READ_COMMITTED
-        //serverConfig.addPackage("com.sourceforgery.tachikoma.database.objects")
-        serverConfig.addPackage("com.sourceforgery.tachikoma.database.sql.objects")
+        serverConfig.addPackage("com.sourceforgery.tachikoma.database.objects")
         serverConfig.dataSourceConfig = dataSourceConfig
         serverConfig.isDefaultServer = false
         serverConfig.isRegister = false
-        serverConfig.objectMapper = createObjectMapper()
+        serverConfig.encryptKeyManager = EncryptKeyManager { _, _ -> EncryptKey { databaseConfig.databaseEncryptionKey } }
+        serverConfig.objectMapper = dbObjectMapper
         when (databaseConfig.sqlUrl.scheme) {
             "h2" -> {
                 dataSourceConfig.driver = "org.h2.Driver"
@@ -86,13 +91,13 @@ internal class EbeanServerFactory @Inject constructor(
             serverConfig.isDdlGenerate = true
             serverConfig.isDdlRun = true
         }
-        return io.ebean.EbeanServerFactory.create(serverConfig)
-    }
 
-    private fun createObjectMapper() =
-            ObjectMapper()
-                    .registerModule(JavaTimeModule())
-                    .registerKotlinModule()
+        return hK2RequestContext.runInScope {
+            val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
+            ebeanHooks.forEach { it.postStart(ebeanServer) }
+            ebeanServer
+        }
+    }
 
     override fun dispose(instance: EbeanServer) {
         instance.shutdown(true, false)

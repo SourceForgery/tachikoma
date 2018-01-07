@@ -1,17 +1,7 @@
-
-sourceSets {
-    main {
-        resources {
-            srcDirs = ["src/main/proto"]
-        }
-    }
-}
-
 apply plugin: 'idea'
 apply plugin: 'kotlin'
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "org.apache.logging.log4j:log4j-api:$log4j2_version"
 

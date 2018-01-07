@@ -1,16 +1,16 @@
 package com.sourceforgery.tachikoma.database.dao
 
-import com.sourceforgery.tachikoma.database.objects.UserDBO
+import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import io.ebean.EbeanServer
 import javax.inject.Inject
 
-class UserDAO
+class AuthenticationDAO
 @Inject
 private constructor(
         private val ebeanServer: EbeanServer
 ) {
     fun validateApiToken(apiToken: String) =
-            ebeanServer.find(UserDBO::class.java)
+            ebeanServer.find(AuthenticationDBO::class.java)
                     .where()
                     .eq("apiToken", apiToken)
                     .findOne()

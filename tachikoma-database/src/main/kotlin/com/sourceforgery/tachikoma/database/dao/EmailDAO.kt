@@ -1,5 +1,6 @@
-package com.sourceforgery.tachikoma.database.objects
+package com.sourceforgery.tachikoma.database.dao
 
+import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import io.ebean.EbeanServer
 import javax.inject.Inject
@@ -11,4 +12,6 @@ private constructor(
 ) {
     fun fetchEmailData(emailMessageId: EmailId) =
             ebeanServer.find(EmailDBO::class.java, emailMessageId.emailId)
+
+    fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
 }

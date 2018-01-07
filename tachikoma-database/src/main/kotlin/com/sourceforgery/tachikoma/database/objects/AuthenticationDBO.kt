@@ -1,14 +1,22 @@
 package com.sourceforgery.tachikoma.database.objects
 
-import com.sourceforgery.tachikoma.identifiers.UserId
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import io.ebean.annotation.Encrypted
 import javax.persistence.Column
+import javax.persistence.Entity
 import javax.persistence.ManyToOne
+import javax.persistence.Table
 
-class UserDBO(
-        // val password: String
+@Table(name = "e_user")
+@Entity
+// One user with
+class AuthenticationDBO(
+        @Column
+        var encryptedPassword: String? = null,
 
         @Column(unique = true)
-        var apiToken: String,
+        @Encrypted
+        var apiToken: String? = null,
 
         @Column
         val backend: Boolean = false,
@@ -16,6 +24,9 @@ class UserDBO(
         @ManyToOne
         val account: AccountDBO? = null
 ) : GenericDBO() {
+
+    // 'Fake' constructor for Ebean
+    private constructor() : this(backend = true)
 
     init {
         if (backend && account != null) {
@@ -27,5 +38,5 @@ class UserDBO(
     }
 }
 
-val UserDBO.id: UserId
-    get() = UserId(realId as Long)
+val AuthenticationDBO.id: AuthenticationId
+    get() = AuthenticationId(realId!!)
