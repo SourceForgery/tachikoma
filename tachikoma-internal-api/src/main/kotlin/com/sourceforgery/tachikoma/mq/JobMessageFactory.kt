@@ -3,7 +3,6 @@ package com.sourceforgery.tachikoma.mq
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.SentMailMessageBodyId
-import org.glassfish.hk2.api.ServiceLocator
 import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
