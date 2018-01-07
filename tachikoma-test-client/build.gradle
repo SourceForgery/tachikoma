@@ -5,5 +5,6 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
     compile "io.grpc:grpc-okhttp:1.8.0"
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
+    compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
 
 }
