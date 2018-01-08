@@ -1,8 +1,6 @@
 buildscript {
     dependencies {
         classpath "io.ebean:ebean-gradle-plugin:10.2.3"
-        classpath "io.ebean:kotlin-querybean-generator:10.1.2"
-        classpath "io.ebean:querybean-generator:${querybean_version}"
     }
 }
 
