@@ -197,6 +197,10 @@ private constructor(
         message.setFrom(InternetAddress(request.from.email, request.from.name))
         message.subject = subject
 
+        for ((key, value) in request.headersMap) {
+            message.addHeader(key, value)
+        }
+
         val multipart = MimeMultipart("alternative")
 
         val plaintextPart = MimeBodyPart()
