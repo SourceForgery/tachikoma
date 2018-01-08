@@ -10,11 +10,9 @@ import "google/protobuf/empty.proto";
 
 service MTAEmailQueue {
     // The postfix mailer daemon will hang waiting for emails via this stream
-    rpc getEmails(google.protobuf.Empty) returns (stream EmailMessage);
-
     // Once the postfix mailer daemon gets an email, it will start
     // looping out all the recipients. All results will be sent as a request stream here
-    rpc emailNotified(MTAQueuedNotification) returns(google.protobuf.Empty);
+    rpc getEmails(stream MTAQueuedNotification) returns (stream EmailMessage);
 
     // This is for mails coming from external mail servers
     rpc incomingEmail(IncomingEmailMessage) returns (google.protobuf.Empty);
@@ -23,6 +21,7 @@ service MTAEmailQueue {
 message EmailMessage {
     repeated string emailAddresses = 101;
     string from = 102;
+    sint64 emailTransactionId  = 103;
 
     string body = 201;
 }
@@ -37,4 +36,5 @@ message MTAQueuedNotification {
     string queueId = 101;
     bool success = 102;
     string recipientEmailAddress = 103;
+    sint64 emailTransactionId = 104;
 }
