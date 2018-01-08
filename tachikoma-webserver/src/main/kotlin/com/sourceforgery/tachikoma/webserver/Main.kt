@@ -129,6 +129,14 @@ internal class HK2RequestServerInterceptor(
                     super.onHalfClose()
                 }
             }
+
+            override fun onMessage(message: ReqT) {
+                hK2RequestContext.runInScope {
+                    scopedRequestContext.value = RequestContext.current()
+                    scopedRequestContext.value = RequestContext.current<RequestContext>().request()
+                    super.onMessage(message)
+                }
+            }
         }
     }
 }
