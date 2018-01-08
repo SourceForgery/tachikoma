@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.common
 import com.google.protobuf.Timestamp
 import java.time.Clock
 import java.time.Instant
+import java.util.concurrent.ThreadLocalRandom
 
 inline fun <T : AutoCloseable, R> T.use(closeable: T, block: (T) -> R): R {
     try {
@@ -15,6 +16,15 @@ inline fun <T : AutoCloseable, R> T.use(closeable: T, block: (T) -> R): R {
 inline fun delay(millis: Long, alwaysRun: () -> Unit) {
     try {
         Thread.sleep(millis)
+    } finally {
+        alwaysRun()
+    }
+}
+
+inline fun randomDelay(millis: LongRange, alwaysRun: () -> Unit) {
+    try {
+        val randomMillis = ThreadLocalRandom.current().nextLong(millis.start, millis.endInclusive)
+        Thread.sleep(randomMillis)
     } finally {
         alwaysRun()
     }
