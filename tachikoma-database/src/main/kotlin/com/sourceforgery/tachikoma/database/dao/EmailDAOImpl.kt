@@ -7,24 +7,24 @@ import com.sourceforgery.tachikoma.identifiers.SentMailMessageBodyId
 import io.ebean.EbeanServer
 import javax.inject.Inject
 
-class EmailDAO
+class EmailDAOImpl
 @Inject
 private constructor(
         private val ebeanServer: EbeanServer
-) {
-    fun fetchEmailData(emailMessageId: EmailId) =
+) : EmailDAO {
+    override fun fetchEmailData(emailMessageId: EmailId) =
             ebeanServer.find(EmailDBO::class.java, emailMessageId.emailId)
 
-    fun fetchEmailData(emailMessageIds: List<EmailId>, sentMailMessageBodyId: SentMailMessageBodyId) =
+    override fun fetchEmailData(emailMessageIds: List<EmailId>, sentMailMessageBodyId: SentMailMessageBodyId) =
             ebeanServer.find(EmailDBO::class.java)
                     .where()
                     .eq("sentMailMessageBody.dbId", sentMailMessageBodyId.sentMailMessageBodyId)
                     .`in`("dbId", emailMessageIds.map { it.emailId })
                     .findList()
 
-    fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
+    override fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
 
-    fun updateMTAQueueStatus(emailTransactionId: EmailTransactionId, queueId: String) {
+    override fun updateMTAQueueStatus(emailTransactionId: EmailTransactionId, queueId: String) {
         ebeanServer.update(EmailDBO::class.java)
                 .set("mtaQueueId", queueId)
                 .where()

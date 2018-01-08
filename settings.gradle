@@ -10,6 +10,7 @@ include 'tachikoma-internal-proto-jvm'
 include 'tachikoma-internal-api'
 
 include 'tachikoma-mq'
+include 'tachikoma-database-api'
 include 'tachikoma-database'
 include 'tachikoma-grpc'
 include 'tachikoma-rest'
