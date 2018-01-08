@@ -98,9 +98,7 @@ private constructor(
             for ((emailId, recipient) in emailIds) {
                 responseObserver.onNext(
                         EmailQueueStatus.newBuilder()
-                                .setEmailId(
-                                        emailId.toGrpcInternal()
-                                )
+                                .setEmailId(emailId.toGrpcInternal())
                                 .setQueued(Queued.getDefaultInstance())
                                 .setTransactionId(grpcEmailTransactionId)
                                 .setRecipient(recipient.toGrpcInternal())
@@ -162,9 +160,7 @@ private constructor(
 
             responseObserver.onNext(
                     EmailQueueStatus.newBuilder()
-                            .setEmailId(
-                                    emailDBO.id.toGrpcInternal()
-                            )
+                            .setEmailId(emailDBO.id.toGrpcInternal())
                             .setQueued(Queued.getDefaultInstance())
                             .setTransactionId(transaction.id.toGrpcInternal())
                             .setRecipient(emailDBO.recipient.toGrpcInternal())
