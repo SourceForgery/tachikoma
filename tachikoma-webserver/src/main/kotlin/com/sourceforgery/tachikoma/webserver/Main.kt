@@ -34,6 +34,7 @@ import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
 import io.grpc.ServerInterceptors
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
+import java.time.Duration
 import java.util.function.Function
 
 @Suppress("unused")
@@ -103,6 +104,7 @@ fun main(vararg args: String) {
             .decorator(Function { it.decorate(requestScoped) })
             .serviceUnder("/", grpcService)
             .port(8070, SessionProtocol.HTTP)
+            .defaultRequestTimeout(Duration.ofDays(365))
             .build()
             .start()
             .join()
