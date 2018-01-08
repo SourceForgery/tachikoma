@@ -14,7 +14,3 @@ dependencies {
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
 }
-
-sourceSets {
-    main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
-}
