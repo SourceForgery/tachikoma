@@ -2,7 +2,7 @@ package com.sourceforgery.tachikoma.webserver
 
 import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
-import com.sourceforgery.tachikoma.common.HmacUtil.validateHmacSha1
+import com.sourceforgery.tachikoma.common.HmacUtil.hmacSha1
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.objects.id
@@ -30,18 +30,18 @@ private constructor(
 
     private fun parseApiTokenHeader() =
             httpHeaders[APITOKEN_HEADER]
-            ?.let {
-                // TODO Needs to be handled better. This is slow and hits the database too much
-                authenticationDAO.validateApiToken(it)
-            }
-            ?.let {
-                AuthenticationImpl(
-                        // No webtoken should allow backend
-                        allowBackend = false,
-                        authenticationId = it.id,
-                        accountId = it.account?.id
-                )
-            }
+                    ?.let {
+                        // TODO Needs to be handled better. This is slow and hits the database too much
+                        authenticationDAO.validateApiToken(it)
+                    }
+                    ?.let {
+                        AuthenticationImpl(
+                                // No webtoken should allow backend
+                                allowBackend = false,
+                                authenticationId = it.id,
+                                accountId = it.account?.id
+                        )
+                    }
 
     private fun parseWebTokenHeader(): Authentication? {
         val webtokenHeader = httpHeaders[WEBTOKEN_HEADER]
@@ -53,9 +53,9 @@ private constructor(
         if (splitToken.size != 2) {
             return null
         }
-        val payloadSignature = splitToken[0]
-        val payload = BASE64_DECODER.decode(splitToken[1])
-        if (!validateHmacSha1(webServerConfig.webtokenSignKey, payload, payloadSignature)) {
+        val payloadSignature = BASE64_DECODER.decode(splitToken[0])!!
+        val payload = BASE64_DECODER.decode(splitToken[1])!!
+        if (hmacSha1(webServerConfig.webtokenSignKey, payload).contentEquals(payloadSignature)) {
             return null
         }
         val tokenAuthData = WebTokenAuthData.parseFrom(payload)
