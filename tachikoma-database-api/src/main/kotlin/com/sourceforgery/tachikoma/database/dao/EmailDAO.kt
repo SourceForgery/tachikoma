@@ -7,7 +7,7 @@ import com.sourceforgery.tachikoma.identifiers.SentMailMessageBodyId
 
 interface EmailDAO {
     fun fetchEmailData(emailMessageId: EmailId): EmailDBO?
-    fun fetchEmailData(emailMessageIds: List<EmailId>, sentMailMessageBodyId: SentMailMessageBodyId): MutableList<EmailDBO>
+    fun fetchEmailData(emailMessageIds: List<EmailId>, sentMailMessageBodyId: SentMailMessageBodyId): List<EmailDBO>
     fun save(emailDBO: EmailDBO)
     fun updateMTAQueueStatus(emailTransactionId: EmailTransactionId, queueId: String)
 }
