@@ -69,22 +69,38 @@ private constructor(
         return scopeInstance!!
     }
 
-    private fun retrieveCurrent(): Instance? {
+    internal fun retrieveCurrent(): Instance? {
         checkState(isActive, "Request scope has been already shut down.")
         return currentScopeInstance.get()
     }
 
-    private fun setCurrent(instance: Instance) {
+    internal fun setCurrent(instance: Instance) {
         checkState(isActive, "Request scope has been already shut down.")
         currentScopeInstance.set(instance)
     }
 
-    private fun resumeCurrent(instance: Instance?) {
+    internal fun resumeCurrent(instance: Instance?) {
         currentScopeInstance.set(instance)
     }
 
-    private fun createInstance(): Instance {
+    internal fun createInstance(): Instance {
         return Instance()
+    }
+
+    internal fun release(instance: Instance) {
+        instance.release()
+    }
+
+    internal fun <T> runInScope(instance: Instance, task: (ServiceLocator) -> T): T {
+        val oldInstance = retrieveCurrent()
+        try {
+            setCurrent(instance)
+            LOGGER.trace { "Entering request scope" }
+            return task(serviceLocator)
+        } finally {
+            LOGGER.trace { "Leaving request scope" }
+            resumeCurrent(oldInstance)
+        }
     }
 
     override fun <T> runInScope(task: (ServiceLocator) -> T): T {
@@ -96,7 +112,7 @@ private constructor(
             return task(serviceLocator)
         } finally {
             LOGGER.trace { "Leaving request scope" }
-            instance.release()
+            release(instance)
             resumeCurrent(oldInstance)
         }
     }
