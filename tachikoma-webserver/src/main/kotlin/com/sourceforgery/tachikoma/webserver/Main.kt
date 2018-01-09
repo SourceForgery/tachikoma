@@ -78,7 +78,6 @@ fun main(vararg args: String) {
         })
     }
 
-
     val healthService = CorsServiceBuilder
             .forAnyOrigin()
             .allowNullOrigin()
