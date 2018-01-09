@@ -28,8 +28,17 @@ import com.sourceforgery.tachikoma.webserver.hk2.REQUEST_CONTEXT_TYPE
 import com.sourceforgery.tachikoma.webserver.hk2.WebBinder
 import io.ebean.EbeanServer
 import io.grpc.BindableService
+import io.grpc.ForwardingServerCall
+import io.grpc.Metadata
+import io.grpc.ServerCall
+import io.grpc.ServerCallHandler
+import io.grpc.ServerInterceptor
+import io.grpc.ServerInterceptors
+import io.grpc.Status
 import io.netty.util.AttributeKey
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.time.Duration
 import java.util.function.Consumer
 import java.util.function.Function
@@ -74,7 +83,11 @@ fun main(vararg args: String) {
             serviceLocator
                     .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
                     .value = ctx
-            delegate.serve(ctx, req)
+            try {
+                delegate.serve(ctx, req)
+            } catch (e: Exception) {
+                handleException(e)
+            }
         })
     }
 
@@ -85,6 +98,7 @@ fun main(vararg args: String) {
             .allowRequestMethods(HttpMethod.GET)
             .build(object : HttpHealthCheckService() {})!!
 
+
     // Order matters!
     val serverBuilder = ServerBuilder()
             .serviceUnder("/health", healthService)
@@ -92,9 +106,10 @@ fun main(vararg args: String) {
         serverBuilder.annotatedService("/", restService)
     }
 
+    val exceptionInterceptor = ExceptionInterceptor()
     val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())!!
     for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
-        grpcServiceBuilder.addService(grpcService)
+        grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, exceptionInterceptor))
     }
     val grpcService = grpcServiceBuilder.build()!!
 
@@ -113,3 +128,38 @@ fun main(vararg args: String) {
 
 private val HK2_CONTEXT_KEY = AttributeKey.valueOf<Instance>("HK2_CONTEXT")
 private val OLD_HK2_CONTEXT_KEY = AttributeKey.valueOf<Instance>("OLD_HK2_CONTEXT")
+
+internal class ExceptionInterceptor : ServerInterceptor {
+    override fun <ReqT, RespT> interceptCall(call: ServerCall<ReqT, RespT>, headers: Metadata, next: ServerCallHandler<ReqT, RespT>): ServerCall.Listener<ReqT> {
+        val wrappedCall = object : ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT>(call) {
+            override fun close(status: Status, trailers: Metadata?) {
+                System.out.println("Interceptor: " + (status.cause?.javaClass?.name ?: "null"));
+                val e = status.cause
+                val sentStatus = if (status.code == Status.Code.UNKNOWN
+                        && status.description == null
+                        && e != null) {
+                    Status.INTERNAL
+                            .withDescription(e.message)
+                            .augmentDescription(stacktraceToString(e));
+                } else {
+                    status
+                }
+
+
+                super.close(sentStatus, trailers)
+            }
+        }
+        return next.startCall(wrappedCall, headers)
+    }
+}
+
+private fun handleException(e: Exception): Nothing {
+    e.printStackTrace()
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+}
+
+
+private fun stacktraceToString(e: Throwable) =
+        StringWriter().use {
+            e.printStackTrace(PrintWriter(it))
+        }.toString()
