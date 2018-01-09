@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.maildelivery.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
@@ -126,55 +127,66 @@ private constructor(
                     Instant.EPOCH
                 }
 
-        val globalVars =
+        val globalVarsStruct =
                 if (template.hasGlobalVars()) {
                     template.globalVars
                 } else {
                     Struct.getDefaultInstance()
                 }
-        for (recipient in request.recipientsList) {
-            // TODO Check if recipient is blocked
-            val recipientVars = recipient.templateVars
-            val htmlBody = mergeTemplate(template.htmlTemplate, globalVars, recipientVars)
-            val plaintextBody = mergeTemplate(template.plaintextTemplate, globalVars, recipientVars)
-            val mailMessageBody = SentMailMessageBodyDBO(
-                    wrapAndPackBody(
-                            request = request,
-                            htmlBody = htmlBody.emptyToNull(),
-                            plaintextBody = plaintextBody.emptyToNull(),
-                            subject = mergeTemplate(template.subject, globalVars, recipientVars)
-                    )
-            )
-            val emailDBO = EmailDBO(
-                    recipient = recipient.toNamedEmail(),
-                    transaction = transaction,
-                    sentMailMessageBody = mailMessageBody
-            )
+        val globalVars = unwrapStruct(globalVarsStruct)
 
-            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                    requestedSendTime = requestedSendTime,
-                    sentMailMessageBodyId = mailMessageBody.id,
-                    emailIds = listOf(emailDBO.id)
-            ))
-            emailDAO.save(emailDBO)
+        ebeanServer.createTransaction().use {
+            for (recipient in request.recipientsList) {
+                // TODO Check if recipient is blocked
+                val recipientVars = unwrapStruct(recipient.templateVars)
+                val htmlBody = mergeTemplate(template.htmlTemplate, globalVars, recipientVars)
+                val plaintextBody = mergeTemplate(template.plaintextTemplate, globalVars, recipientVars)
+                val mailMessageBody = SentMailMessageBodyDBO(
+                        wrapAndPackBody(
+                                request = request,
+                                htmlBody = htmlBody.emptyToNull(),
+                                plaintextBody = plaintextBody.emptyToNull(),
+                                subject = mergeTemplate(template.subject, globalVars, recipientVars)
+                        )
+                )
+                val emailDBO = EmailDBO(
+                        recipient = recipient.toNamedEmail(),
+                        transaction = transaction,
+                        sentMailMessageBody = mailMessageBody
+                )
+                emailDAO.save(emailDBO)
 
-            responseObserver.onNext(
-                    EmailQueueStatus.newBuilder()
-                            .setEmailId(emailDBO.id.toGrpcInternal())
-                            .setQueued(Queued.getDefaultInstance())
-                            .setTransactionId(transaction.id.toGrpcInternal())
-                            .setRecipient(emailDBO.recipient.toGrpcInternal())
-                            .build()
-            )
+                mqSender.queueJob(jobMessageFactory.createSendEmailJob(
+                        requestedSendTime = requestedSendTime,
+                        sentMailMessageBodyId = mailMessageBody.id,
+                        emailIds = listOf(emailDBO.id)
+                ))
+
+                responseObserver.onNext(
+                        EmailQueueStatus.newBuilder()
+                                .setEmailId(emailDBO.id.toGrpcInternal())
+                                .setQueued(Queued.getDefaultInstance())
+                                .setTransactionId(transaction.id.toGrpcInternal())
+                                .setRecipient(emailDBO.recipient.toGrpcInternal())
+                                .build()
+                )
+            }
+            responseObserver.onCompleted()
         }
-        responseObserver.onCompleted()
+    }
+
+    private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
+        return dbObjectMapper.readValue<HashMap<String, Any>>(
+                JsonFormat.printer().print(struct),
+                object : TypeReference<HashMap<String, Any>>() {}
+        )
     }
 
     // Store the request for later debugging
     private fun getRequestData(request: OutgoingEmail) =
             dbObjectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
 
-    private fun mergeTemplate(template: String?, vararg scopes: Any) =
+    private fun mergeTemplate(template: String?, vararg scopes: HashMap<String, Any>) =
             StringWriter().use {
                 DefaultMustacheFactory()
                         .compile(StringReader(template), "html")

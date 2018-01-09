@@ -1,17 +1,18 @@
 package com.sourceforgery.tachikoma.database.dao
 
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
+import com.sourceforgery.tachikoma.database.objects.query.QAuthenticationDBO
 import io.ebean.EbeanServer
 import javax.inject.Inject
 
-class AuthenticationDAO
+class AuthenticationDAOImpl
 @Inject
 private constructor(
         private val ebeanServer: EbeanServer
-) {
-    fun validateApiToken(apiToken: String) =
-            ebeanServer.find(AuthenticationDBO::class.java)
-                    .where()
-                    .eq("apiToken", apiToken)
-                    .findOne()
+) : AuthenticationDAO {
+    override fun validateApiToken(apiToken: String): AuthenticationDBO? {
+        val query = QAuthenticationDBO(ebeanServer)
+        query.apiToken.eq(apiToken)
+        return query.findOne()
+    }
 }

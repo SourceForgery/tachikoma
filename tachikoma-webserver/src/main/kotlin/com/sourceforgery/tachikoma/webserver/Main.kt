@@ -127,7 +127,7 @@ internal class HK2RequestServerInterceptor(
             override fun onHalfClose() {
                 hK2RequestContext.runInScope {
                     scopedRequestContext.value = RequestContext.current()
-                    scopedRequestContext.value = RequestContext.current<RequestContext>().request()
+                    scopedHttpRequest.value = RequestContext.current<RequestContext>().request()
                     super.onHalfClose()
                 }
             }
@@ -135,7 +135,7 @@ internal class HK2RequestServerInterceptor(
             override fun onMessage(message: ReqT) {
                 hK2RequestContext.runInScope {
                     scopedRequestContext.value = RequestContext.current()
-                    scopedRequestContext.value = RequestContext.current<RequestContext>().request()
+                    scopedHttpRequest.value = RequestContext.current<RequestContext>().request()
                     super.onMessage(message)
                 }
             }
