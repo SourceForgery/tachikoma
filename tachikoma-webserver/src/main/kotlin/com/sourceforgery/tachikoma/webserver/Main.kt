@@ -16,7 +16,8 @@ import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
-import com.sourceforgery.tachikoma.hk2.HK2RequestContext
+import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl
+import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl.Instance
 import com.sourceforgery.tachikoma.hk2.SettableReference
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MessageQueue
@@ -27,14 +28,10 @@ import com.sourceforgery.tachikoma.webserver.hk2.REQUEST_CONTEXT_TYPE
 import com.sourceforgery.tachikoma.webserver.hk2.WebBinder
 import io.ebean.EbeanServer
 import io.grpc.BindableService
-import io.grpc.ForwardingServerCallListener
-import io.grpc.Metadata
-import io.grpc.ServerCall
-import io.grpc.ServerCallHandler
-import io.grpc.ServerInterceptor
-import io.grpc.ServerInterceptors
+import io.netty.util.AttributeKey
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import java.time.Duration
+import java.util.function.Consumer
 import java.util.function.Function
 
 @Suppress("unused")
@@ -49,7 +46,7 @@ fun main(vararg args: String) {
             DatabaseBinder(),
             WebBinder()
     )!!
-    val hK2RequestContext = serviceLocator.getService(HK2RequestContext::class.java)
+    val hK2RequestContext = serviceLocator.getService(HK2RequestContextImpl::class.java)
 
     listOf(
             MessageQueue::class.java,
@@ -59,26 +56,26 @@ fun main(vararg args: String) {
             .parallelStream()
             .forEach({ serviceLocator.getService(it) })
 
-    val scopedHttpRequest = serviceLocator.getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
-    val scopedRequestContext = serviceLocator.getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
-
     val requestScoped = DecoratingServiceFunction<HttpRequest, HttpResponse> { delegate, ctx, req ->
-        hK2RequestContext.runInScope {
-            scopedHttpRequest.value = req
-            scopedRequestContext.value = ctx!!
+        val oldHk2Ctx = hK2RequestContext.retrieveCurrent()
+        ctx.attr(OLD_HK2_CONTEXT_KEY).set(oldHk2Ctx)
+        val hk2Ctx = hK2RequestContext.createInstance()
+        ctx.attr(HK2_CONTEXT_KEY).set(hk2Ctx)
+        ctx.onEnter(Consumer {
+            hK2RequestContext.setCurrent(hk2Ctx)
+        })
+        ctx.onExit(Consumer {
+            hK2RequestContext.resumeCurrent(oldHk2Ctx)
+        })
+        hK2RequestContext.runInScope(hk2Ctx, {
+            serviceLocator
+                    .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
+                    .value = req
+            serviceLocator
+                    .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
+                    .value = ctx
             delegate.serve(ctx, req)
-        }
-    }
-
-    val grpcServiceBuilder = GrpcServiceBuilder()
-            .supportedSerializationFormats(GrpcSerializationFormats.values())!!
-    val headerServerInterceptor = HK2RequestServerInterceptor(
-            hK2RequestContext = hK2RequestContext,
-            scopedRequestContext = scopedRequestContext,
-            scopedHttpRequest = scopedHttpRequest
-    )
-    for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
-        grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, headerServerInterceptor))
+        })
     }
 
     val healthService = CorsServiceBuilder
@@ -95,6 +92,10 @@ fun main(vararg args: String) {
         serverBuilder.annotatedService("/", restService)
     }
 
+    val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())!!
+    for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
+        grpcServiceBuilder.addService(grpcService)
+    }
     val grpcService = grpcServiceBuilder.build()!!
 
     serviceLocator.getService(JobWorker::class.java).work()
@@ -110,35 +111,5 @@ fun main(vararg args: String) {
             .join()
 }
 
-// TODO could be replaced by registering an onEnter() and onExit() on RequestContext
-// thanks @anuraaga
-internal class HK2RequestServerInterceptor(
-        private val hK2RequestContext: HK2RequestContext,
-        private val scopedHttpRequest: SettableReference<HttpRequest>,
-        private val scopedRequestContext: SettableReference<RequestContext>
-) : ServerInterceptor {
-    override fun <ReqT, RespT> interceptCall(
-            call: ServerCall<ReqT, RespT>,
-            requestHeaders: Metadata,
-            next: ServerCallHandler<ReqT, RespT>
-    ): ServerCall.Listener<ReqT> {
-        val startCall = next.startCall(call, requestHeaders)
-        return object : ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(startCall) {
-            override fun onHalfClose() {
-                hK2RequestContext.runInScope {
-                    scopedRequestContext.value = RequestContext.current()
-                    scopedHttpRequest.value = RequestContext.current<RequestContext>().request()
-                    super.onHalfClose()
-                }
-            }
-
-            override fun onMessage(message: ReqT) {
-                hK2RequestContext.runInScope {
-                    scopedRequestContext.value = RequestContext.current()
-                    scopedHttpRequest.value = RequestContext.current<RequestContext>().request()
-                    super.onMessage(message)
-                }
-            }
-        }
-    }
-}
+private val HK2_CONTEXT_KEY = AttributeKey.valueOf<Instance>("HK2_CONTEXT")
+private val OLD_HK2_CONTEXT_KEY = AttributeKey.valueOf<Instance>("OLD_HK2_CONTEXT")
