@@ -129,7 +129,7 @@ message EmailQueueStatus {
     Email recipient = 101;
 
     // Only exists if DeliveryStatus is NOT rejected
-    EmailMessageId emailId = 103;
+    EmailId emailId = 103;
 
     // The transaction the
     EmailTransactionId transactionId = 104;

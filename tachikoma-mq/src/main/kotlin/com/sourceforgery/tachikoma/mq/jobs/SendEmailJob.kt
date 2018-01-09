@@ -13,9 +13,8 @@ private constructor(
     override fun execute(jobMessage: JobMessage) {
         val sendEmailJob = jobMessage.sendEmailJob
         val outgoingEmail = OutgoingEmailMessage.newBuilder()
-                .addAllEmailId(sendEmailJob.emailIdList)
+                .setEmailId(sendEmailJob.emailId)
                 .setCreationTimestamp(jobMessage.creationTimestamp)
-                .setSentMailMessageBodyId(sendEmailJob.sentMailMessageBodyId)
                 .build()
         mqSender.queueOutgoingEmail(outgoingEmail)
     }

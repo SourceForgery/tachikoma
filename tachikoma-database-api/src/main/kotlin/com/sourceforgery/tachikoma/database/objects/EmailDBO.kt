@@ -22,24 +22,25 @@ constructor(
         val recipientName: String,
         @ManyToOne(cascade = [CascadeType.ALL])
         val transaction: EmailSendTransactionDBO,
-        @ManyToOne(cascade = [CascadeType.ALL])
-        val sentMailMessageBody: SentMailMessageBodyDBO,
         @Column
         var mtaQueueId: String? = null
 ) : GenericDBO() {
+
+    @Column(columnDefinition = "TEXT")
+            // TODO should this be a string or a byte array?
+    var body: String? = null
+
     @OneToMany
     val emailStatusEvents: List<EmailStatusEventDBO> = BeanList()
 
     constructor(
             recipient: NamedEmail,
             transaction: EmailSendTransactionDBO,
-            sentMailMessageBody: SentMailMessageBodyDBO,
             mtaQueueId: String? = null
     ) : this(
             recipient = recipient.address,
             recipientName = recipient.name,
             transaction = transaction,
-            sentMailMessageBody = sentMailMessageBody,
             mtaQueueId = mtaQueueId
     )
 }

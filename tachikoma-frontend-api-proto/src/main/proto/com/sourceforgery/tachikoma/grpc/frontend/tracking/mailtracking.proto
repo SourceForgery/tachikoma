@@ -13,11 +13,11 @@ service DeliveryNotificationService {
 }
 
 message EmailNotification {
-    EmailMessageId emailId = 101;
+    EmailId emailId = 101;
     Email recipientEmailAddress = 102;
     EmailTransactionId emailTransactionId = 103;
     google.protobuf.Timestamp timestamp = 104;
-    oneof notification  {
+    oneof notification {
         SoftBouncedEvent softBouncedEvent = 201;
         HardBouncedEvent hardBouncedEvent = 202;
         DeliveredEvent delivereddEvent = 203;
