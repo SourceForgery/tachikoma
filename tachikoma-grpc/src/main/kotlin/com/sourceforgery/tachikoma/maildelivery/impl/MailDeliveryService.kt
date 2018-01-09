@@ -178,8 +178,7 @@ private constructor(
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
-        val objectMapper = ObjectMapper().registerKotlinModule()
-        return objectMapper.readValue<HashMap<String, Any>>(
+        return dbObjectMapper.readValue<HashMap<String, Any>>(
                 JsonFormat.printer().print(struct),
                 object : TypeReference<HashMap<String, Any>>() {}
         )
