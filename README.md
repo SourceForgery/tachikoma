@@ -64,7 +64,7 @@ the webserver (for e.g. gRPC) at port 8070.
   *but only in the api projects*
 
 
-**Getting around IntelliJ quirks**
+**Getting around some quirks**
 1. Build with ```./gradlew build``` in the root (should build cleanly).
 2. (May not be necessary) Manually mark all these as Generated sources in the ```Mark Directory as``` context menu.
   * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/java```
@@ -75,3 +75,4 @@ the webserver (for e.g. gRPC) at port 8070.
 4. When IntelliJ flakes out and complains about trying to use 1.8 stuff on 1.6, go ```Open Module Settings```,
   go ```Facets``` and add Kotlin Facet to _all_ modules (and their partial modules, e.g. main and test) you're having
   problems with. Problem will persist until you catch 'em all.
+5. `gw clean build` will only work on new builds OR when the `.gradle` in the tachikoma directory has been removed.

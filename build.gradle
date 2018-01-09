@@ -1,5 +1,6 @@
 buildscript {
     dependencies {
+        classpath "io.ebean:ebean-gradle-plugin:10.2.3"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:3.0.0"
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
@@ -8,6 +9,7 @@ buildscript {
 
     }
     repositories {
+        mavenLocal()
         maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
         maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
         maven { url "https://plugins.gradle.org/m2/" }
@@ -19,15 +21,14 @@ buildscript {
 plugins {
     id 'net.researchgate.release' version '2.6.0'
 }
-
 apply plugin: 'java'
-apply plugin: 'kotlin'
 
 subprojects {
     apply plugin: 'idea'
 
     buildscript {
         repositories {
+            mavenLocal()
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
             maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
             maven { url "https://plugins.gradle.org/m2/" }
@@ -43,6 +44,7 @@ subprojects {
     }
 
     repositories {
+        mavenLocal()
         maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
         maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
         mavenCentral()
@@ -86,6 +88,8 @@ subprojects {
             testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
             testCompile 'org.junit.platform:junit-platform-runner:1.0.2'
             compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+            compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+
         }
     }
 }
