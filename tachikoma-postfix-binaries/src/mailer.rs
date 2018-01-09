@@ -51,9 +51,9 @@ fn handle_client(stream: UnixStream, mta_queue_client: &MTAEmailQueueClient) {
 
 
 #[allow(dead_code)]
-fn send_email(email_message: &EmailMessage, tx: &Sender<MTAQueuedNotification>) {
-    let from = EmailAddress::new(email_message.get_from().to_string());
-    let body = email_message.get_body().to_string();
+fn send_email(mut email_message: EmailMessage, tx: &Sender<MTAQueuedNotification>) {
+    let from = EmailAddress::new(email_message.take_from());
+    let body = email_message.take_body();
 
     // Open a local connection on port SMTP_OUTGOING_PORT
     let mut mailer = SmtpTransportBuilder::new(("localhost", SMTP_OUTGOING_PORT), ClientSecurity::None).unwrap()
@@ -61,34 +61,33 @@ fn send_email(email_message: &EmailMessage, tx: &Sender<MTAQueuedNotification>) 
         .build();
 
     // Send the emails
-    for receiver in email_message.get_emailAddresses() {
-        let email = SimpleSendableEmail::new(
-            from.clone(),
-            vec![EmailAddress::new(receiver.clone())],
-            "".to_string(),
-            body.clone(),
-        );
+    let receiver = email_message.take_emailAddress();
+    let email = SimpleSendableEmail::new(
+        from.clone(),
+        vec![EmailAddress::new(receiver.clone())],
+        String::new(),
+        body,
+    );
 
-        let mailer_result = mailer.send(&email);
+    let mailer_result = mailer.send(&email);
 
-        let mut notification = MTAQueuedNotification::new();
-        notification.set_recipientEmailAddress(receiver.clone());
-        notification.set_emailTransactionId(email_message.get_emailTransactionId());
+    let mut notification = MTAQueuedNotification::new();
+    notification.set_recipientEmailAddress(receiver);
+    notification.set_emailTransactionId(email_message.get_emailTransactionId());
 
-        if let Ok(mailer_response) = mailer_result {
-            let _result_lines_with_message_id = mailer_response.message;
-            // TODO extract queue id from postfix response
-            notification.set_queueId("Here should be something".to_string());
-            notification.set_success(true);
-            println!("Email sent");
-        } else {
-            notification.set_success(false);
-            println!("Could not send email: {:?}", mailer_result);
-        }
-        match tx.send(notification) {
-            Err(e) => println!("This is bad! Failed to send: {:?}", e),
-            Ok(ok) => println!("This managed to send: {:?}", ok)
-        }
+    if let Ok(mailer_response) = mailer_result {
+        let _result_lines_with_message_id = mailer_response.message;
+        // TODO extract queue id from postfix response
+        notification.set_queueId("Here should be something".to_string());
+        notification.set_success(true);
+        println!("Email sent");
+    } else {
+        notification.set_success(false);
+        println!("Could not send email: {:?}", mailer_result);
+    }
+    match tx.send(notification) {
+        Err(e) => println!("This is bad! Failed to send: {:?}", e),
+        Ok(ok) => println!("This managed to send: {:?}", ok)
     }
 
     println!("Should've sent message {:?}", email_message);
@@ -101,7 +100,7 @@ fn listen_for_emails(mta_queue_client: Arc<MTAEmailQueueClient>) {
     let email_stream = mta_queue_client.get_emails(grpc::RequestOptions::new(), grpc_req_stream);
     email_stream.map_items(
         move |email_message| {
-            send_email(&email_message, &tx)
+            send_email(email_message, &tx)
         }
     );
 }

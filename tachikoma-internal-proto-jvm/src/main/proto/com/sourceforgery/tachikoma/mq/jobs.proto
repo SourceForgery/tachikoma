@@ -19,22 +19,14 @@ message JobMessage {
 
 // Job sending the message
 message SendEmailJob {
-    // All messages MUST share a common sentMailMessageBodyId
-    sint64 sentMailMessageBodyId = 103;
-
-    // Lots of EmailDBO.ids. Some can fail and have to be retried, thus,
-    // needs to be more fine grained than EmailSendTransactionDBO.id
-    repeated sint64 emailId = 101;
+    // The email id to send
+    sint64 emailId = 101;
 }
 
 message OutgoingEmailMessage {
     // When this job was queued
     google.protobuf.Timestamp creationTimestamp = 101;
 
-    // All messages MUST share a common sentMailMessageBodyId
-    sint64 sentMailMessageBodyId = 103;
-    // Lots of EmailDBO.ids. Some can fail and have to be retried, thus,
-    // needs to be more fine grained than EmailSendTransactionDBO.id
-    // If empty, will send all emails in that transaction
-    repeated sint64 emailId = 102;
+    // The email id to send
+    sint64 emailId = 102;
 }

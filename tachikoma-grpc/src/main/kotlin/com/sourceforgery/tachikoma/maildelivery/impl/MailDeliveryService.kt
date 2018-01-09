@@ -5,32 +5,36 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
-import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
-import com.sourceforgery.tachikoma.database.objects.SentMailMessageBodyDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
+import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
+import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import net.htmlparser.jericho.Source
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
+import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.Properties
@@ -48,26 +52,15 @@ private constructor(
         private val emailDAO: EmailDAO,
         private val mqSender: MQSender,
         private val jobMessageFactory: JobMessageFactory,
-        private val ebeanServer: EbeanServer
+        private val ebeanServer: EbeanServer,
+        private val trackingDecoderImpl: TrackingDecoderImpl
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
-        when (request.bodyCase!!) {
-            OutgoingEmail.BodyCase.STATIC -> sendStaticEmail(request, responseObserver)
-            OutgoingEmail.BodyCase.TEMPLATE -> sendTemplatedEmail(request, responseObserver)
-            else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
-        }
-    }
 
-    private fun sendStaticEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request),
                 fromEmail = request.from.toNamedEmail().address
-        )
-
-        val static = request.static!!
-        val mailMessageBody = SentMailMessageBodyDBO(
-                body = wrapAndPackBody(request, static.htmlBody.emptyToNull(), static.plaintextBody.emptyToNull(), static.subject)
         )
         val requestedSendTime =
                 if (request.hasSendAt()) {
@@ -77,89 +70,24 @@ private constructor(
                 }
 
         ebeanServer.createTransaction().use {
-            val emailIds = LinkedHashMap<EmailId, Email>()
             for (recipient in request.recipientsList) {
                 // TODO Check if recipient is blocked
-
                 val emailDBO = EmailDBO(
                         recipient = recipient.toNamedEmail(),
-                        transaction = transaction,
-                        sentMailMessageBody = mailMessageBody
+                        transaction = transaction
                 )
                 emailDAO.save(emailDBO)
-                emailIds[emailDBO.id] = emailDBO.recipient
-            }
 
-            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                    requestedSendTime = requestedSendTime,
-                    sentMailMessageBodyId = mailMessageBody.id,
-                    emailIds = emailIds.keys
-            ))
-            val grpcEmailTransactionId = transaction.id.toGrpcInternal()
-            for ((emailId, recipient) in emailIds) {
-                responseObserver.onNext(
-                        EmailQueueStatus.newBuilder()
-                                .setEmailId(emailId.toGrpcInternal())
-                                .setQueued(Queued.getDefaultInstance())
-                                .setTransactionId(grpcEmailTransactionId)
-                                .setRecipient(recipient.toGrpcInternal())
-                                .build()
-                )
-            }
-        }
-        responseObserver.onCompleted()
-    }
-
-    private fun sendTemplatedEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
-        val template = request.template!!
-        if (template.htmlTemplate == null && template.plaintextTemplate == null) {
-            throw IllegalArgumentException("Needs at least one template (plaintext or html)")
-        }
-
-        val transaction = EmailSendTransactionDBO(
-                jsonRequest = getRequestData(request),
-                fromEmail = request.from.toNamedEmail().address
-        )
-        val requestedSendTime =
-                if (request.hasSendAt()) {
-                    request.sendAt.toInstant()
-                } else {
-                    Instant.EPOCH
+                emailDBO.body = when (request.bodyCase!!) {
+                    OutgoingEmail.BodyCase.STATIC -> getStaticBody(request, emailDBO.id)
+                    OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(request, recipient, emailDBO.id)
+                    else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
                 }
-
-        val globalVarsStruct =
-                if (template.hasGlobalVars()) {
-                    template.globalVars
-                } else {
-                    Struct.getDefaultInstance()
-                }
-        val globalVars = unwrapStruct(globalVarsStruct)
-
-        ebeanServer.createTransaction().use {
-            for (recipient in request.recipientsList) {
-                // TODO Check if recipient is blocked
-                val recipientVars = unwrapStruct(recipient.templateVars)
-                val htmlBody = mergeTemplate(template.htmlTemplate, globalVars, recipientVars)
-                val plaintextBody = mergeTemplate(template.plaintextTemplate, globalVars, recipientVars)
-                val mailMessageBody = SentMailMessageBodyDBO(
-                        wrapAndPackBody(
-                                request = request,
-                                htmlBody = htmlBody.emptyToNull(),
-                                plaintextBody = plaintextBody.emptyToNull(),
-                                subject = mergeTemplate(template.subject, globalVars, recipientVars)
-                        )
-                )
-                val emailDBO = EmailDBO(
-                        recipient = recipient.toNamedEmail(),
-                        transaction = transaction,
-                        sentMailMessageBody = mailMessageBody
-                )
                 emailDAO.save(emailDBO)
 
                 mqSender.queueJob(jobMessageFactory.createSendEmailJob(
                         requestedSendTime = requestedSendTime,
-                        sentMailMessageBodyId = mailMessageBody.id,
-                        emailIds = listOf(emailDBO.id)
+                        emailId = emailDBO.id
                 ))
 
                 responseObserver.onNext(
@@ -173,6 +101,49 @@ private constructor(
             }
             responseObserver.onCompleted()
         }
+    }
+
+    private fun getTemplateBody(request: OutgoingEmail, recipient: EmailRecipient, emailId: EmailId): String {
+
+        val template = request.template!!
+        if (template.htmlTemplate == null && template.plaintextTemplate == null) {
+            throw IllegalArgumentException("Needs at least one template (plaintext or html)")
+        }
+
+        val globalVarsStruct =
+                if (template.hasGlobalVars()) {
+                    template.globalVars
+                } else {
+                    Struct.getDefaultInstance()
+                }
+        val globalVars = unwrapStruct(globalVarsStruct)
+
+        val recipientVars = unwrapStruct(recipient.templateVars)
+
+        val htmlBody = mergeTemplate(template.htmlTemplate, globalVars, recipientVars)
+        val plaintextBody = mergeTemplate(template.plaintextTemplate, globalVars, recipientVars)
+
+        return wrapAndPackBody(
+                request = request,
+                htmlBody = htmlBody.emptyToNull(),
+                plaintextBody = plaintextBody.emptyToNull(),
+                subject = mergeTemplate(template.subject, globalVars, recipientVars),
+                emailId = emailId
+        )
+    }
+
+    private fun getStaticBody(request: OutgoingEmail, emailId: EmailId): String {
+        val static = request.static!!
+        val htmlBody = static.htmlBody.emptyToNull()
+        val plaintextBody = static.plaintextBody.emptyToNull()
+
+        return wrapAndPackBody(
+                request = request,
+                htmlBody = htmlBody,
+                plaintextBody = plaintextBody,
+                subject = static.subject,
+                emailId = emailId
+        )
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
@@ -194,10 +165,10 @@ private constructor(
                 it.toString()
             }
 
-    private fun wrapAndPackBody(request: OutgoingEmail, htmlBody: String?, plaintextBody: String?, subject: String): String {
-        val plainTextString = plaintextBody
-                ?: htmlBody?.let { stripHtml(it) }
-                ?: throw IllegalArgumentException("Needs at least one of plaintext or html")
+    private fun wrapAndPackBody(request: OutgoingEmail, htmlBody: String?, plaintextBody: String?, subject: String, emailId: EmailId): String {
+        if (htmlBody == null && plaintextBody == null) {
+            throw IllegalArgumentException("Needs at least one of plaintext or html")
+        }
 
         // TODO add headers here
         val session = Session.getDefaultInstance(Properties())
@@ -211,15 +182,17 @@ private constructor(
 
         val multipart = MimeMultipart("alternative")
 
-        val plaintextPart = MimeBodyPart()
-        plaintextPart.setContent(plainTextString, "text/plain")
-        multipart.addBodyPart(plaintextPart)
+        val htmlDoc = Jsoup.parse(htmlBody ?: "<html><body>$plaintextBody</body></html>")
 
-        if (htmlBody != null) {
-            val htmlPart = MimeBodyPart()
-            htmlPart.setContent(htmlBody, "text/html")
-            multipart.addBodyPart(htmlPart)
-        }
+        injectTrackingPixel(htmlDoc, emailId)
+
+        val htmlPart = MimeBodyPart()
+        htmlPart.setContent(htmlDoc.outerHtml(), "text/html")
+        multipart.addBodyPart(htmlPart)
+
+        val plaintextPart = MimeBodyPart()
+        plaintextPart.setContent(plaintextBody ?: htmlDoc.text(), "text/plain")
+        multipart.addBodyPart(plaintextPart)
 
         message.setContent(multipart)
 
@@ -228,8 +201,18 @@ private constructor(
         return result.toString(StandardCharsets.UTF_8.name())
     }
 
-    private fun stripHtml(html: String) =
-            Source(html).textExtractor.toString()
+    private fun injectTrackingPixel(doc: Document, emailId: EmailId) {
+        val trackingData = trackingDecoderImpl.createUrl(UrlTrackingData.newBuilder().setEmailId(emailId.toGrpcInternal()).build())
+
+        // TODO Fix URI, add config param i.e. AND URIBuilder
+        val trackingUri = URI.create("http://127.0.0.1:8070/t/$trackingData")
+
+        val trackingPixel = Element("img")
+        trackingPixel.attr("src", trackingUri.toString())
+        trackingPixel.attr("height", "1")
+        trackingPixel.attr("width", "1")
+        doc.body().appendChild(trackingPixel)
+    }
 
     companion object {
         val PRINTER = JsonFormat.printer()!!

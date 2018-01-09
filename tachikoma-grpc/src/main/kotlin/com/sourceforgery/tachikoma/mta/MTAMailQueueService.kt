@@ -5,7 +5,6 @@ import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
-import com.sourceforgery.tachikoma.identifiers.SentMailMessageBodyId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import io.grpc.stub.StreamObserver
@@ -22,17 +21,16 @@ private constructor(
 
     override fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
         val future = mqSequenceFactory.listenForOutgoingEmails {
-            val emails = emailDAO.fetchEmailData(EmailId.fromList(it.emailIdList), SentMailMessageBodyId(it.sentMailMessageBodyId))
-            if (emails.isEmpty()) {
-                LOGGER.warn { "Nothing found when looking trying to send email with ids: " + it.emailIdList }
+            val email = emailDAO.fetchEmailData(EmailId(it.emailId))
+            if (email == null) {
+                LOGGER.warn { "Nothing found when looking trying to send email with id: " + it.emailId }
             } else {
 
-                val firstEmail = emails[0]
                 val response = EmailMessage.newBuilder()
-                        .setBody(firstEmail.sentMailMessageBody.body)
-                        .setFrom(firstEmail.transaction.fromEmail.address)
-                        .setEmailTransactionId(firstEmail.transaction.id.emailTransactionId)
-                        .addAllEmailAddresses(emails.map { it.recipient.address })
+                        .setBody(email.body)
+                        .setFrom(email.transaction.fromEmail.address)
+                        .setEmailTransactionId(email.transaction.id.emailTransactionId)
+                        .setEmailAddress(email.recipient.address)
                         .build()
                 responseObserver.onNext(response)
             }

@@ -22,6 +22,6 @@ message EmailTransactionId {
 }
 
 // Represents an email (tuple of a single recipient email address and an email body)
-message EmailMessageId {
+message EmailId {
     sint64 id = 1;
 }

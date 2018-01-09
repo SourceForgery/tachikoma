@@ -19,7 +19,7 @@ service MTAEmailQueue {
 }
 
 message EmailMessage {
-    repeated string emailAddresses = 101;
+    string emailAddress = 101;
     string from = 102;
     sint64 emailTransactionId  = 103;
 
