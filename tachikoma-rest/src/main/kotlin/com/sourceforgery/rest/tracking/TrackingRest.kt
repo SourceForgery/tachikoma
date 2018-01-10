@@ -52,6 +52,7 @@ private constructor(
     @Get("regex:^/c/(?<trackingData>.*)")
     @ProduceType("text/html")
     fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
+        throw RuntimeException()
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 

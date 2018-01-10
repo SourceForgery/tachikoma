@@ -9,6 +9,9 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl
 import com.sourceforgery.tachikoma.hk2.ReferencingFactory
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import com.sourceforgery.tachikoma.webserver.AuthenticationFactory
+import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
+import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
+import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import org.glassfish.hk2.api.Context
 import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -38,6 +41,14 @@ class WebBinder : AbstractBinder() {
                 .to(HK2RequestContext::class.java)
                 .to(RequestScoped::class.java)
                 .to(object : TypeLiteral<Context<RequestScoped>>() {}.type)
+                .`in`(Singleton::class.java)
+        bindAsContract(HttpRequestScopedDecorator::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(GrpcExceptionInterceptor::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(RestExceptionHandlerFunction::class.java)
                 .`in`(Singleton::class.java)
     }
 }
