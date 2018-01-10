@@ -27,6 +27,9 @@ fun NamedEmail.toNamedEmail() =
 fun EmailId.toGrpcInternal() =
         com.sourceforgery.tachikoma.grpc.frontend.EmailId.newBuilder().setId(emailId).build()!!
 
+fun com.sourceforgery.tachikoma.grpc.frontend.EmailId.toEmailId() =
+        EmailId(id)
+
 fun com.sourceforgery.tachikoma.identifiers.EmailTransactionId.toGrpcInternal() =
         EmailTransactionId.newBuilder().setId(emailTransactionId).build()!!
 

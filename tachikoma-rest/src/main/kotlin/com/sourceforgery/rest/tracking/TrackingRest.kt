@@ -9,6 +9,11 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.ProduceType
 import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
+import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import io.netty.util.AsciiString
@@ -20,7 +25,9 @@ internal class TrackingRest
 @Inject
 private constructor(
         val trackingDecoder: TrackingDecoder,
-        val authentication: Authentication
+        val authentication: Authentication,
+        val emailDAO: EmailDAO,
+        val emailStatusEventDAO: EmailStatusEventDAO
 ) : RestService {
     @Get("regex:^/t/(?<trackingData>.*)")
     @ProduceType("image/gif")
@@ -28,7 +35,13 @@ private constructor(
         try {
             @Suppress("UNUSED_VARIABLE")
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
-            // TODO Do tracking stuff here, possibly in another thread
+
+            val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
+            val emailStatusEvent = EmailStatusEventDBO(
+                    emailStatus = EmailStatus.OPENED,
+                    email = email
+            )
+            emailStatusEventDAO.save(emailStatusEvent)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
@@ -39,11 +52,16 @@ private constructor(
     @Get("regex:^/c/(?<trackingData>.*)")
     @ProduceType("text/html")
     fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
-        throw RuntimeException()
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
-            // Do tracking stuff here, possibly in another thread
+            val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
+            val emailStatusEvent = EmailStatusEventDBO(
+                    emailStatus = EmailStatus.CLICKED,
+                    email = email
+            )
+            emailStatusEventDAO.save(emailStatusEvent)
+
             return HttpResponse.of(
                     HttpStatus.TEMPORARY_REDIRECT,
                     MediaType.HTML_UTF_8,
@@ -51,7 +69,6 @@ private constructor(
                     HttpHeaders.of(LOCATION, trackingData.redirectUrl)
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
             return HttpResponse.of(
