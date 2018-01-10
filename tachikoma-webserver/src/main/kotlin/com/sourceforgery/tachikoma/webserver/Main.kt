@@ -57,7 +57,6 @@ fun main(vararg args: String) {
             .allowRequestMethods(HttpMethod.GET)
             .build(object : HttpHealthCheckService() {})!!
 
-
     // Order matters!
     val serverBuilder = ServerBuilder()
             .serviceUnder("/health", healthService)
