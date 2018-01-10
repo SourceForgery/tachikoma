@@ -34,7 +34,6 @@ import org.jsoup.nodes.Element
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
-import java.lang.RuntimeException
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
@@ -100,8 +99,7 @@ private constructor(
                                 .build()
                 )
             }
-            throw RuntimeException("TEST")
-//            responseObserver.onCompleted()
+            responseObserver.onCompleted()
         }
     }
 
