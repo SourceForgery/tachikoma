@@ -1,8 +1,10 @@
 package com.sourceforgery.tachikoma
 
+import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAOImpl
+import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAOImpl
 import com.sourceforgery.tachikoma.database.hooks.CreateSequence
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
@@ -25,8 +27,10 @@ class DatabaseBinder : AbstractBinder() {
                 .to(EmailDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(AuthenticationDAOImpl::class.java)
+                .to(AuthenticationDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(EmailStatusEventDAOImpl::class.java)
+                .to(EmailStatusEventDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(LogEverything::class.java)
                 .to(InvokeCounter::class.java)
