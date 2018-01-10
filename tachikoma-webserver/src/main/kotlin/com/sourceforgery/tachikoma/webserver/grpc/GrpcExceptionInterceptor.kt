@@ -36,7 +36,8 @@ private constructor(
             }
 
             private fun rethrowAsStatusException(e: Exception): Nothing {
-                grpcExceptionCatchers[e::class.java as Class<*>]!!.throwIt(e)
+                grpcExceptionCatchers.findCatcher(e)
+                        .throwIt(e)
             }
         }
     }

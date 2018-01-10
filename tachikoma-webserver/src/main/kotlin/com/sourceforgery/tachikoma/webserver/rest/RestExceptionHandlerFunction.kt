@@ -13,6 +13,7 @@ private constructor(
         private val restExceptionMap: RestExceptionMap
 ) : ExceptionHandlerFunction {
     override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: Throwable): HttpResponse {
-        return restExceptionMap[cause::class.java]!!.handleException(ctx, req, cause)
+        @Suppress("UNCHECKED_CAST")
+        return restExceptionMap.findCatcher(cause::class.java as Class<Throwable>).handleException(ctx, req, cause)
     }
 }
