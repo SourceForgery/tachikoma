@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma
 
+import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.mta.MTADeliveryService
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
@@ -23,6 +24,9 @@ class GrpcBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(MailDeliveryService::class.java)
                 .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(GrpcExceptionMap::class.java)
                 .`in`(Singleton::class.java)
 
         bindAsContract(TrackingDecoderImpl::class.java)

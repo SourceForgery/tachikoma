@@ -30,7 +30,6 @@ private constructor(
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
             // TODO Do tracking stuff here, possibly in another thread
         } catch (e: Exception) {
-            e.printStackTrace()
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
         }
@@ -40,6 +39,7 @@ private constructor(
     @Get("regex:^/t/(?<trackingData>.*)")
     @ProduceType("text/html")
     fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
+        throw RuntimeException()
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
