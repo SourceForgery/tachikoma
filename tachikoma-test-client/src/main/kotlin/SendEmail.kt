@@ -14,10 +14,47 @@ fun main(args: Array<String>) {
 
     val stub = MailDeliveryServiceGrpc.newBlockingStub(channel)
 
+    val mailBody = """
+    |<body>
+    |    <center>
+    |        <!-- HEADER LOGO BLOCK -->
+    |        <div>
+    |            <a href="http://www.google.com" target="_blank" style="text-decoration: none;color: #50cad0;">
+    |                <img src="http://lorempixel.com/400/200/sports/1/" style="width: 150px;margin-top: 15px;margin-bottom: 5px;">
+    |            </a>
+    |        </div>
+    |        <!-- HEADER LOGO BLOCK -->
+    |
+    |        <div>
+    |            <h1>The mail header</h1>
+    |        </div>
+    |
+    |        <div>
+    |            <br>
+    |            <span>Are you the one?</span>
+    |            <h1>
+    |                Acme Inc
+    |            </h1>
+    |            <p>
+    |                Lorem ipsum dolor sit amet, erat sit eu aenean atque leo, nunc mauris justo eros vel, sed ac in. Wisi nulla elit eget nam hymenaeos aliquam, in ut iaculis, ac arcu fringilla varius et. Mattis in. Tincidunt suscipit, lorem massa nunc nullam. Hendrerit ac dui volutpat, dapibus hac arcu donec ipsum luctus mollis. Ligula accumsan pellentesque, sit facilisis libero mi. Sit vel etiam, eget velit.
+    |            </p>
+    |            <p class="center" style="font-size: 16px;color: #626262;padding: 20px;margin: 0;text-align: center;">
+    |                Acme Inc AB Ghmb.
+    |            </p>
+    |            <a class="button" href="https://localhost:3001/api/login/asdf" target="_blank" style="text-decoration: none;color: #fff;display: inline-block;background-color: #fd844a;padding: 10px 16px;border-radius: 2px;font-size: 16px;font-weight: 500;border: none;margin-top: 20px;margin-bottom: 20px;">
+    |                Go to questions
+    |            </a>
+    |            <br><br><br>
+    |            <h6>Some footer text</h6>
+    |        </div>
+    |    </center>
+    |</body>
+    """.trimMargin()
+
     val outgoingEmail = OutgoingEmail.newBuilder()
             .setStatic(
                     StaticBody.newBuilder()
-                            .setHtmlBody("<body>teteteete</body>")
+                            .setHtmlBody(mailBody)
                             .setSubject("Test email " + Instant.now())
             )
             .addRecipients(EmailRecipient.newBuilder()
