@@ -19,8 +19,8 @@ fun main(args: Array<String>) {
     |    <center>
     |        <!-- HEADER LOGO BLOCK -->
     |        <div>
-    |            <a href="http://www.youcruit.com" target="_blank" style="text-decoration: none;color: #50cad0;">
-    |                <img src="https://cdnstatic.youcruit.com/images/email/youcruit-logo-300x104.png" style="width: 150px;margin-top: 15px;margin-bottom: 5px;">
+    |            <a href="http://www.google.com" target="_blank" style="text-decoration: none;color: #50cad0;">
+    |                <img src="http://lorempixel.com/400/200/sports/1/" style="width: 150px;margin-top: 15px;margin-bottom: 5px;">
     |            </a>
     |        </div>
     |        <!-- HEADER LOGO BLOCK -->
@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
     |            <p class="center" style="font-size: 16px;color: #626262;padding: 20px;margin: 0;text-align: center;">
     |                Acme Inc AB Ghmb.
     |            </p>
-    |            <a class="button" href="https://youcruit.noonday.se:3001/api/login/cl/asdf" target="_blank" style="text-decoration: none;color: #fff;display: inline-block;background-color: #fd844a;padding: 10px 16px;border-radius: 2px;font-size: 16px;font-weight: 500;border: none;margin-top: 20px;margin-bottom: 20px;">
+    |            <a class="button" href="https://localhost:3001/api/login/asdf" target="_blank" style="text-decoration: none;color: #fff;display: inline-block;background-color: #fd844a;padding: 10px 16px;border-radius: 2px;font-size: 16px;font-weight: 500;border: none;margin-top: 20px;margin-bottom: 20px;">
     |                Go to questions
     |            </a>
     |            <br><br><br>
