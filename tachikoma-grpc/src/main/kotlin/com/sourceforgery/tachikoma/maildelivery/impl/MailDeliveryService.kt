@@ -31,6 +31,7 @@ import io.grpc.stub.StreamObserver
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.jsoup.safety.Whitelist
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
@@ -184,6 +185,7 @@ private constructor(
 
         val htmlDoc = Jsoup.parse(htmlBody ?: "<html><body>$plaintextBody</body></html>")
 
+        replaceLinks(htmlDoc, emailId)
         injectTrackingPixel(htmlDoc, emailId)
 
         val htmlPart = MimeBodyPart()
@@ -191,7 +193,9 @@ private constructor(
         multipart.addBodyPart(htmlPart)
 
         val plaintextPart = MimeBodyPart()
-        plaintextPart.setContent(plaintextBody ?: htmlDoc.text(), "text/plain")
+        val plainText = getPlainText(htmlDoc)
+
+        plaintextPart.setContent(plaintextBody ?: plainText, "text/plain")
         multipart.addBodyPart(plaintextPart)
 
         message.setContent(multipart)
@@ -201,11 +205,36 @@ private constructor(
         return result.toString(StandardCharsets.UTF_8.name())
     }
 
+    private fun getPlainText(doc: Document): String {
+        // Keeps some structure in the plain text mail version, removes all html tags and keeps indentation and line breaks
+        return Jsoup
+                .clean(doc.html(), "", Whitelist.none(), Document.OutputSettings().prettyPrint(false))
+                .trim()
+    }
+
+    private fun replaceLinks(doc: Document, emailId: EmailId) {
+        val links = doc.select("a[href]")
+        links.forEach({
+            val trackingData = UrlTrackingData.newBuilder()
+                    .setEmailId(emailId.toGrpcInternal())
+                    .setRedirectUrl(it.attr("href"))
+                    .build()
+            val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
+
+            // TODO Fix URI, add config param i.e. AND URIBuilder
+            val trackingUri = URI.create("http://127.0.0.1:8070/c/$trackingUrl")
+            it.attr("href", trackingUri.toString())
+        })
+    }
+
     private fun injectTrackingPixel(doc: Document, emailId: EmailId) {
-        val trackingData = trackingDecoderImpl.createUrl(UrlTrackingData.newBuilder().setEmailId(emailId.toGrpcInternal()).build())
+        val trackingData = UrlTrackingData.newBuilder()
+                .setEmailId(emailId.toGrpcInternal())
+                .build()
+        val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
         // TODO Fix URI, add config param i.e. AND URIBuilder
-        val trackingUri = URI.create("http://127.0.0.1:8070/t/$trackingData")
+        val trackingUri = URI.create("http://127.0.0.1:8070/t/$trackingUrl")
 
         val trackingPixel = Element("img")
         trackingPixel.attr("src", trackingUri.toString())

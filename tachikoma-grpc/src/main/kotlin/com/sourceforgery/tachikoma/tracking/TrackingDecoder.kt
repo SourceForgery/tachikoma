@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 import javax.inject.Inject
 
-internal class TrackingDecoderImpl
+internal class  TrackingDecoderImpl
 @Inject
 private constructor(
         val trackingConfig: TrackingConfig
@@ -21,12 +21,11 @@ private constructor(
         val decoded = Base64.getUrlDecoder().decode(trackingData)!!
         val signedMessage = UrlSignedMessage.parseFrom(decoded)!!
         val sig = signedMessage.signature!!
-        if (sig.toByteArray().contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
+        if (!sig.toByteArray().contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
             randomDelay(LongRange(100, 250)) {
                 throw RuntimeException("Not correct signature")
             }
         }
-        // TODO Validate signature
         return UrlTrackingData.parseFrom(signedMessage.message)!!
     }
 
@@ -37,6 +36,6 @@ private constructor(
                 .setMessage(ByteString.copyFrom(parcelled))
                 .setSignature(ByteString.copyFrom(signature))
                 .build()
-        return Base64.getEncoder().encodeToString(signedMessage.toByteArray())!!
+        return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray())!!
     }
 }

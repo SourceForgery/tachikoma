@@ -37,7 +37,7 @@ private constructor(
         return HttpResponse.of(HttpStatus.OK, MediaType.GIF, SMALL_TRANSPARENT_GIF)
     }
 
-    @Get("regex:^/t/(?<trackingData>.*)")
+    @Get("regex:^/c/(?<trackingData>.*)")
     @ProduceType("text/html")
     fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
         try {
@@ -47,7 +47,7 @@ private constructor(
             return HttpResponse.of(
                     HttpStatus.TEMPORARY_REDIRECT,
                     MediaType.HTML_UTF_8,
-                    HTML_PAGE_WITH_JAVASCRIPT_AND_HTTP_EQUIV_REDIRECT.format(trackingData.redirectUrl),
+                    HTML_PAGE_WITH_JAVASCRIPT_AND_HTTP_EQUIV_REDIRECT.format(arrayOf(trackingData.redirectUrl)),
                     HttpHeaders.of(LOCATION, trackingData.redirectUrl)
             )
         } catch (e: Exception) {
@@ -68,10 +68,10 @@ private constructor(
         val HTML_PAGE_WITH_JAVASCRIPT_AND_HTTP_EQUIV_REDIRECT = MessageFormat("""
             <html>
               <head>
-                <meta http-equiv="refresh" content="0;URL='{0}'" />
+                <meta http-equiv="refresh" content="0;URL=''{0}''" />
               </head>
               <body>
-                <script type="text/javascript">document.location.href = '{0}';</script>
+                <script type="text/javascript">document.location.href=''{0}'';</script>
                 <a href="{0}">redirect</a>
               </body>
             </html>
