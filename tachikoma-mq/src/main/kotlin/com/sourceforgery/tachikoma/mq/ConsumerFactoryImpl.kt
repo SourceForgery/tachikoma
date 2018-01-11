@@ -81,25 +81,21 @@ private constructor(
     }
 
     private fun createQueue(messageQueue: MessageQueue<*>) {
-        connection
-                .createChannel()
-                .use { channel ->
-                    val arguments = HashMap<String, Any>()
-                    messageQueue.maxLength
-                            ?.let { arguments["x-max-length"] = it }
+        val arguments = HashMap<String, Any>()
+        messageQueue.maxLength
+                ?.let { arguments["x-max-length"] = it }
 
-                    if (messageQueue.delay > Duration.ZERO) {
-                        arguments["x-message-ttl"] = messageQueue.delay.toMillis()
-                    }
-                    messageQueue.nextDestination
-                            ?.let {
-                                arguments["x-dead-letter-routing-key"] = it.name
-                                arguments["x-dead-letter-exchangeType"] = ""
-                                arguments["x-dead-letter-exchange"] = ""
-                            }
-
-                    channel.queueDeclare(messageQueue.name, true, false, false, arguments)
+        if (messageQueue.delay > Duration.ZERO) {
+            arguments["x-message-ttl"] = messageQueue.delay.toMillis()
+        }
+        messageQueue.nextDestination
+                ?.let {
+                    arguments["x-dead-letter-routing-key"] = it.name
+                    arguments["x-dead-letter-exchangeType"] = ""
+                    arguments["x-dead-letter-exchange"] = ""
                 }
+
+        sendChannel.queueDeclare(messageQueue.name, true, false, false, arguments)
     }
 
     private fun createExchange(messageExchange: MessageExchange) {
