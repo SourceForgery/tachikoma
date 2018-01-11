@@ -1,5 +1,6 @@
 apply plugin: 'com.moowork.node'
 apply plugin: 'de.richsource.gradle.plugins.typescript'
+apply plugin: 'base'
 
 import com.moowork.gradle.node.NodeExtension
 import com.moowork.gradle.node.variant.VariantBuilder
@@ -10,6 +11,11 @@ node {
     npmVersion = '5.6.0'
 }
 
+def protobufDir = file("$buildDir/proto/")
+configurations {
+    protobuf
+}
+
 String nodeExecutable() {
     NodeExtension nodeExt = NodeExtension.get(project)
     return new VariantBuilder(nodeExt).build().nodeExec
@@ -17,10 +23,67 @@ String nodeExecutable() {
 
 compileTypeScript {
     sourcemap = true
+    source = [file("src/main/ts"), protobufDir]
     compilerExecutable "${nodeExecutable()} node_modules/typescript/lib/tsc.js"
     dependsOn "npmInstall"
 }
 
 dependencies {
-//    compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-js')
+    protobuf project(':tachikoma-backend-api-proto')
 }
+
+
+idea {
+    module {
+        sourceDirs += protobufDir
+        outputDir = file('build/idea-out')
+        outputDir = file('build/idea-testout')
+    }
+}
+
+
+task copyProtobufFiles([type: Sync]) {
+    configurations.protobuf.each {
+        from(zipTree(it)) {
+            include '**/*.proto'
+            exclude 'META-INF/**'
+        }
+    }
+    includeEmptyDirs = false
+    into protobufDir
+}
+
+task buildProtoJs([type: NodeTask]) {
+    script = file('./node_modules/protobufjs/cli/bin/pbjs')
+    def arguments = [
+            '-t', 'static-module',
+            '-w', 'commonjs',
+            '-o', "$protobufDir/mtagrpc.js",
+            '--name', 'mtagrpc',
+            '-p', protobufDir,
+            '--es6',
+            '--force-long'
+    ]
+    args = arguments
+    fileTree(protobufDir)
+            .include('**/*.proto')
+            .collect()
+            .sort()
+            .each { addArgs(it) }
+}
+
+task buildProtoTs(type: NodeTask) {
+    script = file('./node_modules/protobufjs/cli/bin/pbts')
+    args = [
+            '--name', 'mtagrpc',
+            '--out', "$protobufDir/mtagrpc.d.ts",
+            "$protobufDir/mtagrpc.js",
+    ]
+}
+
+
+
+assemble.dependsOn compileTypeScript
+buildProtoJs.dependsOn copyProtobufFiles
+buildProtoTs.dependsOn buildProtoJs
+compileTypeScript.dependsOn buildProtoTs

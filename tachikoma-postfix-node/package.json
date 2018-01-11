@@ -1,6 +1,7 @@
 {
   "dependencies": {
+    "grpc": "1.8.0",
+    "protobufjs": "6.8.3",
     "typescript": "2.6.2",
-    "protobufjs": "6.8.3"
   }
 }
