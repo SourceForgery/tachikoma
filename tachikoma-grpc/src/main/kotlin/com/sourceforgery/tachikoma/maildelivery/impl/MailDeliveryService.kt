@@ -177,6 +177,21 @@ private constructor(
         message.setFrom(InternetAddress(request.from.email, request.from.name))
         message.subject = subject
 
+        // Headers to set:
+        // List-Help (IMPORTANT): <https://support.google.com/a/example.com/bin/topic.py?topic=25838>, <mailto:debug+help@example.com>
+        // List-Unsubscribe: <mailto:unsubscribe-b908213123123212232136a086bbc6@example.net?subject=unsub>
+
+        // Other fields, not needed to set:
+        // List-Subscribe
+        // List-Post
+        // List-Owner
+        // List-Archive
+
+        // For one-click unsubscribe:
+        // List-Unsubscribe header field MUST contain one HTTPS URI (can also contain other mailto:)
+        // List-Unsubscribe=One-Click
+        // MUST have a valid DomainKeys Identified Mail (DKIM) signature that covers at least the List-Unsubscribe and List-Unsubscribe-Post headers
+
         for ((key, value) in request.headersMap) {
             message.addHeader(key, value)
         }
