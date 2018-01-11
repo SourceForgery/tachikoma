@@ -1,3 +1,0 @@
-class Dummy {
-    private Dummy() {}
-}
