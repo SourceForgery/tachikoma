@@ -1,0 +1,37 @@
+apply plugin: 'org.jetbrains.kotlin.frontend'
+apply plugin: 'kotlin2js'
+apply plugin: 'kotlin-dce-js'
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-js')
+}
+
+kotlinFrontend {
+    downloadNodeJsVersion = node_version
+
+    npm {
+        dependency("kotlin", kotlin_version)
+        dependency("protobufjs", "6.8.3")
+    }
+
+    sourceMaps = true
+}
+
+
+compileKotlin2Js {
+    kotlinOptions {
+        metaInfo = true
+        outputFile = "$project.buildDir.path/js/${project.name}.js"
+        sourceMap = true
+        moduleKind = 'commonjs'
+        main = "call"
+        outputFile = "node/index.js"
+    }
+}
+
+compileTestKotlin2Js {
+    kotlinOptions {
+        sourceMap = true
+    }
+}

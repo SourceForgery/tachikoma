@@ -1,6 +1,5 @@
 apply plugin: 'com.google.protobuf'
 apply plugin: 'java'
-apply plugin: 'idea'
 
 dependencies {
     protobuf project(':tachikoma-backend-api-proto')
@@ -8,28 +7,26 @@ dependencies {
     compile "io.grpc:grpc-stub:$grpc_version"
 }
 
-idea {
-    module {
-        sourceDirs += file("${buildDir}/generated/source/proto/main/java/")
-        sourceDirs += file("${buildDir}/generated/source/proto/main/grpc/")
-    }
-}
-
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler
         artifact = "com.google.protobuf:protoc:$protoc_version"
     }
-
-    plugins {
-        grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:$grpc_version"
+    generateProtoTasks {
+        ofSourceSet('main').each { task ->
+            task.builtins {
+                remove java
+                js {}
+            }
         }
     }
+}
 
-    generateProtoTasks {
-        all()*.plugins {
-            grpc {}
-        }
+jar {
+    exclude('**/*.class')
+    exclude('**/*.proto')
+    from('build/generated/source/proto/main/js/') {
+        into 'protobuf'
+        include '**/*.js'
     }
 }

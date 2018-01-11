@@ -6,7 +6,7 @@ buildscript {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
         classpath "gradle.plugin.org.jmailen.gradle:kotlinter-gradle:1.6.0"
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
-
+        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.26"
     }
     repositories {
         mavenLocal()

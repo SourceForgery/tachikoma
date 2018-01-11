@@ -1,6 +1,7 @@
 
 include 'tachikoma-backend-api-proto'
 include 'tachikoma-backend-api-proto:tachikoma-backend-api-jvm'
+include 'tachikoma-backend-api-proto:tachikoma-backend-api-js'
 
 include 'tachikoma-frontend-api-proto'
 include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm'
@@ -17,7 +18,10 @@ include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-startup'
 include 'tachikoma-webserver'
-include 'tachikoma-postfix-binaries'
+
+//include 'tachikoma-postfix-binaries'
+include 'tachikoma-postfix-node'
+
 include 'tachikoma-postfix-docker'
 include 'tachikoma-test-client'
 
