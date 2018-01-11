@@ -56,6 +56,17 @@ To build and start, run
 That will start the webpack-dev-server at port 8080 (liable to change) and
 the webserver (for e.g. gRPC) at port 8070.
 
+
+To start the docker (with the Postfix email server), run
+```
+docker run -it -e MAIL_DOMAIN=<maildomain> -e TACHIKOMA_URL=<webserver url> tachikoma/tachikoma-postfix:<version>
+```
+
+E.g.
+```
+docker run -it -e MAIL_DOMAIN=example.com -e "TACHIKOMA_URL=http://password@172.17.0.1:8070/" tachikoma/tachikoma-postfix:0.0.1-SNAPSHOT
+```
+
 **Recommendations**
 * Add the function ```gw () { $(git rev-parse --show-toplevel)/gradlew "$@" }``` to avoid having to do ```../../../gradlew```
 * Only run ```gradlew build```, ```gradlew clean build``` should not be necessary and slows down development a *lot*.
