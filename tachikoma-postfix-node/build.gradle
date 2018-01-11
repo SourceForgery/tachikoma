@@ -1,37 +1,26 @@
-apply plugin: 'org.jetbrains.kotlin.frontend'
-apply plugin: 'kotlin2js'
-apply plugin: 'kotlin-dce-js'
+apply plugin: 'com.moowork.node'
+apply plugin: 'de.richsource.gradle.plugins.typescript'
+
+import com.moowork.gradle.node.NodeExtension
+import com.moowork.gradle.node.variant.VariantBuilder
+
+node {
+    download = true
+    version = '9.4.0'
+    npmVersion = '5.6.0'
+}
+
+String nodeExecutable() {
+    NodeExtension nodeExt = NodeExtension.get(project)
+    return new VariantBuilder(nodeExt).build().nodeExec
+}
+
+compileTypeScript {
+    sourcemap = true
+    compilerExecutable "${nodeExecutable()} node_modules/typescript/lib/tsc.js"
+    dependsOn "npmInstall"
+}
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
-    compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-js')
-}
-
-kotlinFrontend {
-    downloadNodeJsVersion = node_version
-
-    npm {
-        dependency("kotlin", kotlin_version)
-        dependency("protobufjs", "6.8.3")
-    }
-
-    sourceMaps = true
-}
-
-
-compileKotlin2Js {
-    kotlinOptions {
-        metaInfo = true
-        outputFile = "$project.buildDir.path/js/${project.name}.js"
-        sourceMap = true
-        moduleKind = 'commonjs'
-        main = "call"
-        outputFile = "node/index.js"
-    }
-}
-
-compileTestKotlin2Js {
-    kotlinOptions {
-        sourceMap = true
-    }
+//    compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-js')
 }
