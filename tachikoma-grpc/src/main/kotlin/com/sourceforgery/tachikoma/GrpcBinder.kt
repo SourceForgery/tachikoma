@@ -7,6 +7,8 @@ import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
 import com.sourceforgery.tachikoma.tracking.DeliveryNotificationService
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
+import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
+import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
 import io.grpc.BindableService
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
@@ -31,6 +33,10 @@ class GrpcBinder : AbstractBinder() {
 
         bindAsContract(TrackingDecoderImpl::class.java)
                 .to(TrackingDecoder::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(UnsubscribeDecoderImpl::class.java)
+                .to(UnsubscribeDecoder::class.java)
                 .`in`(Singleton::class.java)
     }
 }

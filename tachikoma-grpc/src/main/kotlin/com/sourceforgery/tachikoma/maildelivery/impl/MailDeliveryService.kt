@@ -20,10 +20,13 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
+import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
+import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
+import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
 import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -35,7 +38,6 @@ import org.jsoup.safety.Whitelist
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
-import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.Properties
@@ -45,16 +47,19 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
+import javax.ws.rs.core.UriBuilder
 
 internal class MailDeliveryService
 @Inject
 private constructor(
+        private val trackingConfig: TrackingConfig,
         private val dbObjectMapper: DBObjectMapper,
         private val emailDAO: EmailDAO,
         private val mqSender: MQSender,
         private val jobMessageFactory: JobMessageFactory,
         private val ebeanServer: EbeanServer,
-        private val trackingDecoderImpl: TrackingDecoderImpl
+        private val trackingDecoderImpl: TrackingDecoderImpl,
+        private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
@@ -171,26 +176,14 @@ private constructor(
             throw IllegalArgumentException("Needs at least one of plaintext or html")
         }
 
-        // TODO add headers here
         val session = Session.getDefaultInstance(Properties())
         val message = MimeMessage(session)
         message.setFrom(InternetAddress(request.from.email, request.from.name))
         message.subject = subject
 
-        // Headers to set:
+        // TODO Headers to set:
         // List-Help (IMPORTANT): <https://support.google.com/a/example.com/bin/topic.py?topic=25838>, <mailto:debug+help@example.com>
-        // List-Unsubscribe: <mailto:unsubscribe-b908213123123212232136a086bbc6@example.net?subject=unsub>
-
-        // Other fields, not needed to set:
-        // List-Subscribe
-        // List-Post
-        // List-Owner
-        // List-Archive
-
-        // For one-click unsubscribe:
-        // List-Unsubscribe header field MUST contain one HTTPS URI (can also contain other mailto:)
-        // List-Unsubscribe=One-Click
-        // MUST have a valid DomainKeys Identified Mail (DKIM) signature that covers at least the List-Unsubscribe and List-Unsubscribe-Post headers
+        addUnsubscribeHeaders(message, emailId)
 
         for ((key, value) in request.headersMap) {
             message.addHeader(key, value)
@@ -220,6 +213,26 @@ private constructor(
         return result.toString(StandardCharsets.UTF_8.name())
     }
 
+    private fun addUnsubscribeHeaders(message: MimeMessage, emailId: EmailId) {
+
+        val unsubscribeData = UnsubscribeData.newBuilder()
+                .setEmailId(emailId.toGrpcInternal())
+                .build()
+        val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
+
+        val unsubscribeUri = UriBuilder.fromUri(trackingConfig.baseUrl)
+                .path("unsubscribe")
+                .path(unsubscribeUrl)
+                .build()
+
+        // MUST have a valid DomainKeys Identified Mail (DKIM) signature that covers at least the List-Unsubscribe and List-Unsubscribe-Post headers
+        message.addHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+        message.addHeader("List-Unsubscribe", "<$unsubscribeUri>")
+
+        // TODO Add mailto: as well...
+        // List-Unsubscribe: <mailto:unsubscribe-b908213123123212232136a086bbc6@example.net?subject=unsub>
+    }
+
     private fun getPlainText(doc: Document): String {
         // Keeps some structure in the plain text mail version, removes all html tags and keeps indentation and line breaks
         return Jsoup
@@ -236,8 +249,11 @@ private constructor(
                     .build()
             val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-            // TODO Fix URI, add config param i.e. AND URIBuilder
-            val trackingUri = URI.create("http://127.0.0.1:8070/c/$trackingUrl")
+            val trackingUri = UriBuilder.fromUri(trackingConfig.baseUrl)
+                    .path("c")
+                    .path(trackingUrl)
+                    .build()
+
             it.attr("href", trackingUri.toString())
         })
     }
@@ -248,8 +264,10 @@ private constructor(
                 .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-        // TODO Fix URI, add config param i.e. AND URIBuilder
-        val trackingUri = URI.create("http://127.0.0.1:8070/t/$trackingUrl")
+        val trackingUri = UriBuilder.fromUri(trackingConfig.baseUrl)
+                .path("t")
+                .path(trackingUrl)
+                .build()
 
         val trackingPixel = Element("img")
         trackingPixel.attr("src", trackingUri.toString())
