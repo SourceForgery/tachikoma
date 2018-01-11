@@ -25,7 +25,7 @@ private constructor(
             if (email == null) {
                 LOGGER.warn { "Nothing found when looking trying to send email with id: " + it.emailId }
             } else {
-
+                LOGGER.info { "Email with id ${email.id} is about to be sent" }
                 val response = EmailMessage.newBuilder()
                         .setBody(email.body)
                         .setFrom(email.transaction.fromEmail.address)
