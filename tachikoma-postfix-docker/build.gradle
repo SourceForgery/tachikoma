@@ -47,7 +47,7 @@ task postfixDocker(type: Docker) {
         }
     }
 
-    runCommand('chmod +x tachikoma*')
+//    runCommand('chmod +x tachikoma*')
 }
 
 assemble.dependsOn postfixDocker

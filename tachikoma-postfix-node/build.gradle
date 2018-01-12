@@ -12,6 +12,8 @@ node {
 }
 
 def protobufDir = file("$buildDir/proto/")
+def typingsDir = file("typings/")
+
 configurations {
     protobuf
 }
@@ -22,9 +24,7 @@ String nodeExecutable() {
 }
 
 compileTypeScript {
-    sourcemap = true
-    source = [file("src/main/ts"), protobufDir]
-    compilerExecutable "${nodeExecutable()} node_modules/typescript/lib/tsc.js"
+    projectFile = new File('./tsconfig.json')
     dependsOn "npmInstall"
 }
 
@@ -36,8 +36,6 @@ dependencies {
 idea {
     module {
         sourceDirs += protobufDir
-        outputDir = file('build/idea-out')
-        outputDir = file('build/idea-testout')
     }
 }
 
@@ -59,7 +57,6 @@ task buildProtoJs([type: NodeTask]) {
             '-t', 'static-module',
             '-w', 'commonjs',
             '-o', "$protobufDir/mtagrpc.js",
-            '--name', 'mtagrpc',
             '-p', protobufDir,
             '--es6',
             '--force-long'
@@ -75,8 +72,7 @@ task buildProtoJs([type: NodeTask]) {
 task buildProtoTs(type: NodeTask) {
     script = file('./node_modules/protobufjs/cli/bin/pbts')
     args = [
-            '--name', 'mtagrpc',
-            '--out', "$protobufDir/mtagrpc.d.ts",
+            '--out', "$typingsDir/mtagrpc.d.ts",
             "$protobufDir/mtagrpc.js",
     ]
 }

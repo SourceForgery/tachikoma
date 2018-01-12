@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "preserveConstEnums": true,
+    "inlineSourceMap": true,
+    "inlineSources": true
+  }
+}
