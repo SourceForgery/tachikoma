@@ -1,10 +1,13 @@
 {
   "scripts": {
     "pbjs": "find build/proto -name '*.proto' | xargs ./node_modules/.bin/pbjs -t static-module -w common-js -o build/proto/mtagrpc.js -p build/proto --es6 --force-long",
+    "protoc": "find build/proto -name '*.proto' | xargs ./node_modules/.bin/grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./ --grpc_out=./ --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin`",
     "pbts": "./node_modules/.bin/pbts --out typings/mtagrpc.d.ts build/proto/mtagrpc.js"
   },
   "dependencies": {
+    "google-protobuf": "^3.5.0",
     "grpc": "1.8.0",
+    "grpc-tools": "^1.6.6",
     "protobufjs": "6.8.3",
     "typescript": "2.6.2"
   }

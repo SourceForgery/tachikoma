@@ -2,6 +2,7 @@
   "compilerOptions": {
     "preserveConstEnums": true,
     "inlineSourceMap": true,
-    "inlineSources": true
+    "inlineSources": true,
+    "allowJs": true
   }
 }

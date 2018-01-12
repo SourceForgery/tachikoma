@@ -42,15 +42,15 @@ task copyProtobufFiles(type: Sync) {
 }
 
 task buildProtoJs(type: NpmTask) {
-    args = ['run', 'pbjs']
+    args = ['run', 'protoc']
 }
 
-task buildProtoTs(type: NpmTask) {
-    args = ['run', 'pbts']
-}
+//task buildProtoTs(type: NpmTask) {
+//    args = ['run', 'pbts']
+//}
 
 
 buildProtoJs.dependsOn copyProtobufFiles
-buildProtoTs.dependsOn buildProtoJs
-compileTypeScript.dependsOn buildProtoTs
+//buildProtoTs.dependsOn buildProtoJs
+compileTypeScript.dependsOn buildProtoJs
 assemble.dependsOn compileTypeScript
