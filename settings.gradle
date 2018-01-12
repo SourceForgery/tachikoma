@@ -17,7 +17,7 @@ include 'tachikoma-rest'
 include 'tachikoma-frontend'
 include 'tachikoma-startup'
 include 'tachikoma-webserver'
-include 'tachikoma-postfix-binaries'
+include 'tachikoma-postfix-utils'
 include 'tachikoma-postfix-docker'
 include 'tachikoma-test-client'
 

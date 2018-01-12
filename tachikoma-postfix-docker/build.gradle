@@ -9,7 +9,7 @@ configurations {
 }
 
 dependencies {
-    binaries project(":tachikoma-postfix-binaries")
+    binaries project(path: ":tachikoma-postfix-utils", configuration: 'archives')
 }
 
 
@@ -29,7 +29,7 @@ task postfixDocker(type: Docker) {
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi supervisor postfix opendkim opendkim-tools && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi supervisor postfix opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     addFile(file('src/assets/'))
 
@@ -39,15 +39,19 @@ task postfixDocker(type: Docker) {
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
     addFile {
-        configurations.binaries.each {
-            from(zipTree(it)) {
-                exclude 'META-INF/**'
-                rename '(.*)', "$workDir/\$1"
+        configurations.binaries.filter {
+            it.path.endsWith(".tar")
+        }
+        .each {
+            from(tarTree(it))
+            includeEmptyDirs = false
+            eachFile { FileCopyDetails fileCopyDetails ->
+                fileCopyDetails.path = fileCopyDetails.path.replaceAll("^[^/]*", "$workDir/tachikoma-postfix-utils")
             }
         }
     }
 
-    runCommand('chmod +x tachikoma*')
+    runCommand("chmod a+rx /$workDir/tachikoma-postfix-utils/bin/tachikoma-postfix-utils")
 }
 
 assemble.dependsOn postfixDocker
