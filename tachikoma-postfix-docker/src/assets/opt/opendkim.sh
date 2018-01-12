@@ -7,8 +7,10 @@ fi
 # /etc/postfix/main.cf
 postconf -e milter_protocol=2
 postconf -e milter_default_action=accept
-postconf -e smtpd_milters=inet:localhost:12301
-postconf -e non_smtpd_milters=inet:localhost:12301
+postconf -e smtpd_milters=unix:/opendkim/opendkim.sock
+postconf -e non_smtpd_milters=unix:/opendkim/opendkim.sock
+
+sudo adduser postfix opendkim
 
 cat >> /etc/opendkim.conf <<EOF
 AutoRestart             Yes
@@ -26,7 +28,7 @@ Mode                    sv
 PidFile                 /var/run/opendkim/opendkim.pid
 SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
-Socket                  inet:12301@localhost
+Socket                  local:/var/spool/postfix/opendkim/opendkim.sock
 EOF
 cat >> /etc/default/opendkim <<EOF
 SOCKET="inet:12301@localhost"
@@ -35,7 +37,6 @@ EOF
 cat >> /etc/opendkim/TrustedHosts <<EOF
 127.0.0.1
 localhost
-192.168.0.1/24
 *.$MAIL_DOMAIN
 EOF
 cat >> /etc/opendkim/KeyTable <<EOF
