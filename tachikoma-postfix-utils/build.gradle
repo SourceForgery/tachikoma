@@ -5,6 +5,8 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
     compile "io.grpc:grpc-okhttp:1.8.0"
     compile "com.github.jnr:jnr-unixsocket:0.18"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile "net.sf.expectit:expectit-core:0.9.0"
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
 }
 
@@ -12,3 +14,5 @@ mainClassName = "com.sourceforgery.tachikoma.mailer.MailerKt"
 
 
 distZip.enabled = false
+
+//assemble.dependsOn distTar
