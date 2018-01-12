@@ -3,7 +3,6 @@ package com.sourceforgery.tachikoma.database.dao
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.query.QEmailDBO
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 import io.ebean.EbeanServer
 import javax.inject.Inject
 
@@ -23,11 +22,11 @@ private constructor(
 
     override fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
 
-    override fun updateMTAQueueStatus(emailTransactionId: EmailTransactionId, queueId: String) {
+    override fun updateMTAQueueStatus(emailId: EmailId, queueId: String) {
         ebeanServer.update(EmailDBO::class.java)
                 .set("mtaQueueId", queueId)
                 .where()
-                .eq("transaction.dbId", emailTransactionId.emailTransactionId)
+                .eq("dbId", emailId.emailId)
                 .update()
     }
 }

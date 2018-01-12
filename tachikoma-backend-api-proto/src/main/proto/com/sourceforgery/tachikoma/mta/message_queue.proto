@@ -21,7 +21,7 @@ service MTAEmailQueue {
 message EmailMessage {
     string emailAddress = 101;
     string from = 102;
-    sint64 emailTransactionId  = 103;
+    sint64 emailId  = 103;
 
     string body = 201;
 }
@@ -36,5 +36,5 @@ message MTAQueuedNotification {
     string queueId = 101;
     bool success = 102;
     string recipientEmailAddress = 103;
-    sint64 emailTransactionId = 104;
+    sint64 emailId = 104;
 }

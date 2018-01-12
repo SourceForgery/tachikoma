@@ -4,7 +4,6 @@ import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import io.grpc.stub.StreamObserver
@@ -29,7 +28,7 @@ private constructor(
                 val response = EmailMessage.newBuilder()
                         .setBody(email.body)
                         .setFrom(email.transaction.fromEmail.address)
-                        .setEmailTransactionId(email.transaction.id.emailTransactionId)
+                        .setEmailId(email.id.emailId)
                         .setEmailAddress(email.recipient.address)
                         .build()
                 responseObserver.onNext(response)
@@ -46,9 +45,13 @@ private constructor(
 
             override fun onNext(value: MTAQueuedNotification) {
                 val queueId = value.queueId!!
-                val emailTransactionId = EmailTransactionId(value.emailTransactionId)
+                val emailId = EmailId(value.emailId)
                 // TODO do something with value.success
-                emailDAO.updateMTAQueueStatus(emailTransactionId, queueId)
+                if (value.success) {
+                    emailDAO.updateMTAQueueStatus(emailId, queueId)
+                } else {
+                    TODO("We failed for message ${value.emailId}")
+                }
             }
 
             override fun onError(t: Throwable) {
