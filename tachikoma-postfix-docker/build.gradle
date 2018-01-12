@@ -9,7 +9,7 @@ configurations {
 }
 
 dependencies {
-    binaries project(":tachikoma-postfix-binaries")
+    binaries project(":tachikoma-postfix-node")
 }
 
 
@@ -47,7 +47,7 @@ task postfixDocker(type: Docker) {
         }
     }
 
-    runCommand('chmod +x tachikoma*')
+//    runCommand('chmod +x tachikoma*')
 }
 
 assemble.dependsOn postfixDocker

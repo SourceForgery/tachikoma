@@ -1,0 +1,56 @@
+apply plugin: 'com.moowork.node'
+apply plugin: 'de.richsource.gradle.plugins.typescript'
+apply plugin: 'base'
+
+node {
+    download = true
+    version = '9.4.0'
+    npmVersion = '5.6.0'
+}
+
+def protobufDir = file("$buildDir/proto/")
+
+configurations {
+    protobuf
+}
+
+compileTypeScript {
+    projectFile = new File('./tsconfig.json')
+    dependsOn "npmInstall"
+}
+
+dependencies {
+    protobuf project(':tachikoma-backend-api-proto')
+}
+
+
+idea {
+    module {
+        sourceDirs += protobufDir
+    }
+}
+
+task copyProtobufFiles(type: Sync) {
+    configurations.protobuf.each {
+        from(zipTree(it)) {
+            include '**/*.proto'
+            exclude 'META-INF/**'
+        }
+    }
+    includeEmptyDirs = false
+    into protobufDir
+}
+
+task buildProtoJs(type: NpmTask) {
+    args = ['run', 'protoc']
+}
+
+//task buildProtoTs(type: NpmTask) {
+//    args = ['run', 'pbts']
+//}
+
+
+buildProtoJs.dependsOn copyProtobufFiles
+//buildProtoTs.dependsOn buildProtoJs
+compileTypeScript.dependsOn buildProtoJs
+assemble.dependsOn compileTypeScript
