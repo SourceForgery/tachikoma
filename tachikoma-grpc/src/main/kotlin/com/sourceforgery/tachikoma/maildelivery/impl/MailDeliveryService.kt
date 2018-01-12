@@ -31,6 +31,7 @@ import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
+import net.moznion.uribuildertiny.URIBuilderTiny
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -47,7 +48,6 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
-import javax.ws.rs.core.UriBuilder
 
 internal class MailDeliveryService
 @Inject
@@ -220,9 +220,8 @@ private constructor(
                 .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
-        val unsubscribeUri = UriBuilder.fromUri(trackingConfig.baseUrl)
-                .path("unsubscribe")
-                .path(unsubscribeUrl)
+        val unsubscribeUri = URIBuilderTiny(trackingConfig.baseUrl)
+                .appendPaths("unsubscribe", unsubscribeUrl)
                 .build()
 
         // MUST have a valid DomainKeys Identified Mail (DKIM) signature that covers at least the List-Unsubscribe and List-Unsubscribe-Post headers
@@ -249,9 +248,8 @@ private constructor(
                     .build()
             val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-            val trackingUri = UriBuilder.fromUri(trackingConfig.baseUrl)
-                    .path("c")
-                    .path(trackingUrl)
+            val trackingUri = URIBuilderTiny(trackingConfig.baseUrl)
+                    .appendPaths("c", trackingUrl)
                     .build()
 
             it.attr("href", trackingUri.toString())
@@ -264,9 +262,8 @@ private constructor(
                 .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-        val trackingUri = UriBuilder.fromUri(trackingConfig.baseUrl)
-                .path("t")
-                .path(trackingUrl)
+        val trackingUri = URIBuilderTiny(trackingConfig.baseUrl)
+                .appendPaths("t", trackingUrl)
                 .build()
 
         val trackingPixel = Element("img")
