@@ -2,9 +2,6 @@ apply plugin: 'com.moowork.node'
 apply plugin: 'de.richsource.gradle.plugins.typescript'
 apply plugin: 'base'
 
-import com.moowork.gradle.node.NodeExtension
-import com.moowork.gradle.node.variant.VariantBuilder
-
 node {
     download = true
     version = '9.4.0'
@@ -12,15 +9,9 @@ node {
 }
 
 def protobufDir = file("$buildDir/proto/")
-def typingsDir = file("typings/")
 
 configurations {
     protobuf
-}
-
-String nodeExecutable() {
-    NodeExtension nodeExt = NodeExtension.get(project)
-    return new VariantBuilder(nodeExt).build().nodeExec
 }
 
 compileTypeScript {
@@ -39,8 +30,7 @@ idea {
     }
 }
 
-
-task copyProtobufFiles([type: Sync]) {
+task copyProtobufFiles(type: Sync) {
     configurations.protobuf.each {
         from(zipTree(it)) {
             include '**/*.proto'
@@ -51,35 +41,16 @@ task copyProtobufFiles([type: Sync]) {
     into protobufDir
 }
 
-task buildProtoJs([type: NodeTask]) {
-    script = file('./node_modules/protobufjs/cli/bin/pbjs')
-    def arguments = [
-            '-t', 'static-module',
-            '-w', 'commonjs',
-            '-o', "$protobufDir/mtagrpc.js",
-            '-p', protobufDir,
-            '--es6',
-            '--force-long'
-    ]
-    args = arguments
-    fileTree(protobufDir)
-            .include('**/*.proto')
-            .collect()
-            .sort()
-            .each { addArgs(it) }
+task buildProtoJs(type: NpmTask) {
+    args = ['run', 'pbjs']
 }
 
-task buildProtoTs(type: NodeTask) {
-    script = file('./node_modules/protobufjs/cli/bin/pbts')
-    args = [
-            '--out', "$typingsDir/mtagrpc.d.ts",
-            "$protobufDir/mtagrpc.js",
-    ]
+task buildProtoTs(type: NpmTask) {
+    args = ['run', 'pbts']
 }
 
 
-
-assemble.dependsOn compileTypeScript
 buildProtoJs.dependsOn copyProtobufFiles
 buildProtoTs.dependsOn buildProtoJs
 compileTypeScript.dependsOn buildProtoTs
+assemble.dependsOn compileTypeScript
