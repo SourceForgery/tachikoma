@@ -7,8 +7,9 @@ import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import io.grpc.Channel
 import io.grpc.stub.StreamObserver
+import net.sf.expectit.Expect
 import net.sf.expectit.ExpectBuilder
-import net.sf.expectit.matcher.Matchers.contains
+import net.sf.expectit.ExpectIOException
 import net.sf.expectit.matcher.Matchers.regexp
 import java.net.Socket
 import java.util.concurrent.TimeUnit
@@ -30,23 +31,30 @@ class Mailer(
         try {
             Socket("localhost", 25).use { smtpSocket ->
                 ExpectBuilder()
+                        .withEchoOutput(System.err)
+                        .withEchoInput(System.err)
                         .withInputs(smtpSocket.getInputStream())
                         .withOutput(smtpSocket.getOutputStream())
+                        .withLineSeparator("\r\n")
                         .withExceptionOnFailure()
-                        .withTimeout(5, TimeUnit.SECONDS)
+                        .withTimeout(180, TimeUnit.SECONDS)
                         .build().use { expect ->
-                    expect.interact()
-                            .until(contains("220 "))
+                    expect.expectNoSmtpError("^220 ")
+                    expect.emptyBuffer()
                     expect.sendLine("EHLO localhost")
-                            .interact().until(contains("250 "))
+                            .expectNoSmtpError("^250 ")
+                    expect.emptyBuffer()
                     expect.sendLine("MAIL FROM: ${value.from}")
-                            .interact().until(contains("250 "))
+                            .expectNoSmtpError("^250 ")
                     expect.sendLine("RCPT TO: ${value.emailAddress}")
-                            .interact().until(contains("250 "))
-                    val queueId = expect.sendLine("DATA")
-                            .send(value.body)
+                            .expectNoSmtpError("^250 ")
+                    expect.emptyBuffer()
+                    expect.sendLine("DATA")
+                            .expectNoSmtpError("^354 ")
+                    expect.expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
+                    val queueId = expect.send(value.body)
                             .sendLine(".")
-                            .interact().until(regexp(Pattern.compile("^250 .* queued as (.*)$")))
+                            .expectNoSmtpError("^250 .* queued as (.*)$")
                             .group(1)
                     expect.sendLine("QUIT")
 
@@ -57,6 +65,7 @@ class Mailer(
                 }
             }
         } catch (e: Exception) {
+            LOGGER.error("", e)
             return MTAQueuedNotification.newBuilder()
                     .setSuccess(false)
                     .build()
@@ -76,8 +85,8 @@ class Mailer(
             if (!Thread.currentThread().isInterrupted) {
                 LOGGER.warn(t, { "Got error from gRPC server" })
                 Thread.sleep(1000)
+                start()
             }
-            start()
         }
 
         override fun onCompleted() {
@@ -97,3 +106,12 @@ class Mailer(
         val LOGGER = logger()
     }
 }
+
+fun Expect.expectNoSmtpError(pattern: String) =
+        interact().`when`(regexpLine("^([45][0-9][0-9] .*)")).then({ r -> throw ExpectIOException("Error", r.input) })
+                .`until`(regexpLine(pattern))
+
+fun Expect.emptyBuffer() =
+        expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))!!
+
+fun regexpLine(regex: String) = regexp(Pattern.compile(regex, Pattern.MULTILINE))
