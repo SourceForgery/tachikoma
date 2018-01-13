@@ -28,7 +28,7 @@ message EmailMessage {
 
 message IncomingEmailMessage {
     string emailAddress = 101;
-
+    string from = 102;
     bytes body = 201;
 }
 

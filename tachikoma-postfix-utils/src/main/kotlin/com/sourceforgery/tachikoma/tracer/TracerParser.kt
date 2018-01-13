@@ -34,7 +34,7 @@ class TracerParser(
 
     private fun addByte(b: Byte) {
         if (b == 0.toByte()) {
-            if (readingKey && key.length == 0) {
+            if (readingKey && key.isEmpty()) {
                 callback(map)
                 map = HashMap()
             } else {

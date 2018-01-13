@@ -10,7 +10,7 @@ import java.io.IOException
 import java.nio.channels.SelectionKey
 import java.nio.channels.spi.AbstractSelector
 
-public class UnixSocketListener(
+class UnixSocketListener(
         socketFile: File,
         private val actorCreator: (UnixSocketChannel) -> Actor
 ) {
@@ -26,7 +26,7 @@ public class UnixSocketListener(
         selector = NativeSelectorProvider.getInstance().openSelector()
     }
 
-    fun start() {
+    fun startBlocking() {
         try {
             channel.configureBlocking(false)
             channel.socket().bind(address)

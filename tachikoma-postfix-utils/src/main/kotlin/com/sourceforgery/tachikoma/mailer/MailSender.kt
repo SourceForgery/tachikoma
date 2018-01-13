@@ -1,15 +1,15 @@
 package com.sourceforgery.tachikoma.mailer
 
 import com.google.protobuf.util.JsonFormat
+import com.sourceforgery.tachikoma.expectit.emptyBuffer
+import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import io.grpc.Channel
 import io.grpc.stub.StreamObserver
-import net.sf.expectit.Expect
 import net.sf.expectit.ExpectBuilder
-import net.sf.expectit.ExpectIOException
 import net.sf.expectit.matcher.Matchers.regexp
 import java.net.Socket
 import java.util.concurrent.TimeUnit
@@ -106,12 +106,3 @@ class MailSender(
         val LOGGER = logger()
     }
 }
-
-fun Expect.expectNoSmtpError(pattern: String) =
-        interact().`when`(regexpLine("^([45][0-9][0-9] .*)")).then({ r -> throw ExpectIOException("Error", r.input) })
-                .`until`(regexpLine(pattern))
-
-fun Expect.emptyBuffer() =
-        expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))!!
-
-fun regexpLine(regex: String) = regexp(Pattern.compile(regex, Pattern.MULTILINE))
