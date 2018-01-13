@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.mailer
 
+import com.sourceforgery.tachikoma.tracer.TraceMessageListener
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
 
@@ -9,5 +10,6 @@ fun main(args: Array<String>) {
             .idleTimeout(365, TimeUnit.DAYS)
             .build()
     MailSender(channel).start()
+    TraceMessageListener(channel).startBlocking()
     Thread.sleep(100000000)
 }
