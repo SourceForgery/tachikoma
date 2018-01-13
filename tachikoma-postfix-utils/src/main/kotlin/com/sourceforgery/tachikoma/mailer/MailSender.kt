@@ -15,7 +15,7 @@ import java.net.Socket
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
-class Mailer(
+class MailSender(
         channel: Channel
 ) {
     private lateinit var response: StreamObserver<MTAQueuedNotification>

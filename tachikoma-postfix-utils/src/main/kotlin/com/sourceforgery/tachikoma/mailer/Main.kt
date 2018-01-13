@@ -8,6 +8,6 @@ fun main(args: Array<String>) {
             .usePlaintext(true)
             .idleTimeout(365, TimeUnit.DAYS)
             .build()
-    Mailer(channel).start()
+    MailSender(channel).start()
     Thread.sleep(100000000)
 }
