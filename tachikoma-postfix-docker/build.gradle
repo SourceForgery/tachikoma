@@ -33,7 +33,6 @@ task postfixDocker(type: Docker) {
 
     addFile(file('src/assets/'))
 
-    runCommand('chmod +x postfix.sh opendkim.sh')
     runCommand('./opendkim.sh')
 
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
@@ -50,8 +49,6 @@ task postfixDocker(type: Docker) {
             }
         }
     }
-
-    runCommand("chmod a+rx /$workDir/tachikoma-postfix-utils/bin/tachikoma-postfix-utils")
 }
 
 assemble.dependsOn postfixDocker
