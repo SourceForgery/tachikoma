@@ -30,9 +30,10 @@ SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
 Socket                  local:/var/spool/postfix/opendkim/opendkim.sock
 EOF
-cat >> /etc/default/opendkim <<EOF
-SOCKET="inet:12301@localhost"
-EOF
+# TODO verify that this part isn't necessary
+#cat >> /etc/default/opendkim <<EOF
+#SOCKET="inet:12301@localhost"
+#EOF
 
 cat >> /etc/opendkim/TrustedHosts <<EOF
 127.0.0.1
