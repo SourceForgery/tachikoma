@@ -11,5 +11,4 @@ fun main(args: Array<String>) {
             .build()
     MailSender(channel).start()
     TraceMessageListener(channel).startBlocking()
-    Thread.sleep(100000000)
 }
