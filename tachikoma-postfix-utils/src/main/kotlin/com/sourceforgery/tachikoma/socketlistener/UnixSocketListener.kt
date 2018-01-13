@@ -1,4 +1,4 @@
-package com.sourceforgery.tachikoma.socketlistener;
+package com.sourceforgery.tachikoma.socketlistener
 
 import com.sourceforgery.tachikoma.logging.logger
 import jnr.enxio.channels.NativeSelectorProvider

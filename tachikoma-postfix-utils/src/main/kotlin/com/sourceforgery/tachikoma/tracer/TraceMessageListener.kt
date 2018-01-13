@@ -13,7 +13,6 @@ class TraceMessageListener(
 ) {
     private val stub = MTADeliveryNotificationsGrpc.newStub(channel)!!
 
-
     fun startBlocking() {
         UnixSocketListener(SOCKET_PATH, { TracerParser(it, this::setDeliveryStatus) })
     }
@@ -60,5 +59,4 @@ class TraceMessageListener(
         val SOCKET_PATH = java.io.File("/var/spool/postfix/private/tracer_tachikoma")
         val LOGGER = logger()
     }
-
 }
