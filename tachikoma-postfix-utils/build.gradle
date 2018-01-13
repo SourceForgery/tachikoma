@@ -10,7 +10,7 @@ dependencies {
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
 }
 
-mainClassName = "com.sourceforgery.tachikoma.mailer.MailerKt"
+mainClassName = "com.sourceforgery.tachikoma.mailer.MainKt"
 
 
 distZip.enabled = false
