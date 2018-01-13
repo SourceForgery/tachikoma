@@ -27,6 +27,8 @@ class IncomingEmail(
         SOCKET_PATH.deleteOnExit()
         val address = UnixSocketAddress(SOCKET_PATH)
         val serverSocketChannel = UnixServerSocketChannel.open()
+        val serverSocket = serverSocketChannel.socket()
+        serverSocket.bind(address)
         while (true) {
             val clientSocket = serverSocketChannel.accept()
             val socket = clientSocket.socket()
