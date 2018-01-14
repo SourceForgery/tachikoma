@@ -22,7 +22,7 @@ class IncomingEmail(
         executor.run { startBlocking() }
     }
 
-    fun startBlocking() {
+    private fun startBlocking() {
         SOCKET_PATH.delete()
         SOCKET_PATH.deleteOnExit()
         val address = UnixSocketAddress(SOCKET_PATH)
@@ -37,7 +37,7 @@ class IncomingEmail(
         }
     }
 
-    fun acceptIncomingEmail(fromEmailAddress: String, emailBody: ByteArray, toEmailAddress: String) {
+    private fun acceptIncomingEmail(fromEmailAddress: String, emailBody: ByteArray, toEmailAddress: String) {
         val incomingEmailMessage = IncomingEmailMessage.newBuilder()
                 .setBody(ByteString.copyFrom(emailBody))
                 .setFrom(fromEmailAddress)
