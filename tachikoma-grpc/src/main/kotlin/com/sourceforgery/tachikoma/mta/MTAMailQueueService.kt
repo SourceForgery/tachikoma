@@ -1,7 +1,10 @@
 package com.sourceforgery.tachikoma.mta
 
 import com.google.protobuf.Empty
+import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
+import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.logging.logger
@@ -14,7 +17,8 @@ internal class MTAEmailQueueService
 @Inject
 private constructor(
         private val mqSequenceFactory: MQSequenceFactory,
-        private val emailDAO: EmailDAO
+        private val emailDAO: EmailDAO,
+        private val incomingEmailDAO: IncomingEmailDAO
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
     private val responseCloser = Executors.newCachedThreadPool()
 
@@ -63,7 +67,18 @@ private constructor(
     }
 
     override fun incomingEmail(request: IncomingEmailMessage, responseObserver: StreamObserver<Empty>) {
-        super.incomingEmail(request, responseObserver)
+        try {
+            val incomingEmailDBO = IncomingEmailDBO(
+                    body = request.body.toByteArray(),
+                    fromEmail = Email(request.from),
+                    toEmail = Email(request.emailAddress)
+            )
+            incomingEmailDAO.save(incomingEmailDBO)
+            // TODO handle unsubscribe emails after merging with that branch
+        } catch (e: Exception) {
+            responseObserver.onError(e)
+        }
+        responseObserver.onCompleted()
     }
 
     companion object {
