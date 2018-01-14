@@ -1,8 +1,5 @@
-buildscript {
-    dependencies {
-        classpath 'se.transmode.gradle:gradle-docker:1.2'
-    }
-}
+apply plugin: 'base'
+apply plugin: 'docker'
 
 configurations {
     binaries
@@ -11,10 +8,6 @@ configurations {
 dependencies {
     binaries project(path: ":tachikoma-postfix-utils", configuration: 'archives')
 }
-
-
-apply plugin: 'base'
-apply plugin: 'docker'
 
 def workDir = 'opt'
 
