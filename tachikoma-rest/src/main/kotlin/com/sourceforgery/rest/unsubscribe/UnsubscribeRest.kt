@@ -29,7 +29,7 @@ private constructor(
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     @ConsumeType("multipart/form-data")
-    fun unsubscribMultipart(@Param("unsubscribeData") unsubscribeDataString: String, formData: String): HttpResponse {
+    fun unsubscribeMultipart(@Param("unsubscribeData") unsubscribeDataString: String, formData: String): HttpResponse {
         try {
             if (formData != UNSUBSCRIBE_FORM_DATA) {
                 throw IllegalArgumentException("Not valid One-Click unsubscribe form data $formData")
