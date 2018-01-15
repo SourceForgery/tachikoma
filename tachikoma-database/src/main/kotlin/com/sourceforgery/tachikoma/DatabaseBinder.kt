@@ -2,6 +2,8 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAOImpl
+import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
+import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -22,6 +24,9 @@ class DatabaseBinder : AbstractBinder() {
     override fun configure() {
         bindFactory(EbeanServerFactory::class.java)
                 .to(EbeanServer::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(BlockedEmailDAOImpl::class.java)
+                .to(BlockedEmailDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(EmailDAOImpl::class.java)
                 .to(EmailDAO::class.java)
