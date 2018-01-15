@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
             .addRecipients(EmailRecipient.newBuilder()
                     .setNamedEmail(
                             NamedEmail.newBuilder()
-                                    .setEmail("test@example.com")
+                                    .setEmail("test@example.net")
                                     .setName("This won't work")
                     )
             )

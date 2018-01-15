@@ -1,10 +1,12 @@
 package com.sourceforgery.tachikoma.mta
 
 import com.google.protobuf.Empty
+import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
+import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import io.grpc.stub.StreamObserver
@@ -15,7 +17,8 @@ internal class MTAEmailQueueService
 @Inject
 private constructor(
         private val mqSequenceFactory: MQSequenceFactory,
-        private val emailDAO: EmailDAO
+        private val emailDAO: EmailDAO,
+        private val incomingEmailDAO: IncomingEmailDAO
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
     private val responseCloser = Executors.newCachedThreadPool()
 
@@ -29,7 +32,7 @@ private constructor(
                 val response = EmailMessage.newBuilder()
                         .setBody(email.body)
                         .setFrom(email.transaction.fromEmail.address)
-                        .setEmailTransactionId(email.transaction.id.emailTransactionId)
+                        .setEmailId(email.id.emailId)
                         .setEmailAddress(email.recipient.address)
                         .build()
                 responseObserver.onNext(response)
@@ -46,9 +49,13 @@ private constructor(
 
             override fun onNext(value: MTAQueuedNotification) {
                 val queueId = value.queueId!!
-                val emailTransactionId = EmailTransactionId(value.emailTransactionId)
+                val emailId = EmailId(value.emailId)
                 // TODO do something with value.success
-                emailDAO.updateMTAQueueStatus(emailTransactionId, queueId)
+                if (value.success) {
+                    emailDAO.updateMTAQueueStatus(emailId, queueId)
+                } else {
+                    TODO("We failed for message ${value.emailId}")
+                }
             }
 
             override fun onError(t: Throwable) {
@@ -60,7 +67,18 @@ private constructor(
     }
 
     override fun incomingEmail(request: IncomingEmailMessage, responseObserver: StreamObserver<Empty>) {
-        super.incomingEmail(request, responseObserver)
+        try {
+            val incomingEmailDBO = IncomingEmailDBO(
+                    body = request.body.toByteArray(),
+                    fromEmail = Email(request.from),
+                    toEmail = Email(request.emailAddress)
+            )
+            incomingEmailDAO.save(incomingEmailDBO)
+            // TODO handle unsubscribe emails after merging with that branch
+        } catch (e: Exception) {
+            responseObserver.onError(e)
+        }
+        responseObserver.onCompleted()
     }
 
     companion object {

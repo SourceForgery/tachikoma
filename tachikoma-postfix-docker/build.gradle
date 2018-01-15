@@ -1,24 +1,17 @@
-buildscript {
-    dependencies {
-        classpath 'se.transmode.gradle:gradle-docker:1.2'
-    }
-}
+apply plugin: 'base'
+apply plugin: 'docker'
 
 configurations {
     binaries
 }
 
 dependencies {
-    binaries project(":tachikoma-postfix-binaries")
+    binaries project(path: ":tachikoma-postfix-utils", configuration: 'archives')
 }
-
-
-apply plugin: 'base'
-apply plugin: 'docker'
 
 def workDir = 'opt'
 
-task postfixDocker(type: Docker) {
+task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     applicationName = 'tachikoma-postfix'
 
     baseImage 'ubuntu:xenial'
@@ -29,25 +22,26 @@ task postfixDocker(type: Docker) {
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi supervisor postfix opendkim opendkim-tools && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi supervisor postfix opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     addFile(file('src/assets/'))
 
-    runCommand('chmod +x postfix.sh opendkim.sh')
     runCommand('./opendkim.sh')
 
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
     addFile {
-        configurations.binaries.each {
-            from(zipTree(it)) {
-                exclude 'META-INF/**'
-                rename '(.*)', "$workDir/\$1"
+        configurations.binaries.filter {
+            it.path.endsWith(".tar")
+        }
+        .each {
+            from(tarTree(it))
+            includeEmptyDirs = false
+            eachFile { FileCopyDetails fileCopyDetails ->
+                fileCopyDetails.path = fileCopyDetails.path.replaceAll("^[^/]*", "$workDir/tachikoma-postfix-utils")
             }
         }
     }
-
-    runCommand('chmod +x tachikoma*')
 }
 
 assemble.dependsOn postfixDocker
