@@ -3,6 +3,7 @@ package com.sourceforgery.rest.unsubscribe
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.server.annotation.ConsumeType
+import com.linecorp.armeria.server.annotation.ConsumeTypes
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.rest.RestService
@@ -25,14 +26,15 @@ private constructor(
         val emailStatusEventDAO: EmailStatusEventDAO
 ) : RestService {
 
-    // TODO Merge endpoints by having two @ConsumeType values
-
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
-    @ConsumeType("multipart/form-data")
-    fun unsubscribeMultipart(@Param("unsubscribeData") unsubscribeDataString: String, formData: String): HttpResponse {
+    @ConsumeTypes(ConsumeType("multipart/form-data"), ConsumeType("application/x-www-form-urlencoded"))
+    fun unsubscribe(
+            @Param("unsubscribeData") unsubscribeDataString: String,
+            @Param("List-Unsubscribe") listUnsubscribe: String
+    ): HttpResponse {
         try {
-            if (formData != UNSUBSCRIBE_FORM_DATA) {
-                throw IllegalArgumentException("Not valid One-Click unsubscribe form data $formData")
+            if (listUnsubscribe != ONE_CLICK_FORM_DATA) {
+                throw IllegalArgumentException("Not valid One-Click unsubscribe form data $listUnsubscribe")
             }
 
             val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
@@ -44,32 +46,7 @@ private constructor(
             )
             emailStatusEventDAO.save(emailStatusEvent)
 
-            // TODO Do more stuff? Add to a blacklist?
-        } catch (e: Exception) {
-            LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
-            LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })
-        }
-        return HttpResponse.of(HttpStatus.OK)
-    }
-
-    @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
-    @ConsumeType("application/x-www-form-urlencoded")
-    fun unsubscribeUrlencoded(@Param("unsubscribeData") unsubscribeDataString: String, formData: String): HttpResponse {
-        try {
-            if (formData != UNSUBSCRIBE_FORM_DATA) {
-                throw IllegalArgumentException("Not valid One-Click unsubscribe form data $formData")
-            }
-
-            val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
-
-            val email = emailDAO.fetchEmailData(unsubscribeData.emailId.toEmailId())!!
-            val emailStatusEvent = EmailStatusEventDBO(
-                    emailStatus = EmailStatus.UNSUBSCRIBE,
-                    email = email
-            )
-            emailStatusEventDAO.save(emailStatusEvent)
-
-            // TODO Do more stuff? Add to a blacklist?
+            // TODO Add to blocked emails
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })
@@ -78,7 +55,7 @@ private constructor(
     }
 
     companion object {
-        val UNSUBSCRIBE_FORM_DATA = "List-Unsubscribe=One-Click"
+        val ONE_CLICK_FORM_DATA = "One-Click"
         val LOGGER = logger()
     }
 }
