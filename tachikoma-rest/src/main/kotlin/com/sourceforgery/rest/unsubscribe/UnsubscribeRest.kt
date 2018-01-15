@@ -7,7 +7,6 @@ import com.linecorp.armeria.server.annotation.ConsumeTypes
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.rest.RestService
-import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -21,7 +20,6 @@ internal class UnsubscribeRest
 @Inject
 private constructor(
         val unsubscribeDecoder: UnsubscribeDecoder,
-        val authentication: Authentication,
         val emailDAO: EmailDAO,
         val emailStatusEventDAO: EmailStatusEventDAO
 ) : RestService {
