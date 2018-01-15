@@ -42,6 +42,8 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
             }
         }
     }
+
+    runCommand("chmod a+x /$workDir/tachikoma-postfix-utils/bin/tachikoma-postfix-utils")
 }
 
 assemble.dependsOn postfixDocker
