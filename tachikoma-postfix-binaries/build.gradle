@@ -20,7 +20,7 @@ dependencies {
     protobuf "com.google.protobuf:protobuf-java:$protoc_version"
 }
 
-task protobufCopy(type: Copy) {
+task protobufCopy(type: Sync) {
     configurations.protobuf.each {
         from(zipTree(it)) {
             include '**/*.proto'
@@ -29,7 +29,7 @@ task protobufCopy(type: Copy) {
     into file("$buildDir/grpc-api/")
 }
 
-task copyBinaries(type: Copy) {
+task copyBinaries(type: Sync) {
     if (file('target/debug').exists() && file('target/release').exists()) {
         throw new Exception("Pick target/debug or target/release")
     }

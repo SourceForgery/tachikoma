@@ -33,7 +33,6 @@ private constructor(
     @ProduceType("image/gif")
     fun trackOpen(@Param("trackingData") trackingDataString: String): HttpResponse {
         try {
-            @Suppress("UNUSED_VARIABLE")
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
             val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!

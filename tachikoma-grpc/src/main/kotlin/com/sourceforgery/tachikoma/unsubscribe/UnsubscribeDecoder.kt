@@ -1,38 +1,40 @@
-package com.sourceforgery.tachikoma.tracking
+package com.sourceforgery.tachikoma.unsubscribe
 
 import com.google.protobuf.ByteString
 import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.randomDelay
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlSignedMessage
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
+import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.SignedUnsubscribeData
+import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
+import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import javax.inject.Inject
 
-internal class TrackingDecoderImpl
+internal class UnsubscribeDecoderImpl
 @Inject
 private constructor(
+        // TODO Rename to EncryptionConfig ?
         val trackingConfig: TrackingConfig
-) : TrackingDecoder {
+) : UnsubscribeDecoder {
 
     private val encryptionKey = trackingConfig.encryptionKey.toByteArray(StandardCharsets.UTF_8)
 
-    override fun decodeTrackingData(trackingData: String): UrlTrackingData {
-        val decoded = Base64.getUrlDecoder().decode(trackingData)!!
-        val signedMessage = UrlSignedMessage.parseFrom(decoded)!!
+    override fun decodeUnsubscribeData(unsubscribeData: String): UnsubscribeData {
+        val decoded = Base64.getUrlDecoder().decode(unsubscribeData)!!
+        val signedMessage = SignedUnsubscribeData.parseFrom(decoded)!!
         val sig = signedMessage.signature!!
         if (!sig.toByteArray().contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
             randomDelay(LongRange(100, 250)) {
                 throw RuntimeException("Not correct signature")
             }
         }
-        return UrlTrackingData.parseFrom(signedMessage.message)!!
+        return UnsubscribeData.parseFrom(signedMessage.message)!!
     }
 
-    override fun createUrl(trackingData: UrlTrackingData): String {
-        val parcelled = trackingData.toByteArray()!!
+    override fun createUrl(unsubscribeData: UnsubscribeData): String {
+        val parcelled = unsubscribeData.toByteArray()!!
         val signature = HmacUtil.hmacSha1(parcelled, encryptionKey)
-        val signedMessage = UrlSignedMessage.newBuilder()
+        val signedMessage = SignedUnsubscribeData.newBuilder()
                 .setMessage(ByteString.copyFrom(parcelled))
                 .setSignature(ByteString.copyFrom(signature))
                 .build()

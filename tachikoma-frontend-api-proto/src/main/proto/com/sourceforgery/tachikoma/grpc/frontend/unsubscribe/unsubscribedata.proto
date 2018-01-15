@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+
+package com.sourceforgery.tachikoma.grpc.frontend.unsubscribe;
+
+message UnsubscribeData {
+    // The email that wants to unsubscribe
+    EmailId emailId = 101;
+}
+
+message SignedUnsubscribeData {
+    // Data (UnsubscribeData) to be signed by signature
+    bytes message = 101;
+    // Signature (HMAC SHA-1)
+    bytes signature = 102;
+}

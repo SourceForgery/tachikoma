@@ -1,7 +1,9 @@
 package com.sourceforgery.tachikoma.grpc.frontend
 
+import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
@@ -61,3 +63,11 @@ fun String.emptyToNull() =
         } else {
             this
         }
+
+fun BlockedReason.toGrpc(): Rejected.RejectReason {
+    return when (this) {
+        BlockedReason.UNSUBSCRIBED -> Rejected.RejectReason.UNSUBSCRIBED
+        BlockedReason.SPAM_MARKED -> Rejected.RejectReason.SPAM_MARKED
+        BlockedReason.HARD_BOUNCED -> Rejected.RejectReason.SPAM_MARKED
+    }
+}

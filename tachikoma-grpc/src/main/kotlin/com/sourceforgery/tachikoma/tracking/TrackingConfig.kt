@@ -1,5 +1,8 @@
 package com.sourceforgery.tachikoma.tracking
 
+import java.net.URI
+
 interface TrackingConfig {
-    val trackingEncryptionKey: String
+    val encryptionKey: String
+    val baseUrl: URI
 }
