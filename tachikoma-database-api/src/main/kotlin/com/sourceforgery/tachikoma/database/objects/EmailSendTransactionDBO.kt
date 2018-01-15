@@ -15,13 +15,15 @@ import javax.persistence.Table
 @Entity
 // Represents one call to MailDelivery.sendEmail()
 class EmailSendTransactionDBO
-constructor(
+(
         // Jsonified version of the gRPC coming in through the front end
         // for logging (in JSON because of readability and searching)
         @DbJsonB
         val jsonRequest: ObjectNode,
         @Column
-        val fromEmail: Email
+        val fromEmail: Email,
+        @Column
+        val authentication: AuthenticationDBO?
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])
     val emails: List<EmailDBO> = BeanList()

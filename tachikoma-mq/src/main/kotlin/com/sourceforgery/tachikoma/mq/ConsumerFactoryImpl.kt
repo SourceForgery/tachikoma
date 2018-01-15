@@ -216,6 +216,20 @@ private constructor(
         )
     }
 
+    override fun queueIncomingEmailNotification(accountId: AccountId, incomingEmailNotificationMessage: IncomingEmailNotificationMessage) {
+        val notificationMessageClone = IncomingEmailNotificationMessage.newBuilder(incomingEmailNotificationMessage)
+                .setCreationTimestamp(clock.instant().toTimestamp())
+                .build()
+        val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
+        sendChannel.basicPublish(
+                MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name,
+                "/account/$accountId",
+                true,
+                basicProperties,
+                notificationMessageClone.toByteArray()
+        )
+    }
+
     companion object {
         val LOGGER = logger()
 

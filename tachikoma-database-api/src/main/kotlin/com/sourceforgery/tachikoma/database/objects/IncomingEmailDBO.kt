@@ -12,9 +12,11 @@ class IncomingEmailDBO(
         @Column
         val fromEmail: Email,
         @Column
-        val toEmail: Email,
+        val receiverEmail: Email,
         @Column
-        val body: ByteArray
+        val body: ByteArray,
+        @Column
+        val accountDBO: AccountDBO
 ) : GenericDBO()
 
 val IncomingEmailDBO.id: IncomingEmailId

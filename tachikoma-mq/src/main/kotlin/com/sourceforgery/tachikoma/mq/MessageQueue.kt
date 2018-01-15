@@ -50,3 +50,16 @@ class DeliveryNotificationMessageQueue(
         assert((delay == Duration.ZERO) == (nextDestination == null))
     }
 }
+
+class IncomingEmailNotificationMessageQueue(
+        override val maxLength: Int? = null,
+        override val name: String
+) : MessageQueue<DeliveryNotificationMessage> {
+    override val delay: Duration = Duration.ZERO
+    override val nextDestination: MessageQueue<DeliveryNotificationMessage>? = null
+    override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
+
+    init {
+        assert((delay == Duration.ZERO) == (nextDestination == null))
+    }
+}

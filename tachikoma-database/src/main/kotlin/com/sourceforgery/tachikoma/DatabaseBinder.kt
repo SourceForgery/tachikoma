@@ -8,6 +8,8 @@ import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAOImpl
+import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
+import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
 import com.sourceforgery.tachikoma.database.hooks.CreateSequence
@@ -41,6 +43,9 @@ class DatabaseBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(IncomingEmailDAOImpl::class.java)
                 .to(IncomingEmailDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(IncomingEmailAddressDAOImpl::class.java)
+                .to(IncomingEmailAddressDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(LogEverything::class.java)
                 .to(InvokeCounter::class.java)

@@ -4,6 +4,7 @@ option java_multiple_files = true;
 
 package com.sourceforgery.tachikoma.grpc.frontend.maildelivery;
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
@@ -12,6 +13,8 @@ service MailDeliveryService {
     // Send emails. This will always succeed unless spam marked.
     // Failures can only be detected via DeliveryNotificationService.notificationStream()
     rpc sendEmail (OutgoingEmail) returns (stream EmailQueueStatus);
+
+    rpc getIncomingEmails(google.protobuf.Empty) returns (IncomingEmail);
 }
 
 // A recipient
@@ -176,4 +179,14 @@ message Queued {
 message Scheduled {
     // When the message is scheduled to be sent
     google.protobuf.Timestamp scheduledTo = 101;
+}
+
+
+// IncomingEmail is an email that is sent to the mail server
+message IncomingEmail {
+    IncomingEmailId incomingEmailId = 101;
+
+    NamedEmail from = 201;
+    NamedEmail to = 202;
+    string subject = 203;
 }
