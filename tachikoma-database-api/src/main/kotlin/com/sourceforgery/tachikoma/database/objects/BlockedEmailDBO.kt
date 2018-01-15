@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.database.objects
 
+import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.common.Email
-import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.identifiers.BlockedEmailId
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -18,7 +18,7 @@ constructor(
         @Column
         val recipient: Email,
         @Column
-        val emailStatus: EmailStatus
+        val blockedReason: BlockedReason
 ) : GenericDBO()
 
 val BlockedEmailDBO.id: BlockedEmailId

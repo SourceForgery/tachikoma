@@ -8,6 +8,7 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
@@ -21,7 +22,8 @@ internal class UnsubscribeRest
 private constructor(
         val unsubscribeDecoder: UnsubscribeDecoder,
         val emailDAO: EmailDAO,
-        val emailStatusEventDAO: EmailStatusEventDAO
+        val emailStatusEventDAO: EmailStatusEventDAO,
+        val blockedEmailDAO: BlockedEmailDAO
 ) : RestService {
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
@@ -44,7 +46,7 @@ private constructor(
             )
             emailStatusEventDAO.save(emailStatusEvent)
 
-            // TODO Add to blocked emails
+            blockedEmailDAO.block(emailStatusEvent)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })

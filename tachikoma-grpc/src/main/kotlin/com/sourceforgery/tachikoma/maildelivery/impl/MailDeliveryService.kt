@@ -6,6 +6,7 @@ import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.common.toInstant
+import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
@@ -17,6 +18,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
+import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
@@ -55,6 +58,7 @@ private constructor(
         private val trackingConfig: TrackingConfig,
         private val dbObjectMapper: DBObjectMapper,
         private val emailDAO: EmailDAO,
+        private val blockedEmailDAO: BlockedEmailDAO,
         private val mqSender: MQSender,
         private val jobMessageFactory: JobMessageFactory,
         private val ebeanServer: EbeanServer,
@@ -64,9 +68,10 @@ private constructor(
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
 
+        val fromEmail = request.from.toNamedEmail().address
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request),
-                fromEmail = request.from.toNamedEmail().address
+                fromEmail = fromEmail
         )
         val requestedSendTime =
                 if (request.hasSendAt()) {
@@ -77,33 +82,49 @@ private constructor(
 
         ebeanServer.createTransaction().use {
             for (recipient in request.recipientsList) {
-                // TODO Check if recipient is blocked
-                val emailDBO = EmailDBO(
-                        recipient = recipient.toNamedEmail(),
-                        transaction = transaction
-                )
-                emailDAO.save(emailDBO)
 
-                emailDBO.body = when (request.bodyCase!!) {
-                    OutgoingEmail.BodyCase.STATIC -> getStaticBody(request, emailDBO.id)
-                    OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(request, recipient, emailDBO.id)
-                    else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
+                val recipientEmail = recipient.toNamedEmail()
+
+                blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)?.let { blockedReason ->
+                    responseObserver.onNext(
+                            EmailQueueStatus.newBuilder()
+                                    .setRejected(Rejected.newBuilder()
+                                            .setRejectReason(blockedReason.toGrpc())
+                                            .build()
+                                    )
+                                    .setTransactionId(transaction.id.toGrpcInternal())
+                                    .setRecipient(recipientEmail.address.toGrpcInternal())
+                                    .build()
+                    )
+                    blockedReason
+                } ?: let {
+                    val emailDBO = EmailDBO(
+                            recipient = recipientEmail,
+                            transaction = transaction
+                    )
+                    emailDAO.save(emailDBO)
+
+                    emailDBO.body = when (request.bodyCase!!) {
+                        OutgoingEmail.BodyCase.STATIC -> getStaticBody(request, emailDBO.id)
+                        OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(request, recipient, emailDBO.id)
+                        else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
+                    }
+                    emailDAO.save(emailDBO)
+
+                    mqSender.queueJob(jobMessageFactory.createSendEmailJob(
+                            requestedSendTime = requestedSendTime,
+                            emailId = emailDBO.id
+                    ))
+
+                    responseObserver.onNext(
+                            EmailQueueStatus.newBuilder()
+                                    .setEmailId(emailDBO.id.toGrpcInternal())
+                                    .setQueued(Queued.getDefaultInstance())
+                                    .setTransactionId(transaction.id.toGrpcInternal())
+                                    .setRecipient(emailDBO.recipient.toGrpcInternal())
+                                    .build()
+                    )
                 }
-                emailDAO.save(emailDBO)
-
-                mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                        requestedSendTime = requestedSendTime,
-                        emailId = emailDBO.id
-                ))
-
-                responseObserver.onNext(
-                        EmailQueueStatus.newBuilder()
-                                .setEmailId(emailDBO.id.toGrpcInternal())
-                                .setQueued(Queued.getDefaultInstance())
-                                .setTransactionId(transaction.id.toGrpcInternal())
-                                .setRecipient(emailDBO.recipient.toGrpcInternal())
-                                .build()
-                )
             }
             responseObserver.onCompleted()
         }
