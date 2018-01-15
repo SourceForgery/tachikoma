@@ -16,8 +16,8 @@ private constructor(
     override fun getBlockedReason(from: Email, recipient: Email): BlockedReason? {
         return ebeanServer.find(BlockedEmailDBO::class.java)
                 .where()
-                .eq("from", from)
-                .eq("recipient", recipient)
+                .eq("fromEmail", from)
+                .eq("recipientEmail", recipient)
                 .findOne()
                 ?.blockedReason
     }
@@ -27,8 +27,8 @@ private constructor(
         val recipient = statusEvent.email.recipient
         if (getBlockedReason(from, recipient) == null) {
             val blockedEmail = BlockedEmailDBO(
-                    recipient = recipient,
-                    from = from,
+                    recipientEmail = recipient,
+                    fromEmail = from,
                     blockedReason = toBlockedReason(statusEvent.emailStatus)
             )
             ebeanServer.save(blockedEmail)
@@ -38,8 +38,8 @@ private constructor(
     override fun unblock(statusEventDBO: EmailStatusEventDBO) {
         ebeanServer.find(BlockedEmailDBO::class.java)
                 .where()
-                .eq("from", statusEventDBO.email.transaction.fromEmail)
-                .eq("recipient", statusEventDBO.email.recipient)
+                .eq("fromEmail", statusEventDBO.email.transaction.fromEmail)
+                .eq("recipientEmail", statusEventDBO.email.recipient)
                 .delete()
     }
 

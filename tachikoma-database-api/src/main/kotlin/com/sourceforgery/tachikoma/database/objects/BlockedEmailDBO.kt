@@ -10,13 +10,13 @@ import javax.persistence.UniqueConstraint
 
 @Entity
 @Table(name = "e_blocked_email")
-@UniqueConstraint(columnNames = ["from", "recipient"])
+@UniqueConstraint(columnNames = ["from_email", "recipient_email"])
 class BlockedEmailDBO
 constructor(
         @Column
-        val from: Email,
+        val fromEmail: Email,
         @Column
-        val recipient: Email,
+        val recipientEmail: Email,
         @Column
         val blockedReason: BlockedReason
 ) : GenericDBO()
