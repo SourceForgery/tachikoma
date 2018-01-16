@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.mta
 
 import com.google.protobuf.Empty
+import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
@@ -35,12 +36,13 @@ private constructor(
         private val emailStatusEventDAO: EmailStatusEventDAO,
         private val blockedEmailDAO: BlockedEmailDAO,
         private val mqSender: MQSender,
-        private val incomingEmailAddressDAO: IncomingEmailAddressDAO
+        private val incomingEmailAddressDAO: IncomingEmailAddressDAO,
+        private val authentication: Authentication
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
     private val responseCloser = Executors.newCachedThreadPool()
 
     override fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
-        val future = mqSequenceFactory.listenForOutgoingEmails {
+        val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
             if (email == null) {
                 LOGGER.warn { "Nothing found when looking trying to send email with id: " + it.emailId }
@@ -54,7 +56,7 @@ private constructor(
                         .build()
                 responseObserver.onNext(response)
             }
-        }
+        })
         future.addListener(Runnable {
             responseObserver.onCompleted()
         }, responseCloser)

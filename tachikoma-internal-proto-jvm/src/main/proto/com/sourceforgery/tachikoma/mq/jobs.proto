@@ -20,6 +20,8 @@ message JobMessage {
 message SendEmailJob {
     // The email id to send
     sint64 emailId = 101;
+    // The maildomain to send from
+    string mailDomain = 102;
 }
 
 message OutgoingEmailMessage {

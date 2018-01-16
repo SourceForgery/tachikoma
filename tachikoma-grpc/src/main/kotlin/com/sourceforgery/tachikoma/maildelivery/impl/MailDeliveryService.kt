@@ -78,7 +78,7 @@ private constructor(
         authentication.requireAccount()
         val auth = authenticationDAO.getActiveById(authentication.authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
-        if (fromEmail.domain != auth.account.domain) {
+        if (fromEmail.domain != auth.account.mailDomain) {
             throw InvalidOrInsufficientCredentialsException()
         }
         val transaction = EmailSendTransactionDBO(
@@ -139,7 +139,8 @@ private constructor(
 
                     mqSender.queueJob(jobMessageFactory.createSendEmailJob(
                             requestedSendTime = requestedSendTime,
-                            emailId = emailDBO.id
+                            emailId = emailDBO.id,
+                            mailDomain = auth.account.mailDomain
                     ))
 
                     responseObserver.onNext(
@@ -306,8 +307,7 @@ private constructor(
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
         // TODO Add this url (abuse)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: http://${trackingConfig.baseUrl}/abuse/$messageId")
-        // TODO Replace accountId? with accountId!! once authentication is fixed
-        message.addHeader("X-Tachikoma-User", authentication.accountId?.accountId.toString())
+        message.addHeader("X-Tachikoma-User", authentication.accountId.accountId.toString())
     }
 
     private fun getPlainText(doc: Document): String {

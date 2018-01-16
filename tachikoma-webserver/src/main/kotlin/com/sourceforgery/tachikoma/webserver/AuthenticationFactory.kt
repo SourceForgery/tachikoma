@@ -4,6 +4,7 @@ import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.HmacUtil.hmacSha1
 import com.sourceforgery.tachikoma.config.WebServerConfig
+import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
@@ -13,6 +14,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.toAccountId
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
 import java.util.Base64
@@ -23,7 +25,8 @@ class AuthenticationFactory
 private constructor(
         private val httpHeaders: HttpHeaders,
         private val webServerConfig: WebServerConfig,
-        private val authenticationDAO: AuthenticationDAO
+        private val authenticationDAO: AuthenticationDAO,
+        private val accountDAO: AccountDAO
 ) : Factory<Authentication> {
     override fun provide() =
             parseWebTokenHeader()
@@ -33,13 +36,14 @@ private constructor(
     private fun parseApiTokenHeader() =
             httpHeaders[APITOKEN_HEADER]
                     ?.let {
-                        it.substringBefore(':') to it.substringAfter(':')
+                        MailDomain(it.substringBefore(':')) to it.substringAfter(':')
                     }
                     ?.let { splitAuthString ->
-                        // TODO Needs to be handled better. This is slow and hits the database too much
+                        // TODO Needs to be handled better. This is slow and hits the database
+                        // for every request
                         authenticationDAO.validateApiToken(splitAuthString.second)
                                 ?.let { auth ->
-                                    if (auth.account.domain == splitAuthString.second) {
+                                    if (auth.account.mailDomain == splitAuthString.first) {
                                         auth
                                     } else {
                                         null
@@ -51,7 +55,8 @@ private constructor(
                                 // No webtoken should allow backend
                                 allowBackend = false,
                                 authenticationId = it.id,
-                                accountId = it.account.id
+                                accountId = it.account.id,
+                                accountDAO = accountDAO
                         )
                     }
 
@@ -74,14 +79,14 @@ private constructor(
         val authenticationId = tokenAuthData.toAuthenticationId()
                 ?: throw InvalidOrInsufficientCredentialsException()
 
-        // No webtoken should be without account
         val accountId = tokenAuthData.toAccountId()
                 ?: throw InvalidOrInsufficientCredentialsException()
         return AuthenticationImpl(
                 // No webtoken should allow backend
                 allowBackend = false,
                 authenticationId = authenticationId,
-                accountId = accountId
+                accountId = accountId,
+                accountDAO = accountDAO
         )
     }
 
@@ -99,9 +104,12 @@ private constructor(
                 throw NoAuthorizationCredentialsException()
             }
 
+            override val mailDomain: MailDomain
+                get() = throw NoAuthorizationCredentialsException()
             override val authenticationId: AuthenticationId
                 get() = throw NoAuthorizationCredentialsException()
-            override val accountId: AccountId? = null
+            override val accountId: AccountId
+                get() = throw NoAuthorizationCredentialsException()
             override val allowBackend: Boolean = false
             override val valid: Boolean = false
         }
@@ -114,8 +122,13 @@ private constructor(
 internal class AuthenticationImpl(
         override var allowBackend: Boolean = false,
         override var authenticationId: AuthenticationId,
-        override var accountId: AccountId
+        override var accountId: AccountId,
+        private val accountDAO: AccountDAO
 ) : Authentication {
+    override val mailDomain: MailDomain by lazy {
+        accountDAO.getById(accountId).mailDomain
+    }
+
     override fun requireAccount(): AccountId {
         requireValid()
         if (allowBackend) {

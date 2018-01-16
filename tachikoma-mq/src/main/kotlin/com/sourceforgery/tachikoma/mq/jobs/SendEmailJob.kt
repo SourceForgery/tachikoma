@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.mq.jobs
 
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobMessage
 import com.sourceforgery.tachikoma.mq.MQSender
@@ -18,7 +19,7 @@ private constructor(
                 .setEmailId(sendEmailJob.emailId)
                 .setCreationTimestamp(jobMessage.creationTimestamp)
                 .build()
-        mqSender.queueOutgoingEmail(outgoingEmail)
+        mqSender.queueOutgoingEmail(MailDomain(sendEmailJob.mailDomain), outgoingEmail)
     }
 
     companion object {
