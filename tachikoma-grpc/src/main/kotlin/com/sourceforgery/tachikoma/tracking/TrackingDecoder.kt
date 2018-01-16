@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 internal class TrackingDecoderImpl
 @Inject
-private constructor(
+constructor(
         val trackingConfig: TrackingConfig
 ) : TrackingDecoder {
 

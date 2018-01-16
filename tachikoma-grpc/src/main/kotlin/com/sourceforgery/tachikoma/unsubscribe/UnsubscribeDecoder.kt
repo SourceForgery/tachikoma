@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 internal class UnsubscribeDecoderImpl
 @Inject
-private constructor(
+constructor(
         // TODO Rename to EncryptionConfig ?
         val trackingConfig: TrackingConfig
 ) : UnsubscribeDecoder {
