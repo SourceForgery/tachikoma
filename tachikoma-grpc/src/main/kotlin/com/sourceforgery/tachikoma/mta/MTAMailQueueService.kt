@@ -90,8 +90,8 @@ private constructor(
             val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), body.inputStream())
             val recipientEmail = Email(InternetAddress(request.emailAddress).address)
             val accountTypePair = handleUnsubscribe(recipientEmail, mimeMessage)
-                    ?: handBounce(recipientEmail)
-                    ?: sendNotification(recipientEmail)
+                    ?: handleHardBounce(recipientEmail)
+                    ?: handleNormalEmails(recipientEmail)
 
             if (accountTypePair != null) {
                 val accountDBO = accountTypePair.first
@@ -108,6 +108,8 @@ private constructor(
                             .build()
                     mqSender.queueIncomingEmailNotification(accountDBO.id, notificationMessage)
                 }
+            } else {
+                TODO("Return bad result!")
             }
         } catch (e: Exception) {
             responseObserver.onError(e)
@@ -115,14 +117,14 @@ private constructor(
         responseObserver.onCompleted()
     }
 
-    private fun sendNotification(recipientEmail: Email): Pair<AccountDBO, IncomingEmailType>? {
+    private fun handleNormalEmails(recipientEmail: Email): Pair<AccountDBO, IncomingEmailType>? {
         return incomingEmailAddressDAO.getByEmail(recipientEmail)
                 ?.let {
                     it.account to IncomingEmailType.NORMAL
                 }
     }
 
-    private fun handBounce(recipientAddress: Email): Pair<AccountDBO, IncomingEmailType>? {
+    private fun handleHardBounce(recipientAddress: Email): Pair<AccountDBO, IncomingEmailType>? {
         return if (recipientAddress.address.startsWith("bounce-")) {
             val messageId = MessageId(recipientAddress.address.substringAfter('-'))
             emailDAO.getByMessageId(messageId)
