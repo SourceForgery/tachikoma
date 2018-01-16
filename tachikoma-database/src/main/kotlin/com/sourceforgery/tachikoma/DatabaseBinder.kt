@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma
 
+import com.sourceforgery.tachikoma.database.dao.AccountDAO
+import com.sourceforgery.tachikoma.database.dao.AccountDAOImpl
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAOImpl
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
@@ -13,6 +15,7 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
 import com.sourceforgery.tachikoma.database.hooks.CreateSequence
+import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
@@ -47,6 +50,9 @@ class DatabaseBinder : AbstractBinder() {
         bindAsContract(IncomingEmailAddressDAOImpl::class.java)
                 .to(IncomingEmailAddressDAO::class.java)
                 .`in`(Singleton::class.java)
+        bindAsContract(AccountDAOImpl::class.java)
+                .to(AccountDAO::class.java)
+                .`in`(Singleton::class.java)
         bindAsContract(LogEverything::class.java)
                 .to(InvokeCounter::class.java)
                 .`in`(RequestScoped::class.java)
@@ -54,6 +60,9 @@ class DatabaseBinder : AbstractBinder() {
                 .to(DBObjectMapper::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(CreateSequence::class.java)
+                .to(EbeanHook::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(CreateUsers::class.java)
                 .to(EbeanHook::class.java)
                 .`in`(Singleton::class.java)
     }

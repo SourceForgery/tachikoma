@@ -6,6 +6,8 @@ import com.sourceforgery.tachikoma.common.HmacUtil.hmacSha1
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.objects.id
+import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
+import com.sourceforgery.tachikoma.exceptions.NoAuthorizationCredentialsException
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.toAccountId
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
@@ -59,11 +61,17 @@ private constructor(
             return null
         }
         val tokenAuthData = WebTokenAuthData.parseFrom(payload)
+        val authenticationId = tokenAuthData.toAuthenticationId()
+                ?: throw InvalidOrInsufficientCredentialsException()
+
+        // No webtoken should be without account
+        val accountId = tokenAuthData.toAccountId()
+                ?: throw InvalidOrInsufficientCredentialsException()
         return AuthenticationImpl(
                 // No webtoken should allow backend
                 allowBackend = false,
-                authenticationId = tokenAuthData.toAuthenticationId(),
-                accountId = tokenAuthData.toAccountId()
+                authenticationId = authenticationId,
+                accountId = accountId
         )
     }
 
@@ -73,7 +81,16 @@ private constructor(
     companion object {
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION = object : Authentication {
-            override val authenticationId: AuthenticationId? = null
+            override fun requireAccount(): AccountId {
+                throw NoAuthorizationCredentialsException()
+            }
+
+            override fun requireBackend() {
+                throw NoAuthorizationCredentialsException()
+            }
+
+            override val authenticationId: AuthenticationId
+                get() = throw NoAuthorizationCredentialsException()
             override val accountId: AccountId? = null
             override val allowBackend: Boolean = false
             override val valid: Boolean = false
@@ -86,8 +103,26 @@ private constructor(
 
 internal class AuthenticationImpl(
         override var allowBackend: Boolean = false,
-        override var authenticationId: AuthenticationId? = null,
+        override var authenticationId: AuthenticationId,
         override var accountId: AccountId? = null
 ) : Authentication {
+    override fun requireAccount(): AccountId {
+        requireValid()
+        return accountId ?: throw InvalidOrInsufficientCredentialsException()
+    }
+
+    override fun requireBackend() {
+        requireValid()
+        if (!allowBackend) {
+            throw InvalidOrInsufficientCredentialsException()
+        }
+    }
+
+    private fun requireValid() {
+        if (!valid) {
+            throw InvalidOrInsufficientCredentialsException()
+        }
+    }
+
     override val valid: Boolean = true
 }

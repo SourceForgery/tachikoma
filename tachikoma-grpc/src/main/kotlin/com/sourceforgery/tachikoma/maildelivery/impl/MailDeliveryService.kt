@@ -9,6 +9,8 @@ import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.config.MTAConfig
+import com.sourceforgery.tachikoma.database.dao.AccountDAO
+import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
@@ -70,16 +72,18 @@ private constructor(
         private val trackingDecoderImpl: TrackingDecoderImpl,
         private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
         private val mtaConfig: MTAConfig,
-        private val authentication: Authentication
+        private val authentication: Authentication,
+        private val authenticationDAO: AuthenticationDAO
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
-
+        authentication.requireAccount()
+        val auth = authenticationDAO.getActiveById(authentication.authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request),
                 fromEmail = fromEmail,
-                authentication = null
+                authentication = auth
         )
         val requestedSendTime =
                 if (request.hasSendAt()) {

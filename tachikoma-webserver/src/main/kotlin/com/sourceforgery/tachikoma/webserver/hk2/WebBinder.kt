@@ -3,12 +3,17 @@ package com.sourceforgery.tachikoma.webserver.hk2
 import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.RequestContext
+import com.sourceforgery.rest.catchers.RestExceptionCatcher
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
+import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionCatcher
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl
 import com.sourceforgery.tachikoma.hk2.ReferencingFactory
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import com.sourceforgery.tachikoma.webserver.AuthenticationFactory
+import com.sourceforgery.tachikoma.webserver.catchers.InvalidOrInsufficientCredentialsCatcher
+import com.sourceforgery.tachikoma.webserver.catchers.NoAuthorizationCredentialsCatcher
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
@@ -44,11 +49,24 @@ class WebBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(HttpRequestScopedDecorator::class.java)
                 .`in`(Singleton::class.java)
-
+        bindCatchers()
         bindAsContract(GrpcExceptionInterceptor::class.java)
                 .`in`(Singleton::class.java)
 
         bindAsContract(RestExceptionHandlerFunction::class.java)
                 .`in`(Singleton::class.java)
+    }
+
+    private fun bindCatchers() {
+        val classes = listOf(
+                InvalidOrInsufficientCredentialsCatcher::class.java,
+                NoAuthorizationCredentialsCatcher::class.java
+        )
+        for (clazz in classes) {
+            bindAsContract(clazz)
+                    .to(GrpcExceptionCatcher::class.java)
+                    .to(RestExceptionCatcher::class.java)
+                    .`in`(Singleton::class.java)
+        }
     }
 }

@@ -1,5 +1,5 @@
 package com.sourceforgery.tachikoma.identifiers
 
-data class AuthenticationId(val userId: Long) {
-    override fun toString() = "AuthenticationId: $userId"
+data class AuthenticationId(val authenticationId: Long) {
+    override fun toString() = "AuthenticationId: $authenticationId"
 }
