@@ -11,8 +11,8 @@ import javax.inject.Inject
 
 internal class TrackingDecoderImpl
 @Inject
-constructor(
-        val trackingConfig: TrackingConfig
+private constructor(
+        trackingConfig: TrackingConfig
 ) : TrackingDecoder {
 
     private val encryptionKey = trackingConfig.encryptionKey.toByteArray(StandardCharsets.UTF_8)
@@ -36,6 +36,6 @@ constructor(
                 .setMessage(ByteString.copyFrom(parcelled))
                 .setSignature(ByteString.copyFrom(signature))
                 .build()
-        return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray())!!
+        return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray()).trimEnd('=')
     }
 }

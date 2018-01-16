@@ -1,34 +1,21 @@
 package com.sourceforgery.tachikoma.unsubscribe
 
+import com.sourceforgery.tachikoma.Hk2TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
-import com.sourceforgery.tachikoma.tracking.TrackingConfig
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.net.URI
-import javax.inject.Inject
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
-internal class UnsubscribeDecoderSpec
-@Inject
-constructor(
-//        val trackingConfig: TrackingConfig
-//        val trackingDecoder: TrackingDecoderImpl
-) : Spek({
-
-    // TODO Inject this stuff instead..
-    val trackingConfig = object : TrackingConfig {
-        override val encryptionKey: String
-            get() = "A REALLY NICE KEY FOR TESTING"
-        override val baseUrl: URI
-            get() = URI.create("https://localhost:8070/")
-    }
-    val unsubscribeDecoder = UnsubscribeDecoderImpl(trackingConfig)
+internal class TrackingDecoderSpec : Spek({
+    val serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+    val unsubscribeDecoder = serviceLocator.getService(UnsubscribeDecoder::class.java)
 
     describe("UnsubscribeDecoderSpec") {
 
@@ -46,12 +33,12 @@ constructor(
 
             val url = unsubscribeDecoder.createUrl(unsubscribeData)
 
-            assertEquals("qgYGqgYDCM4PsgYU9TuIZgGKyDsPoOALZKWrLzc4zxw=", url)
+            assertEquals("qgYGqgYDCM4PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8", url)
         }
 
         it("should decode an unsubscribe url") {
 
-            val unsubscribeDataString = "qgYGqgYDCM4PsgYU9TuIZgGKyDsPoOALZKWrLzc4zxw="
+            val unsubscribeDataString = "qgYGqgYDCM4PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8"
 
             val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
 
@@ -59,7 +46,7 @@ constructor(
         }
 
         it("should throw if trying to decode an invalid url") {
-            val unsubscribeDataString = "qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5le12tcGxlLmNvbS8yZWRpcmVjdFBhdGiyBhT6_Dgl8dQlgiIc4_X0xVkuX3E5Eg=="
+            val unsubscribeDataString = "qgYGqgYDCM5PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8"
 
             assertFailsWith<RuntimeException> {
                 unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)

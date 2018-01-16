@@ -1,33 +1,21 @@
 package com.sourceforgery.tachikoma.tracking
 
+import com.sourceforgery.tachikoma.Hk2TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.net.URI
-import javax.inject.Inject
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
-internal class TrackingDecoderSpec
-@Inject
-constructor(
-//        val trackingConfig: TrackingConfig
-//        val trackingDecoder: TrackingDecoderImpl
-) : Spek({
-
-    // TODO Inject this stuff instead..
-    val trackingConfig = object : TrackingConfig {
-        override val encryptionKey: String
-            get() = "A REALLY NICE KEY FOR TESTING"
-        override val baseUrl: URI
-            get() = URI.create("https://localhost:8070/")
-    }
-    val trackingDecoder = TrackingDecoderImpl(trackingConfig)
+internal class TrackingDecoderSpec : Spek({
+    val serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+    val trackingDecoder = serviceLocator.getService(TrackingDecoder::class.java)
 
     describe("TrackingDecoderSpec") {
 
@@ -46,12 +34,12 @@ constructor(
 
             val url = trackingDecoder.createUrl(trackingData)
 
-            assertEquals("qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5leGFtcGxlLmNvbS9yZWRpcmVjdFBhdGiyBhT6_Dgl8dQlgiIc4_X0xVkuX3E5Eg==", url)
+            assertEquals("qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5leGFtcGxlLmNvbS9yZWRpcmVjdFBhdGiyBhTP69ssXUL94-eJ1oLBnOOD6eH-Bg", url)
         }
 
         it("should decode a tracking url") {
 
-            val trackingDataString = "qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5leGFtcGxlLmNvbS9yZWRpcmVjdFBhdGiyBhT6_Dgl8dQlgiIc4_X0xVkuX3E5Eg=="
+            val trackingDataString = "qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5leGFtcGxlLmNvbS9yZWRpcmVjdFBhdGiyBhTP69ssXUL94-eJ1oLBnOOD6eH-Bg"
 
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
@@ -60,7 +48,7 @@ constructor(
         }
 
         it("should throw if trying to decode an invalid url") {
-            val trackingDataString = "qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5le12tcGxlLmNvbS9yZWRpcmVjdFBhdGiyBhT6_Dgl8dQlgiIc4_X0xVkuX3E5Eg=="
+            val trackingDataString = "qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5le12tcGxlLmNvbS9yZWRpcmVjdFBhdGiyBhT6_Dgl8dQlgiIc4_X0xVkuX3E5Eg"
 
             assertFailsWith<RuntimeException> {
                 trackingDecoder.decodeTrackingData(trackingDataString)
