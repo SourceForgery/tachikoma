@@ -14,7 +14,7 @@ internal class UnsubscribeDecoderImpl
 @Inject
 private constructor(
         // TODO Rename to EncryptionConfig ?
-        val trackingConfig: TrackingConfig
+        trackingConfig: TrackingConfig
 ) : UnsubscribeDecoder {
 
     private val encryptionKey = trackingConfig.encryptionKey.toByteArray(StandardCharsets.UTF_8)
@@ -38,6 +38,6 @@ private constructor(
                 .setMessage(ByteString.copyFrom(parcelled))
                 .setSignature(ByteString.copyFrom(signature))
                 .build()
-        return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray())!!
+        return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray()).trimEnd('=')
     }
 }
