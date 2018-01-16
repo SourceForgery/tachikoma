@@ -287,8 +287,7 @@ private constructor(
 
         // MUST have a valid DomainKeys Identified Mail (DKIM) signature that covers at least the List-Unsubscribe and List-Unsubscribe-Post headers
         message.addHeader("List-Unsubscribe-Post", "One-Click")
-        message.addHeader("List-Unsubscribe", "<$unsubscribeUri>")
-        message.addHeader("List-Unsubscribe", "<mailto:$unsubcribeEmail?subject=unsub>")
+        message.addHeader("List-Unsubscribe", "<$unsubscribeUri>, <mailto:$unsubcribeEmail?subject=unsub>")
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
 
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${mtaConfig.mailDomain}")
