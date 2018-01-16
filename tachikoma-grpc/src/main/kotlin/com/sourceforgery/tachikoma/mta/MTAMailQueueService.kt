@@ -135,7 +135,7 @@ private constructor(
                         )
                         emailStatusEventDAO.save(emailStatusEventDBO)
                         blockedEmailDAO.block(emailStatusEventDBO)
-                        email.transaction.authentication.account!! to IncomingEmailType.HARD_BOUNCE
+                        email.transaction.authentication.account to IncomingEmailType.HARD_BOUNCE
                     }
         } else {
             null
@@ -153,7 +153,7 @@ private constructor(
                         )
                         emailStatusEventDAO.save(emailStatusEventDBO)
                         blockedEmailDAO.block(emailStatusEventDBO)
-                        email.transaction.authentication.account!! to IncomingEmailType.UNSUBSCRIBE
+                        email.transaction.authentication.account to IncomingEmailType.UNSUBSCRIBE
                     }
         } else {
             null

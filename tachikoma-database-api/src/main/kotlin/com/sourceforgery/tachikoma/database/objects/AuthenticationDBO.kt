@@ -23,24 +23,12 @@ class AuthenticationDBO(
         val backend: Boolean = false,
 
         @ManyToOne
-        val account: AccountDBO? = null
+        val account: AccountDBO
 ) : GenericDBO() {
     val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
 
     @Column
     var active = true
-
-    // 'Fake' constructor for Ebean
-    private constructor() : this(backend = true)
-
-    init {
-        if (backend && account != null) {
-            throw RuntimeException("Should not be both backend and have accountId")
-        }
-        if (!backend && account == null) {
-            throw RuntimeException("Must have at least one authenticator")
-        }
-    }
 }
 
 val AuthenticationDBO.id: AuthenticationId

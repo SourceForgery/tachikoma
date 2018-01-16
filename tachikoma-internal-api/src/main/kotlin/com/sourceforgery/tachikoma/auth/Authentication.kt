@@ -9,5 +9,5 @@ interface Authentication {
     val allowBackend: Boolean
     val accountId: AccountId?
     fun requireAccount(): AccountId
-    fun requireBackend()
+    fun requireBackend(): AccountId
 }

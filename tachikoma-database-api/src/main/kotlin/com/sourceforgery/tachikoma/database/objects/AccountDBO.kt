@@ -10,7 +10,9 @@ import javax.persistence.Table
 @Entity
 // This is one account (sender) with it's multiple users
 // Every user = one account
-class AccountDBO : GenericDBO() {
+class AccountDBO(
+        val domain: String
+) : GenericDBO() {
     @OneToMany
     val allowedSendingEmails: List<AllowedSendingEmailDBO> = BeanList()
     @OneToMany
