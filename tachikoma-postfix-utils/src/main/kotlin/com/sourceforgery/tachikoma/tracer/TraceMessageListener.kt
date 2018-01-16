@@ -14,7 +14,7 @@ class TraceMessageListener(
     private val stub = MTADeliveryNotificationsGrpc.newStub(channel)!!
 
     fun startBlocking() {
-        UnixSocketListener(SOCKET_PATH, { TracerParser(it, this::setDeliveryStatus) })
+        UnixSocketListener(SOCKET_PATH, { TracerParser(it, this::setDeliveryStatus) }).startBlocking()
     }
 
     fun setDeliveryStatus(map: Map<String, String>) {

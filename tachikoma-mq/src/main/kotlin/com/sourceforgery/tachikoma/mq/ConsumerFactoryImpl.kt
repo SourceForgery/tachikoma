@@ -136,7 +136,7 @@ private constructor(
     }
 
     override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
-        val queue = DeliveryNotificationMessageQueue(name = "user.${authenticationId.userId}")
+        val queue = DeliveryNotificationMessageQueue(name = "user.${authenticationId.authenticationId}")
         return listenOnQueue(queue, callback)
     }
 
@@ -209,6 +209,20 @@ private constructor(
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
                 MessageExchange.EMAIL_NOTIFICATIONS.name,
+                "/account/$accountId",
+                true,
+                basicProperties,
+                notificationMessageClone.toByteArray()
+        )
+    }
+
+    override fun queueIncomingEmailNotification(accountId: AccountId, incomingEmailNotificationMessage: IncomingEmailNotificationMessage) {
+        val notificationMessageClone = IncomingEmailNotificationMessage.newBuilder(incomingEmailNotificationMessage)
+                .setCreationTimestamp(clock.instant().toTimestamp())
+                .build()
+        val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
+        sendChannel.basicPublish(
+                MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name,
                 "/account/$accountId",
                 true,
                 basicProperties,

@@ -4,7 +4,7 @@ import com.sourceforgery.tachikoma.common.Email
 import io.ebean.config.ScalarTypeConverter
 
 @Suppress("unused")
-class SplitEmailScalarType : ScalarTypeConverter<Email, String> {
+class EmailScalarType : ScalarTypeConverter<Email, String> {
     override fun getNullValue(): Email? {
         return null
     }

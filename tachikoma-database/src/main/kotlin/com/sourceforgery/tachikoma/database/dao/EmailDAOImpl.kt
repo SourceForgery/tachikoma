@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.dao
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.query.QEmailDBO
 import com.sourceforgery.tachikoma.identifiers.EmailId
+import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.EbeanServer
 import javax.inject.Inject
 
@@ -28,5 +29,12 @@ private constructor(
                 .where()
                 .eq("dbId", emailId.emailId)
                 .update()
+    }
+
+    override fun getByMessageId(messageId: MessageId): EmailDBO? {
+        return ebeanServer.find(EmailDBO::class.java)
+                .where()
+                .eq("messageId", messageId.messageId)
+                .findOne()
     }
 }

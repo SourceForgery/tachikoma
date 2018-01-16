@@ -3,14 +3,23 @@ import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import io.grpc.ManagedChannelBuilder
+import io.grpc.Metadata
+import io.grpc.stub.MetadataUtils
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
+private val BACKEND_API_TOKEN = "oodua5yai9Pah5ook3wah4hahqu4IeK0iung8ou5Cho4Doonee"
+
 fun main(args: Array<String>) {
+    val metadataAuth = Metadata()
+    metadataAuth.put(APITOKEN_HEADER, BACKEND_API_TOKEN)
+
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
             .usePlaintext(true)
             .idleTimeout(365, TimeUnit.DAYS)
+            .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
             .build()
 
     val stub = MTAEmailQueueGrpc.newStub(channel)!!

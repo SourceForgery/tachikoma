@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+package com.sourceforgery.tachikoma.mq;
+
+// All messages that can be queued/broadcasted to the MQ
+message IncomingEmailNotificationMessage {
+    google.protobuf.Timestamp creationTimestamp = 101;
+    sint64 incomingEmailMessageId = 102;
+}

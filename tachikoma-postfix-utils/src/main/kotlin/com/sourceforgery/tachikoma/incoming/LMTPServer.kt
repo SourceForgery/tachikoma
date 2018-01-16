@@ -56,6 +56,12 @@ class LMTPServer(
         expect.emptyBuffer()
         expect.sendLine("354 End data with <CR><LF>.<CR><LF>")
         val bytes = expect.expect(regexpLine("^\\.$")).before.toByteArray(ISO_8859_1)
-        param(from, bytes, to)
+        try {
+            param(from, bytes, to)
+            expect.sendLine("250 email queued")
+        } catch (e: Exception) {
+            expect.sendLine("500 Failed")
+            throw e
+        }
     }
 }

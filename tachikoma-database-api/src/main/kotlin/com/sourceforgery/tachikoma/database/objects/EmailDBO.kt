@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.objects
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.identifiers.EmailId
+import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.common.BeanList
 import javax.persistence.CascadeType
 import javax.persistence.Column
@@ -22,6 +23,8 @@ constructor(
         val recipientName: String,
         @ManyToOne(cascade = [CascadeType.ALL])
         val transaction: EmailSendTransactionDBO,
+        @Column(unique = true)
+        var messageId: MessageId,
         @Column
         var mtaQueueId: String? = null
 ) : GenericDBO() {
@@ -36,11 +39,13 @@ constructor(
     constructor(
             recipient: NamedEmail,
             transaction: EmailSendTransactionDBO,
+            messageId: MessageId,
             mtaQueueId: String? = null
     ) : this(
             recipient = recipient.address,
             recipientName = recipient.name,
             transaction = transaction,
+            messageId = messageId,
             mtaQueueId = mtaQueueId
     )
 }

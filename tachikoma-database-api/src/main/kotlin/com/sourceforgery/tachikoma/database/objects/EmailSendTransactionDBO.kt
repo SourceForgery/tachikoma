@@ -8,6 +8,7 @@ import io.ebean.common.BeanList
 import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
@@ -15,13 +16,15 @@ import javax.persistence.Table
 @Entity
 // Represents one call to MailDelivery.sendEmail()
 class EmailSendTransactionDBO
-constructor(
+(
         // Jsonified version of the gRPC coming in through the front end
         // for logging (in JSON because of readability and searching)
         @DbJsonB
         val jsonRequest: ObjectNode,
         @Column
-        val fromEmail: Email
+        val fromEmail: Email,
+        @ManyToOne
+        val authentication: AuthenticationDBO
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])
     val emails: List<EmailDBO> = BeanList()

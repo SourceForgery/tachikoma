@@ -40,7 +40,7 @@ subprojects {
     idea {
         module {
             outputDir = file('build/idea-out')
-            outputDir = file('build/idea-testout')
+            testOutputDir = file('build/idea-testout')
         }
     }
 

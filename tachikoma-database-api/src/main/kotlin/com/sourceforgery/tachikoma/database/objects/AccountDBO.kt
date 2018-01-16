@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.database.objects
 
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import io.ebean.common.BeanList
-import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.OneToMany
 import javax.persistence.Table
@@ -15,8 +14,11 @@ class AccountDBO : GenericDBO() {
     @OneToMany
     val allowedSendingEmails: List<AllowedSendingEmailDBO> = BeanList()
     @OneToMany
-    @Column(unique = true)
     val authentications: List<AuthenticationDBO> = BeanList()
+    @OneToMany
+    val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
+    @OneToMany
+    val incomingEmails: List<IncomingEmailDBO> = BeanList()
 }
 
 val AccountDBO.id: AccountId

@@ -25,3 +25,8 @@ message EmailTransactionId {
 message EmailId {
     sint64 id = 1;
 }
+
+// Represents an incoming email
+message IncomingEmailId {
+    sint64 id = 1;
+}
