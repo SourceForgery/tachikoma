@@ -4,6 +4,7 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Table(name = "e_incoming_email")
@@ -15,7 +16,7 @@ class IncomingEmailDBO(
         val receiverEmail: Email,
         @Column
         val body: ByteArray,
-        @Column
+        @ManyToOne
         val accountDBO: AccountDBO
 ) : GenericDBO()
 

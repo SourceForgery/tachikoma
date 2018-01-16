@@ -8,6 +8,7 @@ import io.ebean.common.BeanList
 import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
@@ -22,8 +23,8 @@ class EmailSendTransactionDBO
         val jsonRequest: ObjectNode,
         @Column
         val fromEmail: Email,
-        @Column
-        val authentication: AuthenticationDBO?
+        @ManyToOne
+        val authentication: AuthenticationDBO
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])
     val emails: List<EmailDBO> = BeanList()
