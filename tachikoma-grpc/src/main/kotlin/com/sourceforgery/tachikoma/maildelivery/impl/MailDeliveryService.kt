@@ -75,7 +75,7 @@ private constructor(
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
-        authentication.requireAccount()
+        authentication.requireFrontend()
         val auth = authenticationDAO.getActiveById(authentication.authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
         if (fromEmail.domain != auth.account.mailDomain) {
@@ -98,19 +98,21 @@ private constructor(
 
                 val recipientEmail = recipient.toNamedEmail()
 
-                blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)?.let { blockedReason ->
-                    responseObserver.onNext(
-                            EmailQueueStatus.newBuilder()
-                                    .setRejected(Rejected.newBuilder()
-                                            .setRejectReason(blockedReason.toGrpc())
+                blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)
+                        ?.let { blockedReason ->
+                            responseObserver.onNext(
+                                    EmailQueueStatus.newBuilder()
+                                            .setRejected(Rejected.newBuilder()
+                                                    .setRejectReason(blockedReason.toGrpc())
+                                                    .build()
+                                            )
+                                            .setTransactionId(transaction.id.toGrpcInternal())
+                                            .setRecipient(recipientEmail.address.toGrpcInternal())
                                             .build()
-                                    )
-                                    .setTransactionId(transaction.id.toGrpcInternal())
-                                    .setRecipient(recipientEmail.address.toGrpcInternal())
-                                    .build()
-                    )
-                    blockedReason
-                } ?: let {
+                            )
+                            blockedReason
+                        }
+                        ?: let {
                     val messageId = MessageId("${UUID.randomUUID()}@${fromEmail.domain}")
                     val emailDBO = EmailDBO(
                             recipient = recipientEmail,

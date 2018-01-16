@@ -62,10 +62,9 @@ class DeliveryNotificationMessageQueue(
 
 class IncomingEmailNotificationMessageQueue(
         override val maxLength: Int? = null,
-        mailDomain: MailDomain,
         authenticationId: AuthenticationId
 ) : MessageQueue<DeliveryNotificationMessage> {
-    override val name = "incomingemail.$authenticationId.$mailDomain"
+    override val name = "incomingemail.$authenticationId"
     override val delay: Duration = Duration.ZERO
     override val nextDestination: MessageQueue<DeliveryNotificationMessage>? = null
     override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom

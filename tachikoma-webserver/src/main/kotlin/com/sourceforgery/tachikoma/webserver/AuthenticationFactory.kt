@@ -96,7 +96,7 @@ private constructor(
     companion object {
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION = object : Authentication {
-            override fun requireAccount(): AccountId {
+            override fun requireFrontend(): AccountId {
                 throw NoAuthorizationCredentialsException()
             }
 
@@ -129,7 +129,7 @@ internal class AuthenticationImpl(
         accountDAO.getById(accountId).mailDomain
     }
 
-    override fun requireAccount(): AccountId {
+    override fun requireFrontend(): AccountId {
         requireValid()
         if (allowBackend) {
             throw InvalidOrInsufficientCredentialsException()

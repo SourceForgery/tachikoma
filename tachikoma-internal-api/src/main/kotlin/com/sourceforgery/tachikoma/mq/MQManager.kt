@@ -8,5 +8,5 @@ interface MQManager {
     fun setupAccount(mailDomain: MailDomain)
     fun removeAccount(mailDomain: MailDomain)
     fun setupAuthentication(mailDomain: MailDomain, authenticationId: AuthenticationId, accountId: AccountId)
-    fun removeAuthentication(authenticationId: AuthenticationId, mailDomain: MailDomain)
+    fun removeAuthentication(authenticationId: AuthenticationId)
 }

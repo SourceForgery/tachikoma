@@ -9,7 +9,7 @@ interface Authentication {
     val authenticationId: AuthenticationId
     val allowBackend: Boolean
     val accountId: AccountId
-    fun requireAccount(): AccountId
+    fun requireFrontend(): AccountId
     fun requireBackend(): AccountId
     val mailDomain: MailDomain
 }

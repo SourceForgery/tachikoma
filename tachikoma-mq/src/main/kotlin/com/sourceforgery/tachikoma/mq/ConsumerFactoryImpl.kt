@@ -87,17 +87,18 @@ private constructor(
     }
 
     override fun setupAuthentication(mailDomain: MailDomain, authenticationId: AuthenticationId, accountId: AccountId) {
-        val incomingEmailQueue = IncomingEmailNotificationMessageQueue(mailDomain = mailDomain, authenticationId = authenticationId)
+        val incomingEmailQueue = IncomingEmailNotificationMessageQueue(authenticationId = authenticationId)
         createQueue(incomingEmailQueue)
         sendChannel.queueBind(incomingEmailQueue.name, MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name, "/account/$accountId")
 
-        val deliveryNotifications = IncomingEmailNotificationMessageQueue(mailDomain = mailDomain, authenticationId = authenticationId)
+        val deliveryNotifications = DeliveryNotificationMessageQueue(authenticationId = authenticationId)
         createQueue(deliveryNotifications)
         sendChannel.queueBind(deliveryNotifications.name, MessageExchange.DELIVERY_NOTIFICATIONS.name, "/account/$accountId")
     }
 
-    override fun removeAuthentication(authenticationId: AuthenticationId, mailDomain: MailDomain) {
-        removeQueue(IncomingEmailNotificationMessageQueue(mailDomain = mailDomain, authenticationId = authenticationId))
+    override fun removeAuthentication(authenticationId: AuthenticationId) {
+        removeQueue(IncomingEmailNotificationMessageQueue(authenticationId = authenticationId))
+        removeQueue(DeliveryNotificationMessageQueue(authenticationId = authenticationId))
     }
 
     private fun createQueue(messageQueue: MessageQueue<*>) {

@@ -45,10 +45,5 @@ private constructor(
                 account = account
         )
         ebeanServer.save(backendAuthentication)
-        mqManager.setupAuthentication(
-                mailDomain = account.mailDomain,
-                authenticationId = backendAuthentication.id,
-                accountId = account.id
-        )
     }
 }
