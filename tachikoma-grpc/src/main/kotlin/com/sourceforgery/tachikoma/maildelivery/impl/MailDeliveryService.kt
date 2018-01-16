@@ -9,7 +9,6 @@ import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.config.MTAConfig
-import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO

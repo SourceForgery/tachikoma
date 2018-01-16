@@ -12,5 +12,4 @@ private constructor(
 ) : AccountDAO {
     override fun getById(accountId: AccountId) =
             ebeanServer.find(AccountDBO::class.java, accountId.accountId)!!
-
 }
