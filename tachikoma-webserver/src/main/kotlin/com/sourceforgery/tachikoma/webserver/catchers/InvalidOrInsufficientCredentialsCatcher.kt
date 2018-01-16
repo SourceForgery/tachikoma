@@ -16,7 +16,7 @@ class InvalidOrInsufficientCredentialsCatcher
 private constructor(
         debugConfig: DebugConfig
 ) : GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(debugConfig), RestExceptionCatcher<InvalidOrInsufficientCredentialsException> {
-    override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: InvalidOrInsufficientCredentialsException): HttpResponse =
+    override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: InvalidOrInsufficientCredentialsException) =
             HttpResponse.of(FORBIDDEN)
 
     override fun status(t: InvalidOrInsufficientCredentialsException) =

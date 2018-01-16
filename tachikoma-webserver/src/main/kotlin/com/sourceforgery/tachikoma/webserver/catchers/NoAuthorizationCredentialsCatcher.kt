@@ -16,7 +16,7 @@ class NoAuthorizationCredentialsCatcher
 private constructor(
         debugConfig: DebugConfig
 ) : GrpcExceptionCatcher<NoAuthorizationCredentialsException>(debugConfig), RestExceptionCatcher<NoAuthorizationCredentialsException> {
-    override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: NoAuthorizationCredentialsException): HttpResponse =
+    override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: NoAuthorizationCredentialsException) =
             HttpResponse.of(UNAUTHORIZED)
 
     override fun status(t: NoAuthorizationCredentialsException) =
