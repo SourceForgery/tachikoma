@@ -66,6 +66,9 @@ subprojects {
         apply plugin: "org.jmailen.kotlinter"
         apply plugin: 'org.junit.platform.gradle.plugin'
 
+        kapt {
+            useBuildCache = true
+        }
 
         kotlinOptions {
             languageVersion = "1.2"
