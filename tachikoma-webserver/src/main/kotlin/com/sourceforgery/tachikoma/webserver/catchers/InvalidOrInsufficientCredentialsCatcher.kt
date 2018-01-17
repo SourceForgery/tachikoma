@@ -20,5 +20,5 @@ private constructor(
             HttpResponse.of(FORBIDDEN)
 
     override fun status(t: InvalidOrInsufficientCredentialsException) =
-            Status.PERMISSION_DENIED
+            Status.PERMISSION_DENIED.withDescription(stackToString(t))
 }
