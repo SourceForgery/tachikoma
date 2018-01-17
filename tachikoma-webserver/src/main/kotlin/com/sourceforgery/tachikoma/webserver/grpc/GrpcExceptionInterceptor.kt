@@ -14,30 +14,33 @@ internal class GrpcExceptionInterceptor
 private constructor(
         private val grpcExceptionCatchers: GrpcExceptionMap
 ) : ServerInterceptor {
+
+    private fun<T> runCaught(method: () -> T): T {
+        try {
+            return method()
+        } catch (e: Exception) {
+            LOGGER.warn("Exception in gRPC", e)
+            rethrowAsStatusException(e)
+        }
+    }
+
+    private fun rethrowAsStatusException(e: Exception): Nothing {
+        grpcExceptionCatchers.findCatcher(e)
+                .throwIt(e)
+    }
+
     override fun <ReqT, RespT> interceptCall(call: ServerCall<ReqT, RespT>, headers: Metadata, next: ServerCallHandler<ReqT, RespT>): ServerCall.Listener<ReqT> {
-        val nextCall = next.startCall(call, headers)
-        return object : ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(nextCall) {
-            override fun onHalfClose() {
-                try {
-                    super.onHalfClose()
-                } catch (e: Exception) {
-                    LOGGER.warn("Exception in gRPC", e)
-                    rethrowAsStatusException(e)
+        return runCaught {
+            val nextCall = next.startCall(call, headers)
+            object : ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(nextCall) {
+                override fun onHalfClose() {
+                    runCaught { super.onHalfClose() }
                 }
-            }
 
-            override fun onMessage(message: ReqT) {
-                try {
-                    super.onMessage(message)
-                } catch (e: Exception) {
-                    LOGGER.warn("Exception in gRPC", e)
-                    rethrowAsStatusException(e)
+                override fun onMessage(message: ReqT) {
+                    runCaught { super.onMessage(message) }
                 }
-            }
 
-            private fun rethrowAsStatusException(e: Exception): Nothing {
-                grpcExceptionCatchers.findCatcher(e)
-                        .throwIt(e)
             }
         }
     }
