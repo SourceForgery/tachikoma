@@ -3,7 +3,6 @@ package com.sourceforgery.tachikoma.startup
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.config.DebugConfig
-import com.sourceforgery.tachikoma.config.MTAConfig
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.mq.MqConfig
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
@@ -18,7 +17,6 @@ class StartupBinder : AbstractBinder() {
                 .to(MqConfig::class.java)
                 .to(WebServerConfig::class.java)
                 .to(DebugConfig::class.java)
-                .to(MTAConfig::class.java)
                 .`in`(Singleton::class.java)
     }
 }

@@ -5,7 +5,7 @@ import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import java.net.URI
 import java.nio.charset.StandardCharsets
 
-internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServerConfig, DebugConfig, MTAConfig {
+internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServerConfig, DebugConfig {
     override val databaseEncryptionKey: String = readConfig("DATABASE_ENCRYPTION_KEY", "aigac4eeth4uChosea2ohvazoop3Ootal6Vaethei2ohhibooK")
     override val mqUrl: URI = readConfig("MQ_URL", "amqp://guest:guest@localhost/tachikoma", URI::class.java)
     override val sendDebugData: Boolean = readConfig("SEND_DEBUG_DATA", true)
@@ -16,5 +16,4 @@ internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServ
     override val baseUrl: URI = readConfig("BASE_URL", "http://localhost:8070/", URI::class.java)
     // TODO set WIPE_AND_CREATE_DATABASE to false
     override val wipeAndCreateDatabase: Boolean = readConfig("WIPE_AND_CREATE_DATABASE", true)
-    override val mailDomain: String = readConfig("MAIL_DOMAIN", "example.com")
 }

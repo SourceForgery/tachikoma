@@ -33,15 +33,25 @@ private constructor(
     private fun parseApiTokenHeader() =
             httpHeaders[APITOKEN_HEADER]
                     ?.let {
+                        it.substringBefore(':') to it.substringAfter(':')
+                    }
+                    ?.let { splitAuthString ->
                         // TODO Needs to be handled better. This is slow and hits the database too much
-                        authenticationDAO.validateApiToken(it)
+                        authenticationDAO.validateApiToken(splitAuthString.second)
+                                ?.let { auth ->
+                                    if (auth.account.domain == splitAuthString.second) {
+                                        auth
+                                    } else {
+                                        null
+                                    }
+                                }
                     }
                     ?.let {
                         AuthenticationImpl(
                                 // No webtoken should allow backend
                                 allowBackend = false,
                                 authenticationId = it.id,
-                                accountId = it.account?.id
+                                accountId = it.account.id
                         )
                     }
 
@@ -85,7 +95,7 @@ private constructor(
                 throw NoAuthorizationCredentialsException()
             }
 
-            override fun requireBackend() {
+            override fun requireBackend(): AccountId {
                 throw NoAuthorizationCredentialsException()
             }
 
@@ -104,18 +114,22 @@ private constructor(
 internal class AuthenticationImpl(
         override var allowBackend: Boolean = false,
         override var authenticationId: AuthenticationId,
-        override var accountId: AccountId? = null
+        override var accountId: AccountId
 ) : Authentication {
     override fun requireAccount(): AccountId {
         requireValid()
-        return accountId ?: throw InvalidOrInsufficientCredentialsException()
+        if (allowBackend) {
+            throw InvalidOrInsufficientCredentialsException()
+        }
+        return accountId
     }
 
-    override fun requireBackend() {
+    override fun requireBackend(): AccountId {
         requireValid()
         if (!allowBackend) {
             throw InvalidOrInsufficientCredentialsException()
         }
+        return accountId
     }
 
     private fun requireValid() {

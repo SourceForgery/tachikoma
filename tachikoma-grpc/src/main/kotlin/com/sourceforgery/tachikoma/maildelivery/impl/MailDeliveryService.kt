@@ -8,7 +8,6 @@ import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.toInstant
-import com.sourceforgery.tachikoma.config.MTAConfig
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -16,6 +15,7 @@ import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
+import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
@@ -70,7 +70,6 @@ private constructor(
         private val ebeanServer: EbeanServer,
         private val trackingDecoderImpl: TrackingDecoderImpl,
         private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
-        private val mtaConfig: MTAConfig,
         private val authentication: Authentication,
         private val authenticationDAO: AuthenticationDAO
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
@@ -79,6 +78,9 @@ private constructor(
         authentication.requireAccount()
         val auth = authenticationDAO.getActiveById(authentication.authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
+        if (fromEmail.domain != auth.account.domain) {
+            throw InvalidOrInsufficientCredentialsException()
+        }
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request),
                 fromEmail = fromEmail,
@@ -109,7 +111,7 @@ private constructor(
                     )
                     blockedReason
                 } ?: let {
-                    val messageId = MessageId("${UUID.randomUUID()}@${mtaConfig.mailDomain}")
+                    val messageId = MessageId("${UUID.randomUUID()}@${fromEmail.domain}")
                     val emailDBO = EmailDBO(
                             recipient = recipientEmail,
                             transaction = transaction,
@@ -121,13 +123,15 @@ private constructor(
                         OutgoingEmail.BodyCase.STATIC -> getStaticBody(
                                 request = request,
                                 emailId = emailDBO.id,
-                                messageId = messageId
+                                messageId = messageId,
+                                fromEmail = fromEmail
                         )
                         OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
                                 request = request,
                                 recipient = recipient,
                                 emailId = emailDBO.id,
-                                messageId = messageId
+                                messageId = messageId,
+                                fromEmail = fromEmail
                         )
                         else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
                     }
@@ -152,8 +156,13 @@ private constructor(
         }
     }
 
-    private fun getTemplateBody(request: OutgoingEmail, recipient: EmailRecipient, emailId: EmailId, messageId: MessageId): String {
-
+    private fun getTemplateBody(
+            request: OutgoingEmail,
+            recipient: EmailRecipient,
+            emailId: EmailId,
+            messageId: MessageId,
+            fromEmail: Email
+    ): String {
         val template = request.template!!
         if (template.htmlTemplate == null && template.plaintextTemplate == null) {
             throw IllegalArgumentException("Needs at least one template (plaintext or html)")
@@ -178,14 +187,16 @@ private constructor(
                 plaintextBody = plaintextBody.emptyToNull(),
                 subject = mergeTemplate(template.subject, globalVars, recipientVars),
                 emailId = emailId,
-                messageId = messageId
+                messageId = messageId,
+                fromEmail = fromEmail
         )
     }
 
     private fun getStaticBody(
             request: OutgoingEmail,
             emailId: EmailId,
-            messageId: MessageId
+            messageId: MessageId,
+            fromEmail: Email
     ): String {
         val static = request.static!!
         val htmlBody = static.htmlBody.emptyToNull()
@@ -197,7 +208,8 @@ private constructor(
                 plaintextBody = plaintextBody,
                 subject = static.subject,
                 emailId = emailId,
-                messageId = messageId
+                messageId = messageId,
+                fromEmail = fromEmail
         )
     }
 
@@ -228,7 +240,8 @@ private constructor(
             plaintextBody: String?,
             subject: String,
             emailId: EmailId,
-            messageId: MessageId
+            messageId: MessageId,
+            fromEmail: Email
     ): String {
         if (htmlBody == null && plaintextBody == null) {
             throw IllegalArgumentException("Needs at least one of plaintext or html")
@@ -239,7 +252,7 @@ private constructor(
         message.setFrom(InternetAddress(request.from.email, request.from.name))
         message.subject = subject
 
-        addListAndAbuseHeaders(message, emailId, messageId)
+        addListAndAbuseHeaders(message, emailId, messageId, fromEmail)
 
         for ((key, value) in request.headersMap) {
             message.addHeader(key, value)
@@ -269,7 +282,7 @@ private constructor(
         return result.toString(StandardCharsets.UTF_8.name())
     }
 
-    private fun addListAndAbuseHeaders(message: MimeMessage, emailId: EmailId, messageId: MessageId) {
+    private fun addListAndAbuseHeaders(message: MimeMessage, emailId: EmailId, messageId: MessageId, fromEmail: Email) {
         // TODO Headers to set:
         // List-Help (IMPORTANT): <https://support.google.com/a/example.com/bin/topic.py?topic=25838>, <mailto:debug+help@example.com>
 
@@ -290,7 +303,7 @@ private constructor(
         message.addHeader("List-Unsubscribe", "<$unsubscribeUri>, <mailto:$unsubcribeEmail?subject=unsub>")
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
 
-        message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${mtaConfig.mailDomain}")
+        message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
         // TODO Add this url (abuse)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: http://${trackingConfig.baseUrl}/abuse/$messageId")
         // TODO Replace accountId? with accountId!! once authentication is fixed
