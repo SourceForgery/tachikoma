@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
-internal class TrackingDecoderSpec : Spek({
+internal class UnsubscribeDecoderSpec : Spek({
     val serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
     val unsubscribeDecoder = serviceLocator.getService(UnsubscribeDecoder::class.java)
 
