@@ -13,9 +13,12 @@ private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRIN
 
 fun main(args: Array<String>) {
 
+    val mailDomain = System.getenv("MAIL_DOMAIN")
+            ?: throw IllegalArgumentException("Can't start without MAIL_DOMAIN")
+
     val tachikomaUrl = URI.create(
             System.getenv("TACHIKOMA_URL")
-                    ?: "http://oodua5yai9Pah5ook3wah4hahqu4IeK0iung8ou5Cho4Doonee@172.17.0.1:8070"
+                    ?: "http://$mailDomain:oodua5yai9Pah5ook3wah4hahqu4IeK0iung8ou5Cho4Doonee@172.17.0.1:8070"
     )
     val plaintext = tachikomaUrl.scheme == "http"
     val port: Int =

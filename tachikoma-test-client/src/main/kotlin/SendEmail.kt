@@ -11,7 +11,7 @@ import io.grpc.stub.MetadataUtils
 import java.time.Instant
 
 private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", ASCII_STRING_MARSHALLER)
-private val FRONTEND_API_TOKEN = "Oufeing2ieth2aequie2ia2ahc3yoonaiw5iey5xifuxoo4tai"
+private val FRONTEND_API_TOKEN = "example.net:Oufeing2ieth2aequie2ia2ahc3yoonaiw5iey5xifuxoo4tai"
 
 fun main(args: Array<String>) {
     val metadataAuth = Metadata()

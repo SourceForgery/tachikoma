@@ -75,10 +75,10 @@ private constructor(
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
-        authentication.requireAccount()
+        authentication.requireFrontend()
         val auth = authenticationDAO.getActiveById(authentication.authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
-        if (fromEmail.domain != auth.account.domain) {
+        if (fromEmail.domain != auth.account.mailDomain) {
             throw InvalidOrInsufficientCredentialsException()
         }
         val transaction = EmailSendTransactionDBO(
@@ -98,19 +98,21 @@ private constructor(
 
                 val recipientEmail = recipient.toNamedEmail()
 
-                blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)?.let { blockedReason ->
-                    responseObserver.onNext(
-                            EmailQueueStatus.newBuilder()
-                                    .setRejected(Rejected.newBuilder()
-                                            .setRejectReason(blockedReason.toGrpc())
+                blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)
+                        ?.let { blockedReason ->
+                            responseObserver.onNext(
+                                    EmailQueueStatus.newBuilder()
+                                            .setRejected(Rejected.newBuilder()
+                                                    .setRejectReason(blockedReason.toGrpc())
+                                                    .build()
+                                            )
+                                            .setTransactionId(transaction.id.toGrpcInternal())
+                                            .setRecipient(recipientEmail.address.toGrpcInternal())
                                             .build()
-                                    )
-                                    .setTransactionId(transaction.id.toGrpcInternal())
-                                    .setRecipient(recipientEmail.address.toGrpcInternal())
-                                    .build()
-                    )
-                    blockedReason
-                } ?: let {
+                            )
+                            blockedReason
+                        }
+                        ?: let {
                     val messageId = MessageId("${UUID.randomUUID()}@${fromEmail.domain}")
                     val emailDBO = EmailDBO(
                             recipient = recipientEmail,
@@ -139,7 +141,8 @@ private constructor(
 
                     mqSender.queueJob(jobMessageFactory.createSendEmailJob(
                             requestedSendTime = requestedSendTime,
-                            emailId = emailDBO.id
+                            emailId = emailDBO.id,
+                            mailDomain = auth.account.mailDomain
                     ))
 
                     responseObserver.onNext(
@@ -306,8 +309,7 @@ private constructor(
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
         // TODO Add this url (abuse)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: http://${trackingConfig.baseUrl}/abuse/$messageId")
-        // TODO Replace accountId? with accountId!! once authentication is fixed
-        message.addHeader("X-Tachikoma-User", authentication.accountId?.accountId.toString())
+        message.addHeader("X-Tachikoma-User", authentication.accountId.accountId.toString())
     }
 
     private fun getPlainText(doc: Document): String {

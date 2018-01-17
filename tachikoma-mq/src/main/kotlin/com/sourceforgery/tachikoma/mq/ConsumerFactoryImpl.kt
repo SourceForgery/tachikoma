@@ -15,6 +15,7 @@ import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import java.time.Clock
 import java.time.Duration
@@ -28,7 +29,7 @@ private constructor(
         mqConfig: MqConfig,
         private val clock: Clock,
         private val hK2RequestContext: HK2RequestContext
-) : MQSequenceFactory, MQSender {
+) : MQSequenceFactory, MQSender, MQManager {
     @Volatile
     private var thread = 0
     private val connection: Connection
@@ -44,9 +45,6 @@ private constructor(
         sendChannel = connection.createChannel()
 
         for (messageQueue in JobMessageQueue.values()) {
-            createQueue(messageQueue)
-        }
-        for (messageQueue in OutgoingEmailsMessageQueue.values()) {
             createQueue(messageQueue)
         }
         for (messageExchange in MessageExchange.values()) {
@@ -80,6 +78,29 @@ private constructor(
         }
     }
 
+    override fun setupAccount(mailDomain: MailDomain) {
+        createQueue(OutgoingEmailsMessageQueue(mailDomain))
+    }
+
+    override fun removeAccount(mailDomain: MailDomain) {
+        removeQueue(OutgoingEmailsMessageQueue(mailDomain))
+    }
+
+    override fun setupAuthentication(mailDomain: MailDomain, authenticationId: AuthenticationId, accountId: AccountId) {
+        val incomingEmailQueue = IncomingEmailNotificationMessageQueue(authenticationId = authenticationId)
+        createQueue(incomingEmailQueue)
+        sendChannel.queueBind(incomingEmailQueue.name, MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name, "/account/$accountId")
+
+        val deliveryNotifications = DeliveryNotificationMessageQueue(authenticationId = authenticationId)
+        createQueue(deliveryNotifications)
+        sendChannel.queueBind(deliveryNotifications.name, MessageExchange.DELIVERY_NOTIFICATIONS.name, "/account/$accountId")
+    }
+
+    override fun removeAuthentication(authenticationId: AuthenticationId) {
+        removeQueue(IncomingEmailNotificationMessageQueue(authenticationId = authenticationId))
+        removeQueue(DeliveryNotificationMessageQueue(authenticationId = authenticationId))
+    }
+
     private fun createQueue(messageQueue: MessageQueue<*>) {
         val arguments = HashMap<String, Any>()
         messageQueue.maxLength
@@ -96,6 +117,10 @@ private constructor(
                 }
 
         sendChannel.queueDeclare(messageQueue.name, true, false, false, arguments)
+    }
+
+    private fun removeQueue(messageQueue: MessageQueue<*>) {
+        sendChannel.queueDelete(messageQueue.name)
     }
 
     private fun createExchange(messageExchange: MessageExchange) {
@@ -136,12 +161,12 @@ private constructor(
     }
 
     override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
-        val queue = DeliveryNotificationMessageQueue(name = "user.${authenticationId.authenticationId}")
+        val queue = DeliveryNotificationMessageQueue(authenticationId = authenticationId)
         return listenOnQueue(queue, callback)
     }
 
-    override fun listenForOutgoingEmails(callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
-        return listenOnQueue(OutgoingEmailsMessageQueue.OUTGOING_EMAILS, callback)
+    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+        return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
     }
 
     override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
@@ -175,11 +200,11 @@ private constructor(
         queueJob(jobMessageClone, queue)
     }
 
-    override fun queueOutgoingEmail(outgoingEmailMessage: OutgoingEmailMessage) {
+    override fun queueOutgoingEmail(mailDomain: MailDomain, outgoingEmailMessage: OutgoingEmailMessage) {
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
                 "",
-                OutgoingEmailsMessageQueue.OUTGOING_EMAILS.name,
+                OutgoingEmailsMessageQueue(mailDomain).name,
                 true,
                 basicProperties,
                 outgoingEmailMessage.toByteArray()
@@ -202,13 +227,13 @@ private constructor(
         )
     }
 
-    override fun queueNotification(accountId: AccountId, notificationMessage: DeliveryNotificationMessage) {
+    override fun queueDeliveryNotification(accountId: AccountId, notificationMessage: DeliveryNotificationMessage) {
         val notificationMessageClone = DeliveryNotificationMessage.newBuilder(notificationMessage)
                 .setCreationTimestamp(clock.instant().toTimestamp())
                 .build()
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
-                MessageExchange.EMAIL_NOTIFICATIONS.name,
+                MessageExchange.DELIVERY_NOTIFICATIONS.name,
                 "/account/$accountId",
                 true,
                 basicProperties,

@@ -9,6 +9,7 @@ class MqBinder : AbstractBinder() {
         bindAsContract(ConsumerFactoryImpl::class.java)
                 .to(MQSequenceFactory::class.java)
                 .to(MQSender::class.java)
+                .to(MQManager::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(JobFactory::class.java)
                 .`in`(Singleton::class.java)

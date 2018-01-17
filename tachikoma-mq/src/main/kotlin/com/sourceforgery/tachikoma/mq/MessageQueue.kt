@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma.mq
 
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Duration
 
 enum class JobMessageQueue(
@@ -30,18 +32,25 @@ enum class JobMessageQueue(
     }
 }
 
-enum class OutgoingEmailsMessageQueue : MessageQueue<OutgoingEmailMessage> {
-    OUTGOING_EMAILS;
-    override val delay: Duration = Duration.ZERO
+class OutgoingEmailsMessageQueue(
+        mailDomain: MailDomain
+) : MessageQueue<OutgoingEmailMessage> {
+    override val name = "outgoing.$mailDomain"
     override val maxLength: Int? = null
+    override val delay: Duration = Duration.ZERO
     override val nextDestination: MessageQueue<OutgoingEmailMessage>? = null
     override val parser: (ByteArray) -> OutgoingEmailMessage = OutgoingEmailMessage::parseFrom
+
+    init {
+        assert((delay == Duration.ZERO) == (nextDestination == null))
+    }
 }
 
 class DeliveryNotificationMessageQueue(
         override val maxLength: Int? = null,
-        override val name: String
+        authenticationId: AuthenticationId
 ) : MessageQueue<DeliveryNotificationMessage> {
+    override val name = "deliverynotifications.$authenticationId"
     override val delay: Duration = Duration.ZERO
     override val nextDestination: MessageQueue<DeliveryNotificationMessage>? = null
     override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
@@ -53,8 +62,9 @@ class DeliveryNotificationMessageQueue(
 
 class IncomingEmailNotificationMessageQueue(
         override val maxLength: Int? = null,
-        override val name: String
+        authenticationId: AuthenticationId
 ) : MessageQueue<DeliveryNotificationMessage> {
+    override val name = "incomingemail.$authenticationId"
     override val delay: Duration = Duration.ZERO
     override val nextDestination: MessageQueue<DeliveryNotificationMessage>? = null
     override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
