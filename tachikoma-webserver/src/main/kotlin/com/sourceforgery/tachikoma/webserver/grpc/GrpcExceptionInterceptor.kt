@@ -15,7 +15,7 @@ private constructor(
         private val grpcExceptionCatchers: GrpcExceptionMap
 ) : ServerInterceptor {
 
-    private fun<T> runCaught(method: () -> T): T {
+    private fun <T> runCaught(method: () -> T): T {
         try {
             return method()
         } catch (e: Exception) {
@@ -40,7 +40,6 @@ private constructor(
                 override fun onMessage(message: ReqT) {
                     runCaught { super.onMessage(message) }
                 }
-
             }
         }
     }
