@@ -15,6 +15,7 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
+import io.ebean.EbeanServer
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -67,7 +68,9 @@ internal class BlockedEmailDAOSpec : Spek({
     describe("BlockedEmailDAO") {
 
         afterEachTest {
-            // Clear H2 DB
+            serviceLocator
+                    .getServiceHandle(EbeanServer::class.java)
+                    .destroy()
         }
 
         it("should return null if e-mail is not blocked") {
@@ -92,9 +95,6 @@ internal class BlockedEmailDAOSpec : Spek({
             val blockedReason = blockedEmailDAO.getBlockedReason(from, recipient)
 
             assertEquals(BlockedReason.UNSUBSCRIBED, blockedReason)
-
-            // TODO Make sure DB is cleared
-            blockedEmailDAO.unblock(emailStatusEvent)
         }
 
         it("should should be possible to unblock a blocked e-mail") {

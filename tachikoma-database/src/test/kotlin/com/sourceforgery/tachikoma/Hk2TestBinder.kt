@@ -27,15 +27,20 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
+import org.glassfish.hk2.api.Context
+import org.glassfish.hk2.api.PerThread
+import org.glassfish.hk2.api.TypeLiteral
+import org.glassfish.hk2.internal.PerThreadContext
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import java.net.URI
+import java.util.UUID
 import javax.inject.Singleton
 
 class Hk2TestBinder : AbstractBinder() {
     override fun configure() {
         bind(object : DatabaseConfig {
             override val databaseEncryptionKey = "asdadsadsadsadasdadasdasdadasasd"
-            override val sqlUrl = URI.create("h2://sa@mem/tests")
+            override val sqlUrl = URI.create("h2://sa@mem/tests-${UUID.randomUUID()}")
             override val timeDatabaseQueries = false
             override val wipeAndCreateDatabase = true
         })
@@ -45,12 +50,19 @@ class Hk2TestBinder : AbstractBinder() {
                 .to(HK2RequestContext::class.java)
                 .`in`(Singleton::class.java)
 
+        bindAsContract(PerThreadContext::class.java)
+                .to(PerThread::class.java)
+                .to(object : TypeLiteral<Context<PerThread>>() {}.type)
+                .`in`(Singleton::class.java)
+
         bindAsContract(TestConsumerFactoryImpl::class.java)
                 .to(MQManager::class.java)
                 .`in`(Singleton::class.java)
 
         bindFactory(EbeanServerFactory::class.java)
                 .to(EbeanServer::class.java)
+                .proxy(true)
+                .proxyForSameScope(true)
                 .`in`(Singleton::class.java)
         bindAsContract(BlockedEmailDAOImpl::class.java)
                 .to(BlockedEmailDAO::class.java)
@@ -80,9 +92,6 @@ class Hk2TestBinder : AbstractBinder() {
                 .to(DBObjectMapper::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(CreateSequence::class.java)
-                .to(EbeanHook::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(CreateUsers::class.java)
                 .to(EbeanHook::class.java)
                 .`in`(Singleton::class.java)
     }
