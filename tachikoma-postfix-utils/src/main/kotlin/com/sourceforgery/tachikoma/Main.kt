@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
             }
 
     val metadataAuth = Metadata()
-    metadataAuth.put(APITOKEN_HEADER, tachikomaUrl.authority)
+    metadataAuth.put(APITOKEN_HEADER, tachikomaUrl.userInfo)
 
     val channel = ManagedChannelBuilder.forAddress(tachikomaUrl.host, port)
             .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
