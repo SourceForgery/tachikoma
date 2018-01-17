@@ -1,6 +1,6 @@
 buildscript {
     dependencies {
-        classpath "io.ebean:ebean-gradle-plugin:10.2.3"
+        classpath "io.ebean:ebean-gradle-plugin:11.5.1"
         classpath 'se.transmode.gradle:gradle-docker:1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:3.0.0"

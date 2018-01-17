@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.database.dao
 
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
-import com.sourceforgery.tachikoma.database.objects.query.QEmailDBO
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.EbeanServer
@@ -16,9 +15,10 @@ private constructor(
             ebeanServer.find(EmailDBO::class.java, emailMessageId.emailId)
 
     override fun fetchEmailData(emailMessageIds: List<EmailId>): List<EmailDBO> {
-        val query = QEmailDBO(ebeanServer)
-        query.dbId.`in`(*emailMessageIds.map { it.emailId }.toTypedArray())
-        return query.findList()
+        return ebeanServer.find(EmailDBO::class.java)
+                .where()
+                .`in`("dbId", emailMessageIds.map { it.emailId })
+                .findList()
     }
 
     override fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)

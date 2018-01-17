@@ -1,5 +1,4 @@
 apply plugin: 'kotlin'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'ebean'
 
 repositories {
@@ -8,8 +7,6 @@ repositories {
 }
 
 dependencies {
-    kapt "io.ebean:kotlin-querybean-generator:10.1.2"
-
     compile project(":tachikoma-internal-api")
     compile "io.ebean:ebean:$ebean_version"
     compile "io.ebean:ebean-querybean:$querybean_version"
@@ -17,10 +14,6 @@ dependencies {
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
 }
 
-sourceSets {
-    main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
-}
-
 ebean {
-    debugLevel = 2
+    debugLevel = 0
 }
