@@ -14,9 +14,9 @@ import java.util.concurrent.Executors
 class IncomingEmail(
         grpcChannel: Channel
 ) {
-    private val stub = MTAEmailQueueGrpc.newStub(grpcChannel)!!
+    private val stub = MTAEmailQueueGrpc.newStub(grpcChannel)
 
-    val executor = Executors.newCachedThreadPool()
+    private val executor = Executors.newCachedThreadPool()!!
 
     fun start() {
         executor.execute { startBlocking() }

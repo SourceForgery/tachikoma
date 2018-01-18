@@ -15,25 +15,25 @@ fun Email.toEmail() =
         com.sourceforgery.tachikoma.common.Email(email)
 
 fun grpcEmailInternal(emailAddress: String) =
-        Email.newBuilder().setEmail(emailAddress).build()!!
+        Email.newBuilder().setEmail(emailAddress).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpcInternal() =
         NamedEmail.newBuilder()
                 .setEmail(address.address)
                 .setName(name)
-                .build()!!
+                .build()
 
 fun NamedEmail.toNamedEmail() =
         com.sourceforgery.tachikoma.common.NamedEmail(com.sourceforgery.tachikoma.common.Email(email), name)
 
 fun EmailId.toGrpcInternal() =
-        com.sourceforgery.tachikoma.grpc.frontend.EmailId.newBuilder().setId(emailId).build()!!
+        com.sourceforgery.tachikoma.grpc.frontend.EmailId.newBuilder().setId(emailId).build()
 
 fun com.sourceforgery.tachikoma.grpc.frontend.EmailId.toEmailId() =
         EmailId(id)
 
 fun com.sourceforgery.tachikoma.identifiers.EmailTransactionId.toGrpcInternal() =
-        EmailTransactionId.newBuilder().setId(emailTransactionId).build()!!
+        EmailTransactionId.newBuilder().setId(emailTransactionId).build()
 
 fun WebTokenAuthData.toAccountId(): AccountId? {
     return if (accountId == 0L) {
@@ -53,8 +53,8 @@ fun WebTokenAuthData.toAuthenticationId(): AuthenticationId? {
 
 fun EmailRecipient.toNamedEmail() =
         com.sourceforgery.tachikoma.common.NamedEmail(
-                address = namedEmail.email!!,
-                name = namedEmail.name!!
+                address = namedEmail.email,
+                name = namedEmail.name
         )
 
 fun String.emptyToNull() =

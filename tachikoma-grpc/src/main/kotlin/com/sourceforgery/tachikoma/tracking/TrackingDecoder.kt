@@ -19,14 +19,14 @@ private constructor(
 
     override fun decodeTrackingData(trackingData: String): UrlTrackingData {
         val decoded = Base64.getUrlDecoder().decode(trackingData)!!
-        val signedMessage = UrlSignedMessage.parseFrom(decoded)!!
-        val sig = signedMessage.signature!!
+        val signedMessage = UrlSignedMessage.parseFrom(decoded)
+        val sig = signedMessage.signature
         if (!sig.toByteArray().contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
             randomDelay(LongRange(100, 250)) {
                 throw RuntimeException("Not correct signature")
             }
         }
-        return UrlTrackingData.parseFrom(signedMessage.message)!!
+        return UrlTrackingData.parseFrom(signedMessage.message)
     }
 
     override fun createUrl(trackingData: UrlTrackingData): String {

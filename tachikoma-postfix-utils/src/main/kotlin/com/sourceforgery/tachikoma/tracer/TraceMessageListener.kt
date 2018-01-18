@@ -11,13 +11,13 @@ import io.grpc.stub.StreamObserver
 class TraceMessageListener(
         channel: Channel
 ) {
-    private val stub = MTADeliveryNotificationsGrpc.newStub(channel)!!
+    private val stub = MTADeliveryNotificationsGrpc.newStub(channel)
 
     fun startBlocking() {
         UnixSocketListener(SOCKET_PATH, { TracerParser(it, this::setDeliveryStatus) }).startBlocking()
     }
 
-    fun setDeliveryStatus(map: Map<String, String>) {
+    private fun setDeliveryStatus(map: Map<String, String>) {
         // Decipher what kind of message it is, and send it to mta_notifier
         // {"dsn_orig_rcpt": "rfc822;foo@example.net", "flags": "1024", "notify_flags": "0", "nrequest": "0","offset": "258", "original_recipient": "foo@example.net", "queue_id": "458182054", "recipient": "foo@example.net", "status": "4.4.1"}
         // {"diag_type": "diag_text"}

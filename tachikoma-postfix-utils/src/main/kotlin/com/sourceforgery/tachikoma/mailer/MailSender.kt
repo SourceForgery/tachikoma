@@ -20,10 +20,10 @@ class MailSender(
         channel: Channel
 ) {
     private lateinit var response: StreamObserver<MTAQueuedNotification>
-    private val stub = MTAEmailQueueGrpc.newStub(channel)!!
+    private val stub = MTAEmailQueueGrpc.newStub(channel)
 
     fun start() {
-        response = stub.getEmails(fromServerStreamObserver)!!
+        response = stub.getEmails(fromServerStreamObserver)
         LOGGER.info { "Successfully started listening for emails" }
     }
 

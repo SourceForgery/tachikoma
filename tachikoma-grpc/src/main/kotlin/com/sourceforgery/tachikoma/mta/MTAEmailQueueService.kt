@@ -48,7 +48,7 @@ private constructor(
             } else {
                 LOGGER.info { "Email with id ${email.id} is about to be sent" }
                 val response = EmailMessage.newBuilder()
-                        .setBody(email.body)
+                        .setBody(email.body!!)
                         .setFrom(email.transaction.fromEmail.address)
                         .setEmailId(email.id.emailId)
                         .setEmailAddress(email.recipient.address)
@@ -66,7 +66,7 @@ private constructor(
             }
 
             override fun onNext(value: MTAQueuedNotification) {
-                val queueId = value.queueId!!
+                val queueId = value.queueId
                 val emailId = EmailId(value.emailId)
                 // TODO do something with value.success
                 if (value.success) {
