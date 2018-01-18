@@ -1,18 +1,16 @@
 package com.sourceforgery.tachikoma.tracking
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveredEvent
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.OpenedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.SoftBouncedEvent
-import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
@@ -24,8 +22,8 @@ internal class DeliveryNotificationService
 private constructor(
         private val mqSequenceFactory: MQSequenceFactory,
         private val emailDAO: EmailDAO
-) : DeliveryNotificationServiceGrpc.DeliveryNotificationServiceImplBase() {
-    override fun notificationStream(request: Empty?, responseObserver: StreamObserver<EmailNotification>) {
+) {
+    fun notificationStream(responseObserver: StreamObserver<EmailNotification>) {
         mqSequenceFactory.listenForDeliveryNotifications(AuthenticationId(100), {
             val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(it.emailMessageId))
             if (emailData == null) {

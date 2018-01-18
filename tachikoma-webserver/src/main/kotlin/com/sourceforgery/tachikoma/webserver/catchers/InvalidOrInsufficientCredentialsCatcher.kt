@@ -15,10 +15,10 @@ class InvalidOrInsufficientCredentialsCatcher
 @Inject
 private constructor(
         debugConfig: DebugConfig
-) : GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(debugConfig), RestExceptionCatcher<InvalidOrInsufficientCredentialsException> {
+) : GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(debugConfig, InvalidOrInsufficientCredentialsException::class.java), RestExceptionCatcher<InvalidOrInsufficientCredentialsException> {
     override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: InvalidOrInsufficientCredentialsException) =
             HttpResponse.of(FORBIDDEN)
 
     override fun status(t: InvalidOrInsufficientCredentialsException) =
-            Status.PERMISSION_DENIED.withDescription(stackToString(t))
+            Status.PERMISSION_DENIED
 }

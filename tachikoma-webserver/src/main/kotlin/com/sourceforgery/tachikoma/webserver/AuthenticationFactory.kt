@@ -15,6 +15,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
+import com.sourceforgery.tachikoma.logging.logger
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
 import java.util.Base64
@@ -46,7 +47,8 @@ private constructor(
                                     if (auth.account.mailDomain == splitAuthString.first) {
                                         auth
                                     } else {
-                                        null
+                                        LOGGER.warn { "Incorrect domain(${splitAuthString.first}) for account ${auth.account.id})" }
+                                        throw InvalidOrInsufficientCredentialsException("Incorrect domain(${splitAuthString.first}")
                                     }
                                 }
                     }
@@ -94,6 +96,7 @@ private constructor(
     }
 
     companion object {
+        val LOGGER = logger()
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION = object : Authentication {
             override fun requireFrontend(): AccountId {

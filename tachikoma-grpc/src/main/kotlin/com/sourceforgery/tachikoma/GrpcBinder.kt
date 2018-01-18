@@ -2,9 +2,13 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
-import com.sourceforgery.tachikoma.mta.MTADeliveryService
+import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryServiceGrpcImpl
+import com.sourceforgery.tachikoma.mta.MTADeliveryNotifications
+import com.sourceforgery.tachikoma.mta.MTADeliveryServiceGrpcImpl
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
+import com.sourceforgery.tachikoma.mta.MTAEmailQueueServiceGrpcImpl
 import com.sourceforgery.tachikoma.tracking.DeliveryNotificationService
+import com.sourceforgery.tachikoma.tracking.DeliveryNotificationServiceGrpcImpl
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
@@ -15,16 +19,25 @@ import javax.inject.Singleton
 
 class GrpcBinder : AbstractBinder() {
     override fun configure() {
-        bindAsContract(MTADeliveryService::class.java)
-                .to(BindableService::class.java)
+        bindAsContract(MTADeliveryNotifications::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(MTAEmailQueueService::class.java)
-                .to(BindableService::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(DeliveryNotificationService::class.java)
-                .to(BindableService::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(MailDeliveryService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(DeliveryNotificationService::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(MTADeliveryServiceGrpcImpl::class.java)
+                .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(MTAEmailQueueServiceGrpcImpl::class.java)
+                .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(DeliveryNotificationServiceGrpcImpl::class.java)
+                .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(MailDeliveryServiceGrpcImpl::class.java)
                 .to(BindableService::class.java)
                 .`in`(Singleton::class.java)
 

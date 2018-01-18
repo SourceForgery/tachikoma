@@ -1,12 +1,12 @@
 package com.sourceforgery.tachikoma.webserver.grpc
 
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
-import com.sourceforgery.tachikoma.logging.logger
 import io.grpc.ForwardingServerCallListener
 import io.grpc.Metadata
 import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
+import org.glassfish.hk2.api.MultiException
 import javax.inject.Inject
 
 internal class GrpcExceptionInterceptor
@@ -18,13 +18,14 @@ private constructor(
     private fun <T> runCaught(method: () -> T): T {
         try {
             return method()
+        } catch (e: MultiException) {
+            rethrowAsStatusException(e.cause!!)
         } catch (e: Exception) {
-            LOGGER.warn("Exception in gRPC", e)
             rethrowAsStatusException(e)
         }
     }
 
-    private fun rethrowAsStatusException(e: Exception): Nothing {
+    private fun rethrowAsStatusException(e: Throwable): Nothing {
         grpcExceptionCatchers.findCatcher(e)
                 .throwIt(e)
     }
@@ -42,9 +43,5 @@ private constructor(
                 }
             }
         }
-    }
-
-    companion object {
-        val LOGGER = logger()
     }
 }

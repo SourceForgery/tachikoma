@@ -28,8 +28,8 @@ class EmailStatusEventDBO(
 ) {
     @Id
     @Column(columnDefinition = "DECIMAL(20)", name = "id")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unique_id_seq")
-    @SequenceGenerator(name = "unique_id_seq", sequenceName = "unique_id_seq", allocationSize = 100)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unique_status_event_id_seq")
+    @SequenceGenerator(name = "unique_status_event_id_seq", sequenceName = "unique_status_event_id_seq", allocationSize = 1)
     internal var dbId: Long? = null
 
     @field:CreatedTimestamp

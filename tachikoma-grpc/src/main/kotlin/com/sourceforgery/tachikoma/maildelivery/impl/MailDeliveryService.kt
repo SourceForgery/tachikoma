@@ -19,7 +19,7 @@ import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsEx
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
@@ -72,9 +72,9 @@ private constructor(
         private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
         private val authentication: Authentication,
         private val authenticationDAO: AuthenticationDAO
-) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
+) {
 
-    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
+    fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         authentication.requireFrontend()
         val auth = authenticationDAO.getActiveById(authentication.authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
@@ -155,7 +155,6 @@ private constructor(
                     )
                 }
             }
-            responseObserver.onCompleted()
         }
     }
 
@@ -351,6 +350,10 @@ private constructor(
         trackingPixel.attr("height", "1")
         trackingPixel.attr("width", "1")
         doc.body().appendChild(trackingPixel)
+    }
+
+    fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>) {
+        TODO("Implement this")
     }
 
     companion object {
