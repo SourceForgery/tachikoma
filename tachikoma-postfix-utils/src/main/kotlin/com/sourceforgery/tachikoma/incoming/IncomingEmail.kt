@@ -19,7 +19,7 @@ class IncomingEmail(
     val executor = Executors.newCachedThreadPool()
 
     fun start() {
-        executor.run { startBlocking() }
+        executor.execute { startBlocking() }
     }
 
     private fun startBlocking() {
