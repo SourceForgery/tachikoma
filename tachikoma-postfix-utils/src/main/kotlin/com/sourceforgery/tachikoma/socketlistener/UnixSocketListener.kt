@@ -67,6 +67,7 @@ class UnixSocketListener(
                 val client = channel.accept()
                 client.configureBlocking(false)
                 client.register(selector, SelectionKey.OP_READ, actorCreator(client))
+                LOGGER.info { "Successfully connected to ${client.remoteSocketAddress.humanReadablePath()}" }
                 true
             } catch (ex: IOException) {
                 LOGGER.info("Caught exception in server actor", ex)

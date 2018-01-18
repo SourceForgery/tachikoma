@@ -41,6 +41,7 @@ private constructor(
     private val responseCloser = Executors.newCachedThreadPool()
 
     fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
+        LOGGER.info { "MTA connected" }
         val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
             if (email == null) {
