@@ -23,10 +23,11 @@ class MailSender(
 
     fun start() {
         response = stub.getEmails(fromServerStreamObserver)!!
+        LOGGER.info { "Successfully started listening for emails" }
     }
 
     fun sendEmail(value: EmailMessage): MTAQueuedNotification {
-        LOGGER.debug { "Got email: " + JsonFormat.printer().print(value) }
+        LOGGER.info { "Got email: " + JsonFormat.printer().print(value) }
 
         try {
             Socket("localhost", 25).use { smtpSocket ->
@@ -58,6 +59,7 @@ class MailSender(
                             .group(1)
                     expect.sendLine("QUIT")
 
+                    LOGGER.info { "Successfully send email: ${value.emailId}" }
                     return MTAQueuedNotification.newBuilder()
                             .setQueueId(queueId)
                             .setSuccess(true)
@@ -103,6 +105,6 @@ class MailSender(
     }
 
     companion object {
-        val LOGGER = logger()
+        private val LOGGER = logger()
     }
 }

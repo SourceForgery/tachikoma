@@ -23,6 +23,6 @@ private constructor(
     }
 
     companion object {
-        val LOGGER = logger()
+        private val LOGGER = logger()
     }
 }

@@ -29,6 +29,7 @@ class IncomingEmail(
         val serverSocketChannel = UnixServerSocketChannel.open()
         val serverSocket = serverSocketChannel.socket()
         serverSocket.bind(address)
+        LOGGER.info { "Successfully started listening for incoming emails on socket" }
         while (true) {
             val clientSocket = serverSocketChannel.accept()
             val socket = clientSocket.socket()
@@ -62,6 +63,6 @@ class IncomingEmail(
 
     companion object {
         val SOCKET_PATH = java.io.File("/var/spool/postfix/private/incoming_tachikoma")
-        val LOGGER = logger()
+        private val LOGGER = logger()
     }
 }

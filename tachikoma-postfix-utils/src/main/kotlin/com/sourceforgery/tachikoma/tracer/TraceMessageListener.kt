@@ -57,6 +57,6 @@ class TraceMessageListener(
 
     companion object {
         val SOCKET_PATH = java.io.File("/var/spool/postfix/private/tracer_tachikoma")
-        val LOGGER = logger()
+        private val LOGGER = logger()
     }
 }

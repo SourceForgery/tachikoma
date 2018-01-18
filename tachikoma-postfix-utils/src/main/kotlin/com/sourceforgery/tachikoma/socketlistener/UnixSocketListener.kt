@@ -31,6 +31,7 @@ class UnixSocketListener(
             channel.configureBlocking(false)
             channel.socket().bind(address)
             channel.register(selector, SelectionKey.OP_ACCEPT, ServerActor())
+            LOGGER.info { "Successfully started listening for trace events" }
 
             while (selector.select() > 0) {
                 val iterator = selector.selectedKeys().iterator()
