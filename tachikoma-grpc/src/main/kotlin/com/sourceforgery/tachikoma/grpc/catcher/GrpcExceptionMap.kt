@@ -27,7 +27,8 @@ private constructor(
     }
 
     private fun getGenerics(catcher: GrpcExceptionCatcher<*>): Type {
-        return (catcher.javaClass.genericSuperclass.javaClass as ParameterizedType).actualTypeArguments[0]
+        val genericSuperclass = catcher.javaClass.genericSuperclass!!
+        return (genericSuperclass as ParameterizedType).actualTypeArguments[0]
     }
 
     private fun findClass(key: Class<Throwable>): GrpcExceptionCatcher<Throwable> {

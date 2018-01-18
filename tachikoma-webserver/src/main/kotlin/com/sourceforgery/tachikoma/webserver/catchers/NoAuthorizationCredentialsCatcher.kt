@@ -20,5 +20,5 @@ private constructor(
             HttpResponse.of(UNAUTHORIZED)
 
     override fun status(t: NoAuthorizationCredentialsException) =
-            Status.UNAUTHENTICATED
+            Status.UNAUTHENTICATED.withDescription(stackToString(t))
 }

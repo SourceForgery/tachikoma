@@ -9,6 +9,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.TemplateBody
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.TemplateEngine
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.MetadataUtils
 import java.time.Instant
 
@@ -82,6 +83,8 @@ fun main(args: Array<String>) {
         }
     } catch (e: Exception) {
         e.printStackTrace()
+        (e as? StatusRuntimeException)
+                ?.let { System.err.println(e.message) }
     }
     System.err.println("Send complete")
 }

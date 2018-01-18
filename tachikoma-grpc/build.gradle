@@ -7,9 +7,6 @@ dependencies {
     compile 'org.jsoup:jsoup:1.11.2'
     compile "com.linecorp.armeria:armeria:$armeria_version"
     compile "com.linecorp.armeria:armeria-grpc:$armeria_version"
-    testCompile "org.glassfish.hk2:hk2-locator:$hk2_version"
-    testCompile "org.glassfish.hk2:hk2-utils:$hk2_version"
-
 
     compile project(':tachikoma-internal-api')
     compile project(':tachikoma-database-api')
