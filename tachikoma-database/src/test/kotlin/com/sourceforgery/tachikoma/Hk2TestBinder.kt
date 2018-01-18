@@ -21,9 +21,7 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
-import com.sourceforgery.tachikoma.database.server.LogEverything
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
-import com.sourceforgery.tachikoma.hk2.RequestScoped
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
 import org.glassfish.hk2.api.Context
@@ -84,9 +82,14 @@ class Hk2TestBinder : AbstractBinder() {
         bindAsContract(AccountDAOImpl::class.java)
                 .to(AccountDAO::class.java)
                 .`in`(Singleton::class.java)
-        bindAsContract(LogEverything::class.java)
+
+        bind(object : InvokeCounter {
+            override fun inc(sql: String?, millis: Long) {
+                // Do nothing
+            }
+        })
                 .to(InvokeCounter::class.java)
-                .`in`(RequestScoped::class.java)
+
         bindAsContract(DBObjectMapperImpl::class.java)
                 .to(DBObjectMapper::class.java)
                 .`in`(Singleton::class.java)
