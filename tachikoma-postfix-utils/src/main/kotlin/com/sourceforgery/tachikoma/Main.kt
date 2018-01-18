@@ -42,5 +42,5 @@ fun main(args: Array<String>) {
             .build()
     MailSender(channel).start()
     IncomingEmail(channel).start()
-    Syslogger().blockingSniffer()
+    Syslogger(channel).blockingSniffer()
 }
