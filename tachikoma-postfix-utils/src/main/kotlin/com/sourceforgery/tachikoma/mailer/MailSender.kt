@@ -62,6 +62,7 @@ class MailSender(
                     LOGGER.info { "Successfully send email: ${value.emailId}" }
                     return MTAQueuedNotification.newBuilder()
                             .setQueueId(queueId)
+                            .setEmailId(value.emailId)
                             .setSuccess(true)
                             .build()
                 }
