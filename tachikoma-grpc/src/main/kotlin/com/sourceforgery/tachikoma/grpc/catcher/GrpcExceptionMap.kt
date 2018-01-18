@@ -22,7 +22,7 @@ private constructor(
             logger.warn("Exception in gRPC", t)
         }
 
-        override fun status(t: Throwable) = Status.fromThrowable(t).withDescription(stackToString(t))
+        override fun status(t: Throwable) = Status.fromThrowable(t).withDescription(stackToString(t).substring(0, 6000))
     }
 
     fun findCatcher(key: Throwable): GrpcExceptionCatcher<Throwable> {

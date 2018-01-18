@@ -30,7 +30,7 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
-    runCommand('mkdir -p /var/logs/tachikoma && chown postfix:postfix /var/logs/tachikoma')
+    runCommand('mkdir -p /var/log/tachikoma && chown postfix:postfix /var/log/tachikoma')
 
     addFile {
         configurations.binaries.filter {

@@ -10,4 +10,5 @@ interface EmailDAO {
     fun save(emailDBO: EmailDBO)
     fun updateMTAQueueStatus(emailId: EmailId, queueId: String)
     fun getByMessageId(messageId: MessageId): EmailDBO?
+    fun getByQueueId(queueId: String): EmailDBO?
 }
