@@ -2,9 +2,6 @@ sudo: required
 language: java
 jdk:
   - oraclejdk8
-before_install:
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y
-  - export PATH=$PATH:$HOME/.cargo/bin/:$HOME/bin/
 cache:
   - directories:
     - $HOME/.gradle
