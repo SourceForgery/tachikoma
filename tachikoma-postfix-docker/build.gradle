@@ -22,7 +22,7 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi supervisor postfix opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install inetutils-syslogd less nvi supervisor postfix opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     addFile(file('src/assets/'))
 
