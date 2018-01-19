@@ -15,7 +15,7 @@ class InvalidOrInsufficientCredentialsCatcher
 @Inject
 private constructor(
         debugConfig: DebugConfig
-) : GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(debugConfig), RestExceptionCatcher<InvalidOrInsufficientCredentialsException> {
+) : GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(debugConfig, InvalidOrInsufficientCredentialsException::class.java), RestExceptionCatcher<InvalidOrInsufficientCredentialsException> {
     override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: InvalidOrInsufficientCredentialsException) =
             HttpResponse.of(FORBIDDEN)
 

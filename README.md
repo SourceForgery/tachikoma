@@ -31,7 +31,6 @@ What it uses:
 * PostgreSQL database
 * Postfix email server
 * RabbitMQ message broker
-* Rust language
 * gRPC API
 
 **Setting up the development environment**
@@ -39,12 +38,7 @@ What it uses:
 Setting up the different programs necessary to develop (not run)
 it in IntelliJ.
 
-* [Rustup](https://www.rustup.rs/) is necessary for IntelliJ and an
-  easy way to get rust build env up. Run as user, *not* root
 * JDK 8 (JRE is untested)
-* IntelliJ plugin for Rust
-* IntelliJ TOML plugin
-* ssl headers (libssl-dev on Ubuntu)
 
 ** Running **
 
@@ -77,13 +71,6 @@ docker run -it -e MAIL_DOMAIN=example.com -e "TACHIKOMA_URL=http://password@172.
 
 **Getting around some quirks**
 1. Build with ```./gradlew build``` in the root (should build cleanly).
-2. (May not be necessary) Manually mark all these as Generated sources in the ```Mark Directory as``` context menu.
-  * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/java```
-  * ```tachikoma-backend-api-proto/tachikoma-backend-api-jvm/build/generated/source/proto/main/grpc```
-  * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/java```
-  * ```tachikoma-frontend-api-proto/tachikoma-frontend-api-jvm/build/generated/source/proto/main/grpc```
-3. Open ```View -> Tool Windows -> Cargo``` and add tachikoma-postfix-binaries as a cargo project
-4. When IntelliJ flakes out and complains about trying to use 1.8 stuff on 1.6, go ```Open Module Settings```,
+2. When IntelliJ flakes out and complains about trying to use 1.8 stuff on 1.6, go ```Open Module Settings```,
   go ```Facets``` and add Kotlin Facet to _all_ modules (and their partial modules, e.g. main and test) you're having
   problems with. Problem will persist until you catch 'em all.
-5. `gw clean build` will only work on new builds OR when the `.gradle` in the tachikoma directory has been removed.

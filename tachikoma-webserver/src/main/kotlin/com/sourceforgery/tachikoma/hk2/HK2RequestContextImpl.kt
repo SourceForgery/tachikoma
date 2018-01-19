@@ -91,10 +91,12 @@ private constructor(
         instance.release()
     }
 
-    internal fun <T> runInScope(instance: Instance, task: (ServiceLocator) -> T): T {
+    override fun getContextInstance(): ReqCtxInstance = current()
+
+    override fun <T> runInScope(ctx: ReqCtxInstance, task: (ServiceLocator) -> T): T {
         val oldInstance = retrieveCurrent()
         try {
-            setCurrent(instance)
+            setCurrent(ctx as Instance)
             LOGGER.trace { "Entering request scope" }
             return task(serviceLocator)
         } finally {
@@ -118,7 +120,7 @@ private constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    internal class Instance internal constructor() {
+    internal class Instance internal constructor() : ReqCtxInstance {
         private val id by lazy {
             UUID.randomUUID()
         }

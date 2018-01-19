@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.grpc.catcher
 
 import com.sourceforgery.tachikoma.config.DebugConfig
 import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import org.glassfish.hk2.api.IterableProvider
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -16,8 +17,12 @@ private constructor(
 ) {
     private val map = ConcurrentHashMap<Class<Throwable>, GrpcExceptionCatcher<Throwable>>()
 
-    private val defaultCatcher = object : GrpcExceptionCatcher<Throwable>(debugConfig) {
-        override fun status(t: Throwable) = Status.fromThrowable(t).withDescription(stackToString(t))
+    private val defaultCatcher = object : GrpcExceptionCatcher<Throwable>(debugConfig, Throwable::class.java) {
+        override fun logError(t: Throwable) {
+            logger.warn("Exception in gRPC", t)
+        }
+
+        override fun status(t: Throwable) = Status.fromThrowable(t).withDescription(stackToString(t).substring(0, 6000))
     }
 
     fun findCatcher(key: Throwable): GrpcExceptionCatcher<Throwable> {
@@ -27,7 +32,8 @@ private constructor(
     }
 
     private fun getGenerics(catcher: GrpcExceptionCatcher<*>): Type {
-        return (catcher.javaClass.genericSuperclass.javaClass as ParameterizedType).actualTypeArguments[0]
+        val genericSuperclass = catcher.javaClass.genericSuperclass!!
+        return (genericSuperclass as ParameterizedType).actualTypeArguments[0]
     }
 
     private fun findClass(key: Class<Throwable>): GrpcExceptionCatcher<Throwable> {
@@ -41,4 +47,7 @@ private constructor(
         }
         return defaultCatcher
     }
+
+    fun findAndConvert(t: Throwable): StatusRuntimeException =
+            findCatcher(t).toException(t)
 }

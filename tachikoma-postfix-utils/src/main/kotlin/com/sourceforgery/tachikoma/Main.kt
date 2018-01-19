@@ -2,7 +2,7 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.incoming.IncomingEmail
 import com.sourceforgery.tachikoma.mailer.MailSender
-import com.sourceforgery.tachikoma.tracer.TraceMessageListener
+import com.sourceforgery.tachikoma.syslog.Syslogger
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.stub.MetadataUtils
@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
             }
 
     val metadataAuth = Metadata()
-    metadataAuth.put(APITOKEN_HEADER, tachikomaUrl.authority)
+    metadataAuth.put(APITOKEN_HEADER, tachikomaUrl.userInfo)
 
     val channel = ManagedChannelBuilder.forAddress(tachikomaUrl.host, port)
             .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
@@ -42,5 +42,5 @@ fun main(args: Array<String>) {
             .build()
     MailSender(channel).start()
     IncomingEmail(channel).start()
-    TraceMessageListener(channel).startBlocking()
+    Syslogger(channel).blockingSniffer()
 }

@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.mailer
 
-import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.expectit.emptyBuffer
 import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
 import com.sourceforgery.tachikoma.logging.logger
@@ -11,6 +10,8 @@ import io.grpc.Channel
 import io.grpc.stub.StreamObserver
 import net.sf.expectit.ExpectBuilder
 import net.sf.expectit.matcher.Matchers.regexp
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
 import java.net.Socket
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -19,20 +20,22 @@ class MailSender(
         channel: Channel
 ) {
     private lateinit var response: StreamObserver<MTAQueuedNotification>
-    private val stub = MTAEmailQueueGrpc.newStub(channel)!!
+    private val stub = MTAEmailQueueGrpc.newStub(channel)
 
     fun start() {
-        response = stub.getEmails(fromServerStreamObserver)!!
+        response = stub.getEmails(fromServerStreamObserver)
+        LOGGER.info { "Successfully started listening for emails" }
     }
 
     fun sendEmail(value: EmailMessage): MTAQueuedNotification {
-        LOGGER.debug { "Got email: " + JsonFormat.printer().print(value) }
+        LOGGER.info { "Got email: ${value.emailId}" }
 
         try {
             Socket("localhost", 25).use { smtpSocket ->
+                val os = IoBuilder.forLogger("smtp.debug").setLevel(Level.TRACE).buildPrintWriter()
                 ExpectBuilder()
-                        .withEchoOutput(System.err)
-                        .withEchoInput(System.err)
+                        .withEchoOutput(os)
+                        .withEchoInput(os)
                         .withInputs(smtpSocket.getInputStream())
                         .withOutput(smtpSocket.getOutputStream())
                         .withLineSeparator("\r\n")
@@ -58,8 +61,10 @@ class MailSender(
                             .group(1)
                     expect.sendLine("QUIT")
 
+                    LOGGER.info { "Successfully send email: ${value.emailId}" }
                     return MTAQueuedNotification.newBuilder()
                             .setQueueId(queueId)
+                            .setEmailId(value.emailId)
                             .setSuccess(true)
                             .build()
                 }
@@ -83,7 +88,7 @@ class MailSender(
     private val fromServerStreamObserver = object : StreamObserver<EmailMessage> {
         override fun onError(t: Throwable) {
             if (!Thread.currentThread().isInterrupted) {
-                LOGGER.warn(t, { "Got error from gRPC server" })
+                LOGGER.warn { "Got error from gRPC server with message: ${t.message}" }
                 Thread.sleep(1000)
                 start()
             }
@@ -98,11 +103,11 @@ class MailSender(
         override fun onNext(value: EmailMessage) {
             val status = sendEmail(value)
             response.onNext(status)
-            System.err.println("Got email: " + JsonFormat.printer().print(value))
+            LOGGER.info { "Send email: ${value.emailId} with status ${status.success} and queueId ${status.queueId}" }
         }
     }
 
     companion object {
-        val LOGGER = logger()
+        private val LOGGER = logger()
     }
 }

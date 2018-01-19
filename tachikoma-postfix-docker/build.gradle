@@ -9,7 +9,7 @@ dependencies {
     binaries project(path: ":tachikoma-postfix-utils", configuration: 'archives')
 }
 
-def workDir = 'opt'
+def workDir = '/opt'
 
 task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     applicationName = 'tachikoma-postfix'
@@ -18,17 +18,21 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     maintainer 'tachikoma@sourceforgery.com'
 
-    workingDir("/$workDir")
+    workingDir("$workDir")
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi supervisor postfix opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install inetutils-syslogd less nvi supervisor postfix opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     addFile(file('src/assets/'))
 
     runCommand('./opendkim.sh')
 
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
+
+    runCommand("mkfifo $workDir/maillog_pipe && chown postfix:postfix $workDir/maillog_pipe")
+
+    runCommand('mkdir -p /var/log/tachikoma && chown postfix:postfix /var/log/tachikoma')
 
     addFile {
         configurations.binaries.filter {
@@ -43,7 +47,7 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
         }
     }
 
-    runCommand("chmod a+x /$workDir/tachikoma-postfix-utils/bin/tachikoma-postfix-utils")
+    runCommand("chmod a+x $workDir/tachikoma-postfix-utils/bin/tachikoma-postfix-utils")
 }
 
 assemble.dependsOn postfixDocker

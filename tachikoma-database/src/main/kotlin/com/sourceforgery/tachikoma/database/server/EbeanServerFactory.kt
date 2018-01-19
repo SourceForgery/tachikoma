@@ -75,6 +75,7 @@ internal class EbeanServerFactory @Inject constructor(
         serverConfig.isRegister = false
         serverConfig.encryptKeyManager = EncryptKeyManager { _, _ -> EncryptKey { databaseConfig.databaseEncryptionKey } }
         serverConfig.objectMapper = dbObjectMapper
+        serverConfig.databaseSequenceBatchSize = 100
         when (databaseConfig.sqlUrl.scheme) {
             "h2" -> {
                 dataSourceConfig.driver = "org.h2.Driver"

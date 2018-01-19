@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.mta
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
@@ -38,10 +37,11 @@ private constructor(
         private val mqSender: MQSender,
         private val incomingEmailAddressDAO: IncomingEmailAddressDAO,
         private val authentication: Authentication
-) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
+) {
     private val responseCloser = Executors.newCachedThreadPool()
 
-    override fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
+    fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
+        LOGGER.info { "MTA connected" }
         val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
             if (email == null) {
@@ -49,7 +49,7 @@ private constructor(
             } else {
                 LOGGER.info { "Email with id ${email.id} is about to be sent" }
                 val response = EmailMessage.newBuilder()
-                        .setBody(email.body)
+                        .setBody(email.body!!)
                         .setFrom(email.transaction.fromEmail.address)
                         .setEmailId(email.id.emailId)
                         .setEmailAddress(email.recipient.address)
@@ -67,7 +67,7 @@ private constructor(
             }
 
             override fun onNext(value: MTAQueuedNotification) {
-                val queueId = value.queueId!!
+                val queueId = value.queueId
                 val emailId = EmailId(value.emailId)
                 // TODO do something with value.success
                 if (value.success) {
@@ -85,38 +85,33 @@ private constructor(
         }
     }
 
-    override fun incomingEmail(request: IncomingEmailMessage, responseObserver: StreamObserver<Empty>) {
-        try {
-            val body = request.body.toByteArray()
-            val fromEmail = Email(InternetAddress(request.from).address)
-            val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), body.inputStream())
-            val recipientEmail = Email(InternetAddress(request.emailAddress).address)
-            val accountTypePair = handleUnsubscribe(recipientEmail, mimeMessage)
-                    ?: handleHardBounce(recipientEmail)
-                    ?: handleNormalEmails(recipientEmail)
+    fun incomingEmail(request: IncomingEmailMessage) {
+        val body = request.body.toByteArray()
+        val fromEmail = Email(InternetAddress(request.from).address)
+        val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), body.inputStream())
+        val recipientEmail = Email(InternetAddress(request.emailAddress).address)
+        val accountTypePair = handleUnsubscribe(recipientEmail, mimeMessage)
+                ?: handleHardBounce(recipientEmail)
+                ?: handleNormalEmails(recipientEmail)
 
-            if (accountTypePair != null) {
-                val accountDBO = accountTypePair.first
-                val incomingEmailDBO = IncomingEmailDBO(
-                        body = body,
-                        fromEmail = fromEmail,
-                        receiverEmail = recipientEmail,
-                        accountDBO = accountDBO
-                )
-                incomingEmailDAO.save(incomingEmailDBO)
-                if (accountTypePair.second == IncomingEmailType.NORMAL) {
-                    val notificationMessage = IncomingEmailNotificationMessage.newBuilder()
-                            .setIncomingEmailMessageId(incomingEmailDBO.id.incomingEmailId)
-                            .build()
-                    mqSender.queueIncomingEmailNotification(accountDBO.id, notificationMessage)
-                }
-            } else {
-                TODO("Return bad result!")
+        if (accountTypePair != null) {
+            val accountDBO = accountTypePair.first
+            val incomingEmailDBO = IncomingEmailDBO(
+                    body = body,
+                    fromEmail = fromEmail,
+                    receiverEmail = recipientEmail,
+                    accountDBO = accountDBO
+            )
+            incomingEmailDAO.save(incomingEmailDBO)
+            if (accountTypePair.second == IncomingEmailType.NORMAL) {
+                val notificationMessage = IncomingEmailNotificationMessage.newBuilder()
+                        .setIncomingEmailMessageId(incomingEmailDBO.id.incomingEmailId)
+                        .build()
+                mqSender.queueIncomingEmailNotification(accountDBO.id, notificationMessage)
             }
-        } catch (e: Exception) {
-            responseObserver.onError(e)
+        } else {
+            TODO("Return bad result!")
         }
-        responseObserver.onCompleted()
     }
 
     private fun handleNormalEmails(recipientEmail: Email): Pair<AccountDBO, IncomingEmailType>? {

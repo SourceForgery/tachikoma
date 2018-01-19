@@ -15,7 +15,7 @@ class NoAuthorizationCredentialsCatcher
 @Inject
 private constructor(
         debugConfig: DebugConfig
-) : GrpcExceptionCatcher<NoAuthorizationCredentialsException>(debugConfig), RestExceptionCatcher<NoAuthorizationCredentialsException> {
+) : GrpcExceptionCatcher<NoAuthorizationCredentialsException>(debugConfig, NoAuthorizationCredentialsException::class.java), RestExceptionCatcher<NoAuthorizationCredentialsException> {
     override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: NoAuthorizationCredentialsException) =
             HttpResponse.of(UNAUTHORIZED)
 

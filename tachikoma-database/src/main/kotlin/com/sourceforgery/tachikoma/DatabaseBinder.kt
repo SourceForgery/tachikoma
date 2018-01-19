@@ -14,7 +14,6 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
-import com.sourceforgery.tachikoma.database.hooks.CreateSequence
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
@@ -58,9 +57,6 @@ class DatabaseBinder : AbstractBinder() {
                 .`in`(RequestScoped::class.java)
         bindAsContract(DBObjectMapperImpl::class.java)
                 .to(DBObjectMapper::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(CreateSequence::class.java)
-                .to(EbeanHook::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(CreateUsers::class.java)
                 .to(EbeanHook::class.java)

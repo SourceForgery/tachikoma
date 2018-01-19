@@ -132,6 +132,7 @@ private constructor(
     }
 
     override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
+        val ctx = hK2RequestContext.getContextInstance()
         val channel = connection
                 .createChannel()!!
 
@@ -142,7 +143,7 @@ private constructor(
                 var handledResult = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
-                    callback(parsedMessage)
+                    hK2RequestContext.runInScope(ctx, { callback(parsedMessage) })
                     channel.basicAck(envelope.deliveryTag, false)
                     handledResult = true
                 } catch (e: Exception) {

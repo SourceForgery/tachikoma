@@ -19,7 +19,7 @@ import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsEx
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
@@ -72,9 +72,9 @@ private constructor(
         private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
         private val authentication: Authentication,
         private val authenticationDAO: AuthenticationDAO
-) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
+) {
 
-    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
+    fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         authentication.requireFrontend()
         val auth = authenticationDAO.getActiveById(authentication.authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
@@ -121,7 +121,7 @@ private constructor(
                     )
                     emailDAO.save(emailDBO)
 
-                    emailDBO.body = when (request.bodyCase!!) {
+                    emailDBO.body = when (request.bodyCase) {
                         OutgoingEmail.BodyCase.STATIC -> getStaticBody(
                                 request = request,
                                 emailId = emailDBO.id,
@@ -155,7 +155,6 @@ private constructor(
                     )
                 }
             }
-            responseObserver.onCompleted()
         }
     }
 
@@ -166,8 +165,8 @@ private constructor(
             messageId: MessageId,
             fromEmail: Email
     ): String {
-        val template = request.template!!
-        if (template.htmlTemplate == null && template.plaintextTemplate == null) {
+        val template = request.template
+        if (template.htmlTemplate.isBlank() && template.plaintextTemplate.isBlank()) {
             throw IllegalArgumentException("Needs at least one template (plaintext or html)")
         }
 
@@ -201,7 +200,7 @@ private constructor(
             messageId: MessageId,
             fromEmail: Email
     ): String {
-        val static = request.static!!
+        val static = request.static
         val htmlBody = static.htmlBody.emptyToNull()
         val plaintextBody = static.plaintextBody.emptyToNull()
 
@@ -351,6 +350,10 @@ private constructor(
         trackingPixel.attr("height", "1")
         trackingPixel.attr("width", "1")
         doc.body().appendChild(trackingPixel)
+    }
+
+    fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>) {
+        TODO("Implement this")
     }
 
     companion object {

@@ -13,16 +13,16 @@ private constructor(
         private val mqSender: MQSender
 ) : Job {
     override fun execute(jobMessage: JobMessage) {
-        LOGGER.info { "Email with id ${jobMessage.sendEmailJob.emailId} is about to be put into outgoing queue" }
         val sendEmailJob = jobMessage.sendEmailJob
         val outgoingEmail = OutgoingEmailMessage.newBuilder()
                 .setEmailId(sendEmailJob.emailId)
                 .setCreationTimestamp(jobMessage.creationTimestamp)
                 .build()
         mqSender.queueOutgoingEmail(MailDomain(sendEmailJob.mailDomain), outgoingEmail)
+        LOGGER.info { "Email with id ${jobMessage.sendEmailJob.emailId} is about to be put into outgoing queue" }
     }
 
     companion object {
-        val LOGGER = logger()
+        private val LOGGER = logger()
     }
 }

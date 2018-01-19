@@ -3,7 +3,7 @@ package com.sourceforgery.tachikoma.incoming
 import com.sourceforgery.tachikoma.expectit.emptyBuffer
 import com.sourceforgery.tachikoma.expectit.expectNoQuit
 import com.sourceforgery.tachikoma.expectit.regexpLine
-import com.sourceforgery.tachikoma.mailer.MailSender
+import com.sourceforgery.tachikoma.logging.logger
 import net.sf.expectit.Expect
 import net.sf.expectit.ExpectBuilder
 import java.net.Socket
@@ -46,7 +46,7 @@ class LMTPServer(
                 }
             }
         } catch (e: Exception) {
-            MailSender.LOGGER.error("", e)
+            LOGGER.error("", e)
         }
     }
 
@@ -63,5 +63,9 @@ class LMTPServer(
             expect.sendLine("500 Failed")
             throw e
         }
+    }
+
+    companion object {
+        private val LOGGER = logger()
     }
 }

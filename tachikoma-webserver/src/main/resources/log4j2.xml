@@ -15,6 +15,6 @@
         <Root level="info">
             <AppenderRef ref="StdOut" />
         </Root>
-        <Logger name="sql.log_everything" level="trace" />
+        <!--<Logger name="sql.log_everything" level="trace" />-->
     </Loggers>
 </Configuration>
