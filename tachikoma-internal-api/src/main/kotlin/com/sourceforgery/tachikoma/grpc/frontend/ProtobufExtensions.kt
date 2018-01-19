@@ -5,8 +5,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.identifiers.AccountId
-import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import com.sourceforgery.tachikoma.identifiers.EmailId
 
 fun com.sourceforgery.tachikoma.common.Email.toGrpcInternal() =
         Email.newBuilder().setEmail(address).build()
@@ -71,3 +71,9 @@ fun BlockedReason.toGrpc(): Rejected.RejectReason {
         BlockedReason.HARD_BOUNCED -> Rejected.RejectReason.SPAM_MARKED
     }
 }
+
+fun com.sourceforgery.tachikoma.identifiers.IncomingEmailId.toGrpc() =
+        IncomingEmailId.newBuilder().setId(incomingEmailId).build()
+
+fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpc() =
+        NamedEmail.newBuilder().setEmail(address.address).setName(name).build()

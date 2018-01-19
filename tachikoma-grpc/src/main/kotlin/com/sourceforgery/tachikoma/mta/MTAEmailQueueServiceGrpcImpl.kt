@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.mta
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
@@ -20,9 +19,10 @@ private constructor(
         }
     }
 
-    override fun incomingEmail(request: IncomingEmailMessage, responseObserver: StreamObserver<Empty>) {
+    override fun incomingEmail(request: IncomingEmailMessage, responseObserver: StreamObserver<MailAcceptanceResult>) {
         return try {
-            mtaEmailQueueService.incomingEmail(request)
+            val acceptanceResult = mtaEmailQueueService.incomingEmail(request)
+            responseObserver.onNext(MailAcceptanceResult.newBuilder().setAcceptanceStatus(acceptanceResult).build())
             responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))

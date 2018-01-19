@@ -7,10 +7,12 @@ import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
+import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
@@ -29,9 +31,12 @@ import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.identifiers.EmailId
+import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
+import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
+import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
@@ -51,6 +56,7 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.Properties
 import java.util.UUID
+import java.util.concurrent.Executors
 import javax.inject.Inject
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
@@ -66,11 +72,13 @@ private constructor(
         private val emailDAO: EmailDAO,
         private val blockedEmailDAO: BlockedEmailDAO,
         private val mqSender: MQSender,
+        private val mqSequenceFactory: MQSequenceFactory,
         private val jobMessageFactory: JobMessageFactory,
         private val ebeanServer: EbeanServer,
         private val trackingDecoderImpl: TrackingDecoderImpl,
         private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
         private val authentication: Authentication,
+        private val incomingEmailDAO: IncomingEmailDAO,
         private val authenticationDAO: AuthenticationDAO
 ) {
 
@@ -113,47 +121,47 @@ private constructor(
                             blockedReason
                         }
                         ?: let {
-                    val messageId = MessageId("${UUID.randomUUID()}@${fromEmail.domain}")
-                    val emailDBO = EmailDBO(
-                            recipient = recipientEmail,
-                            transaction = transaction,
-                            messageId = messageId
-                    )
-                    emailDAO.save(emailDBO)
+                            val messageId = MessageId("${UUID.randomUUID()}@${fromEmail.domain}")
+                            val emailDBO = EmailDBO(
+                                    recipient = recipientEmail,
+                                    transaction = transaction,
+                                    messageId = messageId
+                            )
+                            emailDAO.save(emailDBO)
 
-                    emailDBO.body = when (request.bodyCase) {
-                        OutgoingEmail.BodyCase.STATIC -> getStaticBody(
-                                request = request,
-                                emailId = emailDBO.id,
-                                messageId = messageId,
-                                fromEmail = fromEmail
-                        )
-                        OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
-                                request = request,
-                                recipient = recipient,
-                                emailId = emailDBO.id,
-                                messageId = messageId,
-                                fromEmail = fromEmail
-                        )
-                        else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
-                    }
-                    emailDAO.save(emailDBO)
+                            emailDBO.body = when (request.bodyCase) {
+                                OutgoingEmail.BodyCase.STATIC -> getStaticBody(
+                                        request = request,
+                                        emailId = emailDBO.id,
+                                        messageId = messageId,
+                                        fromEmail = fromEmail
+                                )
+                                OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
+                                        request = request,
+                                        recipient = recipient,
+                                        emailId = emailDBO.id,
+                                        messageId = messageId,
+                                        fromEmail = fromEmail
+                                )
+                                else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
+                            }
+                            emailDAO.save(emailDBO)
 
-                    mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                            requestedSendTime = requestedSendTime,
-                            emailId = emailDBO.id,
-                            mailDomain = auth.account.mailDomain
-                    ))
+                            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
+                                    requestedSendTime = requestedSendTime,
+                                    emailId = emailDBO.id,
+                                    mailDomain = auth.account.mailDomain
+                            ))
 
-                    responseObserver.onNext(
-                            EmailQueueStatus.newBuilder()
-                                    .setEmailId(emailDBO.id.toGrpcInternal())
-                                    .setQueued(Queued.getDefaultInstance())
-                                    .setTransactionId(transaction.id.toGrpcInternal())
-                                    .setRecipient(emailDBO.recipient.toGrpcInternal())
-                                    .build()
-                    )
-                }
+                            responseObserver.onNext(
+                                    EmailQueueStatus.newBuilder()
+                                            .setEmailId(emailDBO.id.toGrpcInternal())
+                                            .setQueued(Queued.getDefaultInstance())
+                                            .setTransactionId(transaction.id.toGrpcInternal())
+                                            .setRecipient(emailDBO.recipient.toGrpcInternal())
+                                            .build()
+                            )
+                        }
             }
         }
     }
@@ -353,10 +361,31 @@ private constructor(
     }
 
     fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>) {
-        TODO("Implement this")
+        authentication.requireFrontend()
+        val mailDomain = authentication.mailDomain
+        val future = mqSequenceFactory.listenForOutgoingEmails(mailDomain, {
+            val incomingEmailId = IncomingEmailId(it.emailId)
+            val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId)
+            if (email != null) {
+                val incomingEmail = IncomingEmail.newBuilder()
+                        .setIncomingEmailId(incomingEmailId.toGrpc())
+                        .setSubject(email.subject)
+                        .setTo(NamedEmail(email.receiverEmail, email.receiverName).toGrpc())
+                        .setFrom(NamedEmail(email.fromEmail, email.fromName).toGrpc())
+                        .build()
+                responseObserver.onNext(incomingEmail)
+            } else {
+                LOGGER.warn { "Could not find email with id $incomingEmailId" }
+            }
+        })
+        future.addListener(Runnable {
+            responseObserver.onCompleted()
+        }, responseCloser)
     }
 
     companion object {
-        val PRINTER = JsonFormat.printer()!!
+        private val LOGGER = logger()
+        private val PRINTER = JsonFormat.printer()!!
+        private val responseCloser = Executors.newCachedThreadPool()
     }
 }

@@ -1,20 +1,20 @@
 package com.sourceforgery.tachikoma.incoming
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.IncomingEmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
+import com.sourceforgery.tachikoma.mta.MailAcceptanceResult
 import io.grpc.Channel
-import io.grpc.stub.StreamObserver
 import jnr.unixsocket.UnixServerSocketChannel
 import jnr.unixsocket.UnixSocketAddress
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 class IncomingEmail(
         grpcChannel: Channel
 ) {
-    private val stub = MTAEmailQueueGrpc.newStub(grpcChannel)
+    private val stub = MTAEmailQueueGrpc.newBlockingStub(grpcChannel)
 
     private val executor = Executors.newCachedThreadPool()!!
 
@@ -38,27 +38,13 @@ class IncomingEmail(
         }
     }
 
-    private fun acceptIncomingEmail(fromEmailAddress: String, emailBody: ByteArray, toEmailAddress: String) {
+    private fun acceptIncomingEmail(fromEmailAddress: String, emailBody: String, toEmailAddress: String): MailAcceptanceResult {
         val incomingEmailMessage = IncomingEmailMessage.newBuilder()
-                .setBody(ByteString.copyFrom(emailBody))
+                .setBody(ByteString.copyFrom(emailBody, StandardCharsets.US_ASCII))
                 .setFrom(fromEmailAddress)
                 .setEmailAddress(toEmailAddress)
                 .build()
-        stub.incomingEmail(incomingEmailMessage, nullObserver)
-    }
-
-    private val nullObserver = object : StreamObserver<Empty> {
-        override fun onNext(value: Empty?) {
-            // Don't care
-        }
-
-        override fun onCompleted() {
-            // Don't care
-        }
-
-        override fun onError(t: Throwable?) {
-            LOGGER.warn("Exception sending incoming email", t)
-        }
+        return stub.incomingEmail(incomingEmailMessage)
     }
 
     companion object {
