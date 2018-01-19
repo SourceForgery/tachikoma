@@ -121,7 +121,7 @@ private constructor(
                     )
                     emailDAO.save(emailDBO)
 
-                    emailDBO.body = when (request.bodyCase!!) {
+                    emailDBO.body = when (request.bodyCase) {
                         OutgoingEmail.BodyCase.STATIC -> getStaticBody(
                                 request = request,
                                 emailId = emailDBO.id,
@@ -165,8 +165,8 @@ private constructor(
             messageId: MessageId,
             fromEmail: Email
     ): String {
-        val template = request.template!!
-        if (template.htmlTemplate == null && template.plaintextTemplate == null) {
+        val template = request.template
+        if (template.htmlTemplate.isBlank() && template.plaintextTemplate.isBlank()) {
             throw IllegalArgumentException("Needs at least one template (plaintext or html)")
         }
 
@@ -200,7 +200,7 @@ private constructor(
             messageId: MessageId,
             fromEmail: Email
     ): String {
-        val static = request.static!!
+        val static = request.static
         val htmlBody = static.htmlBody.emptyToNull()
         val plaintextBody = static.plaintextBody.emptyToNull()
 

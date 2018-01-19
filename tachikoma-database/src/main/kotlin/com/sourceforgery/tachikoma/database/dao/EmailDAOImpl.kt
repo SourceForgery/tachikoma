@@ -37,4 +37,10 @@ private constructor(
                 .eq("messageId", messageId.messageId)
                 .findOne()
     }
+
+    override fun getByQueueId(queueId: String) =
+            ebeanServer.find(EmailDBO::class.java)
+                    .where()
+                    .eq("mtaQueueId", queueId)
+                    .findOne()
 }

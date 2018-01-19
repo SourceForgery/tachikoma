@@ -22,7 +22,7 @@ fun main(args: Array<String>) {
             .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
             .build()
 
-    val stub = MTAEmailQueueGrpc.newStub(channel)!!
+    val stub = MTAEmailQueueGrpc.newStub(channel)
 
     try {
         val responseHolder = AtomicReference<StreamObserver<MTAQueuedNotification>>()
@@ -49,7 +49,7 @@ fun main(args: Array<String>) {
                 }
             }
         }
-        val response: StreamObserver<MTAQueuedNotification> = stub.getEmails(fromServerStreamObserver)!!
+        val response: StreamObserver<MTAQueuedNotification> = stub.getEmails(fromServerStreamObserver)
         responseHolder.set(response)
         Thread.sleep(100000000L)
     } catch (e: Exception) {
