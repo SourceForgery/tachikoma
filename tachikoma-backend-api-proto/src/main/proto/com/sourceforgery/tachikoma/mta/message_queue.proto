@@ -4,23 +4,20 @@ option java_multiple_files = true;
 
 package com.sourceforgery.tachikoma.mta;
 
-import "google/protobuf/empty.proto";
-
-
 service MTAEmailQueue {
     // The postfix mailer daemon will hang waiting for emails via this stream
     // Once the postfix mailer daemon gets an email, it will start
     // looping out all the recipients. All results will be sent as a request stream here
-    rpc getEmails(stream MTAQueuedNotification) returns (stream EmailMessage);
+    rpc getEmails (stream MTAQueuedNotification) returns (stream EmailMessage);
 
     // This is for mails coming from external mail servers
-    rpc incomingEmail(IncomingEmailMessage) returns (google.protobuf.Empty);
+    rpc incomingEmail (IncomingEmailMessage) returns (MailAcceptanceResult);
 }
 
 message EmailMessage {
     string emailAddress = 101;
     string from = 102;
-    sint64 emailId  = 103;
+    sint64 emailId = 103;
 
     string body = 201;
 }
@@ -36,4 +33,13 @@ message MTAQueuedNotification {
     bool success = 102;
     string recipientEmailAddress = 103;
     sint64 emailId = 104;
+}
+
+message MailAcceptanceResult {
+    enum AcceptanceStatus {
+        ACCEPTED = 0;
+        REJECTED = 1;
+        IGNORED = 2;
+    }
+    AcceptanceStatus acceptanceStatus = 101;
 }

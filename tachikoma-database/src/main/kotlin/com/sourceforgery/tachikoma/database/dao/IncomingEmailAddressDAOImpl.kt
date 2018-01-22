@@ -13,6 +13,6 @@ private constructor(
     override fun getByEmail(email: Email) =
             ebeanServer.find(IncomingEmailAddressDBO::class.java)
                     .where()
-                    .eq("receiverEmail", email.address)
+                    .eq("email", email.address)
                     .findOne()
 }

@@ -14,7 +14,7 @@ service MailDeliveryService {
     // Failures can only be detected via DeliveryNotificationService.notificationStream()
     rpc sendEmail (OutgoingEmail) returns (stream EmailQueueStatus);
 
-    rpc getIncomingEmails(google.protobuf.Empty) returns (IncomingEmail);
+    rpc getIncomingEmails(google.protobuf.Empty) returns (stream IncomingEmail);
 }
 
 // A recipient
