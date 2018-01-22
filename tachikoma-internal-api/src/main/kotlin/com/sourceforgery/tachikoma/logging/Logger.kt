@@ -17,7 +17,6 @@
 package com.sourceforgery.tachikoma.logging
 
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import org.apache.logging.log4j.Marker
 import org.apache.logging.log4j.spi.ExtendedLogger
 import org.apache.logging.log4j.util.MessageSupplier
@@ -53,7 +52,7 @@ import kotlin.reflect.full.companionObject
  * One known limitation of the Kotlin logging API is that location aware logging does not work
  */
 @Suppress("NOTHING_TO_INLINE", "OVERRIDE_BY_INLINE", "UNUSED")
-class FunctionalLogger(val log: ExtendedLogger) : Logger by log {
+class FunctionalLogger(val log: ExtendedLogger) : ExtendedLogger by log {
     companion object {
         inline fun <T : Any?> (() -> T).asLog4jSupplier(): Supplier<T> = Supplier { invoke() }
     }
