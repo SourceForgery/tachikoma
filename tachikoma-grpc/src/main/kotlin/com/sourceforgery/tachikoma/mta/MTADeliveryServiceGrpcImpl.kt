@@ -14,6 +14,7 @@ private constructor(
     override fun setDeliveryStatus(request: DeliveryNotification, responseObserver: StreamObserver<Empty>) {
         return try {
             mtaDeliveryNotifications.setDeliveryStatus(request)
+            responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
