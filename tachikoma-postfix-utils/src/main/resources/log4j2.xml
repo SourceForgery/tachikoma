@@ -22,5 +22,6 @@
             <AppenderRef ref="StdOut" />
             <AppenderRef ref="RollingFile" />
         </Root>
+        <!-- <Logger name="smtp.incoming.debug" level="trace" />-->
     </Loggers>
 </Configuration>

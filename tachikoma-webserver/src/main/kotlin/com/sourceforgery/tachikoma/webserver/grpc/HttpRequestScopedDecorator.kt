@@ -43,7 +43,8 @@ private constructor(
                             .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
                             .value = ctx
                     delegate.serve(ctx, req)
-                })
+                }
+        )
     }
 
     companion object {

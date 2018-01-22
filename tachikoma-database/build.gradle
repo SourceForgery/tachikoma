@@ -10,7 +10,6 @@ dependencies {
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
 
     testCompile "com.h2database:h2:${h2_version}"
-    testCompile "org.avaje.composite:composite-testing:3.1"
     testCompile "org.apache.logging.log4j:log4j-core:$log4j2_version"
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:$log4j2_version"
 }

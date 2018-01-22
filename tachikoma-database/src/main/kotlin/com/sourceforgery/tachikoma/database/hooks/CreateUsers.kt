@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.hooks
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
+import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
@@ -17,12 +18,22 @@ private constructor(
 ) : EbeanHook() {
     override fun postStart(ebeanServer: EbeanServer) {
         if (databaseConfig.wipeAndCreateDatabase) {
-            val account = AccountDBO(MailDomain("example.net"))
+            val account = AccountDBO(MAIL_DOMAIN)
             ebeanServer.save(account)
-            mqManager.setupAccount(account.mailDomain)
+            mqManager.setupAccount(MAIL_DOMAIN)
             createBackendAuthentication(ebeanServer, account)
             createFrontendAuthentication(ebeanServer, account)
+            createIncomingEmail(ebeanServer, account)
         }
+    }
+
+    private fun createIncomingEmail(ebeanServer: EbeanServer, account: AccountDBO) {
+        val incomingAddress = IncomingEmailAddressDBO(
+                localPart = null,
+                mailDomain = MAIL_DOMAIN,
+                account = account
+        )
+        ebeanServer.save(incomingAddress)
     }
 
     private fun createFrontendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
@@ -45,5 +56,9 @@ private constructor(
                 account = account
         )
         ebeanServer.save(backendAuthentication)
+    }
+
+    companion object {
+        val MAIL_DOMAIN = MailDomain("example.net")
     }
 }

@@ -8,7 +8,7 @@ interface EmailDAO {
     fun fetchEmailData(emailMessageId: EmailId): EmailDBO?
     fun fetchEmailData(emailMessageIds: List<EmailId>): List<EmailDBO>
     fun save(emailDBO: EmailDBO)
-    fun updateMTAQueueStatus(emailId: EmailId, queueId: String)
+    fun getByEmailId(emailId: EmailId): EmailDBO?
     fun getByMessageId(messageId: MessageId): EmailDBO?
     fun getByQueueId(queueId: String): EmailDBO?
 }

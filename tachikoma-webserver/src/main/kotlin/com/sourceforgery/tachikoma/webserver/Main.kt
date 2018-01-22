@@ -1,9 +1,12 @@
 package com.sourceforgery.tachikoma.webserver
 
 import com.linecorp.armeria.common.HttpMethod
+import com.linecorp.armeria.common.HttpRequest
+import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.ServerBuilder
+import com.linecorp.armeria.server.Service
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
 import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
@@ -44,7 +47,7 @@ fun main(vararg args: String) {
             MessageQueue::class.java,
             EbeanServer::class.java
     )
-            // Yes, parallal stream is broken by design, but here it should work
+            // Yes, parallel stream is broken by design, but here it should work
             .parallelStream()
             .forEach({ serviceLocator.getService(it) })
 
@@ -61,8 +64,10 @@ fun main(vararg args: String) {
     val serverBuilder = ServerBuilder()
             .serviceUnder("/health", healthService)
     val exceptionHandler = serviceLocator.getService(RestExceptionHandlerFunction::class.java)
+
+    val restDecoratorFunction = Function<Service<HttpRequest, HttpResponse>, Service<HttpRequest, HttpResponse>> { it.decorate(requestScoped) }
     for (restService in serviceLocator.getAllServices(RestService::class.java)) {
-        serverBuilder.annotatedService("/", restService, exceptionHandler)
+        serverBuilder.annotatedService("/", restService, restDecoratorFunction, exceptionHandler)
     }
 
     val exceptionInterceptor = serviceLocator.getService(GrpcExceptionInterceptor::class.java)

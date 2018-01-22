@@ -67,18 +67,36 @@ private constructor(
             override fun onNext(value: MTAQueuedNotification) {
                 val queueId = value.queueId
                 val emailId = EmailId(value.emailId)
-                // TODO do something with value.success
+                val email = emailDAO.getByEmailId(emailId)
+                if (email == null) {
+                    LOGGER.warn { "Didn't find id for email with emailId: $emailId" }
+                    return
+                }
+
                 if (value.success) {
-                    emailDAO.updateMTAQueueStatus(emailId, queueId)
+                    LOGGER.debug { "Successfully delivered email with id $emailId" }
+                    email.mtaQueueId = queueId
+                    emailDAO.save(email)
+
+                    val statusDBO = EmailStatusEventDBO(
+                            email = email,
+                            emailStatus = EmailStatus.QUEUED
+                    )
+                    emailStatusEventDAO.save(statusDBO)
                 } else {
-                    TODO("We failed for message ${value.emailId}")
+                    val statusDBO = EmailStatusEventDBO(
+                            email = email,
+                            emailStatus = EmailStatus.HARD_BOUNCED
+                    )
+                    emailStatusEventDAO.save(statusDBO)
+
+                    LOGGER.info { "Wasn't able to deliver message with emailId emailId: $emailId" }
                 }
             }
 
             override fun onError(t: Throwable) {
-                t.printStackTrace()
+                LOGGER.error(t, { "Error in MTAEmailQueueService" })
                 future.cancel(true)
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
         }
     }
@@ -103,9 +121,9 @@ private constructor(
             val incomingEmailDBO = IncomingEmailDBO(
                     body = body,
                     fromEmail = fromEmail,
-                    fromName = fromAddress.personal,
+                    fromName = fromAddress.personal ?: "",
                     receiverEmail = recipientEmail,
-                    receiverName = receiverAddress.personal,
+                    receiverName = receiverAddress.personal ?: "",
                     accountDBO = accountDBO,
                     subject = mimeMessage.subject
             )
@@ -167,7 +185,7 @@ private constructor(
 
     companion object {
         private val LOGGER = logger()
-        private val responseCloser = Executors.newCachedThreadPool()
+        private val responseCloser = Executors.newCachedThreadPool()!!
     }
 }
 
