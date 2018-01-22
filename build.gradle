@@ -5,7 +5,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:3.0.0"
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
-        classpath "gradle.plugin.org.jmailen.gradle:kotlinter-gradle:1.6.0"
+        classpath "gradle.plugin.org.jmailen.gradle:kotlinter-gradle:1.7.0"
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
 
     }
@@ -66,6 +66,9 @@ subprojects {
         apply plugin: "org.jmailen.kotlinter"
         apply plugin: 'org.junit.platform.gradle.plugin'
 
+        kapt {
+            useBuildCache = true
+        }
 
         kotlinOptions {
             languageVersion = "1.2"
