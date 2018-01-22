@@ -23,13 +23,8 @@ private constructor(
 
     override fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
 
-    override fun updateMTAQueueStatus(emailId: EmailId, queueId: String) {
-        ebeanServer.update(EmailDBO::class.java)
-                .set("mtaQueueId", queueId)
-                .where()
-                .eq("dbId", emailId.emailId)
-                .update()
-    }
+    override fun getByEmailId(emailId: EmailId) =
+            ebeanServer.find(EmailDBO::class.java, emailId.emailId)
 
     override fun getByMessageId(messageId: MessageId): EmailDBO? {
         return ebeanServer.find(EmailDBO::class.java)
