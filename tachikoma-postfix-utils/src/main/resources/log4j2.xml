@@ -2,6 +2,7 @@
 <Configuration monitorInterval="30">
     <Properties>
         <Property name="pattern">%d{ISO8601} %-5p - [%t] %-26.26c{1} - %X{tag} - %m\n</Property>
+        <Property name="name">postfix-utils</Property>
     </Properties>
     <Appenders>
         <Console name="StdOut" target="SYSTEM_OUT">
