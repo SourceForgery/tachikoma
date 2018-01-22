@@ -72,6 +72,7 @@ class MailSender(
         } catch (e: Exception) {
             LOGGER.error("", e)
             return MTAQueuedNotification.newBuilder()
+                    .setEmailId(value.emailId)
                     .setSuccess(false)
                     .build()
         }
