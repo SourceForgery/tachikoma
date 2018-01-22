@@ -103,9 +103,9 @@ private constructor(
             val incomingEmailDBO = IncomingEmailDBO(
                     body = body,
                     fromEmail = fromEmail,
-                    fromName = fromAddress.personal,
+                    fromName = fromAddress.personal ?: "",
                     receiverEmail = recipientEmail,
-                    receiverName = receiverAddress.personal,
+                    receiverName = receiverAddress.personal ?: "",
                     accountDBO = accountDBO,
                     subject = mimeMessage.subject
             )

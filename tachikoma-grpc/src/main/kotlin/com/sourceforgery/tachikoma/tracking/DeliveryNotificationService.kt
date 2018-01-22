@@ -35,7 +35,7 @@ private constructor(
                 notificationBuilder.emailTransactionId = emailData.transaction.id.toGrpcInternal()
                 notificationBuilder.timestamp = it.creationTimestamp
                 @Suppress("UNUSED_VARIABLE")
-                val ignored = when (it.notificationDataCase!!) {
+                val ignored = when (it.notificationDataCase) {
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGECLICKED -> {
                         notificationBuilder.clickedEvent = ClickedEvent.newBuilder().setIpAddress(it.messageClicked.ipAdress).build()
                     }
@@ -55,6 +55,7 @@ private constructor(
                         // Skipping obviously bad message
                         throw RuntimeException("Message without event. Just wrong.")
                     }
+                    null -> throw NullPointerException()
                 }
                 responseObserver.onNext(notificationBuilder.build())
             }
