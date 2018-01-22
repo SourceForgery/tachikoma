@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.database.hooks
 
-import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
