@@ -38,8 +38,6 @@ private constructor(
         private val incomingEmailAddressDAO: IncomingEmailAddressDAO,
         private val authentication: Authentication
 ) {
-    private val responseCloser = Executors.newCachedThreadPool()
-
     fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
         LOGGER.info { "MTA connected" }
         val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
@@ -85,22 +83,31 @@ private constructor(
         }
     }
 
-    fun incomingEmail(request: IncomingEmailMessage) {
+    fun incomingEmail(request: IncomingEmailMessage): MailAcceptanceResult.AcceptanceStatus {
         val body = request.body.toByteArray()
-        val fromEmail = Email(InternetAddress(request.from).address)
         val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), body.inputStream())
-        val recipientEmail = Email(InternetAddress(request.emailAddress).address)
+        val receiverAddress = InternetAddress(request.emailAddress)
+        val recipientEmail = Email(receiverAddress.address)
         val accountTypePair = handleUnsubscribe(recipientEmail, mimeMessage)
                 ?: handleHardBounce(recipientEmail)
                 ?: handleNormalEmails(recipientEmail)
 
-        if (accountTypePair != null) {
+        // <> from address means bounce
+        if (request.from == "<>") {
+            LOGGER.warn { "Received bounce to $recipientEmail" }
+            return MailAcceptanceResult.AcceptanceStatus.IGNORED
+        } else if (accountTypePair != null) {
+            val fromAddress = InternetAddress(request.from)
+            val fromEmail = Email(fromAddress.address)
             val accountDBO = accountTypePair.first
             val incomingEmailDBO = IncomingEmailDBO(
                     body = body,
                     fromEmail = fromEmail,
+                    fromName = fromAddress.personal,
                     receiverEmail = recipientEmail,
-                    accountDBO = accountDBO
+                    receiverName = receiverAddress.personal,
+                    accountDBO = accountDBO,
+                    subject = mimeMessage.subject
             )
             incomingEmailDAO.save(incomingEmailDBO)
             if (accountTypePair.second == IncomingEmailType.NORMAL) {
@@ -109,8 +116,9 @@ private constructor(
                         .build()
                 mqSender.queueIncomingEmailNotification(accountDBO.id, notificationMessage)
             }
+            return MailAcceptanceResult.AcceptanceStatus.ACCEPTED
         } else {
-            TODO("Return bad result!")
+            return MailAcceptanceResult.AcceptanceStatus.REJECTED
         }
     }
 
@@ -158,7 +166,8 @@ private constructor(
     }
 
     companion object {
-        val LOGGER = logger()
+        private val LOGGER = logger()
+        private val responseCloser = Executors.newCachedThreadPool()
     }
 }
 

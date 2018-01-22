@@ -2,18 +2,16 @@
 
 package com.sourceforgery.tachikoma.syslog
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.DeliveryNotification
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpc
 import io.grpc.Channel
-import io.grpc.stub.StreamObserver
 import java.io.File
 import java.io.RandomAccessFile
 
 class Syslogger(grpcChannel: Channel) {
 
-    private val stub = MTADeliveryNotificationsGrpc.newStub(grpcChannel)
+    private val stub = MTADeliveryNotificationsGrpc.newBlockingStub(grpcChannel)
 
     fun blockingSniffer() {
         LOGGER.info("Started logging")
@@ -37,7 +35,8 @@ class Syslogger(grpcChannel: Channel) {
                                             .setStatus(dsn)
                                             .setOriginalRecipient(originalRecipient)
                                             .build()
-                                    stub.setDeliveryStatus(notification, nullObserver)
+                                    stub.setDeliveryStatus(notification)
+                                    ""
                                 }
                             }
                         }
@@ -68,19 +67,5 @@ class Syslogger(grpcChannel: Channel) {
 
     companion object {
         val LOGGER = logger()
-
-        private val nullObserver = object : StreamObserver<Empty> {
-            override fun onNext(value: Empty?) {
-                // Don't care
-            }
-
-            override fun onCompleted() {
-                // Don't care
-            }
-
-            override fun onError(t: Throwable?) {
-                LOGGER.warn("Exception sending setDeliveryStatus", t)
-            }
-        }
     }
 }

@@ -18,7 +18,6 @@ private constructor(
     override fun getIncomingEmails(request: Empty?, responseObserver: StreamObserver<IncomingEmail>) {
         try {
             mailDeliveryService.getIncomingEmails(responseObserver)
-            responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }
