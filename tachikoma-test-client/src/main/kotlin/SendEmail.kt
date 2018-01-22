@@ -65,12 +65,12 @@ fun main(args: Array<String>) {
             .setStatic(
                     StaticBody.newBuilder()
                             .setHtmlBody(mailBody)
-                            .setSubject("Test email " + Instant.now())
+                            .setSubject("Test email öåäöäåöäåöåäöäå 日本." + Instant.now())
             )
             .addRecipients(EmailRecipient.newBuilder()
                     .setNamedEmail(
                             NamedEmail.newBuilder()
-                                    .setEmail("test@example.com")
+                                    .setEmail("kjdsfljkhsdf@example.net")
                                     .setName("This won't work")
                     )
             )
