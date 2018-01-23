@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.database.objects
 
+import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.ebean.annotation.Encrypted
 import io.ebean.common.BeanList
@@ -23,7 +24,10 @@ class AuthenticationDBO(
         val backend: Boolean = false,
 
         @ManyToOne
-        val account: AccountDBO
+        val account: AccountDBO,
+
+        @Column
+        var recipientOverride: Email? = null
 ) : GenericDBO() {
     val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
 

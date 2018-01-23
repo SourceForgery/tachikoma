@@ -15,8 +15,6 @@ class AccountDBO(
         val mailDomain: MailDomain
 ) : GenericDBO() {
     @OneToMany
-    val allowedSendingEmails: List<AllowedSendingEmailDBO> = BeanList()
-    @OneToMany
     val authentications: List<AuthenticationDBO> = BeanList()
     @OneToMany
     val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
