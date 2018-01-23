@@ -22,8 +22,6 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     addFile(file('src/assets/'))
 
-    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
-
     addFile {
         configurations.binaries.filter {
             it.path.endsWith(".tar")
@@ -39,6 +37,7 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand("chmod a+x /opt/tachikoma-webserver/bin/tachikoma-webserver")
 
+    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 }
 
 assemble.dependsOn webserverDocker
