@@ -22,7 +22,9 @@ import java.util.HashMap
 import javax.inject.Inject
 import javax.sql.DataSource
 
-internal class EbeanServerFactory @Inject constructor(
+internal class EbeanServerFactory
+@Inject
+private constructor(
         private val databaseConfig: DatabaseConfig,
         private val counter: InvokeCounter,
         private val dbObjectMapper: DBObjectMapper,
@@ -38,13 +40,11 @@ internal class EbeanServerFactory @Inject constructor(
                     } else if (originalDataSource is DataSourcePool) {
                         LoggingDataSourcePool(
                                 originalDataSourcePool = originalDataSource,
-                                sandbox = databaseConfig.timeDatabaseQueries,
                                 counter = counter
                         )
                     } else {
                         LoggingDataSource(
                                 originalDataSource = originalDataSource,
-                                sandbox = databaseConfig.timeDatabaseQueries,
                                 counter = counter
                         )
                     }

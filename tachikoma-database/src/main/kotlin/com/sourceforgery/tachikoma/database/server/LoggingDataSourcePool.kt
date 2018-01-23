@@ -6,11 +6,9 @@ import org.avaje.datasource.PoolStatus
 
 internal class LoggingDataSourcePool(
         private val originalDataSourcePool: DataSourcePool,
-        sandbox: Boolean,
         counter: InvokeCounter
 ) : LoggingDataSource(
         originalDataSource = originalDataSourcePool,
-        sandbox = sandbox,
         counter = counter
 ), DataSourcePool {
 

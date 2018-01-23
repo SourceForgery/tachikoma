@@ -11,7 +11,7 @@ class LogEverything
 private constructor(
 ) : InvokeCounter {
 
-    var slowThreshold = Duration.ofSeconds(1)
+    var slowThreshold = Duration.ofSeconds(1)!!
     val mapper by lazy(LazyThreadSafetyMode.NONE) {
         ObjectMapper()
     }
