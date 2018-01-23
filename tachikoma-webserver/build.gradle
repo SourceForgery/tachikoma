@@ -14,15 +14,4 @@ dependencies {
 
 mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
 
-task fatJar(type: Jar) {
-    manifest {
-        attributes 'Implementation-Title': 'Tachikoma ESP Webserver',
-                'Implementation-Version': version,
-                'Main-Class': mainClassName
-    }
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
-}
-
-assemble.dependsOn fatJar
+distZip.enabled = false
