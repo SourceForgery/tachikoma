@@ -1,0 +1,43 @@
+apply plugin: 'base'
+apply plugin: 'docker'
+
+configurations {
+    binaries
+}
+
+dependencies {
+    binaries project(path: ":tachikoma-webserver", configuration: 'archives')
+}
+
+task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
+    applicationName = 'tachikoma-webserver'
+
+    baseImage 'ubuntu:xenial'
+
+    maintainer 'tachikoma@sourceforgery.com'
+
+    setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
+
+    runCommand('apt-get update && apt-get -y --no-install-recommends install inetutils-syslogd less nvi supervisor openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
+
+    addFile(file('src/assets/'))
+
+    addFile {
+        configurations.binaries.filter {
+            it.path.endsWith(".tar")
+        }
+        .each {
+            from(tarTree(it))
+            includeEmptyDirs = false
+            eachFile { FileCopyDetails fileCopyDetails ->
+                fileCopyDetails.path = fileCopyDetails.path.replaceAll("^[^/]*", "/opt/tachikoma-webserver")
+            }
+        }
+    }
+
+    runCommand("chmod a+x /opt/tachikoma-webserver/bin/tachikoma-webserver")
+
+    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
+}
+
+assemble.dependsOn webserverDocker
