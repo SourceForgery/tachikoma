@@ -106,6 +106,7 @@ subprojects {
         project.group = "sourceforgery"
 
         def currentBranch = grgit.branch.current.name
+        System.err.println("Current branch is: $currentBranch")
         if (currentBranch == "master" && Boolean.valueOf(System.getenv("DOCKER_PUSH"))) {
             push = true
         }
