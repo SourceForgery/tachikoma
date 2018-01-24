@@ -47,8 +47,8 @@ class OutgoingEmailsMessageQueue(
 }
 
 class DeliveryNotificationMessageQueue(
-        override val maxLength: Int? = null,
-        authenticationId: AuthenticationId
+        authenticationId: AuthenticationId,
+        override val maxLength: Int? = null
 ) : MessageQueue<DeliveryNotificationMessage> {
     override val name = "deliverynotifications.$authenticationId"
     override val delay: Duration = Duration.ZERO

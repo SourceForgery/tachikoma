@@ -157,7 +157,7 @@ private constructor(
     }
 
     override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
-        val queue = DeliveryNotificationMessageQueue(authenticationId = authenticationId)
+        val queue = DeliveryNotificationMessageQueue(authenticationId)
         return listenOnQueue(queue, callback)
     }
 
