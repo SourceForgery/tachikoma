@@ -361,9 +361,8 @@ private constructor(
 
     fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>) {
         authentication.requireFrontend()
-        val mailDomain = authentication.mailDomain
-        val future = mqSequenceFactory.listenForOutgoingEmails(mailDomain, {
-            val incomingEmailId = IncomingEmailId(it.emailId)
+        val future = mqSequenceFactory.listenForIncomingEmails(authentication.authenticationId, {
+            val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
             val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId)
             if (email != null) {
                 val incomingEmail = IncomingEmail.newBuilder()

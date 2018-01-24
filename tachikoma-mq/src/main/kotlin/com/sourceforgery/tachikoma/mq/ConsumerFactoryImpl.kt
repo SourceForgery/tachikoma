@@ -165,6 +165,10 @@ private constructor(
         return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
     }
 
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+        return listenOnQueue(IncomingEmailNotificationMessageQueue(authenticationId), callback)
+    }
+
     override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(JobMessageQueue.JOBS, { it ->
             val messageQueue = getRequeueQueueByRequestedExecutionTime(it)

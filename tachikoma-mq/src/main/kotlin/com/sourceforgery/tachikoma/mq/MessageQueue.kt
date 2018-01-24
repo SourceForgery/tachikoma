@@ -61,13 +61,13 @@ class DeliveryNotificationMessageQueue(
 }
 
 class IncomingEmailNotificationMessageQueue(
-        override val maxLength: Int? = null,
-        authenticationId: AuthenticationId
-) : MessageQueue<DeliveryNotificationMessage> {
+        authenticationId: AuthenticationId,
+        override val maxLength: Int? = null
+) : MessageQueue<IncomingEmailNotificationMessage> {
     override val name = "incomingemail.$authenticationId"
     override val delay: Duration = Duration.ZERO
-    override val nextDestination: MessageQueue<DeliveryNotificationMessage>? = null
-    override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
+    override val nextDestination: MessageQueue<IncomingEmailNotificationMessage>? = null
+    override val parser: (ByteArray) -> IncomingEmailNotificationMessage = IncomingEmailNotificationMessage::parseFrom
 
     init {
         assert((delay == Duration.ZERO) == (nextDestination == null))
