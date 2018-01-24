@@ -64,17 +64,12 @@ private constructor(
             private val threadName: String
     ) : Thread(runnable, threadName) {
 
-        @Synchronized override fun start() {
+        @Synchronized
+        override fun start() {
             if (threadName == name) {
                 LOGGER.info { "Starting thread: " + name }
             }
             super.start()
-        }
-
-        override fun run() {
-            hK2RequestContext.runInScope {
-                super.run()
-            }
         }
     }
 
