@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.config
 
 import com.sun.xml.internal.ws.spi.db.BindingContextFactory.LOGGER
+import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -44,6 +45,17 @@ internal fun readConfig(configKey: String, default: Boolean) =
 
 internal fun readConfig(configKey: String, default: String) =
         readConfig(configKey, default, String::class.java)
+
+private const val REALLY_BAD_KEY = "really_really_poor_dev_encryption_key"
+
+internal fun readEncryptionConfig(configKey: String) =
+        readConfig(configKey, REALLY_BAD_KEY)
+                .also {
+                    if (it == REALLY_BAD_KEY) {
+                        LogManager.getLogger("change_dev_key")
+                                .error("You're using a DEV key for $configKey. Do NOT use in production!!")
+                    }
+                }
 
 internal fun readConfig(configKey: String, default: Int) =
         readConfig(configKey, default.toString(), Int::class.java)
