@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.mta
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -15,10 +16,14 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.logging.logger
+import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.IncomingEmailNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
+import com.sourceforgery.tachikoma.mq.MessageHardBounced
+import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
 import io.grpc.stub.StreamObserver
+import java.time.Clock
 import java.util.Properties
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -29,6 +34,7 @@ import javax.mail.internet.MimeMessage
 internal class MTAEmailQueueService
 @Inject
 private constructor(
+        private val clock: Clock,
         private val mqSequenceFactory: MQSequenceFactory,
         private val emailDAO: EmailDAO,
         private val incomingEmailDAO: IncomingEmailDAO,
@@ -158,6 +164,13 @@ private constructor(
                         )
                         emailStatusEventDAO.save(emailStatusEventDBO)
                         blockedEmailDAO.block(emailStatusEventDBO)
+                        val notificationMessage = DeliveryNotificationMessage
+                                .newBuilder()
+                                .setCreationTimestamp(clock.instant().toTimestamp())
+                                .setEmailMessageId(email.id.emailId)
+                                .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
+                                .build()
+                        mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
                         email.transaction.authentication.account to IncomingEmailType.HARD_BOUNCE
                     }
         } else {
@@ -176,6 +189,13 @@ private constructor(
                         )
                         emailStatusEventDAO.save(emailStatusEventDBO)
                         blockedEmailDAO.block(emailStatusEventDBO)
+                        val notificationMessage = DeliveryNotificationMessage
+                                .newBuilder()
+                                .setCreationTimestamp(clock.instant().toTimestamp())
+                                .setEmailMessageId(email.id.emailId)
+                                .setMessageUnsubscribed(MessageUnsubscribed.getDefaultInstance())
+                                .build()
+                        mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
                         email.transaction.authentication.account to IncomingEmailType.UNSUBSCRIBE
                     }
         } else {

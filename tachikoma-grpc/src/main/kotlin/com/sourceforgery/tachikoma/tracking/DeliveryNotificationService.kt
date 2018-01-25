@@ -9,6 +9,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.tracking.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.OpenedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.SoftBouncedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.tracking.UnsubscribedEvent
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.logging.logger
@@ -50,6 +51,9 @@ private constructor(
                     }
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGESOFTBOUNCED -> {
                         notificationBuilder.softBouncedEvent = SoftBouncedEvent.getDefaultInstance()
+                    }
+                    DeliveryNotificationMessage.NotificationDataCase.MESSAGEUNSUBSCRIBED -> {
+                        notificationBuilder.unsubscribedEvent = UnsubscribedEvent.getDefaultInstance()
                     }
                     DeliveryNotificationMessage.NotificationDataCase.NOTIFICATIONDATA_NOT_SET -> {
                         // Skipping obviously bad message
