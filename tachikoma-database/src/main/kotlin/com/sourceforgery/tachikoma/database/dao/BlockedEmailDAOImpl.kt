@@ -43,6 +43,12 @@ private constructor(
                 .delete()
     }
 
+    override fun getBlockedEmails(): List<BlockedEmailDBO> {
+        return ebeanServer
+                .find(BlockedEmailDBO::class.java)
+                .findList()
+    }
+
     private fun toBlockedReason(emailStatus: EmailStatus): BlockedReason {
         return when (emailStatus) {
             EmailStatus.UNSUBSCRIBE -> BlockedReason.UNSUBSCRIBED

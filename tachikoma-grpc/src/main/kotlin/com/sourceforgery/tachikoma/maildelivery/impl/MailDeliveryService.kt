@@ -27,6 +27,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
+import com.sourceforgery.tachikoma.grpc.frontend.toGrpcRejectReason
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
@@ -111,7 +112,7 @@ private constructor(
                             responseObserver.onNext(
                                     EmailQueueStatus.newBuilder()
                                             .setRejected(Rejected.newBuilder()
-                                                    .setRejectReason(blockedReason.toGrpc())
+                                                    .setRejectReason(blockedReason.toGrpcRejectReason())
                                                     .build()
                                             )
                                             .setTransactionId(transaction.id.toGrpcInternal())

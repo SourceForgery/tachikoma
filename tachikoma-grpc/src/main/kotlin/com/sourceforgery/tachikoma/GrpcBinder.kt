@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma
 
+import com.sourceforgery.tachikoma.blockedemail.BlockedEmailServiceGrpcImpl
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryServiceGrpcImpl
@@ -38,6 +39,9 @@ class GrpcBinder : AbstractBinder() {
                 .to(BindableService::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(MailDeliveryServiceGrpcImpl::class.java)
+                .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(BlockedEmailServiceGrpcImpl::class.java)
                 .to(BindableService::class.java)
                 .`in`(Singleton::class.java)
 

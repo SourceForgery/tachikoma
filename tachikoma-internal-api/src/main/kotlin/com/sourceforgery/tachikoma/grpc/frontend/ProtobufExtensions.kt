@@ -64,7 +64,15 @@ fun String.emptyToNull() =
             this
         }
 
-fun BlockedReason.toGrpc(): Rejected.RejectReason {
+fun BlockedReason.toGrpc(): com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason {
+    return when (this) {
+        BlockedReason.UNSUBSCRIBED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.UNSUBSCRIBED
+        BlockedReason.SPAM_MARKED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.SPAM_MARKED
+        BlockedReason.HARD_BOUNCED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.HARD_BOUNCED
+    }
+}
+
+fun BlockedReason.toGrpcRejectReason(): Rejected.RejectReason {
     return when (this) {
         BlockedReason.UNSUBSCRIBED -> Rejected.RejectReason.UNSUBSCRIBED
         BlockedReason.SPAM_MARKED -> Rejected.RejectReason.SPAM_MARKED
