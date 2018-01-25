@@ -37,7 +37,7 @@ class Hk2TestBinder : AbstractBinder() {
             override val databaseEncryptionKey = "asdadsadsadsadasdadasdasdadasasd"
             override val sqlUrl = URI.create("h2://sa@mem/tests-${UUID.randomUUID()}")
             override val timeDatabaseQueries = false
-            override val wipeAndCreateDatabase = false
+            override val wipeBeforeCreateDatabase = false
             override val createDatabase = true
         })
                 .to(DatabaseConfig::class.java)

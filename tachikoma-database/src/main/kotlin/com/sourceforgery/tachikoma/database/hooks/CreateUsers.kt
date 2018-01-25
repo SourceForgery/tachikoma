@@ -26,7 +26,6 @@ private constructor(
                     .eq("mailDomain", MAIL_DOMAIN)
                     .findOne()
             ?: let {
-
                 val account = AccountDBO(MAIL_DOMAIN)
                 LOGGER.error { "Creating new account and authentications for $MAIL_DOMAIN" }
                 ebeanServer.save(account)

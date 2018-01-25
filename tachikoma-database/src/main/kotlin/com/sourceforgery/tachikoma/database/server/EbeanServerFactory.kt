@@ -111,7 +111,7 @@ private constructor(
             else -> throw IllegalArgumentException("Don't know anything about the database ${databaseConfig.sqlUrl.scheme}.")
         }
         if (databaseConfig.createDatabase) {
-            serverConfig.isDdlCreateOnly = !databaseConfig.wipeAndCreateDatabase
+            serverConfig.isDdlCreateOnly = !databaseConfig.wipeBeforeCreateDatabase
             serverConfig.isDdlGenerate = true
             serverConfig.isDdlRun = true
         }
