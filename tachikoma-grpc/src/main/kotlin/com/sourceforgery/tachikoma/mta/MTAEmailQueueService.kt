@@ -18,6 +18,7 @@ import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.IncomingEmailNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
+import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
 import java.util.Properties
 import java.util.concurrent.Executors
@@ -40,6 +41,7 @@ private constructor(
 ) {
     fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
         LOGGER.info { "MTA connected" }
+        val serverCallStreamObserver = responseObserver as ServerCallStreamObserver
         val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
             if (email == null) {
@@ -56,7 +58,9 @@ private constructor(
             }
         })
         future.addListener(Runnable {
-            responseObserver.onCompleted()
+            if (serverCallStreamObserver.isCancelled) {
+                responseObserver.onCompleted()
+            }
         }, responseCloser)
 
         return object : StreamObserver<MTAQueuedNotification> {
