@@ -64,17 +64,12 @@ private constructor(
             private val threadName: String
     ) : Thread(runnable, threadName) {
 
-        @Synchronized override fun start() {
+        @Synchronized
+        override fun start() {
             if (threadName == name) {
                 LOGGER.info { "Starting thread: " + name }
             }
             super.start()
-        }
-
-        override fun run() {
-            hK2RequestContext.runInScope {
-                super.run()
-            }
         }
     }
 
@@ -162,12 +157,16 @@ private constructor(
     }
 
     override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
-        val queue = DeliveryNotificationMessageQueue(authenticationId = authenticationId)
+        val queue = DeliveryNotificationMessageQueue(authenticationId)
         return listenOnQueue(queue, callback)
     }
 
     override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
+    }
+
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+        return listenOnQueue(IncomingEmailNotificationMessageQueue(authenticationId), callback)
     }
 
     override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
