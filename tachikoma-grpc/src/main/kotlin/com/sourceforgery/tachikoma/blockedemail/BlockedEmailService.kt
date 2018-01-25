@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.blockedemail
 
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.grpc.frontend.EmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedEmail
@@ -13,12 +14,14 @@ internal class BlockedEmailService
 @Inject
 private constructor(
         private val authentication: Authentication,
+        private val authenticationDAO: AuthenticationDAO,
         private val blockedEmailDAO: BlockedEmailDAO
 ) {
     fun getBlockedEmails(responseObserver: StreamObserver<BlockedEmails>) {
         authentication.requireFrontend()
+        val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
-        val blockedEmails = blockedEmailDAO.getBlockedEmails()
+        val blockedEmails = blockedEmailDAO.getBlockedEmails(authenticationDBO.account)
         val blockedEmailsBuilder = BlockedEmails.newBuilder()
 
         blockedEmails.forEach {

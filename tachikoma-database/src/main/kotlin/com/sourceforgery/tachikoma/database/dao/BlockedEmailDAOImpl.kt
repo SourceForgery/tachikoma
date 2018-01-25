@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.dao
 import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.BlockedEmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import io.ebean.EbeanServer
@@ -44,11 +45,12 @@ private constructor(
                 .delete()
     }
 
-    override fun getBlockedEmails(): List<BlockedEmailDBO> {
-        return ebeanServer
-                .find(BlockedEmailDBO::class.java)
-                .findList()
-    }
+    override fun getBlockedEmails(accountDBO: AccountDBO): List<BlockedEmailDBO> =
+            ebeanServer
+                    .find(BlockedEmailDBO::class.java)
+                    .where()
+                    .eq("account", accountDBO)
+                    .findList()
 
     private fun toBlockedReason(emailStatus: EmailStatus): BlockedReason {
         return when (emailStatus) {
