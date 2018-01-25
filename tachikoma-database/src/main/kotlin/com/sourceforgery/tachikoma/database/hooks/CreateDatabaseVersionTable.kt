@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma.database.hooks
 
+import io.ebean.migration.ddl.DdlRunner
+import java.nio.charset.StandardCharsets
 import java.sql.Connection
 
 class CreateDatabaseVersionTable : DatabaseUpgrade {
@@ -12,7 +14,11 @@ class CreateDatabaseVersionTable : DatabaseUpgrade {
                         if (resultset.next()) {
                             return resultset.getInt(1)
                         } else {
-                            it.executeUpdate("INSERT INTO database_version VALUES (-1)")
+                            val content = javaClass.getResourceAsStream("/create-all.sql").use {
+                                it.reader(StandardCharsets.UTF_8).readText()
+                            }
+                            DdlRunner(false, "create-all.sql")
+                                    .runAll(content, connection)
                             return -1
                         }
                     }

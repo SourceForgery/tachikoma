@@ -16,25 +16,23 @@ import javax.inject.Inject
 class CreateUsers
 @Inject
 private constructor(
-        private val databaseConfig: DatabaseConfig,
         private val mqManager: MQManager
 ) : EbeanHook() {
     override fun postStart(ebeanServer: EbeanServer) {
-        if (databaseConfig.createDatabase) {
-            ebeanServer.find(AccountDBO::class.java)
-                    .where()
-                    .eq("mailDomain", MAIL_DOMAIN)
-                    .findOne()
-            ?: let {
-                val account = AccountDBO(MAIL_DOMAIN)
-                LOGGER.error { "Creating new account and authentications for $MAIL_DOMAIN" }
-                ebeanServer.save(account)
-                mqManager.setupAccount(MAIL_DOMAIN)
-                createBackendAuthentication(ebeanServer, account)
-                createFrontendAuthentication(ebeanServer, account)
-                createIncomingEmail(ebeanServer, account)
-            }
-        }
+        ebeanServer
+                .find(AccountDBO::class.java)
+                .where()
+                .eq("mailDomain", MAIL_DOMAIN)
+                .findOne()
+                ?: also {
+                    val account = AccountDBO(MAIL_DOMAIN)
+                    LOGGER.error { "Creating new account and authentications for $MAIL_DOMAIN" }
+                    ebeanServer.save(account)
+                    mqManager.setupAccount(MAIL_DOMAIN)
+                    createBackendAuthentication(ebeanServer, account)
+                    createFrontendAuthentication(ebeanServer, account)
+                    createIncomingEmail(ebeanServer, account)
+                }
     }
 
     private fun createIncomingEmail(ebeanServer: EbeanServer, account: AccountDBO) {

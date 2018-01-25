@@ -36,8 +36,11 @@ private constructor(
 
     private inner class LoggingServerConfig : ServerConfig() {
         override fun setDataSource(originalDataSource: DataSource?) {
-            originalDataSource
-                    ?.also { upgradeDatabase(it) }
+            if (this.databasePlatform is PostgresPlatform) {
+                // Only do database upgrade on postgresql
+                originalDataSource
+                        ?.also { upgradeDatabase(it) }
+            }
             val loggingDataSource =
                     when (originalDataSource) {
                         null -> null
@@ -60,7 +63,7 @@ private constructor(
                 if (newVersion == 0) {
                     throw RuntimeException("Rank must be set on ${serviceHandle.activeDescriptor.implementationClass}")
                 }
-                if (newVersion > currentVersion) {
+                if (newVersion < currentVersion) {
                     dataSource.connection.use {
                         it.autoCommit = false
                         currentVersion = serviceHandle.service.run(it)
@@ -103,17 +106,21 @@ private constructor(
             "h2" -> {
                 dataSourceConfig.driver = "org.h2.Driver"
                 serverConfig.databasePlatform = H2Platform()
+                if (databaseConfig.createDatabase) {
+                    // Really only for tests
+                    serverConfig.isDdlCreateOnly = true
+                    serverConfig.isDdlGenerate = true
+                    serverConfig.isDdlRun = true
+                }
             }
             "postgres" -> {
                 dataSourceConfig.driver = "org.postgresql.Driver"
                 serverConfig.databasePlatform = PostgresPlatform()
+                serverConfig.isDdlGenerate = false
+                serverConfig.isDdlRun = false
+
             }
             else -> throw IllegalArgumentException("Don't know anything about the database ${databaseConfig.sqlUrl.scheme}.")
-        }
-        if (databaseConfig.createDatabase) {
-            serverConfig.isDdlCreateOnly = !databaseConfig.wipeBeforeCreateDatabase
-            serverConfig.isDdlGenerate = true
-            serverConfig.isDdlRun = true
         }
 
         return hK2RequestContext.runInScope {

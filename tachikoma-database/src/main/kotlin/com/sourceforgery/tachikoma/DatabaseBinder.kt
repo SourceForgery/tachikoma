@@ -68,6 +68,7 @@ class DatabaseBinder : AbstractBinder() {
 
     private fun bindDatabaseUpgrades() {
         // NEVER EVER change order or insert elements anywhere but at the end of this list!!
+        // These classes will be run in order before ebean starts
         val databaseUpgrades = listOf(
                 CreateDatabaseVersionTable::class.java
         )

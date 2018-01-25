@@ -6,6 +6,5 @@ interface DatabaseConfig {
     val databaseEncryptionKey: String
     val sqlUrl: URI
     val timeDatabaseQueries: Boolean
-    val wipeBeforeCreateDatabase: Boolean
     val createDatabase: Boolean
 }
