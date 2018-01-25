@@ -6,8 +6,10 @@ import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.MailDomain
+import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
+import org.apache.commons.lang3.RandomStringUtils
 import javax.inject.Inject
 
 class CreateUsers
@@ -47,9 +49,10 @@ private constructor(
     private fun createFrontendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
         val frontendAuthentication = AuthenticationDBO(
                 account = account,
-                apiToken = "Oufeing2ieth2aequie2ia2ahc3yoonaiw5iey5xifuxoo4tai"
+                apiToken = RandomStringUtils.randomAlphanumeric(40)
         )
         ebeanServer.save(frontendAuthentication)
+        LOGGER.error { "Creating new frontend api with login:password '$MAIL_DOMAIN:${frontendAuthentication.apiToken}'" }
         mqManager.setupAuthentication(
                 mailDomain = account.mailDomain,
                 authenticationId = frontendAuthentication.id,
@@ -59,14 +62,18 @@ private constructor(
 
     private fun createBackendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
         val backendAuthentication = AuthenticationDBO(
-                apiToken = "oodua5yai9Pah5ook3wah4hahqu4IeK0iung8ou5Cho4Doonee",
+                apiToken = RandomStringUtils.randomAlphanumeric(40),
                 backend = true,
                 account = account
         )
+        LOGGER.error { "Creating new backend api with login:password '$MAIL_DOMAIN:${backendAuthentication.apiToken}'" }
         ebeanServer.save(backendAuthentication)
     }
 
     companion object {
-        val MAIL_DOMAIN = MailDomain("example.net")
+        val LOGGER = logger()
+        val MAIL_DOMAIN = MailDomain(
+                System.getenv("MAIL_DOMAIN") ?: "example.net"
+        )
     }
 }
