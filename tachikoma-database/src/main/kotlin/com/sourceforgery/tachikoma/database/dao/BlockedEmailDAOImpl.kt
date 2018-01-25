@@ -29,7 +29,8 @@ private constructor(
             val blockedEmail = BlockedEmailDBO(
                     recipientEmail = recipient,
                     fromEmail = from,
-                    blockedReason = toBlockedReason(statusEvent.emailStatus)
+                    blockedReason = toBlockedReason(statusEvent.emailStatus),
+                    account = statusEvent.email.transaction.authentication.account
             )
             ebeanServer.save(blockedEmail)
         }

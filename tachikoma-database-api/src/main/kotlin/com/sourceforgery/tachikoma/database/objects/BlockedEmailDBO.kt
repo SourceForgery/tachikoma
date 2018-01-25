@@ -18,7 +18,9 @@ constructor(
         @Column
         val recipientEmail: Email,
         @Column
-        val blockedReason: BlockedReason
+        val blockedReason: BlockedReason,
+        @Column
+        val account: AccountDBO
 ) : GenericDBO()
 
 val BlockedEmailDBO.id: BlockedEmailId
