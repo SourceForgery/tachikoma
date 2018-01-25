@@ -14,7 +14,7 @@ service DeliveryNotificationService {
 
 message EmailNotification {
     EmailId emailId = 101;
-    Email recipientEmailAddress = 102;
+    EmailAddress recipientEmailAddress = 102;
     EmailTransactionId emailTransactionId = 103;
     google.protobuf.Timestamp timestamp = 104;
     oneof notification {

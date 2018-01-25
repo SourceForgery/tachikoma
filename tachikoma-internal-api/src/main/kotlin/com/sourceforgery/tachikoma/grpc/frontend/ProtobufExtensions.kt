@@ -9,21 +9,21 @@ import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 
 fun com.sourceforgery.tachikoma.common.Email.toGrpcInternal() =
-        Email.newBuilder().setEmail(address).build()
+        EmailAddress.newBuilder().setEmail(address).build()
 
-fun Email.toEmail() =
+fun EmailAddress.toEmail() =
         com.sourceforgery.tachikoma.common.Email(email)
 
 fun grpcEmailInternal(emailAddress: String) =
-        Email.newBuilder().setEmail(emailAddress).build()
+        EmailAddress.newBuilder().setEmail(emailAddress).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpcInternal() =
-        NamedEmail.newBuilder()
+        NamedEmailAddress.newBuilder()
                 .setEmail(address.address)
                 .setName(name)
                 .build()
 
-fun NamedEmail.toNamedEmail() =
+fun NamedEmailAddress.toNamedEmail() =
         com.sourceforgery.tachikoma.common.NamedEmail(com.sourceforgery.tachikoma.common.Email(email), name)
 
 fun EmailId.toGrpcInternal() =
@@ -84,4 +84,4 @@ fun com.sourceforgery.tachikoma.identifiers.IncomingEmailId.toGrpc() =
         IncomingEmailId.newBuilder().setId(incomingEmailId).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpc() =
-        NamedEmail.newBuilder().setEmail(address.address).setName(name).build()
+        NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()

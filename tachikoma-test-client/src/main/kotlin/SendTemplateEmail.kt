@@ -1,7 +1,7 @@
 import com.google.protobuf.Struct
 import com.google.protobuf.Value
 import com.google.protobuf.util.JsonFormat
-import com.sourceforgery.tachikoma.grpc.frontend.NamedEmail
+import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
@@ -66,12 +66,12 @@ fun main(args: Array<String>) {
             )
             .addRecipients(EmailRecipient.newBuilder()
                     .setNamedEmail(
-                            NamedEmail.newBuilder()
+                            NamedEmailAddress.newBuilder()
                                     .setEmail("test@example.com")
                                     .setName("This won't work")
                     )
             )
-            .setFrom(NamedEmail.newBuilder()
+            .setFrom(NamedEmailAddress.newBuilder()
                     .setEmail("test@example.com")
                     .setName("This won't work")
             )
