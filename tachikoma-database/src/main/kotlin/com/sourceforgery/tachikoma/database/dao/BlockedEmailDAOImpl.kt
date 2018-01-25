@@ -45,6 +45,16 @@ private constructor(
                 .delete()
     }
 
+    override fun unblock(accountDBO: AccountDBO, from: Email?, recipient: Email) {
+        ebeanServer
+                .find(BlockedEmailDBO::class.java)
+                .where()
+                .raw("fromEmail = ? IS NOT FALSE", from)
+                .eq("account", accountDBO)
+                .eq("recipientEmail", recipient)
+                .delete()
+    }
+
     override fun getBlockedEmails(accountDBO: AccountDBO): List<BlockedEmailDBO> =
             ebeanServer
                     .find(BlockedEmailDBO::class.java)

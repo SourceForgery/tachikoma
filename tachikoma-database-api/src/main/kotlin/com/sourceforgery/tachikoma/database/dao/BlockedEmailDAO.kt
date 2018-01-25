@@ -10,5 +10,6 @@ interface BlockedEmailDAO {
     fun getBlockedReason(from: Email, recipient: Email): BlockedReason?
     fun block(statusEvent: EmailStatusEventDBO)
     fun unblock(statusEventDBO: EmailStatusEventDBO)
+    fun unblock(accountDBO: AccountDBO, from: Email?, recipient: Email)
     fun getBlockedEmails(accountDBO: AccountDBO): List<BlockedEmailDBO>
 }

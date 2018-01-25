@@ -4,6 +4,7 @@ import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedEmail
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedEmailServiceGrpc
+import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveBlockedEmailRequest
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
@@ -17,6 +18,14 @@ private constructor(
     override fun getBlockedEmails(request: Empty, responseObserver: StreamObserver<BlockedEmail>) {
         try {
             blockedEmailService.getBlockedEmails(responseObserver)
+        } catch (e: Exception) {
+            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+        }
+    }
+
+    override fun removeBlockedEmail(request: RemoveBlockedEmailRequest, responseObserver: StreamObserver<Empty>) {
+        try {
+            blockedEmailService.removeBlockedEmail(request, responseObserver)
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }
