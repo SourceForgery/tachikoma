@@ -14,6 +14,6 @@ internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServ
     override val encryptionKey: String = readEncryptionConfig("ENCRYPTION_KEY")
     override val webtokenSignKey: ByteArray = readEncryptionConfig("WEBTOKEN_SIGN_KEY").toByteArray(StandardCharsets.UTF_8)
     override val baseUrl: URI = readConfig("BASE_URL", "http://localhost:8070/", URI::class.java)
-    // TODO set WIPE_AND_CREATE_DATABASE to false
-    override val wipeAndCreateDatabase: Boolean = readConfig("WIPE_AND_CREATE_DATABASE", true)
+    override val createDatabase: Boolean = readConfig("CREATE_DATABASE", true)
+    override val wipeAndCreateDatabase: Boolean = readConfig("WIPE_AND_CREATE_DATABASE", false)
 }

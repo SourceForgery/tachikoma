@@ -17,13 +17,21 @@ private constructor(
         private val mqManager: MQManager
 ) : EbeanHook() {
     override fun postStart(ebeanServer: EbeanServer) {
-        if (databaseConfig.wipeAndCreateDatabase) {
-            val account = AccountDBO(MAIL_DOMAIN)
-            ebeanServer.save(account)
-            mqManager.setupAccount(MAIL_DOMAIN)
-            createBackendAuthentication(ebeanServer, account)
-            createFrontendAuthentication(ebeanServer, account)
-            createIncomingEmail(ebeanServer, account)
+        if (databaseConfig.createDatabase) {
+            ebeanServer.find(AccountDBO::class.java)
+                    .where()
+                    .eq("mailDomain", MAIL_DOMAIN)
+                    .findOne()
+            ?: let {
+
+                val account = AccountDBO(MAIL_DOMAIN)
+                LOGGER.error { "Creating new account and authentications for $MAIL_DOMAIN" }
+                ebeanServer.save(account)
+                mqManager.setupAccount(MAIL_DOMAIN)
+                createBackendAuthentication(ebeanServer, account)
+                createFrontendAuthentication(ebeanServer, account)
+                createIncomingEmail(ebeanServer, account)
+            }
         }
     }
 

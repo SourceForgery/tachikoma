@@ -7,4 +7,5 @@ interface DatabaseConfig {
     val sqlUrl: URI
     val timeDatabaseQueries: Boolean
     val wipeAndCreateDatabase: Boolean
+    val createDatabase: Boolean
 }
