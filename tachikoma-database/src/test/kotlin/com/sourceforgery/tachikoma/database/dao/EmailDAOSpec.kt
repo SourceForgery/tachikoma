@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.dao
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
@@ -45,7 +46,7 @@ internal class EmailDAOSpec : Spek({
         val authentication = AuthenticationDBO(
                 encryptedPassword = null,
                 apiToken = null,
-                backend = true,
+                role = AuthenticationRole.BACKEND,
                 account = account
         )
 

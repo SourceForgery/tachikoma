@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.database.hooks
 
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
@@ -49,7 +50,8 @@ private constructor(
     private fun createFrontendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
         val frontendAuthentication = AuthenticationDBO(
                 account = account,
-                apiToken = RandomStringUtils.randomAlphanumeric(40)
+                apiToken = RandomStringUtils.randomAlphanumeric(40),
+                role = AuthenticationRole.FRONTEND_ADMIN
         )
         ebeanServer.save(frontendAuthentication)
         LOGGER.error { "Creating new frontend api with login:password '$MAIL_DOMAIN:${frontendAuthentication.apiToken}'" }
@@ -63,7 +65,7 @@ private constructor(
     private fun createBackendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
         val backendAuthentication = AuthenticationDBO(
                 apiToken = RandomStringUtils.randomAlphanumeric(40),
-                backend = true,
+                role = AuthenticationRole.BACKEND,
                 account = account
         )
         LOGGER.error { "Creating new backend api with login:password '$MAIL_DOMAIN:${backendAuthentication.apiToken}'" }
