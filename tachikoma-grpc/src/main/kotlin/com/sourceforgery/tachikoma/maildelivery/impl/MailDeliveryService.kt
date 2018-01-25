@@ -104,7 +104,11 @@ private constructor(
         ebeanServer.createTransaction().use {
             for (recipient in request.recipientsList) {
 
-                val recipientEmail = recipient.toNamedEmail()
+                val recipientEmail = auth.recipientOverride
+                        ?. let {
+                            NamedEmail(it, "Overriden email")
+                        }
+                        ?: recipient.toNamedEmail()
 
                 blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)
                         ?.let { blockedReason ->
