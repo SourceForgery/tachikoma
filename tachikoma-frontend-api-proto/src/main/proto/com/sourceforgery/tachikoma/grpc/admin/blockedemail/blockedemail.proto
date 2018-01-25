@@ -9,17 +9,14 @@ package com.sourceforgery.tachikoma.grpc.frontend.blockedemail;
 
 service BlockedEmailService {
     // Returns all blocked email addresses
-    rpc getBlockedEmails (google.protobuf.Empty) returns (stream BlockedEmails);
+    rpc getBlockedEmails (google.protobuf.Empty) returns (stream BlockedEmail);
 }
 
+// The reason for a blocked email address
 enum BlockedReason {
     UNSUBSCRIBED = 0;
     SPAM_MARKED = 1;
     HARD_BOUNCED = 2;
-}
-
-message BlockedEmails {
-    repeated BlockedEmail blockedEmail = 101;
 }
 
 // A blocked email entry with from and recipient email

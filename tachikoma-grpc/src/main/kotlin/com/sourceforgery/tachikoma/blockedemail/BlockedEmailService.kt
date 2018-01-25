@@ -3,10 +3,9 @@ package com.sourceforgery.tachikoma.blockedemail
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
-import com.sourceforgery.tachikoma.grpc.frontend.EmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedEmail
-import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedEmails
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
+import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
@@ -17,37 +16,24 @@ private constructor(
         private val authenticationDAO: AuthenticationDAO,
         private val blockedEmailDAO: BlockedEmailDAO
 ) {
-    fun getBlockedEmails(responseObserver: StreamObserver<BlockedEmails>) {
+    fun getBlockedEmails(responseObserver: StreamObserver<BlockedEmail>) {
         authentication.requireFrontend()
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
         val blockedEmails = blockedEmailDAO.getBlockedEmails(authenticationDBO.account)
-        val blockedEmailsBuilder = BlockedEmails.newBuilder()
 
         blockedEmails.forEach {
 
-            val fromEmail = EmailAddress
+            val blockedEmail = BlockedEmail
                     .newBuilder()
-                    .setLocalPart(it.fromEmail.localPart)
-                    .setMailDomain(it.fromEmail.domain.mailDomain)
-                    .setAddress(it.fromEmail.address)
-                    .build()
-
-            val recipientEmail = EmailAddress
-                    .newBuilder()
-                    .setLocalPart(it.recipientEmail.localPart)
-                    .setMailDomain(it.recipientEmail.domain.mailDomain)
-                    .setAddress(it.recipientEmail.address)
-                    .build()
-
-            blockedEmailsBuilder.addBlockedEmail(BlockedEmail
-                    .newBuilder()
-                    .setFromEmail(fromEmail)
-                    .setRecipientEmail(recipientEmail)
+                    .setFromEmail(it.fromEmail.toGrpcInternal())
+                    .setRecipientEmail(it.recipientEmail.toGrpcInternal())
                     .setBlockedReason(it.blockedReason.toGrpc())
-            )
+                    .build()
+
+            responseObserver.onNext(blockedEmail)
         }
 
-        responseObserver.onNext(blockedEmailsBuilder.build())
+        responseObserver.onCompleted()
     }
 }
