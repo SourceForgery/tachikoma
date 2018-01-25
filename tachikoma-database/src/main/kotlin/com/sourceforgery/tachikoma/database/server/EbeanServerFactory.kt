@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.database.hooks.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import io.ebean.EbeanServer
@@ -29,26 +30,48 @@ private constructor(
         private val counter: InvokeCounter,
         private val dbObjectMapper: DBObjectMapper,
         private val ebeanHooks: IterableProvider<EbeanHook>,
+        private val databaseUpgrades: IterableProvider<DatabaseUpgrade>,
         private val hK2RequestContext: HK2RequestContext
 ) : Factory<EbeanServer> {
 
     private inner class LoggingServerConfig : ServerConfig() {
         override fun setDataSource(originalDataSource: DataSource?) {
-            super.setDataSource(
-                    if (originalDataSource == null) {
-                        null
-                    } else if (originalDataSource is DataSourcePool) {
-                        LoggingDataSourcePool(
+            originalDataSource
+                    ?.also { upgradeDatabase(it) }
+            val loggingDataSource =
+                    when (originalDataSource) {
+                        null -> null
+                        is DataSourcePool -> LoggingDataSourcePool(
                                 originalDataSourcePool = originalDataSource,
                                 counter = counter
                         )
-                    } else {
-                        LoggingDataSource(
+                        else -> LoggingDataSource(
                                 originalDataSource = originalDataSource,
                                 counter = counter
                         )
                     }
-            )
+            super.setDataSource(loggingDataSource)
+        }
+
+        private fun upgradeDatabase(dataSource: DataSource) {
+            var currentVersion = 0
+            for (serviceHandle in databaseUpgrades.handleIterator()) {
+                val newVersion = serviceHandle.activeDescriptor.ranking
+                if (newVersion == 0) {
+                    throw RuntimeException("Rank must be set on ${serviceHandle.activeDescriptor.implementationClass}")
+                }
+                if (newVersion > currentVersion) {
+                    dataSource.connection.use {
+                        it.autoCommit = false
+                        currentVersion = serviceHandle.service.run(it)
+                        val prepareStatement = it.prepareStatement("UPDATE database_version SET version = ?")
+                        prepareStatement.setInt(1, currentVersion)
+                        prepareStatement.execute()
+                        it.commit()
+                    }
+                }
+                serviceHandle.destroy()
+            }
         }
     }
 
@@ -105,8 +128,8 @@ private constructor(
     }
 
     companion object {
-        private val MIN_PSQL_CONNECTIONS = 1
-        private val MAX_PSQL_CONNECTIONS = 15
+        private const val MIN_PSQL_CONNECTIONS = 1
+        private const val MAX_PSQL_CONNECTIONS = 15
 
         fun parseDataSourceConfigFromURL(config: DataSourceConfig, dbUrl: URI) {
             val scheme = dbUrl.scheme
