@@ -1,3 +1,4 @@
+include 'tachikoma-protobuf-annotations'
 
 include 'tachikoma-backend-api-proto'
 include 'tachikoma-backend-api-proto:tachikoma-backend-api-jvm'
