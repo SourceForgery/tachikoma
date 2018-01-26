@@ -42,9 +42,8 @@ subprojects {
         }
     }
 
-    gradleLint.rules = []
-    gradleLint.rules += 'all-dependency'
-    gradleLint.rules += 'duplicate-dependency-class'
+    gradleLint.criticalRules = ['all-dependency', 'duplicate-dependency-class']
+    gradleLint.rules = ['archaic-wrapper']
 
     configurations {
         compile.exclude(group: 'org.glassfish.hk2.external', module: 'javax.inject')
