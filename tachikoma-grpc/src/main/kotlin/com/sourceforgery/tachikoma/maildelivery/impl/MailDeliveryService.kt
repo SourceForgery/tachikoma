@@ -106,12 +106,16 @@ private constructor(
             for (recipient in request.recipientsList) {
 
                 val recipientEmail = auth.recipientOverride
-                        ?. let {
+                        ?.let {
                             NamedEmail(it, "Overriden email")
                         }
                         ?: recipient.toNamedEmail()
 
-                blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)
+                blockedEmailDAO.getBlockedReason(
+                        accountDBO = auth.account,
+                        recipient = recipientEmail.address,
+                        from = fromEmail
+                )
                         ?.let { blockedReason ->
                             responseObserver.onNext(
                                     EmailQueueStatus.newBuilder()
