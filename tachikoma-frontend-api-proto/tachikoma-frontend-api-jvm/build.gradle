@@ -3,6 +3,9 @@ apply plugin: 'java'
 apply plugin: 'idea'
 
 dependencies {
+    compile "io.grpc:grpc-core:$grpc_version"
+    compile "com.google.code.findbugs:jsr305:$jsr305_version"
+    compile "com.google.protobuf:protobuf-java:$protoc_version"
     protobuf project(':tachikoma-frontend-api-proto')
 
     compile project(":tachikoma-protobuf-annotations")

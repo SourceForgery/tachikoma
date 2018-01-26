@@ -3,8 +3,6 @@ apply plugin: 'java'
 
 dependencies {
     protobuf project(':tachikoma-frontend-api-proto')
-    compile "io.grpc:grpc-protobuf:$grpc_version"
-    compile "io.grpc:grpc-stub:$grpc_version"
 }
 
 protobuf {
