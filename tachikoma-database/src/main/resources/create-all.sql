@@ -30,6 +30,7 @@ create table e_blocked_email (
   from_email                    varchar(255) not null,
   recipient_email               varchar(255) not null,
   blocked_reason                integer not null,
+  account_id                    decimal(20),
   version                       bigint not null,
   date_created                  timestamptz not null,
   last_updated                  timestamptz not null,
@@ -109,6 +110,9 @@ create sequence unique_id_seq increment by 1;
 
 alter table e_user add constraint fk_e_user_account_id foreign key (account_id) references e_account (id) on delete restrict on update restrict;
 create index ix_e_user_account_id on e_user (account_id);
+
+alter table e_blocked_email add constraint fk_e_blocked_email_account_id foreign key (account_id) references e_account (id) on delete restrict on update restrict;
+create index ix_e_blocked_email_account_id on e_blocked_email (account_id);
 
 alter table e_email add constraint fk_e_email_transaction_id foreign key (transaction_id) references e_email_send_transaction (id) on delete restrict on update restrict;
 create index ix_e_email_transaction_id on e_email (transaction_id);
