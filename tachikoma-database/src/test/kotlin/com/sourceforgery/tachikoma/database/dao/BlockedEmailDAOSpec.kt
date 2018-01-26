@@ -24,16 +24,19 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
+import java.util.Collections
 import kotlin.test.assertEquals
 
 @RunWith(JUnitPlatform::class)
 internal class BlockedEmailDAOSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
     lateinit var blockedEmailDAO: BlockedEmailDAO
+    lateinit var accountDAO: AccountDAO
     lateinit var dbObjectMapper: DBObjectMapper
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
         blockedEmailDAO = serviceLocator.getService(BlockedEmailDAO::class.java)
+        accountDAO = serviceLocator.getService(AccountDAO::class.java)
         dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
     }
 
@@ -43,13 +46,12 @@ internal class BlockedEmailDAOSpec : Spek({
 
     val PRINTER = JsonFormat.printer()!!
 
-    fun getEmailStatusEvent(from: Email, recipient: Email, emailStatus: EmailStatus): EmailStatusEventDBO {
-        val account = AccountDBO(MailDomain("example.com"))
+    fun getEmailStatusEvent(accountDBO: AccountDBO, from: Email, recipient: Email, emailStatus: EmailStatus): EmailStatusEventDBO {
         val authentication = AuthenticationDBO(
                 encryptedPassword = null,
                 apiToken = null,
                 role = AuthenticationRole.BACKEND,
-                account = account
+                account = accountDBO
         )
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
@@ -78,18 +80,55 @@ internal class BlockedEmailDAOSpec : Spek({
 
     describe("BlockedEmailDAO") {
 
+        var accountDBO: AccountDBO? = null
+
+        beforeEachTest {
+            accountDBO = AccountDBO(MailDomain("example.com"))
+            accountDAO.save(accountDBO!!)
+        }
+
         afterEachTest {
             serviceLocator
                     .getServiceHandle(EbeanServer::class.java)
                     .destroy()
         }
 
+        fun getAccount(): AccountDBO {
+            return accountDBO!!
+        }
+
+        fun blockEmails(recipient: Email) {
+            blockedEmailDAO.block(getEmailStatusEvent(
+                    accountDBO = getAccount(),
+                    from = Email("from1@example.com"),
+                    recipient = recipient,
+                    emailStatus = EmailStatus.HARD_BOUNCED
+            ))
+            blockedEmailDAO.block(getEmailStatusEvent(
+                    accountDBO = getAccount(),
+                    from = Email("from2@example.com"),
+                    recipient = recipient,
+                    emailStatus = EmailStatus.UNSUBSCRIBE
+            ))
+            blockedEmailDAO.block(getEmailStatusEvent(
+                    accountDBO = getAccount(),
+                    from = Email("from3@example.com"),
+                    recipient = recipient,
+                    emailStatus = EmailStatus.UNSUBSCRIBE
+            ))
+            blockedEmailDAO.block(getEmailStatusEvent(
+                    accountDBO = getAccount(),
+                    from = Email("from4@example.com"),
+                    recipient = recipient,
+                    emailStatus = EmailStatus.UNSUBSCRIBE
+            ))
+        }
         it("should return null if e-mail is not blocked") {
 
             val from = Email("from@example.com")
             val recipient = Email("recipient@example.com")
 
-            val blockedReason = blockedEmailDAO.getBlockedReason(from, recipient)
+            val blockedReason = blockedEmailDAO.getBlockedReason(getAccount(), from, recipient)
 
             assertEquals(null, blockedReason)
         }
@@ -99,11 +138,11 @@ internal class BlockedEmailDAOSpec : Spek({
             val from = Email("from@example.com")
             val recipient = Email("recipient@example.com")
 
-            val emailStatusEvent = getEmailStatusEvent(from, recipient, EmailStatus.UNSUBSCRIBE)
+            val emailStatusEvent = getEmailStatusEvent(getAccount(), from, recipient, EmailStatus.UNSUBSCRIBE)
 
             blockedEmailDAO.block(emailStatusEvent)
 
-            val blockedReason = blockedEmailDAO.getBlockedReason(from, recipient)
+            val blockedReason = blockedEmailDAO.getBlockedReason(getAccount(), from, recipient)
 
             assertEquals(BlockedReason.UNSUBSCRIBED, blockedReason)
         }
@@ -113,15 +152,46 @@ internal class BlockedEmailDAOSpec : Spek({
             val from = Email("from@example.com")
             val recipient = Email("recipient@example.com")
 
-            val emailStatusEvent = getEmailStatusEvent(from, recipient, EmailStatus.HARD_BOUNCED)
+            val emailStatusEvent = getEmailStatusEvent(getAccount(), from, recipient, EmailStatus.HARD_BOUNCED)
 
             blockedEmailDAO.block(emailStatusEvent)
 
-            assertEquals(BlockedReason.HARD_BOUNCED, blockedEmailDAO.getBlockedReason(from, recipient))
+            assertEquals(BlockedReason.HARD_BOUNCED, blockedEmailDAO.getBlockedReason(getAccount(), from, recipient))
 
             blockedEmailDAO.unblock(emailStatusEvent)
 
-            assertEquals(null, blockedEmailDAO.getBlockedReason(from, recipient))
+            assertEquals(null, blockedEmailDAO.getBlockedReason(getAccount(), from, recipient))
+        }
+
+        it("should should be possible to get a list of all blocked e-mails") {
+
+            val recipient = Email("recipient@example.com")
+
+            blockEmails(recipient)
+
+            assertEquals(4, blockedEmailDAO.getBlockedEmails(getAccount()).size)
+        }
+
+        it("should should be possible to unblock blocked e-mails by from & recipient") {
+
+            val recipient = Email("recipient@example.com")
+
+            blockEmails(recipient)
+
+            blockedEmailDAO.unblock(getAccount(), Email("from2@example.com"), recipient)
+
+            assertEquals(3, blockedEmailDAO.getBlockedEmails(getAccount()).size)
+        }
+
+        it("should should be possible to unblock all blocked e-mails by recipient") {
+
+            val recipient = Email("recipient@example.com")
+
+            blockEmails(recipient)
+
+            blockedEmailDAO.unblock(getAccount(), null, recipient)
+
+            assertEquals(Collections.EMPTY_LIST, blockedEmailDAO.getBlockedEmails(getAccount()))
         }
     }
 })

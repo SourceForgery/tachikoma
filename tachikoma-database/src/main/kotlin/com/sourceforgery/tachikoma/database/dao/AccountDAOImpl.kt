@@ -10,6 +10,8 @@ class AccountDAOImpl
 private constructor(
         private val ebeanServer: EbeanServer
 ) : AccountDAO {
+    override fun save(account: AccountDBO) = ebeanServer.save(account)
+
     override fun getById(accountId: AccountId) =
             ebeanServer.find(AccountDBO::class.java, accountId.accountId)!!
 }

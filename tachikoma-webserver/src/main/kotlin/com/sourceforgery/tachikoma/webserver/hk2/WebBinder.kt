@@ -10,7 +10,9 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl
 import com.sourceforgery.tachikoma.hk2.ReferencingFactory
 import com.sourceforgery.tachikoma.hk2.RequestScoped
+import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.webserver.AuthenticationFactory
+import com.sourceforgery.tachikoma.webserver.RemoteIPImpl
 import com.sourceforgery.tachikoma.webserver.catchers.InvalidOrInsufficientCredentialsCatcher
 import com.sourceforgery.tachikoma.webserver.catchers.NoAuthorizationCredentialsCatcher
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
@@ -59,6 +61,9 @@ class WebBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
 
         bindAsContract(RestExceptionHandlerFunction::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(RemoteIPImpl::class.java)
+                .to(RemoteIP::class.java)
                 .`in`(Singleton::class.java)
     }
 

@@ -14,7 +14,7 @@ service DeliveryNotificationService {
 
 message EmailNotification {
     EmailId emailId = 101;
-    Email recipientEmailAddress = 102;
+    EmailAddress recipientEmailAddress = 102;
     EmailTransactionId emailTransactionId = 103;
     google.protobuf.Timestamp timestamp = 104;
     oneof notification {
@@ -24,6 +24,7 @@ message EmailNotification {
         QueuedEvent queuedEvent = 204;
         OpenedEvent openedEvent = 205;
         ClickedEvent clickedEvent = 206;
+        UnsubscribedEvent unsubscribedEvent = 207;
     }
 }
 
@@ -56,4 +57,10 @@ message OpenedEvent {
 message ClickedEvent {
     // Ip address that clicked the link
     string ipAddress = 101;
+}
+
+// Message has caused receiver to unsubscribe
+message UnsubscribedEvent {
+    // Ip address that unsubscribed
+    string ipaddress = 101;
 }
