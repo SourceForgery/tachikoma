@@ -1,4 +1,4 @@
-package com.sourceforgery.tachikoma.database.hooks
+package com.sourceforgery.tachikoma.database.upgrades
 
 import java.sql.Connection
 

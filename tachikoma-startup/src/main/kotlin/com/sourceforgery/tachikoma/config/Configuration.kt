@@ -5,7 +5,7 @@ import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import java.net.URI
 import java.nio.charset.StandardCharsets
 
-internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServerConfig, DebugConfig {
+internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServerConfig, DebugConfig, WebtokenAuthConfig {
     override val databaseEncryptionKey: String = readEncryptionConfig("DATABASE_ENCRYPTION_KEY")
     override val mqUrl: URI = readConfig("MQ_URL", "amqp://guest:guest@localhost/tachikoma", URI::class.java)
     override val sendDebugData: Boolean = readConfig("SEND_DEBUG_DATA", true)

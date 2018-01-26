@@ -1,10 +1,10 @@
-package com.sourceforgery.tachikoma.database.hooks
+package com.sourceforgery.tachikoma.database.upgrades
 
 import io.ebean.migration.ddl.DdlRunner
 import java.nio.charset.StandardCharsets
 import java.sql.Connection
 
-class CreateDatabaseVersionTable : DatabaseUpgrade {
+class Version1 : DatabaseUpgrade {
     override fun run(connection: Connection): Int {
         connection
                 .createStatement()
