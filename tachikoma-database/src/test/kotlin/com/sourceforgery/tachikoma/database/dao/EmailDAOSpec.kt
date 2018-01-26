@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.dao
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
@@ -14,6 +15,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.EbeanServer
+import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -24,9 +26,18 @@ import kotlin.test.assertNotNull
 
 @RunWith(JUnitPlatform::class)
 internal class EmailDAOSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
-    val emailDAO = serviceLocator.getService(EmailDAO::class.java)
-    val dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
+    lateinit var serviceLocator: ServiceLocator
+    lateinit var emailDAO: EmailDAO
+    lateinit var dbObjectMapper: DBObjectMapper
+    beforeEachTest {
+        serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+        emailDAO = serviceLocator.getService(EmailDAO::class.java)
+        dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
+    }
+
+    afterEachTest {
+        serviceLocator.shutdown()
+    }
 
     val PRINTER = JsonFormat.printer()!!
 
@@ -35,7 +46,7 @@ internal class EmailDAOSpec : Spek({
         val authentication = AuthenticationDBO(
                 encryptedPassword = null,
                 apiToken = null,
-                backend = true,
+                role = AuthenticationRole.BACKEND,
                 account = account
         )
 

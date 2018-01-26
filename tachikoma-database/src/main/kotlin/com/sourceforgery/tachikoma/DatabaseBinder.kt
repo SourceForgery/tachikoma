@@ -14,7 +14,9 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
+import com.sourceforgery.tachikoma.database.hooks.CreateDatabaseVersionTable
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
+import com.sourceforgery.tachikoma.database.hooks.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
@@ -61,5 +63,20 @@ class DatabaseBinder : AbstractBinder() {
         bindAsContract(CreateUsers::class.java)
                 .to(EbeanHook::class.java)
                 .`in`(Singleton::class.java)
+        bindDatabaseUpgrades()
+    }
+
+    private fun bindDatabaseUpgrades() {
+        // NEVER EVER change order or insert elements anywhere but at the end of this list!!
+        // These classes will be run in order before ebean starts
+        val databaseUpgrades = listOf(
+                CreateDatabaseVersionTable::class.java
+        )
+        var idx = 0
+        for (databaseUpgrade in databaseUpgrades) {
+            bindAsContract(databaseUpgrade)
+                    .to(DatabaseUpgrade::class.java)
+                    .ranked(--idx)
+        }
     }
 }
