@@ -17,7 +17,7 @@ class AuthenticationDBO(
         @Column
         var encryptedPassword: String? = null,
 
-        @Column
+        @Column(unique = true)
         val username: String? = null,
 
         @Column(unique = true)

@@ -8,6 +8,7 @@ class Version2 : DatabaseUpgrade {
                 .createStatement()
                 .use {
                     it.execute("ALTER TABLE e_user ADD COLUMN username varchar(255)")
+                    it.execute("ALTER TABLE e_user ADD CONSTRAINT uq_e_user_username unique (username)")
                 }
         return -2
     }
