@@ -118,7 +118,6 @@ private constructor(
                 serverConfig.databasePlatform = PostgresPlatform()
                 serverConfig.isDdlGenerate = false
                 serverConfig.isDdlRun = false
-
             }
             else -> throw IllegalArgumentException("Don't know anything about the database ${databaseConfig.sqlUrl.scheme}.")
         }
