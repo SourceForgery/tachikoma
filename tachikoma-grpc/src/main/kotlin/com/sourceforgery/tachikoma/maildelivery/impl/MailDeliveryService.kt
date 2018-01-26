@@ -27,6 +27,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
+import com.sourceforgery.tachikoma.grpc.frontend.toGrpcRejectReason
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
@@ -105,17 +106,21 @@ private constructor(
             for (recipient in request.recipientsList) {
 
                 val recipientEmail = auth.recipientOverride
-                        ?. let {
+                        ?.let {
                             NamedEmail(it, "Overriden email")
                         }
                         ?: recipient.toNamedEmail()
 
-                blockedEmailDAO.getBlockedReason(recipient = recipientEmail.address, from = fromEmail)
+                blockedEmailDAO.getBlockedReason(
+                        accountDBO = auth.account,
+                        recipient = recipientEmail.address,
+                        from = fromEmail
+                )
                         ?.let { blockedReason ->
                             responseObserver.onNext(
                                     EmailQueueStatus.newBuilder()
                                             .setRejected(Rejected.newBuilder()
-                                                    .setRejectReason(blockedReason.toGrpc())
+                                                    .setRejectReason(blockedReason.toGrpcRejectReason())
                                                     .build()
                                             )
                                             .setTransactionId(transaction.id.toGrpcInternal())

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+
+package com.sourceforgery.tachikoma.grpc.frontend.blockedemail;
+
+service BlockedEmailService {
+
+    // Removes the blocked email based on specified from and recipient addresses
+    rpc removeBlockedEmail (RemoveBlockedEmailRequest) returns (google.protobuf.Empty);
+
+    // Returns all blocked email addresses
+    rpc getBlockedEmails (google.protobuf.Empty) returns (stream BlockedEmail);
+}
+
+// Request to remove a blocked email address
+message RemoveBlockedEmailRequest {
+    // Remove blocked emails on from (optional)
+    EmailAddress fromEmail = 101;
+    // Remove blocked emails on recipient email
+    EmailAddress recipientEmail = 102;
+}
+
+// The reason for a blocked email address
+enum BlockedReason {
+    UNSUBSCRIBED = 0;
+    SPAM_MARKED = 1;
+    HARD_BOUNCED = 2;
+}
+
+// A blocked email entry with from and recipient email
+message BlockedEmail {
+    // From email address
+    EmailAddress fromEmail = 101;
+    // Recipient email address
+    EmailAddress recipientEmail = 102;
+    // The blocked reason
+    BlockedReason blockedReason = 103;
+}

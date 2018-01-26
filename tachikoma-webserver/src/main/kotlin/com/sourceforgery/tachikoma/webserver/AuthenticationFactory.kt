@@ -124,6 +124,10 @@ private constructor(
                 throw NoAuthorizationCredentialsException()
             }
 
+            override fun requireAdmin(): AccountId {
+                throw NoAuthorizationCredentialsException()
+            }
+
             override val mailDomain: MailDomain
                 get() = throw NoAuthorizationCredentialsException()
 
@@ -174,6 +178,10 @@ internal class AuthenticationImpl(
             throw InvalidOrInsufficientCredentialsException()
         }
         return accountId
+    }
+
+    override fun requireAdmin(): AccountId {
+        return requireFrontend()
     }
 
     private fun requireValid() {
