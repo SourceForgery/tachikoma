@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma.webserver
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.AuthenticationRole
@@ -21,6 +23,7 @@ import com.sourceforgery.tachikoma.logging.logger
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
 import java.util.Base64
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class AuthenticationFactory
@@ -31,13 +34,21 @@ private constructor(
         private val authenticationDAO: AuthenticationDAO,
         private val accountDAO: AccountDAO
 ) : Factory<Authentication> {
+
+    private val apiKeyCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build(CacheLoader.from<String, AuthenticationImpl?>({ parseApiTokenHeader(it) }))
+
     override fun provide() =
             parseWebTokenHeader()
                     ?: parseApiTokenHeader()
                     ?: NO_AUTHENTICATION
 
-    private fun parseApiTokenHeader() =
-            httpHeaders[APITOKEN_HEADER]
+    private fun parseApiTokenHeader(): AuthenticationImpl? =
+            apiKeyCache.getUnchecked(httpHeaders[APITOKEN_HEADER])
+
+    private fun parseApiTokenHeader(header: String?): AuthenticationImpl? =
+            header
                     ?.let {
                         MailDomain(it.substringBefore(':')) to it.substringAfter(':')
                     }
