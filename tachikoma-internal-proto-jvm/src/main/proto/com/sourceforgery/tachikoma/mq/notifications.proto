@@ -16,6 +16,7 @@ message DeliveryNotificationMessage {
         MessageHardBounced messageHardBounced = 203;
         MessageOpened messageOpened = 204;
         MessageClicked messageClicked = 205;
+        MessageUnsubscribed messageUnsubscribed = 206;
     }
 }
 
@@ -23,12 +24,17 @@ message DeliveryNotificationMessage {
 message MessageDelivered {
 }
 
-// This represents a single email has softbounced (e.g. graylisted)
+// This represents a single email that has softbounced (e.g. graylisted)
 message MessageSoftBounced {
 }
 
-// This represents a single email has hardbounced.
+// This represents a single email that has hardbounced.
 message MessageHardBounced {
+}
+
+// This represents a single email that has unsubscribed
+message MessageUnsubscribed {
+    string ipAdress = 101;
 }
 
 // This represents a single email that has been opened(via tracking pixel)

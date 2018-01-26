@@ -8,22 +8,32 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.logging.logger
+import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
+import com.sourceforgery.tachikoma.mq.MQSender
+import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
+import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
+import java.time.Clock
 import javax.inject.Inject
 
 internal class UnsubscribeRest
 @Inject
 private constructor(
-        val unsubscribeDecoder: UnsubscribeDecoder,
-        val emailDAO: EmailDAO,
-        val emailStatusEventDAO: EmailStatusEventDAO,
-        val blockedEmailDAO: BlockedEmailDAO
+        private val clock: Clock,
+        private val mqSender: MQSender,
+        private val unsubscribeDecoder: UnsubscribeDecoder,
+        private val emailDAO: EmailDAO,
+        private val emailStatusEventDAO: EmailStatusEventDAO,
+        private val blockedEmailDAO: BlockedEmailDAO,
+        private val remoteIP: RemoteIP
 ) : RestService {
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
@@ -45,8 +55,19 @@ private constructor(
                     email = email
             )
             emailStatusEventDAO.save(emailStatusEvent)
-
             blockedEmailDAO.block(emailStatusEvent)
+
+            val notificationMessage = DeliveryNotificationMessage
+                    .newBuilder()
+                    .setCreationTimestamp(clock.instant().toTimestamp())
+                    .setEmailMessageId(email.id.emailId)
+                    .setMessageUnsubscribed(
+                            MessageUnsubscribed
+                                    .newBuilder()
+                                    .setIpAdress(remoteIP.remoteAddress)
+                    )
+                    .build()
+            mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })

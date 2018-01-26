@@ -5,6 +5,7 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.BlockedEmailId
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 import javax.persistence.UniqueConstraint
 
@@ -18,7 +19,9 @@ constructor(
         @Column
         val recipientEmail: Email,
         @Column
-        val blockedReason: BlockedReason
+        val blockedReason: BlockedReason,
+        @ManyToOne
+        val account: AccountDBO
 ) : GenericDBO()
 
 val BlockedEmailDBO.id: BlockedEmailId

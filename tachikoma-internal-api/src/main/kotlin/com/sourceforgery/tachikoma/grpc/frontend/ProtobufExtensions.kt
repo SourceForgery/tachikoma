@@ -9,21 +9,21 @@ import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 
 fun com.sourceforgery.tachikoma.common.Email.toGrpcInternal() =
-        Email.newBuilder().setEmail(address).build()
+        EmailAddress.newBuilder().setEmail(address).build()
 
-fun Email.toEmail() =
+fun EmailAddress.toEmail() =
         com.sourceforgery.tachikoma.common.Email(email)
 
 fun grpcEmailInternal(emailAddress: String) =
-        Email.newBuilder().setEmail(emailAddress).build()
+        EmailAddress.newBuilder().setEmail(emailAddress).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpcInternal() =
-        NamedEmail.newBuilder()
+        NamedEmailAddress.newBuilder()
                 .setEmail(address.address)
                 .setName(name)
                 .build()
 
-fun NamedEmail.toNamedEmail() =
+fun NamedEmailAddress.toNamedEmail() =
         com.sourceforgery.tachikoma.common.NamedEmail(com.sourceforgery.tachikoma.common.Email(email), name)
 
 fun EmailId.toGrpcInternal() =
@@ -64,7 +64,15 @@ fun String.emptyToNull() =
             this
         }
 
-fun BlockedReason.toGrpc(): Rejected.RejectReason {
+fun BlockedReason.toGrpc(): com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason {
+    return when (this) {
+        BlockedReason.UNSUBSCRIBED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.UNSUBSCRIBED
+        BlockedReason.SPAM_MARKED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.SPAM_MARKED
+        BlockedReason.HARD_BOUNCED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.HARD_BOUNCED
+    }
+}
+
+fun BlockedReason.toGrpcRejectReason(): Rejected.RejectReason {
     return when (this) {
         BlockedReason.UNSUBSCRIBED -> Rejected.RejectReason.UNSUBSCRIBED
         BlockedReason.SPAM_MARKED -> Rejected.RejectReason.SPAM_MARKED
@@ -76,4 +84,4 @@ fun com.sourceforgery.tachikoma.identifiers.IncomingEmailId.toGrpc() =
         IncomingEmailId.newBuilder().setId(incomingEmailId).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpc() =
-        NamedEmail.newBuilder().setEmail(address.address).setName(name).build()
+        NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()

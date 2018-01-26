@@ -20,7 +20,7 @@ service MailDeliveryService {
 // A recipient
 message EmailRecipient {
     // Recipient email with name
-    NamedEmail namedEmail = 101;
+    NamedEmailAddress namedEmail = 101;
 
     // Template variables (if using a template)
     google.protobuf.Struct templateVars = 102;
@@ -95,10 +95,10 @@ message OutgoingEmail {
 
     // Optional
     // Blind CC of ALL emails for e.g. debugging. This will get one email per recipient
-    Email bcc = 102;
+    EmailAddress bcc = 102;
 
     // From address
-    NamedEmail from = 103;
+    NamedEmailAddress from = 103;
 
     // Choose one of
     oneof body {
@@ -129,7 +129,7 @@ message OutgoingEmail {
 // representing the status of delivering to outgoing email server
 message EmailQueueStatus {
     // The recipient of this email
-    Email recipient = 101;
+    EmailAddress recipient = 101;
 
     // Only exists if DeliveryStatus is NOT rejected
     EmailId emailId = 103;
@@ -186,7 +186,7 @@ message Scheduled {
 message IncomingEmail {
     IncomingEmailId incomingEmailId = 101;
 
-    NamedEmail from = 201;
-    NamedEmail to = 202;
+    NamedEmailAddress from = 201;
+    NamedEmailAddress to = 202;
     string subject = 203;
 }
