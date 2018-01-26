@@ -46,6 +46,10 @@ subprojects {
     gradleLint.rules += 'all-dependency'
     gradleLint.rules += 'duplicate-dependency-class'
 
+    configurations {
+        compile.exclude(group: 'org.glassfish.hk2.external', module: 'javax.inject')
+    }
+
     idea {
         module {
             outputDir = file('build/idea-out')
