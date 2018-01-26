@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.grpc.frontend
 
 import com.sourceforgery.tachikoma.common.BlockedReason
+import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
@@ -77,6 +78,19 @@ fun BlockedReason.toGrpcRejectReason(): Rejected.RejectReason {
         BlockedReason.UNSUBSCRIBED -> Rejected.RejectReason.UNSUBSCRIBED
         BlockedReason.SPAM_MARKED -> Rejected.RejectReason.SPAM_MARKED
         BlockedReason.HARD_BOUNCED -> Rejected.RejectReason.SPAM_MARKED
+    }
+}
+
+fun EmailStatus.toGrpc(): com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus {
+    return when (this) {
+        EmailStatus.UNSUBSCRIBE -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.UNSUBSCRIBE
+        EmailStatus.HARD_BOUNCED -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.HARD_BOUNCED
+        EmailStatus.QUEUED -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.QUEUED
+        EmailStatus.DELIVERED -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.DELIVERED
+        EmailStatus.SOFT_BOUNCED -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.SOFT_BOUNCED
+        EmailStatus.SPAM -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.SPAM
+        EmailStatus.CLICKED -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.CLICKED
+        EmailStatus.OPENED -> com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatus.OPENED
     }
 }
 

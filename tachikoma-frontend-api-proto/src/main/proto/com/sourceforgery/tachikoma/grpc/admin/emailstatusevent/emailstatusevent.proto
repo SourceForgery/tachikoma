@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+
+package com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent;
+
+service EmailStatusEventService {
+
+    // Returns all email status events the last 7 days
+    rpc getEmailStatusEvents (google.protobuf.Empty) returns (stream EmailStatusEvent);
+}
+
+// All available email status events
+enum EmailStatus {
+    HARD_BOUNCED = 0;
+    QUEUED = 1;
+    SOFT_BOUNCED = 2;
+    DELIVERED = 3;
+    OPENED = 4;
+    CLICKED = 5;
+    SPAM = 6;
+    UNSUBSCRIBE = 7;
+}
+
+// An email status event
+message EmailStatusEvent {
+    // Email ID
+    EmailId emailId = 101;
+    // From email address
+    EmailAddress fromEmail = 102;
+    // Recipient email address
+    EmailAddress recipientEmail = 103;
+    // The email status
+    EmailStatus emailStatus = 104;
+    // MTA status code, if there is any
+    string mtaStatusCode = 105;
+    // Timestamp when the email status event was created
+    google.protobuf.Timestamp dateCreated = 106;
+}
