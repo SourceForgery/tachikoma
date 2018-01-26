@@ -1,6 +1,8 @@
 package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
+import com.sourceforgery.tachikoma.grpc.frontend.auth.LoginService
+import com.sourceforgery.tachikoma.grpc.frontend.auth.LoginServiceGrpcImpl
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryServiceGrpcImpl
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotifications
@@ -39,6 +41,12 @@ class GrpcBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(MailDeliveryServiceGrpcImpl::class.java)
                 .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(LoginServiceGrpcImpl::class.java)
+                .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(LoginService::class.java)
                 .`in`(Singleton::class.java)
 
         bindAsContract(GrpcExceptionMap::class.java)

@@ -10,6 +10,13 @@ class AuthenticationDAOImpl
 private constructor(
         private val ebeanServer: EbeanServer
 ) : AuthenticationDAO {
+    override fun getByUsername(username: String) =
+            ebeanServer
+                    .find(AuthenticationDBO::class.java)
+                    .where()
+                    .eq("username", username)
+                    .findOne()
+
     override fun validateApiToken(apiToken: String): AuthenticationDBO? {
         return ebeanServer.find(AuthenticationDBO::class.java)
                 .where()
