@@ -6,7 +6,7 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-api:$log4j2_version"
     compile "io.ebean:ebean-annotation:$ebean_annotation_version"
     compile "org.glassfish.hk2:hk2-api:$hk2_version"
-    compile 'org.apache.commons:commons-lang3:3.7'
+    compile "com.google.guava:guava:$guava_version"
 
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')

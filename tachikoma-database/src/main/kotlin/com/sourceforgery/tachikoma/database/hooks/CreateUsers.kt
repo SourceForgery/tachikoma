@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.database.hooks
 
 import com.sourceforgery.tachikoma.common.AuthenticationRole
-import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
@@ -10,7 +9,7 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
-import org.apache.commons.lang3.RandomStringUtils
+import net.bytebuddy.utility.RandomString
 import javax.inject.Inject
 
 class CreateUsers
@@ -18,6 +17,8 @@ class CreateUsers
 private constructor(
         private val mqManager: MQManager
 ) : EbeanHook() {
+    private val randomString = RandomString(40)
+
     override fun postStart(ebeanServer: EbeanServer) {
         ebeanServer
                 .find(AccountDBO::class.java)
@@ -47,7 +48,7 @@ private constructor(
     private fun createFrontendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
         val frontendAuthentication = AuthenticationDBO(
                 account = account,
-                apiToken = RandomStringUtils.randomAlphanumeric(40),
+                apiToken = randomString.nextString(),
                 role = AuthenticationRole.FRONTEND_ADMIN
         )
         ebeanServer.save(frontendAuthentication)
@@ -61,7 +62,7 @@ private constructor(
 
     private fun createBackendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
         val backendAuthentication = AuthenticationDBO(
-                apiToken = RandomStringUtils.randomAlphanumeric(40),
+                apiToken = randomString.nextString(),
                 role = AuthenticationRole.BACKEND,
                 account = account
         )
