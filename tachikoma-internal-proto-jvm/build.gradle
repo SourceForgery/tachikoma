@@ -9,12 +9,12 @@ sourceSets {
 
 apply plugin: 'com.google.protobuf'
 apply plugin: 'java'
-apply plugin: 'idea'
 
 
 dependencies {
     compile "io.grpc:grpc-protobuf:$grpc_version"
     compile "io.grpc:grpc-stub:$grpc_version"
+    compile project(":tachikoma-protobuf-annotations")
 }
 
 idea {
