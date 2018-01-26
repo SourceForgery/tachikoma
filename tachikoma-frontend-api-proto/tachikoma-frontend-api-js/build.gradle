@@ -3,6 +3,7 @@ apply plugin: 'java'
 
 dependencies {
     protobuf project(':tachikoma-frontend-api-proto')
+    protobuf "com.google.protobuf:protobuf-java:$protoc_version"
 }
 
 protobuf {
