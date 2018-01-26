@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.database.objects
 
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.ebean.annotation.Encrypted
@@ -21,7 +22,7 @@ class AuthenticationDBO(
         var apiToken: String? = null,
 
         @Column
-        val backend: Boolean = false,
+        val role: AuthenticationRole,
 
         @ManyToOne
         val account: AccountDBO,

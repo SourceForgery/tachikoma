@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.dao
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
@@ -16,6 +17,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.EbeanServer
+import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -27,10 +29,20 @@ import kotlin.test.assertEquals
 
 @RunWith(JUnitPlatform::class)
 internal class BlockedEmailDAOSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
-    val blockedEmailDAO = serviceLocator.getService(BlockedEmailDAO::class.java)
-    val accountDAO = serviceLocator.getService(AccountDAO::class.java)
-    val dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
+    lateinit var serviceLocator: ServiceLocator
+    lateinit var blockedEmailDAO: BlockedEmailDAO
+    lateinit var accountDAO: AccountDAO
+    lateinit var dbObjectMapper: DBObjectMapper
+    beforeEachTest {
+        serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+        blockedEmailDAO = serviceLocator.getService(BlockedEmailDAO::class.java)
+        accountDAO = serviceLocator.getService(AccountDAO::class.java)
+        dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
+    }
+
+    afterEachTest {
+        serviceLocator.shutdown()
+    }
 
     val PRINTER = JsonFormat.printer()!!
 
@@ -38,7 +50,7 @@ internal class BlockedEmailDAOSpec : Spek({
         val authentication = AuthenticationDBO(
                 encryptedPassword = null,
                 apiToken = null,
-                backend = true,
+                role = AuthenticationRole.BACKEND,
                 account = accountDBO
         )
 

@@ -10,4 +10,11 @@ package com.sourceforgery.tachikoma.grpc.frontend.auth;
 message WebTokenAuthData {
     sint64 userId = 101;
     sint64 accountId = 102;
+    AuthRole authenticationRole = 103;
+}
+
+enum AuthRole {
+    FRONTEND = 0;
+    FRONTEND_ADMIN = 1;
+    BACKEND = 2;
 }

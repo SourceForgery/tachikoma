@@ -8,6 +8,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+    compile "net.bytebuddy:byte-buddy:$bytebuddy_version"
 
     testCompile "com.h2database:h2:${h2_version}"
     testCompile "org.apache.logging.log4j:log4j-core:$log4j2_version"

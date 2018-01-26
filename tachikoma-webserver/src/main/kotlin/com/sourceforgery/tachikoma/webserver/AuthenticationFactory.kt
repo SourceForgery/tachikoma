@@ -1,7 +1,10 @@
 package com.sourceforgery.tachikoma.webserver
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.HmacUtil.hmacSha1
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
@@ -9,6 +12,7 @@ import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
 import com.sourceforgery.tachikoma.exceptions.NoAuthorizationCredentialsException
+import com.sourceforgery.tachikoma.grpc.frontend.auth.AuthRole
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.toAccountId
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
@@ -19,6 +23,7 @@ import com.sourceforgery.tachikoma.logging.logger
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
 import java.util.Base64
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class AuthenticationFactory
@@ -29,13 +34,21 @@ private constructor(
         private val authenticationDAO: AuthenticationDAO,
         private val accountDAO: AccountDAO
 ) : Factory<Authentication> {
+
+    private val apiKeyCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build(CacheLoader.from<String, AuthenticationImpl?>({ parseApiTokenHeader(it) }))
+
     override fun provide() =
             parseWebTokenHeader()
                     ?: parseApiTokenHeader()
                     ?: NO_AUTHENTICATION
 
-    private fun parseApiTokenHeader() =
-            httpHeaders[APITOKEN_HEADER]
+    private fun parseApiTokenHeader(): AuthenticationImpl? =
+            apiKeyCache.getUnchecked(httpHeaders[APITOKEN_HEADER])
+
+    private fun parseApiTokenHeader(header: String?): AuthenticationImpl? =
+            header
                     ?.let {
                         MailDomain(it.substringBefore(':')) to it.substringAfter(':')
                     }
@@ -55,7 +68,7 @@ private constructor(
                     ?.let {
                         AuthenticationImpl(
                                 // No webtoken should allow backend
-                                allowBackend = false,
+                                role = it.role,
                                 authenticationId = it.id,
                                 accountId = it.account.id,
                                 accountDAO = accountDAO
@@ -85,7 +98,7 @@ private constructor(
                 ?: throw InvalidOrInsufficientCredentialsException()
         return AuthenticationImpl(
                 // No webtoken should allow backend
-                allowBackend = false,
+                role = tokenAuthData.authenticationRole.toAuthenticationRole(),
                 authenticationId = authenticationId,
                 accountId = accountId,
                 accountDAO = accountDAO
@@ -107,17 +120,23 @@ private constructor(
                 throw NoAuthorizationCredentialsException()
             }
 
+            override fun requireFrontendAdmin(): AccountId {
+                throw NoAuthorizationCredentialsException()
+            }
+
             override fun requireAdmin(): AccountId {
                 throw NoAuthorizationCredentialsException()
             }
 
             override val mailDomain: MailDomain
                 get() = throw NoAuthorizationCredentialsException()
+
             override val authenticationId: AuthenticationId
                 get() = throw NoAuthorizationCredentialsException()
+
             override val accountId: AccountId
                 get() = throw NoAuthorizationCredentialsException()
-            override val allowBackend: Boolean = false
+
             override val valid: Boolean = false
         }
 
@@ -127,18 +146,27 @@ private constructor(
 }
 
 internal class AuthenticationImpl(
-        override var allowBackend: Boolean = false,
         override var authenticationId: AuthenticationId,
         override var accountId: AccountId,
-        private val accountDAO: AccountDAO
+        private val accountDAO: AccountDAO,
+        private val role: AuthenticationRole
 ) : Authentication {
+
     override val mailDomain: MailDomain by lazy {
         accountDAO.getById(accountId).mailDomain
     }
 
     override fun requireFrontend(): AccountId {
         requireValid()
-        if (allowBackend) {
+        if (role != AuthenticationRole.FRONTEND_ADMIN && role != AuthenticationRole.FRONTEND) {
+            throw InvalidOrInsufficientCredentialsException()
+        }
+        return accountId
+    }
+
+    override fun requireFrontendAdmin(): AccountId {
+        requireValid()
+        if (role != AuthenticationRole.FRONTEND_ADMIN) {
             throw InvalidOrInsufficientCredentialsException()
         }
         return accountId
@@ -146,7 +174,7 @@ internal class AuthenticationImpl(
 
     override fun requireBackend(): AccountId {
         requireValid()
-        if (!allowBackend) {
+        if (role != AuthenticationRole.BACKEND) {
             throw InvalidOrInsufficientCredentialsException()
         }
         return accountId
@@ -164,3 +192,11 @@ internal class AuthenticationImpl(
 
     override val valid: Boolean = true
 }
+
+fun AuthRole.toAuthenticationRole() =
+        when (this) {
+            AuthRole.FRONTEND -> AuthenticationRole.FRONTEND
+            AuthRole.BACKEND -> AuthenticationRole.BACKEND
+            AuthRole.FRONTEND_ADMIN -> AuthenticationRole.FRONTEND_ADMIN
+            AuthRole.UNRECOGNIZED -> throw InvalidOrInsufficientCredentialsException("Webtoken is invalid")
+        }
