@@ -73,8 +73,7 @@ internal class EmailStatusEventDAOSpec : Spek({
 
         return EmailStatusEventDBO(
                 emailStatus = emailStatus,
-                email = fromEmail,
-                mtaStatusCode = null
+                email = fromEmail
         )
     }
 

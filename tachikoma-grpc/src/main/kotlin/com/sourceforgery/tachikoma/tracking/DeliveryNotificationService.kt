@@ -2,14 +2,14 @@ package com.sourceforgery.tachikoma.tracking
 
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
+import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
+import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
+import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.ClickedEvent
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveredEvent
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.EmailNotification
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.HardBouncedEvent
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.OpenedEvent
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.SoftBouncedEvent
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.UnsubscribedEvent
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.logging.logger
@@ -38,13 +38,13 @@ private constructor(
                 @Suppress("UNUSED_VARIABLE")
                 val ignored = when (it.notificationDataCase) {
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGECLICKED -> {
-                        notificationBuilder.clickedEvent = ClickedEvent.newBuilder().setIpAddress(it.messageClicked.ipAdress).build()
+                        notificationBuilder.clickedEvent = ClickedEvent.newBuilder().setIpAddress(it.messageClicked.ipAddress).build()
                     }
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGEHARDBOUNCED -> {
                         notificationBuilder.hardBouncedEvent = HardBouncedEvent.getDefaultInstance()
                     }
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGEOPENED -> {
-                        notificationBuilder.openedEvent = OpenedEvent.newBuilder().setIpAddress(it.messageOpened.ipAdress).build()
+                        notificationBuilder.openedEvent = OpenedEvent.newBuilder().setIpAddress(it.messageOpened.ipAddress).build()
                     }
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGEDELIVERED -> {
                         notificationBuilder.delivereddEvent = DeliveredEvent.getDefaultInstance()

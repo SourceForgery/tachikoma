@@ -2,8 +2,8 @@ package com.sourceforgery.tachikoma.tracking
 
 import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
+import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpc
-import com.sourceforgery.tachikoma.grpc.frontend.tracking.EmailNotification
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 

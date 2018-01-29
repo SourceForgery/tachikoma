@@ -5,6 +5,7 @@ import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
@@ -48,7 +49,9 @@ private constructor(
                 val statusEventDBO = EmailStatusEventDBO(
                         emailStatus = status,
                         email = email,
-                        mtaStatusCode = request.status
+                        metaData = StatusEventMetaData(
+                                mtaStatusCode = request.status
+                        )
                 )
                 statusEventDBO.dateCreated = creationTimestamp
                 emailStatusEventDAO.save(statusEventDBO)

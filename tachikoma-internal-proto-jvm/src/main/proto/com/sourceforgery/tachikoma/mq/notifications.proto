@@ -34,15 +34,15 @@ message MessageHardBounced {
 
 // This represents a single email that has unsubscribed
 message MessageUnsubscribed {
-    string ipAdress = 101;
+    string ipAddress = 101;
 }
 
 // This represents a single email that has been opened(via tracking pixel)
 message MessageOpened {
-    string ipAdress = 101;
+    string ipAddress = 101;
 }
 
 // This represents a single email that has been opened(link has been clicked)
 message MessageClicked {
-    string ipAdress = 101;
+    string ipAddress = 101;
 }

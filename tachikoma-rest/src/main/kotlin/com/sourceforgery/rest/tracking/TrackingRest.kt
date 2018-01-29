@@ -13,6 +13,7 @@ import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.tracking.RemoteIP
@@ -42,7 +43,9 @@ private constructor(
             val emailStatusEvent = EmailStatusEventDBO(
                     emailStatus = EmailStatus.OPENED,
                     email = email,
-                    ipAddress = remoteIP.remoteAddress
+                    metaData = StatusEventMetaData(
+                            ipAddress = remoteIP.remoteAddress
+                    )
             )
             emailStatusEventDAO.save(emailStatusEvent)
         } catch (e: Exception) {
@@ -62,8 +65,9 @@ private constructor(
             val emailStatusEvent = EmailStatusEventDBO(
                     emailStatus = EmailStatus.CLICKED,
                     email = email,
-                    ipAddress = remoteIP.remoteAddress
-            )
+                    metaData = StatusEventMetaData(
+                            ipAddress = remoteIP.remoteAddress
+                    ))
             emailStatusEventDAO.save(emailStatusEvent)
 
             return HttpResponse.of(
