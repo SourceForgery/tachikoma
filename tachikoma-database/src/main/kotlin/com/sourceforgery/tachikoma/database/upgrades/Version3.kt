@@ -8,9 +8,7 @@ class Version3 : DatabaseUpgrade {
                 .createStatement()
                 .use {
                     it.executeUpdate("ALTER TABLE e_email_status DROP COLUMN mta_status_code")
-                    it.executeUpdate("ALTER TABLE e_email_status ADD COLUMN metaData JSON")
-                    it.executeUpdate("CREATE INDEX mail_status_meta_data_mta_status_code ON e_email_status ((metaData->>'mtaStatusCode'))")
-                    it.executeUpdate("CREATE INDEX mail_status_meta_data_ip_address ON e_email_status ((metaData->>'ipAddress'))")
+                    it.executeUpdate("ALTER TABLE e_email_status ADD COLUMN metaData JSON NOT NULL")
                 }
         return -2
     }
