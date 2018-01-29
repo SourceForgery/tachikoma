@@ -11,5 +11,11 @@ package com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent;
 service EmailStatusEventService {
 
     // Returns all email status events the last 7 days
-    rpc getEmailStatusEvents (google.protobuf.Empty) returns (stream EmailNotification);
+    rpc getEmailStatusEvents (GetEmailStatusEventsFilter) returns (stream EmailNotification);
+}
+
+// Filter for retrieving historic e-mail status events
+message GetEmailStatusEventsFilter {
+    // Only retrieve events that are maximum this amount of days old
+    int32 daysOld = 101;
 }

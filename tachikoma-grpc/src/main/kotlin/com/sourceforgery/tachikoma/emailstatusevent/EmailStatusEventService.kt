@@ -15,6 +15,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.QueuedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SpamEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.GetEmailStatusEventsFilter
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import io.grpc.stub.StreamObserver
 import java.time.Instant
@@ -27,12 +28,11 @@ private constructor(
         private val authentication: Authentication,
         private val emailStatusEventDAO: EmailStatusEventDAO
 ) {
-    fun getEmailStatusEvents(responseObserver: StreamObserver<EmailNotification>) {
+    fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>) {
 
         authentication.requireFrontend()
 
-        // TODO What is an reasonable amount of time?
-        val timeFromNow = Instant.now().minus(7, ChronoUnit.DAYS)
+        val timeFromNow = Instant.now().minus(request.daysOld.toLong(), ChronoUnit.DAYS)
 
         emailStatusEventDAO.getEventsAfter(timeFromNow)
                 .forEach {
