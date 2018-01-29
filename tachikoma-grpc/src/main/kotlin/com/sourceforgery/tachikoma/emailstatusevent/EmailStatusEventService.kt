@@ -1,8 +1,9 @@
 package com.sourceforgery.tachikoma.emailstatusevent
 
-import com.google.protobuf.Timestamp
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.common.toTimestamp
+import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.id
@@ -26,32 +27,31 @@ internal class EmailStatusEventService
 @Inject
 private constructor(
         private val authentication: Authentication,
+        private val authenticationDAO: AuthenticationDAO,
         private val emailStatusEventDAO: EmailStatusEventDAO
 ) {
     fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>) {
 
         authentication.requireFrontend()
+        val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
         val timeFromNow = Instant.now().minus(request.daysOld.toLong(), ChronoUnit.DAYS)
 
-        emailStatusEventDAO.getEventsAfter(timeFromNow)
+        emailStatusEventDAO.getEventsAfter(authenticationDBO.account, timeFromNow)
                 .forEach {
                     responseObserver.onNext(
-                            getEmailNotification(it).build()
+                            getEmailNotification(it)
                     )
                 }
         responseObserver.onCompleted()
     }
 
-    private fun getEmailNotification(it: EmailStatusEventDBO): EmailNotification.Builder {
+    private fun getEmailNotification(it: EmailStatusEventDBO): EmailNotification {
         val builder = EmailNotification.newBuilder()
         builder.emailId = it.email.id.toGrpcInternal()
         builder.recipientEmailAddress = it.email.recipient.toGrpcInternal()
         builder.emailTransactionId = it.email.transaction.id.toGrpcInternal()
-        builder.timestamp = Timestamp
-                .newBuilder()
-                .setSeconds(it.dateCreated!!.epochSecond)
-                .build()
+        builder.timestamp = it.dateCreated!!.toTimestamp()
         return when (it.emailStatus) {
             EmailStatus.OPENED -> {
                 val ipAddress = it.metaData.ipAddress ?: ""
@@ -80,6 +80,6 @@ private constructor(
             EmailStatus.SPAM -> {
                 builder.setSpamEvent(SpamEvent.getDefaultInstance())
             }
-        }
+        }.build()
     }
 }

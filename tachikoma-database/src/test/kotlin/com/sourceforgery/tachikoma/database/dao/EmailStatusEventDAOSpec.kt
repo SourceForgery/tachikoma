@@ -25,18 +25,23 @@ import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import kotlin.test.assertEquals
 
 @RunWith(JUnitPlatform::class)
 internal class EmailStatusEventDAOSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
+    lateinit var emailDAO: EmailDAO
     lateinit var emailStatusEventDAO: EmailStatusEventDAO
     lateinit var accountDAO: AccountDAO
+    lateinit var authenticationDAO: AuthenticationDAO
     lateinit var dbObjectMapper: DBObjectMapper
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+        emailDAO = serviceLocator.getService(EmailDAO::class.java)
         emailStatusEventDAO = serviceLocator.getService(EmailStatusEventDAO::class.java)
         accountDAO = serviceLocator.getService(AccountDAO::class.java)
+        authenticationDAO = serviceLocator.getService(AuthenticationDAO::class.java)
         dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
     }
 
@@ -46,89 +51,103 @@ internal class EmailStatusEventDAOSpec : Spek({
 
     val PRINTER = JsonFormat.printer()!!
 
-    fun getEmailStatusEvent(accountDBO: AccountDBO, from: Email, recipient: Email, emailStatus: EmailStatus): EmailStatusEventDBO {
-        val authentication = AuthenticationDBO(
-                encryptedPassword = null,
-                apiToken = null,
+    fun createAuthentication(domain: String): AuthenticationDBO {
+        val accountDBO = AccountDBO(MailDomain(domain))
+        accountDAO.save(accountDBO)
+
+        val authenticationDBO = AuthenticationDBO(
+                username = domain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
                 role = AuthenticationRole.BACKEND,
                 account = accountDBO
         )
+        authenticationDAO.save(authenticationDBO)
+
+        return authenticationDBO
+    }
+
+    fun createEmailStatusEvent(
+            authentication: AuthenticationDBO,
+            from: Email,
+            recipient: Email,
+            emailStatus: EmailStatus
+    ): EmailStatusEventDBO {
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
         val jsonRequest = dbObjectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
-        val emailSendTransaction = EmailSendTransactionDBO(
-                jsonRequest = jsonRequest,
-                fromEmail = from,
-                authentication = authentication
-        )
-
-        val fromEmail = EmailDBO(
+        val email = EmailDBO(
                 recipient = recipient,
                 recipientName = "Mr. Recipient",
-                transaction = emailSendTransaction,
-                messageId = MessageId("1023"),
+                transaction = EmailSendTransactionDBO(
+                        jsonRequest = jsonRequest,
+                        fromEmail = from,
+                        authentication = authentication
+                ),
+                messageId = MessageId(UUID.randomUUID().toString()),
                 mtaQueueId = null
         )
+        emailDAO.save(email)
 
-        return EmailStatusEventDBO(
+        val emailStatusEventDBO = EmailStatusEventDBO(
                 emailStatus = emailStatus,
-                email = fromEmail,
+                email = email,
                 metaData = StatusEventMetaData()
         )
+        emailStatusEventDAO.save(emailStatusEventDBO)
+
+        return emailStatusEventDBO
     }
 
     describe("EmailStatusEventDAO") {
 
-        var accountDBO: AccountDBO? = null
+        it("it should return all recent status events for specified account") {
 
-        beforeEachTest {
-            accountDBO = AccountDBO(MailDomain("example.com"))
-            accountDAO.save(accountDBO!!)
-        }
-
-        fun getAccount(): AccountDBO {
-            return accountDBO!!
-        }
-
-        it("it should return all recent status events") {
-
-            val from = Email("from@example.com")
-            val recipient = Email("recipient@example.com")
-
-            val emailStatusEvent = getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = from,
-                    recipient = recipient,
-                    emailStatus = EmailStatus.OPENED
+            val authentication1 = createAuthentication("example.org")
+            createEmailStatusEvent(
+                    authentication = authentication1,
+                    from = Email("from@example.org"),
+                    recipient = Email("recipient1@example.org"),
+                    emailStatus = EmailStatus.DELIVERED
+            )
+            createEmailStatusEvent(
+                    authentication = authentication1,
+                    from = Email("from@example.org"),
+                    recipient = Email("recipient2@example.org"),
+                    emailStatus = EmailStatus.DELIVERED
             )
 
-            emailStatusEventDAO.save(emailStatusEvent)
+            val authentication2 = createAuthentication("example.com")
+            createEmailStatusEvent(
+                    authentication = authentication2,
+                    from = Email("from@example.com"),
+                    recipient = Email("recipient@example.com"),
+                    emailStatus = EmailStatus.DELIVERED
+            )
 
             val eventsTimeLimit = Instant.now().minus(2, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(eventsTimeLimit)
+            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account, eventsTimeLimit)
 
-            assertEquals(1, emailStatusEvents.size)
+            assertEquals(2, emailStatusEvents.size)
+            assertEquals("recipient1@example.org", emailStatusEvents[0].email.recipient.address)
+            assertEquals("recipient2@example.org", emailStatusEvents[1].email.recipient.address)
         }
 
         it("it should not return events outside time limit") {
 
-            val from = Email("from@example.com")
-            val recipient = Email("recipient@example.com")
-
-            val emailStatusEvent = getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = from,
-                    recipient = recipient,
-                    emailStatus = EmailStatus.OPENED
+            val authentication1 = createAuthentication("example.org")
+            createEmailStatusEvent(
+                    authentication = authentication1,
+                    from = Email("from@example.org"),
+                    recipient = Email("recipient1@example.org"),
+                    emailStatus = EmailStatus.DELIVERED
             )
-
-            emailStatusEventDAO.save(emailStatusEvent)
 
             val eventsTimeLimit = Instant.now().plus(2, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(eventsTimeLimit)
+            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account, eventsTimeLimit)
 
             assertEquals(0, emailStatusEvents.size)
         }
