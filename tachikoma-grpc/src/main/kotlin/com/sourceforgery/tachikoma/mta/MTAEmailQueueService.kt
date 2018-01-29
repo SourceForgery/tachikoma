@@ -21,6 +21,7 @@ import com.sourceforgery.tachikoma.mq.IncomingEmailNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.MessageHardBounced
+import com.sourceforgery.tachikoma.mq.MessageQueued
 import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
 import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
@@ -93,12 +94,28 @@ private constructor(
                             emailStatus = EmailStatus.QUEUED
                     )
                     emailStatusEventDAO.save(statusDBO)
+                    mqSender.queueDeliveryNotification(
+                            accountId = email.transaction.authentication.account.id,
+                            notificationMessage = DeliveryNotificationMessage.newBuilder()
+                                    .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
+                                    .setEmailMessageId(email.id.emailId)
+                                    .setMessageQueued(MessageQueued.getDefaultInstance())
+                                    .build()
+                    )
                 } else {
                     val statusDBO = EmailStatusEventDBO(
                             email = email,
                             emailStatus = EmailStatus.HARD_BOUNCED
                     )
                     emailStatusEventDAO.save(statusDBO)
+                    mqSender.queueDeliveryNotification(
+                            accountId = email.transaction.authentication.account.id,
+                            notificationMessage = DeliveryNotificationMessage.newBuilder()
+                                    .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
+                                    .setEmailMessageId(email.id.emailId)
+                                    .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
+                                    .build()
+                    )
 
                     LOGGER.info { "Wasn't able to deliver message with emailId emailId: $emailId" }
                 }
