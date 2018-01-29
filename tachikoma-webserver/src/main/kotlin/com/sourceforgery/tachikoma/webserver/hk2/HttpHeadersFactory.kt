@@ -11,7 +11,7 @@ private constructor(
         private val httpRequest: HttpRequest
 ) : Factory<HttpHeaders> {
     override fun provide() =
-            httpRequest.headers()!!
+            httpRequest.headers()
 
     override fun dispose(instance: HttpHeaders?) {
     }

@@ -15,7 +15,7 @@ private constructor(
         private val mailDeliveryService: MailDeliveryService,
         private val grpcExceptionMap: GrpcExceptionMap
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
-    override fun getIncomingEmails(request: Empty?, responseObserver: StreamObserver<IncomingEmail>) {
+    override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) {
         try {
             mailDeliveryService.getIncomingEmails(responseObserver)
         } catch (e: Exception) {
