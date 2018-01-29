@@ -14,7 +14,6 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
-import io.ebean.EbeanServer
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -69,12 +68,6 @@ internal class EmailDAOSpec : Spek({
     }
 
     describe("EmailDAO") {
-
-        afterEachTest {
-            serviceLocator
-                    .getServiceHandle(EbeanServer::class.java)
-                    .destroy()
-        }
 
         it("should be possible to retrieve a saved e-mail") {
 

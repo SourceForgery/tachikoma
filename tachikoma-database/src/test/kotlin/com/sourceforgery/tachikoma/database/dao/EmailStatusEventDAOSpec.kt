@@ -87,12 +87,6 @@ internal class EmailStatusEventDAOSpec : Spek({
             accountDAO.save(accountDBO!!)
         }
 
-        afterEachTest {
-            serviceLocator
-                    .getServiceHandle(EbeanServer::class.java)
-                    .destroy()
-        }
-
         fun getAccount(): AccountDBO {
             return accountDBO!!
         }
