@@ -54,12 +54,12 @@ private constructor(
                 .build()
         return when (it.emailStatus) {
             EmailStatus.OPENED -> {
-                val ipAddress = it.metaData?.ipAddress ?: ""
+                val ipAddress = it.metaData.ipAddress ?: ""
                 builder.setOpenedEvent(OpenedEvent.newBuilder().setIpAddress(ipAddress).build())
             }
 
             EmailStatus.CLICKED -> {
-                val ipAddress = it.metaData?.ipAddress ?: ""
+                val ipAddress = it.metaData.ipAddress ?: ""
                 builder.setClickedEvent(ClickedEvent.newBuilder().setIpAddress(ipAddress).build())
             }
             EmailStatus.HARD_BOUNCED -> {
