@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.mta
 
+import com.sourceforgery.tachikoma.grpc.NullStreamObserver
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
@@ -15,7 +16,7 @@ private constructor(
             mtaEmailQueueService.getEmails(responseObserver)
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
-            null
+            NullStreamObserver()
         }
     }
 
