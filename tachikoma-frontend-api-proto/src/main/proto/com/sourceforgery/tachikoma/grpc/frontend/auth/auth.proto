@@ -13,8 +13,31 @@ message WebTokenAuthData {
     AuthRole authenticationRole = 103;
 }
 
+// The different roles for a login
 enum AuthRole {
+    // "Normal" user allowed to send emails, check statistics, and basically anything
+    // but modifying users
     FRONTEND = 0;
     FRONTEND_ADMIN = 1;
     BACKEND = 2;
+}
+
+// Login service to handle webtokens
+service LoginService {
+    // login. Will return either valid LoginResponse OR an error code
+    rpc login(LoginRequest) returns (LoginResponse);
+}
+
+// Login request
+message LoginRequest {
+    // The username trying to log in
+    string username = 101;
+    // The password of the user
+    string password = 102;
+}
+
+// A valid response with the header to add to requests
+message LoginResponse {
+    // send this as a "x-webtoken" header on all subsequent requests
+    string authHeader = 101;
 }

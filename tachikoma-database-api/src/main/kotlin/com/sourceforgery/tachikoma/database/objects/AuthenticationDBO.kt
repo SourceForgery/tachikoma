@@ -18,6 +18,9 @@ class AuthenticationDBO(
         var encryptedPassword: String? = null,
 
         @Column(unique = true)
+        val username: String? = null,
+
+        @Column(unique = true)
         @Encrypted
         var apiToken: String? = null,
 

@@ -1,7 +1,9 @@
 package com.sourceforgery.tachikoma.grpc.frontend
 
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.grpc.frontend.auth.AuthRole
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
@@ -98,4 +100,11 @@ fun com.sourceforgery.tachikoma.identifiers.IncomingEmailId.toGrpc() =
         IncomingEmailId.newBuilder().setId(incomingEmailId).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpc() =
-        NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()
+NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()
+
+fun AuthenticationRole.toRole() =
+        when (this) {
+            AuthenticationRole.BACKEND -> AuthRole.BACKEND
+            AuthenticationRole.FRONTEND -> AuthRole.FRONTEND
+            AuthenticationRole.FRONTEND_ADMIN -> AuthRole.FRONTEND_ADMIN
+        }

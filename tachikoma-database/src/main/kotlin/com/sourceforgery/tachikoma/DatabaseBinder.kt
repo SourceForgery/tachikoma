@@ -14,15 +14,16 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
-import com.sourceforgery.tachikoma.database.hooks.CreateDatabaseVersionTable
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
-import com.sourceforgery.tachikoma.database.hooks.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
 import com.sourceforgery.tachikoma.database.server.LogEverything
+import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
+import com.sourceforgery.tachikoma.database.upgrades.Version1
+import com.sourceforgery.tachikoma.database.upgrades.Version2
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import io.ebean.EbeanServer
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -60,17 +61,27 @@ class DatabaseBinder : AbstractBinder() {
         bindAsContract(DBObjectMapperImpl::class.java)
                 .to(DBObjectMapper::class.java)
                 .`in`(Singleton::class.java)
-        bindAsContract(CreateUsers::class.java)
-                .to(EbeanHook::class.java)
-                .`in`(Singleton::class.java)
+        bindEbeanHooks()
         bindDatabaseUpgrades()
+    }
+
+    private fun bindEbeanHooks() {
+        val ebeanHooks = listOf(
+                CreateUsers::class.java
+        )
+        for (ebeanHook in ebeanHooks) {
+            bindAsContract(ebeanHook)
+                    .to(EbeanHook::class.java)
+                    .`in`(Singleton::class.java)
+        }
     }
 
     private fun bindDatabaseUpgrades() {
         // NEVER EVER change order or insert elements anywhere but at the end of this list!!
         // These classes will be run in order before ebean starts
         val databaseUpgrades = listOf(
-                CreateDatabaseVersionTable::class.java
+                Version1::class.java,
+                Version2::class.java
         )
         var idx = 0
         for (databaseUpgrade in databaseUpgrades) {

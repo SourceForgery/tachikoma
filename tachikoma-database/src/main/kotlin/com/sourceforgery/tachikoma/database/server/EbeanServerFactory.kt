@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.sourceforgery.tachikoma.config.DatabaseConfig
-import com.sourceforgery.tachikoma.database.hooks.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
+import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import io.ebean.EbeanServer
 import io.ebean.config.EncryptKey
@@ -67,9 +67,11 @@ private constructor(
                     dataSource.connection.use {
                         it.autoCommit = false
                         currentVersion = serviceHandle.service.run(it)
-                        val prepareStatement = it.prepareStatement("UPDATE database_version SET version = ?")
-                        prepareStatement.setInt(1, currentVersion)
-                        prepareStatement.execute()
+                        it.prepareStatement("UPDATE database_version SET version = ?")
+                                .use {
+                                    it.setInt(1, currentVersion)
+                                    it.execute()
+                                }
                         it.commit()
                     }
                 }
@@ -124,7 +126,12 @@ private constructor(
 
         return hK2RequestContext.runInScope {
             val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
-            ebeanHooks.forEach { it.postStart(ebeanServer) }
+            ebeanHooks
+                    .handleIterator()
+                    .forEach {
+                        it.service.postStart(ebeanServer)
+                        it.destroy()
+                    }
             ebeanServer
         }
     }
