@@ -24,7 +24,9 @@ class EmailStatusEventDBO(
         @ManyToOne(cascade = [CascadeType.ALL])
         val email: EmailDBO,
         @Column
-        val mtaStatusCode: String? = null
+        val mtaStatusCode: String? = null,
+        @Column
+        val ipAddress: String? = null
 ) {
     @Id
     @Column(columnDefinition = "DECIMAL(20)", name = "id")

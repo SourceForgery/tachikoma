@@ -52,7 +52,8 @@ private constructor(
             val email = emailDAO.fetchEmailData(unsubscribeData.emailId.toEmailId())!!
             val emailStatusEvent = EmailStatusEventDBO(
                     emailStatus = EmailStatus.UNSUBSCRIBE,
-                    email = email
+                    email = email,
+                    ipAddress = remoteIP.remoteAddress
             )
             emailStatusEventDAO.save(emailStatusEvent)
             blockedEmailDAO.block(emailStatusEvent)
