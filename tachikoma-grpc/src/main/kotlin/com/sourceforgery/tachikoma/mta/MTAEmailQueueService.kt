@@ -47,6 +47,7 @@ private constructor(
         private val authentication: Authentication
 ) {
     fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
+        authentication.requireBackend()
         LOGGER.info { "MTA connected" }
         val serverCallStreamObserver = responseObserver as ServerCallStreamObserver
         val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
