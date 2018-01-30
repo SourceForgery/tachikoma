@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.mta
 
 import com.sourceforgery.tachikoma.grpc.NullStreamObserver
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
+import com.sourceforgery.tachikoma.grpc.frontend.NullStreamObserver
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
@@ -11,7 +12,7 @@ private constructor(
         private val mtaEmailQueueService: MTAEmailQueueService,
         private val grpcExceptionMap: GrpcExceptionMap
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
-    override fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification>? {
+    override fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
         return try {
             mtaEmailQueueService.getEmails(responseObserver)
         } catch (e: Exception) {

@@ -63,7 +63,6 @@ private constructor(
                         // Skipping obviously bad message
                         throw RuntimeException("Message without event. Just wrong.")
                     }
-                    null -> throw NullPointerException()
                 }
                 responseObserver.onNext(notificationBuilder.build())
             }
