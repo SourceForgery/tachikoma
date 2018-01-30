@@ -55,7 +55,6 @@ class Main(
     }
 }
 
-
 fun main(args: Array<String>) {
 
     val mailDomain = System.getenv("MAIL_DOMAIN")
