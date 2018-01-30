@@ -21,6 +21,7 @@ import com.sourceforgery.tachikoma.mq.IncomingEmailNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.MessageHardBounced
+import com.sourceforgery.tachikoma.mq.MessageQueued
 import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
 import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
@@ -46,8 +47,9 @@ private constructor(
         private val authentication: Authentication
 ) {
     fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
+        authentication.requireBackend()
         LOGGER.info { "MTA connected" }
-        val serverCallStreamObserver = responseObserver as ServerCallStreamObserver
+        val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
         val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
             if (email == null) {
@@ -64,7 +66,8 @@ private constructor(
             }
         })
         future.addListener(Runnable {
-            if (serverCallStreamObserver.isCancelled) {
+            val cancelled = serverCallStreamObserver?.isCancelled ?: true
+            if (!cancelled) {
                 responseObserver.onCompleted()
             }
         }, responseCloser)
@@ -93,12 +96,28 @@ private constructor(
                             emailStatus = EmailStatus.QUEUED
                     )
                     emailStatusEventDAO.save(statusDBO)
+                    mqSender.queueDeliveryNotification(
+                            accountId = email.transaction.authentication.account.id,
+                            notificationMessage = DeliveryNotificationMessage.newBuilder()
+                                    .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
+                                    .setEmailMessageId(email.id.emailId)
+                                    .setMessageQueued(MessageQueued.getDefaultInstance())
+                                    .build()
+                    )
                 } else {
                     val statusDBO = EmailStatusEventDBO(
                             email = email,
                             emailStatus = EmailStatus.HARD_BOUNCED
                     )
                     emailStatusEventDAO.save(statusDBO)
+                    mqSender.queueDeliveryNotification(
+                            accountId = email.transaction.authentication.account.id,
+                            notificationMessage = DeliveryNotificationMessage.newBuilder()
+                                    .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
+                                    .setEmailMessageId(email.id.emailId)
+                                    .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
+                                    .build()
+                    )
 
                     LOGGER.info { "Wasn't able to deliver message with emailId emailId: $emailId" }
                 }

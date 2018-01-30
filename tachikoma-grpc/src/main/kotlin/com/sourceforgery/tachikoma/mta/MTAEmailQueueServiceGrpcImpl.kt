@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.mta
 
+import com.sourceforgery.tachikoma.grpc.NullStreamObserver
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
-import com.sourceforgery.tachikoma.grpc.frontend.NullStreamObserver
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 

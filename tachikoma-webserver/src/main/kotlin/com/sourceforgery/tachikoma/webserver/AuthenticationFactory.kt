@@ -181,7 +181,7 @@ internal class AuthenticationImpl(
     }
 
     override fun requireAdmin(): AccountId {
-        return requireFrontend()
+        TODO("No superadmin yet")
     }
 
     private fun requireValid() {
