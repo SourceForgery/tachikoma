@@ -10,6 +10,6 @@ class Version3 : DatabaseUpgrade {
                     it.executeUpdate("ALTER TABLE e_email_status DROP COLUMN mta_status_code")
                     it.executeUpdate("ALTER TABLE e_email_status ADD COLUMN metaData JSON NOT NULL")
                 }
-        return -2
+        return -3
     }
 }
