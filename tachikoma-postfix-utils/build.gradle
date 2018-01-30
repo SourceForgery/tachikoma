@@ -3,11 +3,13 @@ apply plugin: 'application'
 
 dependencies {
     compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
-    compile "io.grpc:grpc-okhttp:1.8.0"
+    compile "io.grpc:grpc-netty:$grpc_version"
     compile "com.github.jnr:jnr-unixsocket:0.18"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "net.sf.expectit:expectit-core:0.9.0"
     compile "org.apache.logging.log4j:log4j-iostreams:$log4j2_version"
+    // alpn is tied to JVM version
+    compile 'org.mortbay.jetty.alpn:alpn-boot:8.1.11.v20170118'
 
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
 }
