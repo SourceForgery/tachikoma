@@ -17,7 +17,7 @@ private constructor(
         trackingConfig: TrackingConfig
 ) : UnsubscribeDecoder {
 
-    private val encryptionKey = trackingConfig.encryptionKey.toByteArray(StandardCharsets.UTF_8)
+    private val encryptionKey = trackingConfig.linkSignKey.toByteArray(StandardCharsets.UTF_8)
 
     override fun decodeUnsubscribeData(unsubscribeData: String): UnsubscribeData {
         val decoded = Base64.getUrlDecoder().decode(unsubscribeData)!!
