@@ -13,7 +13,7 @@ private constructor(
         private val deliveryNotificationService: DeliveryNotificationService,
         private val grpcExceptionMap: GrpcExceptionMap
 ) : DeliveryNotificationServiceGrpc.DeliveryNotificationServiceImplBase() {
-    override fun notificationStream(request: Empty?, responseObserver: StreamObserver<EmailNotification>) {
+    override fun notificationStream(request: Empty, responseObserver: StreamObserver<EmailNotification>) {
         try {
             deliveryNotificationService.notificationStream(responseObserver)
             responseObserver.onCompleted()

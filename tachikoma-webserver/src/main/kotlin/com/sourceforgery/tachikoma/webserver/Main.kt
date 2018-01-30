@@ -58,7 +58,7 @@ fun main(vararg args: String) {
             .allowNullOrigin()
             .allowCredentials()
             .allowRequestMethods(HttpMethod.GET)
-            .build(object : HttpHealthCheckService() {})!!
+            .build(object : HttpHealthCheckService() {})
 
     // Order matters!
     val serverBuilder = ServerBuilder()
@@ -72,11 +72,11 @@ fun main(vararg args: String) {
 
     val exceptionInterceptor = serviceLocator.getService(GrpcExceptionInterceptor::class.java)
 
-    val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())!!
+    val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())
     for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
         grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, exceptionInterceptor))
     }
-    val grpcService = grpcServiceBuilder.build()!!
+    val grpcService = grpcServiceBuilder.build()
 
     serviceLocator.getService(JobWorker::class.java).work()
 
