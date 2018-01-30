@@ -9,7 +9,6 @@ private constructor(
 ) {
     fun getJobClass(jobMessage: JobMessage): Class<out Job> {
         val jobDataCase = jobMessage.jobDataCase
-                ?: throw IllegalArgumentException("Unknown job type")
         return when (jobDataCase) {
             JobMessage.JobDataCase.JOBDATA_NOT_SET -> throw IllegalArgumentException("Jobdata not set")
             JobMessage.JobDataCase.SENDEMAILJOB -> SendEmailJob::class.java

@@ -86,7 +86,7 @@ subprojects {
             languageVersion = "1.2"
             apiVersion = "1.2"
             jvmTarget = "1.8"
-            freeCompilerArgs = ["-Xjsr305=true"]
+            freeCompilerArgs = ["-Xjsr305=strict"]
             //javaParameters = true   // Useful for reflection.
         }
 

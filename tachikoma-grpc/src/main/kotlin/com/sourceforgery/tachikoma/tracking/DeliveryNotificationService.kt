@@ -55,11 +55,13 @@ private constructor(
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGEUNSUBSCRIBED -> {
                         notificationBuilder.unsubscribedEvent = UnsubscribedEvent.getDefaultInstance()
                     }
+                    DeliveryNotificationMessage.NotificationDataCase.MESSAGEQUEUED -> {
+                        notificationBuilder.queuedEvent = QueuedEvent.getDefaultInstance()
+                    }
                     DeliveryNotificationMessage.NotificationDataCase.NOTIFICATIONDATA_NOT_SET -> {
                         // Skipping obviously bad message
                         throw RuntimeException("Message without event. Just wrong.")
                     }
-                    null -> throw NullPointerException()
                 }
                 responseObserver.onNext(notificationBuilder.build())
             }

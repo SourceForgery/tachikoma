@@ -17,6 +17,7 @@ message DeliveryNotificationMessage {
         MessageOpened messageOpened = 204;
         MessageClicked messageClicked = 205;
         MessageUnsubscribed messageUnsubscribed = 206;
+        MessageQueued messageQueued = 207;
     }
 }
 
@@ -45,4 +46,8 @@ message MessageOpened {
 // This represents a single email that has been opened(link has been clicked)
 message MessageClicked {
     string ipAddress = 101;
+}
+
+// This represents a single email that has been delivered to MTA (mail is being sent)
+message MessageQueued {
 }
