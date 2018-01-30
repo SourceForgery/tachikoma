@@ -1,7 +1,4 @@
-@ParametersAreNonnullByDefault
-@MethodsAreNonnullByDefault
+@NonnullByDefault
 package com.sourceforgery.tachikoma.mta;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import com.sourceforgery.tachikoma.annotations.MethodsAreNonnullByDefault;
+import com.sourceforgery.tachikoma.annotations.NonnullByDefault;
