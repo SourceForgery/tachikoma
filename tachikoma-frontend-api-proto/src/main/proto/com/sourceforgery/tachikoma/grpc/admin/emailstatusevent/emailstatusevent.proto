@@ -2,7 +2,6 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 
@@ -16,6 +15,6 @@ service EmailStatusEventService {
 
 // Filter for retrieving historic e-mail status events
 message GetEmailStatusEventsFilter {
-    // Only retrieve events that are maximum this amount of days old
-    int32 daysOld = 101;
+    // Only retrieve events that are newer than this timestamp
+    google.protobuf.Timestamp newerThan = 101;
 }

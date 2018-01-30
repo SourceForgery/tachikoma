@@ -12,6 +12,7 @@ import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
+import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.MailDomain
@@ -23,6 +24,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
+import java.time.Clock
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -36,6 +38,7 @@ internal class EmailStatusEventDAOSpec : Spek({
     lateinit var accountDAO: AccountDAO
     lateinit var authenticationDAO: AuthenticationDAO
     lateinit var dbObjectMapper: DBObjectMapper
+    lateinit var clock: Clock
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
         emailDAO = serviceLocator.getService(EmailDAO::class.java)
@@ -43,6 +46,7 @@ internal class EmailStatusEventDAOSpec : Spek({
         accountDAO = serviceLocator.getService(AccountDAO::class.java)
         authenticationDAO = serviceLocator.getService(AuthenticationDAO::class.java)
         dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
+        clock = serviceLocator.getService(Clock::class.java)
     }
 
     afterEachTest {
@@ -71,7 +75,8 @@ internal class EmailStatusEventDAOSpec : Spek({
             authentication: AuthenticationDBO,
             from: Email,
             recipient: Email,
-            emailStatus: EmailStatus
+            emailStatus: EmailStatus,
+            dateCreated: Instant? = null
     ): EmailStatusEventDBO {
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
@@ -95,6 +100,7 @@ internal class EmailStatusEventDAOSpec : Spek({
                 email = email,
                 metaData = StatusEventMetaData()
         )
+        emailStatusEventDBO.dateCreated = dateCreated
         emailStatusEventDAO.save(emailStatusEventDBO)
 
         return emailStatusEventDBO
@@ -117,6 +123,13 @@ internal class EmailStatusEventDAOSpec : Spek({
                     recipient = Email("recipient2@example.org"),
                     emailStatus = EmailStatus.DELIVERED
             )
+            createEmailStatusEvent(
+                    authentication = authentication1,
+                    from = Email("from@example.org"),
+                    recipient = Email("recipient3@example.org"),
+                    emailStatus = EmailStatus.DELIVERED,
+                    dateCreated = clock.instant().minus(3, ChronoUnit.DAYS)
+            )
 
             val authentication2 = createAuthentication("example.com")
             createEmailStatusEvent(
@@ -126,9 +139,9 @@ internal class EmailStatusEventDAOSpec : Spek({
                     emailStatus = EmailStatus.DELIVERED
             )
 
-            val eventsTimeLimit = Instant.now().minus(2, ChronoUnit.DAYS)
+            val eventsTimeLimit = clock.instant().minus(2, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account, eventsTimeLimit)
+            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account.id, eventsTimeLimit)
 
             assertEquals(2, emailStatusEvents.size)
             assertEquals("recipient1@example.org", emailStatusEvents[0].email.recipient.address)
@@ -145,9 +158,9 @@ internal class EmailStatusEventDAOSpec : Spek({
                     emailStatus = EmailStatus.DELIVERED
             )
 
-            val eventsTimeLimit = Instant.now().plus(2, ChronoUnit.DAYS)
+            val eventsTimeLimit = clock.instant().plus(2, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account, eventsTimeLimit)
+            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account.id, eventsTimeLimit)
 
             assertEquals(0, emailStatusEvents.size)
         }

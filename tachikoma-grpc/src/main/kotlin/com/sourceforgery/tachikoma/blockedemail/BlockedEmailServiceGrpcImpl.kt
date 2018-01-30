@@ -18,6 +18,7 @@ private constructor(
     override fun getBlockedEmails(request: Empty, responseObserver: StreamObserver<BlockedEmail>) {
         try {
             blockedEmailService.getBlockedEmails(responseObserver)
+            responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }
@@ -26,6 +27,7 @@ private constructor(
     override fun removeBlockedEmail(request: RemoveBlockedEmailRequest, responseObserver: StreamObserver<Empty>) {
         try {
             blockedEmailService.removeBlockedEmail(request, responseObserver)
+            responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }

@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.emailstatusevent
 
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -19,8 +20,6 @@ import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.GetEmailStatusEventsFilter
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import io.grpc.stub.StreamObserver
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 internal class EmailStatusEventService
@@ -35,15 +34,12 @@ private constructor(
         authentication.requireFrontend()
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
-        val timeFromNow = Instant.now().minus(request.daysOld.toLong(), ChronoUnit.DAYS)
-
-        emailStatusEventDAO.getEventsAfter(authenticationDBO.account, timeFromNow)
+        emailStatusEventDAO.getEventsAfter(authenticationDBO.account.id, request.newerThan.toInstant())
                 .forEach {
                     responseObserver.onNext(
                             getEmailNotification(it)
                     )
                 }
-        responseObserver.onCompleted()
     }
 
     private fun getEmailNotification(it: EmailStatusEventDBO): EmailNotification {

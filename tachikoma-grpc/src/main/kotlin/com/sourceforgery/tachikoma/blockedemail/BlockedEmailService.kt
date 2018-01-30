@@ -36,8 +36,6 @@ private constructor(
 
             responseObserver.onNext(blockedEmail)
         }
-
-        responseObserver.onCompleted()
     }
 
     fun removeBlockedEmail(request: RemoveBlockedEmailRequest, responseObserver: StreamObserver<Empty>) {
@@ -45,7 +43,5 @@ private constructor(
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
         blockedEmailDAO.unblock(authenticationDBO.account, request.fromEmail.toEmail(), request.recipientEmail.toEmail())
-
-        responseObserver.onCompleted()
     }
 }

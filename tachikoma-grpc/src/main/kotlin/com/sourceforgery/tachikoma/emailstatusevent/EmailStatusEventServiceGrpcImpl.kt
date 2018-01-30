@@ -17,6 +17,7 @@ private constructor(
     override fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>) {
         try {
             emailStatsEventService.getEmailStatusEvents(request, responseObserver)
+            responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }
