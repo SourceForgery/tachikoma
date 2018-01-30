@@ -38,7 +38,7 @@ private constructor(
         }
     }
 
-    fun removeBlockedEmail(request: RemoveBlockedEmailRequest, responseObserver: StreamObserver<Empty>) {
+    fun removeBlockedEmail(request: RemoveBlockedEmailRequest) {
         authentication.requireFrontend()
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 

@@ -26,7 +26,7 @@ private constructor(
 
     override fun removeBlockedEmail(request: RemoveBlockedEmailRequest, responseObserver: StreamObserver<Empty>) {
         try {
-            blockedEmailService.removeBlockedEmail(request, responseObserver)
+            blockedEmailService.removeBlockedEmail(request)
             responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
