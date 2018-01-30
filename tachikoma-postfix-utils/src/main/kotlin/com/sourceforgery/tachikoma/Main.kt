@@ -42,7 +42,11 @@ class Main(
 
         val channel = ManagedChannelBuilder.forAddress(tachikomaUrl.host, port)
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-                .usePlaintext(plaintext)
+                .apply {
+                    if (plaintext) {
+                        usePlaintext(true)
+                    }
+                }
                 .idleTimeout(365, TimeUnit.DAYS)
                 .build()
         MailSender(channel).start()
