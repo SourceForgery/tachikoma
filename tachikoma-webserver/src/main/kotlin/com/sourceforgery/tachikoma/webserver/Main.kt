@@ -15,6 +15,7 @@ import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
+import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MessageQueue
 import com.sourceforgery.tachikoma.mq.MqBinder
@@ -51,7 +52,7 @@ fun main(vararg args: String) {
             .parallelStream()
             .forEach({ serviceLocator.getService(it) })
 
-    val requestScoped = serviceLocator.getService(HttpRequestScopedDecorator::class.java)
+    val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
 
     val healthService = CorsServiceBuilder
             .forAnyOrigin()
@@ -63,14 +64,14 @@ fun main(vararg args: String) {
     // Order matters!
     val serverBuilder = ServerBuilder()
             .serviceUnder("/health", healthService)
-    val exceptionHandler = serviceLocator.getService(RestExceptionHandlerFunction::class.java)
+    val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
 
     val restDecoratorFunction = Function<Service<HttpRequest, HttpResponse>, Service<HttpRequest, HttpResponse>> { it.decorate(requestScoped) }
     for (restService in serviceLocator.getAllServices(RestService::class.java)) {
         serverBuilder.annotatedService("/", restService, restDecoratorFunction, exceptionHandler)
     }
 
-    val exceptionInterceptor = serviceLocator.getService(GrpcExceptionInterceptor::class.java)
+    val exceptionInterceptor: GrpcExceptionInterceptor = serviceLocator.get()
 
     val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())
     for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {

@@ -15,6 +15,7 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
 import com.sourceforgery.tachikoma.grpc.NullStreamObserver
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
+import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.mq.MQSenderMock
@@ -157,5 +158,3 @@ class MTAEmailQueueServiceSpec : Spek({
         })
     })
 })
-
-inline fun <reified T : Any> ServiceLocator.get(): T = this.getService(T::class.java)
