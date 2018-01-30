@@ -12,6 +12,7 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
+import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
@@ -93,7 +94,8 @@ private constructor(
 
                     val statusDBO = EmailStatusEventDBO(
                             email = email,
-                            emailStatus = EmailStatus.QUEUED
+                            emailStatus = EmailStatus.QUEUED,
+                            metaData = StatusEventMetaData()
                     )
                     emailStatusEventDAO.save(statusDBO)
                     mqSender.queueDeliveryNotification(
@@ -107,7 +109,8 @@ private constructor(
                 } else {
                     val statusDBO = EmailStatusEventDBO(
                             email = email,
-                            emailStatus = EmailStatus.HARD_BOUNCED
+                            emailStatus = EmailStatus.HARD_BOUNCED,
+                            metaData = StatusEventMetaData()
                     )
                     emailStatusEventDAO.save(statusDBO)
                     mqSender.queueDeliveryNotification(
@@ -183,7 +186,8 @@ private constructor(
                     ?.let { email ->
                         val emailStatusEventDBO = EmailStatusEventDBO(
                                 email = email,
-                                emailStatus = EmailStatus.HARD_BOUNCED
+                                emailStatus = EmailStatus.HARD_BOUNCED,
+                                metaData = StatusEventMetaData()
                         )
                         emailStatusEventDAO.save(emailStatusEventDBO)
                         blockedEmailDAO.block(emailStatusEventDBO)
@@ -208,7 +212,8 @@ private constructor(
                     ?.let { email ->
                         val emailStatusEventDBO = EmailStatusEventDBO(
                                 email = email,
-                                emailStatus = EmailStatus.UNSUBSCRIBE
+                                emailStatus = EmailStatus.UNSUBSCRIBE,
+                                metaData = StatusEventMetaData()
                         )
                         emailStatusEventDAO.save(emailStatusEventDBO)
                         blockedEmailDAO.block(emailStatusEventDBO)

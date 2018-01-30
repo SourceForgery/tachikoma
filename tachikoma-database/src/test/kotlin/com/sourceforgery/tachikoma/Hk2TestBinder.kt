@@ -28,6 +28,7 @@ import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.internal.PerThreadContext
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import java.net.URI
+import java.time.Clock
 import java.util.UUID
 import javax.inject.Singleton
 
@@ -80,6 +81,9 @@ class Hk2TestBinder : AbstractBinder() {
         bindAsContract(AccountDAOImpl::class.java)
                 .to(AccountDAO::class.java)
                 .`in`(Singleton::class.java)
+
+        bind(Clock.systemUTC())
+                .to(Clock::class.java)
 
         bind(object : InvokeCounter {
             override fun inc(sql: String?, millis: Long) {

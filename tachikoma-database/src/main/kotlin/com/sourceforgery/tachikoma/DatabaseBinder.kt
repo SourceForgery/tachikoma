@@ -24,6 +24,7 @@ import com.sourceforgery.tachikoma.database.server.LogEverything
 import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.upgrades.Version1
 import com.sourceforgery.tachikoma.database.upgrades.Version2
+import com.sourceforgery.tachikoma.database.upgrades.Version3
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import io.ebean.EbeanServer
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -81,7 +82,8 @@ class DatabaseBinder : AbstractBinder() {
         // These classes will be run in order before ebean starts
         val databaseUpgrades = listOf(
                 Version1::class.java,
-                Version2::class.java
+                Version2::class.java,
+                Version3::class.java
         )
         var idx = 0
         for (databaseUpgrade in databaseUpgrades) {

@@ -10,6 +10,9 @@ class AuthenticationDAOImpl
 private constructor(
         private val ebeanServer: EbeanServer
 ) : AuthenticationDAO {
+    override fun save(authenticationDBO: AuthenticationDBO) =
+            ebeanServer.save(authenticationDBO)
+
     override fun getByUsername(username: String) =
             ebeanServer
                     .find(AuthenticationDBO::class.java)

@@ -86,7 +86,7 @@ fun com.sourceforgery.tachikoma.identifiers.IncomingEmailId.toGrpc() =
         IncomingEmailId.newBuilder().setId(incomingEmailId).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpc() =
-NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()
+        NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()
 
 fun AuthenticationRole.toRole() =
         when (this) {

@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.objects
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.identifiers.EmailStatusId
 import io.ebean.annotation.CreatedTimestamp
+import io.ebean.annotation.DbJson
 import io.ebean.bean.EntityBean
 import java.time.Instant
 import javax.persistence.CascadeType
@@ -23,8 +24,8 @@ class EmailStatusEventDBO(
         val emailStatus: EmailStatus,
         @ManyToOne(cascade = [CascadeType.ALL])
         val email: EmailDBO,
-        @Column
-        val mtaStatusCode: String? = null
+        @field:DbJson
+        val metaData: StatusEventMetaData
 ) {
     @Id
     @Column(columnDefinition = "DECIMAL(20)", name = "id")

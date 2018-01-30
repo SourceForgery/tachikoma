@@ -13,8 +13,10 @@ import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.logging.logger
+import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import io.netty.util.AsciiString
 import java.text.MessageFormat
@@ -24,10 +26,12 @@ import javax.inject.Inject
 internal class TrackingRest
 @Inject
 private constructor(
-        val trackingDecoder: TrackingDecoder,
-        val authentication: Authentication,
-        val emailDAO: EmailDAO,
-        val emailStatusEventDAO: EmailStatusEventDAO
+        private val trackingDecoder: TrackingDecoder,
+        private val authentication: Authentication,
+        private val emailDAO: EmailDAO,
+        private val emailStatusEventDAO: EmailStatusEventDAO,
+        private val remoteIP: RemoteIP
+
 ) : RestService {
     @Get("regex:^/t/(?<trackingData>.*)")
     @ProduceType("image/gif")
@@ -38,7 +42,10 @@ private constructor(
             val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
             val emailStatusEvent = EmailStatusEventDBO(
                     emailStatus = EmailStatus.OPENED,
-                    email = email
+                    email = email,
+                    metaData = StatusEventMetaData(
+                            ipAddress = remoteIP.remoteAddress
+                    )
             )
             emailStatusEventDAO.save(emailStatusEvent)
         } catch (e: Exception) {
@@ -57,8 +64,10 @@ private constructor(
             val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
             val emailStatusEvent = EmailStatusEventDBO(
                     emailStatus = EmailStatus.CLICKED,
-                    email = email
-            )
+                    email = email,
+                    metaData = StatusEventMetaData(
+                            ipAddress = remoteIP.remoteAddress
+                    ))
             emailStatusEventDAO.save(emailStatusEvent)
 
             return HttpResponse.of(

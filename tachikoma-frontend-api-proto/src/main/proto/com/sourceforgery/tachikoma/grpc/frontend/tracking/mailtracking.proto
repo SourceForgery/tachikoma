@@ -6,61 +6,7 @@ package com.sourceforgery.tachikoma.grpc.frontend.tracking;
 
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 
 service DeliveryNotificationService {
     rpc notificationStream(google.protobuf.Empty) returns (stream EmailNotification);
-}
-
-message EmailNotification {
-    EmailId emailId = 101;
-    EmailAddress recipientEmailAddress = 102;
-    EmailTransactionId emailTransactionId = 103;
-    google.protobuf.Timestamp timestamp = 104;
-    oneof notification {
-        SoftBouncedEvent softBouncedEvent = 201;
-        HardBouncedEvent hardBouncedEvent = 202;
-        DeliveredEvent delivereddEvent = 203;
-        QueuedEvent queuedEvent = 204;
-        OpenedEvent openedEvent = 205;
-        ClickedEvent clickedEvent = 206;
-        UnsubscribedEvent unsubscribedEvent = 207;
-    }
-}
-
-// Message bounced. Will be retried automatically.
-message SoftBouncedEvent {
-}
-
-// Message bounced. No more retries will be done.
-message HardBouncedEvent {
-    // Free text saying what the other server said (if anything)
-    // Will be empty if it's a connection error
-    string rejectReason = 101;
-}
-
-// Message has been successfully delivered to other server
-message DeliveredEvent {
-}
-
-// Message has been successfully delievered to outgoing email server
-message QueuedEvent {
-}
-
-// Message has been opened
-message OpenedEvent {
-    // IP address that downloaded the tracking pixel
-    string ipAddress = 101;
-}
-
-// Message has been clicked
-message ClickedEvent {
-    // Ip address that clicked the link
-    string ipAddress = 101;
-}
-
-// Message has caused receiver to unsubscribe
-message UnsubscribedEvent {
-    // Ip address that unsubscribed
-    string ipaddress = 101;
 }

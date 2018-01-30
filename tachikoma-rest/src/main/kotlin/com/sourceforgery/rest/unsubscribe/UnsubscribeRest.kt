@@ -13,6 +13,7 @@ import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.logging.logger
@@ -52,7 +53,10 @@ private constructor(
             val email = emailDAO.fetchEmailData(unsubscribeData.emailId.toEmailId())!!
             val emailStatusEvent = EmailStatusEventDBO(
                     emailStatus = EmailStatus.UNSUBSCRIBE,
-                    email = email
+                    email = email,
+                    metaData = StatusEventMetaData(
+                            ipAddress = remoteIP.remoteAddress
+                    )
             )
             emailStatusEventDAO.save(emailStatusEvent)
             blockedEmailDAO.block(emailStatusEvent)
@@ -64,7 +68,7 @@ private constructor(
                     .setMessageUnsubscribed(
                             MessageUnsubscribed
                                     .newBuilder()
-                                    .setIpAdress(remoteIP.remoteAddress)
+                                    .setIpAddress(remoteIP.remoteAddress)
                     )
                     .build()
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
