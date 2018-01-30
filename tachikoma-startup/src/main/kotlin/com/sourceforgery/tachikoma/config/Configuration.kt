@@ -11,7 +11,7 @@ internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServ
     override val sendDebugData: Boolean = readConfig("SEND_DEBUG_DATA", true)
     override val sqlUrl = readConfig("SQL_URL", "postgres://username:password@localhost:5432/tachikoma", URI::class.java)
     override val timeDatabaseQueries: Boolean = readConfig("TIME_DATABASE_QUERIES", true)
-    override val encryptionKey: String = readEncryptionConfig("ENCRYPTION_KEY")
+    override val linkSignKey: String = readEncryptionConfig("LINK_SIGN_KEY")
     override val webtokenSignKey: ByteArray = readEncryptionConfig("WEBTOKEN_SIGN_KEY").toByteArray(StandardCharsets.UTF_8)
     override val baseUrl: URI = readConfig("BASE_URL", "http://localhost:8070/", URI::class.java)
     override val createDatabase: Boolean = false

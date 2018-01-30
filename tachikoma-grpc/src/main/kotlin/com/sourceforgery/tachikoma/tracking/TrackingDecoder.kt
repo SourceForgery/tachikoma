@@ -15,7 +15,7 @@ private constructor(
         trackingConfig: TrackingConfig
 ) : TrackingDecoder {
 
-    private val encryptionKey = trackingConfig.encryptionKey.toByteArray(StandardCharsets.UTF_8)
+    private val encryptionKey = trackingConfig.linkSignKey.toByteArray(StandardCharsets.UTF_8)
 
     override fun decodeTrackingData(trackingData: String): UrlTrackingData {
         val decoded = Base64.getUrlDecoder().decode(trackingData)!!

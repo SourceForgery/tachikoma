@@ -25,7 +25,7 @@ import javax.inject.Singleton
 class Hk2TestBinder : AbstractBinder() {
     override fun configure() {
         bind(object : TrackingConfig {
-            override val encryptionKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd"
+            override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd"
             override val baseUrl: URI = URI.create("http://localhost/")
         })
                 .to(TrackingConfig::class.java)
