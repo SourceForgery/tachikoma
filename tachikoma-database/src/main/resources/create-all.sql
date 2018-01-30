@@ -129,4 +129,5 @@ create index ix_e_incoming_email_address_account_id on e_incoming_email_address 
 alter table e_incoming_email add constraint fk_e_incoming_email_account_dbo_id foreign key (account_dbo_id) references e_account (id) on delete restrict on update restrict;
 create index ix_e_incoming_email_account_dbo_id on e_incoming_email (account_dbo_id);
 
-insert into database_version values (-1);
+CREATE EXTENSION pgcrypto;
+INSERT INTO database_version VALUES (-1);
