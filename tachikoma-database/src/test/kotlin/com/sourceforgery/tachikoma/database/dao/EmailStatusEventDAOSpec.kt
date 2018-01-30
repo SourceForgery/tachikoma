@@ -100,8 +100,11 @@ internal class EmailStatusEventDAOSpec : Spek({
                 email = email,
                 metaData = StatusEventMetaData()
         )
-        emailStatusEventDBO.dateCreated = dateCreated
         emailStatusEventDAO.save(emailStatusEventDBO)
+        dateCreated ?. also {
+            emailStatusEventDBO.dateCreated = it
+            emailStatusEventDAO.save(emailStatusEventDBO)
+        }
 
         return emailStatusEventDBO
     }

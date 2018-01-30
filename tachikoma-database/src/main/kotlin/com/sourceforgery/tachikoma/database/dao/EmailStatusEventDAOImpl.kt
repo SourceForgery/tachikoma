@@ -18,7 +18,7 @@ private constructor(
         return ebeanServer
                 .find(EmailStatusEventDBO::class.java)
                 .where()
-                .eq("email.transaction.authentication.account.id", accountId.accountId)
+                .eq("email.transaction.authentication.account.dbId", accountId.accountId)
                 .gt("dateCreated", instant)
                 .findList()
     }

@@ -7,6 +7,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.QueuedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
