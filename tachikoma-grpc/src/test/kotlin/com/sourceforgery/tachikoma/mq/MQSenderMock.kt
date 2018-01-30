@@ -13,10 +13,6 @@ private constructor() : MQSender {
     val outgoingEmails = LinkedBlockingQueue<OutgoingEmailMessage>()
     val incomingEmails = LinkedBlockingQueue<IncomingEmailNotificationMessage>()
 
-    init {
-        System.err.println("here we are")
-    }
-
     override fun queueJob(jobMessage: JobMessage) {
         jobs.add(jobMessage)
     }
