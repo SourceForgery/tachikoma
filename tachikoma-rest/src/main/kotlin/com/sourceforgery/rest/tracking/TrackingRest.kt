@@ -27,7 +27,6 @@ internal class TrackingRest
 @Inject
 private constructor(
         private val trackingDecoder: TrackingDecoder,
-        private val authentication: Authentication,
         private val emailDAO: EmailDAO,
         private val emailStatusEventDAO: EmailStatusEventDAO,
         private val remoteIP: RemoteIP
