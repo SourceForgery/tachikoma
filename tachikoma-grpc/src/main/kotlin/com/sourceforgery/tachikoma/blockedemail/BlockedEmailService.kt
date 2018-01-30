@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.blockedemail
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
