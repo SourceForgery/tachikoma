@@ -24,7 +24,7 @@ class MailSender(
 
     fun start() {
         response = stub.getEmails(fromServerStreamObserver)
-        LOGGER.info { "Successfully started listening for emails" }
+        LOGGER.info { "Connecting. Trying to listen for emails" }
     }
 
     fun sendEmail(value: EmailMessage): MTAQueuedNotification {
