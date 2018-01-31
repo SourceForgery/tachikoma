@@ -19,7 +19,4 @@ dependencies {
 
 mainClassName = "com.sourceforgery.tachikoma.MainKt"
 
-
 distZip.enabled = false
-
-//assemble.dependsOn distTar
