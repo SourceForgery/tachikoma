@@ -15,6 +15,7 @@ import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
+import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MessageQueue
@@ -72,6 +73,7 @@ fun main(vararg args: String) {
     }
 
     val exceptionInterceptor: GrpcExceptionInterceptor = serviceLocator.get()
+    val webServerConfig: WebServerConfig = serviceLocator.get()
 
     val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())
     for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
@@ -85,7 +87,14 @@ fun main(vararg args: String) {
             // Grpc must be last
             .decorator(Function { it.decorate(requestScoped) })
             .serviceUnder("/", grpcService)
-            .port(8070, SessionProtocol.HTTP)
+            .apply {
+                if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
+                    sslContext(SessionProtocol.HTTPS, File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
+                    port(8443, SessionProtocol.HTTPS)
+                } else {
+                    port(8070, SessionProtocol.HTTP)
+                }
+            }
             .defaultRequestTimeout(Duration.ofDays(365))
             .build()
             .start()
