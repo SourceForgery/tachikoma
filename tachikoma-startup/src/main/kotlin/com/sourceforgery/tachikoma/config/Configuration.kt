@@ -15,4 +15,6 @@ internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServ
     override val webtokenSignKey: ByteArray = readEncryptionConfig("WEBTOKEN_SIGN_KEY").toByteArray(StandardCharsets.UTF_8)
     override val baseUrl: URI = readConfig("BASE_URL", "http://localhost:8070/", URI::class.java)
     override val createDatabase: Boolean = false
+    override val sslCertChainFile = readConfig("SSL_CERT_CHAIN_FILE", "")
+    override val sslCertKeyFile = readConfig("SSL_CERT_KEY_FILE", "")
 }
