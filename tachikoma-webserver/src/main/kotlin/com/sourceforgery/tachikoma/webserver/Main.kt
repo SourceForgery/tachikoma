@@ -28,7 +28,10 @@ import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.EbeanServer
 import io.grpc.BindableService
 import io.grpc.ServerInterceptors
+import io.netty.util.internal.logging.InternalLoggerFactory
+import io.netty.util.internal.logging.Log4J2LoggerFactory
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
+import java.io.File
 import java.time.Duration
 import java.util.function.Function
 
@@ -45,14 +48,6 @@ fun main(vararg args: String) {
             DatabaseBinder(),
             WebBinder()
     )!!
-
-    listOf(
-            MessageQueue::class.java,
-            EbeanServer::class.java
-    )
-            // Yes, parallel stream is broken by design, but here it should work
-            .parallelStream()
-            .forEach({ serviceLocator.getService(it) })
 
     val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
 
@@ -84,7 +79,7 @@ fun main(vararg args: String) {
 
     serviceLocator.getService(JobWorker::class.java).work()
 
-    serverBuilder
+    val server = serverBuilder
             // Grpc must be last
             .decorator(Function { it.decorate(requestScoped) })
             .serviceUnder("/", grpcService)
@@ -99,5 +94,15 @@ fun main(vararg args: String) {
             .defaultRequestTimeout(Duration.ofDays(365))
             .build()
             .start()
-            .join()
+
+    listOf(
+            MessageQueue::class.java,
+            EbeanServer::class.java
+    )
+            // Yes, parallel stream is broken by design, but here it should work
+            .parallelStream()
+            .forEach({ serviceLocator.getService(it) })
+
+
+    server.join()
 }
