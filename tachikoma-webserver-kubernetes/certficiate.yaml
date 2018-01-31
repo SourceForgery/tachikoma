@@ -1,0 +1,22 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: tachikoma-cert
+  namespace: default
+spec:
+  secretName: tachikoma-webserver-cert
+  issuerRef:
+    name: letsencrypt-staging
+  commonName: www.example.com
+  dnsNames:
+  - www.example.com
+  acme:
+    config:
+    - http01:
+        ingressClass: nginx
+      domains:
+      - example.com
+    - http01:
+        ingress: my-ingress
+      domains:
+      - www.example.com
