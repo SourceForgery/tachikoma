@@ -34,6 +34,7 @@ import java.util.function.Function
 
 @Suppress("unused")
 fun main(vararg args: String) {
+    InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
 
     val serviceLocator = ServiceLocatorUtilities.bind(
             CommonBinder(),
