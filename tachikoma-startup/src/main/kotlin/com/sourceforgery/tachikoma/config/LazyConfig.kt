@@ -88,7 +88,11 @@ private object ConfigData {
     val properties = Properties()
 
     init {
-        val configFile = File(System.getProperty("user.home"), ".tachikoma.config")
+        val configFile = System.getenv("TACHIKOMA_CONFIG")
+                ?. let {
+                    File(it)
+                }
+                ?: File(System.getProperty("user.home"), ".tachikoma.config")
         try {
             InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)
                     .use { reader -> properties.load(reader) }
