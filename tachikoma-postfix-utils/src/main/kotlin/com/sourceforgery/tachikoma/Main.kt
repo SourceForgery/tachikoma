@@ -85,9 +85,9 @@ fun main(args: Array<String>) {
 
     val tachikomaUrl = URI.create(
             System.getenv("TACHIKOMA_URL")
-                    ?: "http://oodua5yai9Pah5ook3wah4hahqu4IeK0iung8ou5Cho4Doonee@172.17.0.1:8070"
-
+                    ?: throw IllegalArgumentException("Can't start without TACHIKOMA_URL")
     )
+
     Main(tachikomaUrl, mailDomain)
             .run()
 }
