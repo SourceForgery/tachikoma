@@ -15,6 +15,7 @@ import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
+import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MessageQueue
@@ -27,12 +28,16 @@ import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.EbeanServer
 import io.grpc.BindableService
 import io.grpc.ServerInterceptors
+import io.netty.util.internal.logging.InternalLoggerFactory
+import io.netty.util.internal.logging.Log4J2LoggerFactory
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
+import java.io.File
 import java.time.Duration
 import java.util.function.Function
 
 @Suppress("unused")
 fun main(vararg args: String) {
+    InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
 
     val serviceLocator = ServiceLocatorUtilities.bind(
             CommonBinder(),
@@ -43,14 +48,6 @@ fun main(vararg args: String) {
             DatabaseBinder(),
             WebBinder()
     )!!
-
-    listOf(
-            MessageQueue::class.java,
-            EbeanServer::class.java
-    )
-            // Yes, parallel stream is broken by design, but here it should work
-            .parallelStream()
-            .forEach({ serviceLocator.getService(it) })
 
     val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
 
@@ -72,6 +69,7 @@ fun main(vararg args: String) {
     }
 
     val exceptionInterceptor: GrpcExceptionInterceptor = serviceLocator.get()
+    val webServerConfig: WebServerConfig = serviceLocator.get()
 
     val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())
     for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
@@ -81,13 +79,29 @@ fun main(vararg args: String) {
 
     serviceLocator.getService(JobWorker::class.java).work()
 
-    serverBuilder
+    val server = serverBuilder
             // Grpc must be last
             .decorator(Function { it.decorate(requestScoped) })
             .serviceUnder("/", grpcService)
-            .port(8070, SessionProtocol.HTTP)
+            .apply {
+                if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
+                    sslContext(SessionProtocol.HTTPS, File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
+                    port(8443, SessionProtocol.HTTPS)
+                } else {
+                    port(8070, SessionProtocol.HTTP)
+                }
+            }
             .defaultRequestTimeout(Duration.ofDays(365))
             .build()
             .start()
-            .join()
+
+    listOf(
+            MessageQueue::class.java,
+            EbeanServer::class.java
+    )
+            // Yes, parallel stream is broken by design, but here it should work
+            .parallelStream()
+            .forEach({ serviceLocator.getService(it) })
+
+    server.join()
 }

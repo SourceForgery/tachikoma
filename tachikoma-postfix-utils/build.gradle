@@ -1,20 +1,22 @@
 apply plugin: 'kotlin'
 apply plugin: 'application'
+apply plugin: "com.google.osdetector"
+
+
+def tcnative_classifier = osdetector.classifier
 
 dependencies {
-    compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
-    compile "io.grpc:grpc-okhttp:1.8.0"
     compile "com.github.jnr:jnr-unixsocket:0.18"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile "io.grpc:grpc-netty:$grpc_version"
+    compile "io.netty:netty-tcnative-boringssl-static:2.0.7.Final:$tcnative_classifier"
     compile "net.sf.expectit:expectit-core:0.9.0"
+    compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
     compile "org.apache.logging.log4j:log4j-iostreams:$log4j2_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
 }
 
 mainClassName = "com.sourceforgery.tachikoma.MainKt"
 
-
 distZip.enabled = false
-
-//assemble.dependsOn distTar
