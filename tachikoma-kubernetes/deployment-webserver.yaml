@@ -1,0 +1,42 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: tachikoma-webserver
+  labels:
+    app: tachikoma-webserver
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tachikoma-webserver
+  template:
+    metadata:
+      labels:
+        app: tachikoma-webserver
+    spec:
+      containers:
+      - name: tachikoma-webserver
+        image: sourceforgery/tachikoma-webserver:0.0.1-SNAPSHOT
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - name: webserver-config
+          mountPath: "/etc/tachikoma/config/"
+          readOnly: true
+        - name: webserver-certs
+          mountPath: "/etc/tachikoma/cert/"
+          readOnly: true
+        env:
+        - name: TACHIKOMA_CONFIG
+          value: "/etc/tachikomma/config/tachikoma.config"
+        - name: SSL_CERT_CHAIN_FILE
+          value: "/etc/tachikoma/cert/server.cert"
+        - name: SSL_CERT_KEY_FILE
+          value: "/etc/tachikomma/cert/server.key"
+      volumes:
+      - name: webserver-config
+        secret:
+          secretName: tachikoma-webserver-config
+      - name: webserver-certs
+        secret:
+          secretName: tachikoma-webserver-cert
