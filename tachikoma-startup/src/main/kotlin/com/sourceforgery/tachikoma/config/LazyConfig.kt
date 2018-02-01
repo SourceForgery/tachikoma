@@ -96,6 +96,7 @@ private object ConfigData {
         try {
             InputStreamReader(FileInputStream(configFile), StandardCharsets.UTF_8)
                     .use { reader -> properties.load(reader) }
+            LOGGER.info("Read config from '$configFile'")
         } catch (e: IOException) {
             LOGGER.info { "Couldn't find '$configFile'" }
         }

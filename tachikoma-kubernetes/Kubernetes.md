@@ -39,3 +39,12 @@ $ kubectl create secret generic tachikoma-webserver-cert \
  --from-file=./server.pem \
  --from-file=./ca_chain.pem
 ```
+
+
+
+
+### Upgrading
+
+``
+$ kubectl replace -f deployment-webserver.yaml
+```
