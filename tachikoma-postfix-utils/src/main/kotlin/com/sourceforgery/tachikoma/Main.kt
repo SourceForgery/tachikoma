@@ -78,7 +78,7 @@ class Main(
 }
 
 fun main(args: Array<String>) {
-    InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
+    InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
 
     val mailDomain = System.getenv("MAIL_DOMAIN")
             ?: throw IllegalArgumentException("Can't start without MAIL_DOMAIN")

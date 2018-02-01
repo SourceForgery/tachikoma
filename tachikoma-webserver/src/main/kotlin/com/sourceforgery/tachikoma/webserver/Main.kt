@@ -37,7 +37,7 @@ import java.util.function.Function
 
 @Suppress("unused")
 fun main(vararg args: String) {
-    InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
+    InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
 
     val serviceLocator = ServiceLocatorUtilities.bind(
             CommonBinder(),
@@ -102,7 +102,6 @@ fun main(vararg args: String) {
             // Yes, parallel stream is broken by design, but here it should work
             .parallelStream()
             .forEach({ serviceLocator.getService(it) })
-
 
     server.join()
 }
