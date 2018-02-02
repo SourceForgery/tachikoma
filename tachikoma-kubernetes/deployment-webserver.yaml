@@ -28,11 +28,11 @@ spec:
           readOnly: true
         env:
         - name: TACHIKOMA_CONFIG
-          value: "/etc/tachikomma/config/tachikoma.config"
+          value: "/etc/tachikoma/config/tachikoma.properties"
         - name: SSL_CERT_CHAIN_FILE
           value: "/etc/tachikoma/cert/server.cert"
         - name: SSL_CERT_KEY_FILE
-          value: "/etc/tachikomma/cert/server.key"
+          value: "/etc/tachikoma/cert/server.key"
       volumes:
       - name: webserver-config
         secret:
