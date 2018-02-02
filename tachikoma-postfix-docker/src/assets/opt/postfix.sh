@@ -20,6 +20,12 @@ if [[ -n "$(find /etc/postfix/certs -iname *.crt)" && -n "$(find /etc/postfix/ce
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
 fi
 
+# OpenDKIM
+postconf -e milter_protocol=2
+postconf -e milter_default_action=accept
+postconf -e smtpd_milters=unix:/opendkim/opendkim.sock
+postconf -e non_smtpd_milters=unix:/opendkim/opendkim.sock
+
 service postfix start
 
 touch /var/log/mail.log
