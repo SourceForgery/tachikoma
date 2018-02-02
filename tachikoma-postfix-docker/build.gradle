@@ -24,8 +24,6 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     addFile(file('src/assets/'))
 
-    runCommand('./opendkim.sh')
-
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
     runCommand("mkfifo /opt/maillog_pipe && chown postfix:postfix /opt/maillog_pipe")
