@@ -17,7 +17,9 @@ import com.sourceforgery.tachikoma.grpc.frontend.QueuedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SpamEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.Event
 import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.GetEmailStatusEventsFilter
+import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
@@ -34,7 +36,28 @@ private constructor(
         authentication.requireFrontend()
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
-        emailStatusEventDAO.getEventsAfter(authenticationDBO.account.id, request.newerThan.toInstant())
+        val events: List<EmailStatus> = request.eventsList
+                .map {
+                    when (it) {
+                        Event.CLICKED -> EmailStatus.CLICKED
+                        Event.DELIVERED -> EmailStatus.DELIVERED
+                        Event.UNSUBSCRIBED -> EmailStatus.UNSUBSCRIBE
+                        Event.HARD_BOUNCED -> EmailStatus.HARD_BOUNCED
+                        Event.SOFT_BOUNCED -> EmailStatus.SOFT_BOUNCED
+                        Event.QUEUED -> EmailStatus.QUEUED
+                        Event.SPAM -> EmailStatus.SPAM
+                        Event.OPENED -> EmailStatus.OPENED
+                        else -> throw IllegalArgumentException("$it is not valid for blocking")
+                    }
+                }
+
+        emailStatusEventDAO.getEvents(
+                accountId = authenticationDBO.account.id,
+                instant = request.newerThan?.toInstant(),
+                recipientEmail = request.recipientEmail?.toEmail(),
+                fromEmail = request.fromEmail?.toEmail(),
+                events = events
+        )
                 .forEach {
                     responseObserver.onNext(
                             getEmailNotification(it)

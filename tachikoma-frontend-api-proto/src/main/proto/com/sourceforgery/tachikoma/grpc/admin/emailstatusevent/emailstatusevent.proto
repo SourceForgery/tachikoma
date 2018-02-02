@@ -15,6 +15,28 @@ service EmailStatusEventService {
 
 // Filter for retrieving historic e-mail status events
 message GetEmailStatusEventsFilter {
+
     // Only retrieve events that are newer than this timestamp
     google.protobuf.Timestamp newerThan = 101;
+
+    // Filter events on recipient e-mail
+    EmailAddress recipientEmail = 102;
+
+    // Filter events on from e-mail
+    EmailAddress fromEmail = 103;
+
+    // Filter events on zero or more event types
+    repeated Event events = 104;
+}
+
+// Event types available to filter on
+enum Event {
+    SOFT_BOUNCED = 0;
+    HARD_BOUNCED = 1;
+    DELIVERED = 2;
+    QUEUED = 3;
+    OPENED = 4;
+    CLICKED = 5;
+    UNSUBSCRIBED = 6;
+    SPAM = 7;
 }
