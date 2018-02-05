@@ -15,8 +15,10 @@ import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
+import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
+import io.ebean.EbeanServer
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -33,20 +35,16 @@ import kotlin.test.assertEquals
 @RunWith(JUnitPlatform::class)
 internal class EmailStatusEventDAOSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
-    lateinit var emailDAO: EmailDAO
     lateinit var emailStatusEventDAO: EmailStatusEventDAO
-    lateinit var accountDAO: AccountDAO
-    lateinit var authenticationDAO: AuthenticationDAO
     lateinit var dbObjectMapper: DBObjectMapper
+    lateinit var ebeanServer: EbeanServer
     lateinit var clock: Clock
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
-        emailDAO = serviceLocator.getService(EmailDAO::class.java)
-        emailStatusEventDAO = serviceLocator.getService(EmailStatusEventDAO::class.java)
-        accountDAO = serviceLocator.getService(AccountDAO::class.java)
-        authenticationDAO = serviceLocator.getService(AuthenticationDAO::class.java)
-        dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
-        clock = serviceLocator.getService(Clock::class.java)
+        emailStatusEventDAO = serviceLocator.get()
+        dbObjectMapper = serviceLocator.get()
+        ebeanServer = serviceLocator.get()
+        clock = serviceLocator.get()
     }
 
     afterEachTest {
@@ -57,7 +55,7 @@ internal class EmailStatusEventDAOSpec : Spek({
 
     fun createAuthentication(domain: String): AuthenticationDBO {
         val accountDBO = AccountDBO(MailDomain(domain))
-        accountDAO.save(accountDBO)
+        ebeanServer.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
                 username = domain,
@@ -66,7 +64,7 @@ internal class EmailStatusEventDAOSpec : Spek({
                 role = AuthenticationRole.BACKEND,
                 account = accountDBO
         )
-        authenticationDAO.save(authenticationDBO)
+        ebeanServer.save(authenticationDBO)
 
         return authenticationDBO
     }
@@ -93,17 +91,17 @@ internal class EmailStatusEventDAOSpec : Spek({
                 messageId = MessageId(UUID.randomUUID().toString()),
                 mtaQueueId = null
         )
-        emailDAO.save(email)
+        ebeanServer.save(email)
 
         val emailStatusEventDBO = EmailStatusEventDBO(
                 emailStatus = emailStatus,
                 email = email,
                 metaData = StatusEventMetaData()
         )
-        emailStatusEventDAO.save(emailStatusEventDBO)
-        dateCreated ?. also {
+        ebeanServer.save(emailStatusEventDBO)
+        dateCreated?.also {
             emailStatusEventDBO.dateCreated = it
-            emailStatusEventDAO.save(emailStatusEventDBO)
+            ebeanServer.save(emailStatusEventDBO)
         }
 
         return emailStatusEventDBO
@@ -126,12 +124,19 @@ internal class EmailStatusEventDAOSpec : Spek({
                     recipient = Email("recipient2@example.org"),
                     emailStatus = EmailStatus.DELIVERED
             )
-            createEmailStatusEvent(
+            val event1 = createEmailStatusEvent(
                     authentication = authentication1,
                     from = Email("from@example.org"),
                     recipient = Email("recipient3@example.org"),
                     emailStatus = EmailStatus.DELIVERED,
                     dateCreated = clock.instant().minus(3, ChronoUnit.DAYS)
+            )
+            val event2 = createEmailStatusEvent(
+                    authentication = authentication1,
+                    from = Email("from@example.org"),
+                    recipient = Email("recipient3@example.org"),
+                    emailStatus = EmailStatus.UNSUBSCRIBE,
+                    dateCreated = clock.instant().minus(2, ChronoUnit.DAYS)
             )
 
             val authentication2 = createAuthentication("example.com")
@@ -142,13 +147,19 @@ internal class EmailStatusEventDAOSpec : Spek({
                     emailStatus = EmailStatus.DELIVERED
             )
 
-            val eventsTimeLimit = clock.instant().minus(2, ChronoUnit.DAYS)
+            val eventsTimeLimit = clock.instant().minus(4, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account.id, eventsTimeLimit)
+            val emailStatusEvents = emailStatusEventDAO.getEvents(
+                    accountId = authentication1.account.id,
+                    instant = eventsTimeLimit,
+                    recipientEmail = Email("recipient3@example.org"),
+                    fromEmail = Email("from@example.org"),
+                    events = listOf(EmailStatus.DELIVERED, EmailStatus.UNSUBSCRIBE)
+            )
 
             assertEquals(2, emailStatusEvents.size)
-            assertEquals("recipient1@example.org", emailStatusEvents[0].email.recipient.address)
-            assertEquals("recipient2@example.org", emailStatusEvents[1].email.recipient.address)
+            assertEquals(event1.id, emailStatusEvents[0].id)
+            assertEquals(event2.id, emailStatusEvents[1].id)
         }
 
         it("it should not return events outside time limit") {
@@ -158,12 +169,25 @@ internal class EmailStatusEventDAOSpec : Spek({
                     authentication = authentication1,
                     from = Email("from@example.org"),
                     recipient = Email("recipient1@example.org"),
-                    emailStatus = EmailStatus.DELIVERED
+                    emailStatus = EmailStatus.DELIVERED,
+                    dateCreated = clock.instant().minus(3, ChronoUnit.DAYS)
+
+            )
+            createEmailStatusEvent(
+                    authentication = authentication1,
+                    from = Email("from@example.org"),
+                    recipient = Email("recipient1@example.org"),
+                    emailStatus = EmailStatus.DELIVERED,
+                    dateCreated = clock.instant().minus(4, ChronoUnit.DAYS)
+
             )
 
-            val eventsTimeLimit = clock.instant().plus(2, ChronoUnit.DAYS)
+            val eventsTimeLimit = clock.instant().minus(2, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO.getEventsAfter(authentication1.account.id, eventsTimeLimit)
+            val emailStatusEvents = emailStatusEventDAO.getEvents(
+                    accountId = authentication1.account.id,
+                    instant = eventsTimeLimit
+            )
 
             assertEquals(0, emailStatusEvents.size)
         }
