@@ -10,7 +10,8 @@ buildscript {
         classpath 'org.ajoberstar:gradle-git:1.7.2'
         classpath 'com.netflix.nebula:gradle-lint-plugin:8.3.1'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
-
+        classpath 'co.riiid:gradle-github-plugin:0.4.2'
+        classpath 'net.researchgate:gradle-release:2.6.0'
     }
     repositories {
         mavenLocal()
@@ -22,12 +23,12 @@ buildscript {
     }
 }
 
-plugins {
-    id 'net.researchgate.release' version '2.6.0'
-}
 apply plugin: 'java'
 apply plugin: 'org.ajoberstar.grgit'
 apply plugin: 'nebula.lint'
+apply plugin: 'net.researchgate.release'
+
+def travisTag = System.getenv("TRAVIS_TAG") ?: ""
 
 subprojects {
     apply plugin: 'idea'
@@ -108,7 +109,24 @@ subprojects {
             testCompile "org.glassfish.hk2:hk2-utils:$hk2_version"
             compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
             compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+        }
+    }
 
+    if (!travisTag.empty) {
+        // Only activate when we're building a tag
+        apply plugin: 'co.riiid.gradle'
+        def githubApiToken = System.getenv("GITHUB_API_TOKEN") ?: ""
+        github {
+            owner = 'SourceForgery'
+            repo = 'tachikoma'
+            token = githubApiToken
+            tagName = travisTag
+            targetCommitish = 'master'
+            name = "v${project.version}"
+            assets = [
+                    "tachikoma-webserver/build/distributions/tachikoma-webserver-${project.version}.tar",
+                    "tachikoma-postfix-utils/build/distributions/tachikoma-postfix-utils-${project.version}.tar",
+            ]
         }
     }
 
@@ -119,8 +137,10 @@ subprojects {
         if (currentBranch == "master" && Boolean.valueOf(System.getenv("DOCKER_PUSH"))) {
             push = true
         }
+        if (!travisTag.empty) {
+            push = true
+        }
     }
 }
 
 group 'com.sourceforgery.tachikoma'
-
