@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: tachikoma-webserver
-        image: sourceforgery/tachikoma-webserver:0.0.1-SNAPSHOT
+        image: sourceforgery/tachikoma-webserver:0.0.6-SNAPSHOT
         ports:
         - containerPort: 8443
         volumeMounts:
@@ -30,7 +30,7 @@ spec:
         - name: TACHIKOMA_CONFIG
           value: "/etc/tachikoma/config/tachikoma.properties"
         - name: SSL_CERT_CHAIN_FILE
-          value: "/etc/tachikoma/cert/server.cert"
+          value: "/etc/tachikoma/cert/server.crt"
         - name: SSL_CERT_KEY_FILE
           value: "/etc/tachikoma/cert/server.key"
       volumes:
