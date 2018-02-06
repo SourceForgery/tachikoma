@@ -37,6 +37,8 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand("chmod a+x /opt/tachikoma-webserver/bin/tachikoma-webserver")
 
+    runCommand("useradd webserver && mkdir -p /var/log/tachikoma && chown webserver:root /var/log/tachikoma")
+
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 }
 
