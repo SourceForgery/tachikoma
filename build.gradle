@@ -46,7 +46,8 @@ github {
 
 if (!travisTag.empty) {
     // Only activate when we're building a tag
-    build.dependsOn githubRelease
+    println("Trying to build release")
+    check.doLast githubRelease
 }
 
 subprojects {
