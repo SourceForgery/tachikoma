@@ -46,6 +46,9 @@ github {
 
 if (!travisTag.empty) {
     // Only activate when we're building a tag
+    if (System.getenv("GITHUB_API_TOKEN") == null) {
+        throw new GroovyRuntimeException("GITHUB_API_TOKEN not set")
+    }
     println("Trying to build release")
     check.finalizedBy githubRelease
 }
