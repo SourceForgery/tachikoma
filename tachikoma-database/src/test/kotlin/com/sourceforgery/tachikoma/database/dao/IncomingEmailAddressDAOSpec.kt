@@ -117,7 +117,7 @@ internal class IncomingEmailAddressDAOSpec : Spek({
             }
         }
 
-        it("it should return a correct incoming e-mail from en E-mail") {
+        it("it should return a correct account from en E-mail") {
 
             val authentication1 = createAuthentication("example.org")
 
@@ -132,6 +132,32 @@ internal class IncomingEmailAddressDAOSpec : Spek({
             assertNotNull(incomingEmail)
             assertEquals(authentication1.account.id, incomingEmail!!.account.id)
             assertEquals("a", incomingEmail.localPart)
+        }
+
+        it("it should return a correct account from an E-mail") {
+
+            val authentication1 = createAuthentication("example.org")
+            val authentication2 = createAuthentication("example.net")
+
+            saveIncomingEmailAddress(authentication1, "a")
+            saveIncomingEmailAddress(authentication1, "b")
+            saveIncomingEmailAddress(authentication1, "")
+
+            saveIncomingEmailAddress(authentication2, "a")
+            saveIncomingEmailAddress(authentication2, "b")
+            saveIncomingEmailAddress(authentication2, "")
+
+            val email1 = Email(MailDomain("example.org"), "ab")
+            val email2 = Email(MailDomain("example.net"), "b")
+            val incomingEmail1 = incomingEmailAddressDAO.getByEmail(email1)
+            val incomingEmail2 = incomingEmailAddressDAO.getByEmail(email2)
+
+            assertNotNull(incomingEmail1)
+            assertNotNull(incomingEmail2)
+            assertEquals(authentication1.account.id, incomingEmail1!!.account.id)
+            assertEquals(authentication2.account.id, incomingEmail2!!.account.id)
+            assertEquals("", incomingEmail1.localPart)
+            assertEquals("b", incomingEmail2.localPart)
         }
     }
 })

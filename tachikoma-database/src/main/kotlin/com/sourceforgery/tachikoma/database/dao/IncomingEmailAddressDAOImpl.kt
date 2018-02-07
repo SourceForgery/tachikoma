@@ -19,7 +19,12 @@ private constructor(
             ebeanServer.find(IncomingEmailAddressDBO::class.java)
                     .where()
                     .eq("account.mailDomain", email.domain)
+                    .or()
                     .eq("localPart", email.localPart)
+                    .eq("localPart", "")
+                    .endOr()
+                    .orderBy("localPart DESC")
+                    .setMaxRows(1)
                     .findOne()
 
     override fun getAll(accountDBO: AccountDBO): List<IncomingEmailAddressDBO> =
