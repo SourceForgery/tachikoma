@@ -17,6 +17,7 @@ import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MessageQueue
 import com.sourceforgery.tachikoma.mq.MqBinder
@@ -30,10 +31,94 @@ import io.grpc.BindableService
 import io.grpc.ServerInterceptors
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
+import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import java.io.File
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 import java.util.function.Function
+
+class WebServerStarter(
+        private val serviceLocator: ServiceLocator
+) {
+
+    private fun startServerInBackground(): CompletableFuture<Void> {
+        val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
+
+        val healthService = CorsServiceBuilder
+                .forAnyOrigin()
+                .allowNullOrigin()
+                .allowCredentials()
+                .allowRequestMethods(HttpMethod.GET)
+                .build(object : HttpHealthCheckService() {})
+
+        // Order matters!
+        val serverBuilder = ServerBuilder()
+                .serviceUnder("/health", healthService)
+        val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
+
+        val restDecoratorFunction = Function<Service<HttpRequest, HttpResponse>, Service<HttpRequest, HttpResponse>> { it.decorate(requestScoped) }
+        for (restService in serviceLocator.getAllServices(RestService::class.java)) {
+            serverBuilder.annotatedService("/", restService, restDecoratorFunction, exceptionHandler)
+        }
+
+        val exceptionInterceptor: GrpcExceptionInterceptor = serviceLocator.get()
+        val webServerConfig: WebServerConfig = serviceLocator.get()
+
+        val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())
+        for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
+            grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, exceptionInterceptor))
+        }
+        val grpcService = grpcServiceBuilder.build()
+
+        return serverBuilder
+                // Grpc must be last
+                .decorator(Function { it.decorate(requestScoped) })
+                .serviceUnder("/", grpcService)
+                .apply {
+                    if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
+                        sslContext(SessionProtocol.HTTPS, File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
+                        port(8443, SessionProtocol.HTTPS)
+                    } else {
+                        port(8070, SessionProtocol.HTTP)
+                    }
+                }
+                .defaultRequestTimeout(Duration.ofDays(365))
+                .build()
+                .start()
+    }
+
+    private fun startBackgroundWorkers() {
+        serviceLocator.getService(JobWorker::class.java).work()
+    }
+
+    private fun initClientsInBackground() {
+        listOf(
+                MessageQueue::class.java,
+                EbeanServer::class.java
+        )
+                // Yes, parallel stream is broken by design, but here it should work
+                .parallelStream()
+                .forEach({ serviceLocator.getService(it) })
+    }
+
+    fun start() {
+        try {
+            val server = startServerInBackground()
+            startBackgroundWorkers()
+            initClientsInBackground()
+            server.join()
+        } catch (e: Exception) {
+            LOGGER.fatal(e, { "Failed to start server" })
+            serviceLocator.shutdown()
+            throw e
+        }
+    }
+
+    companion object {
+        private val LOGGER = logger()
+    }
+}
 
 @Suppress("unused")
 fun main(vararg args: String) {
@@ -48,60 +133,5 @@ fun main(vararg args: String) {
             DatabaseBinder(),
             WebBinder()
     )!!
-
-    val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
-
-    val healthService = CorsServiceBuilder
-            .forAnyOrigin()
-            .allowNullOrigin()
-            .allowCredentials()
-            .allowRequestMethods(HttpMethod.GET)
-            .build(object : HttpHealthCheckService() {})
-
-    // Order matters!
-    val serverBuilder = ServerBuilder()
-            .serviceUnder("/health", healthService)
-    val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
-
-    val restDecoratorFunction = Function<Service<HttpRequest, HttpResponse>, Service<HttpRequest, HttpResponse>> { it.decorate(requestScoped) }
-    for (restService in serviceLocator.getAllServices(RestService::class.java)) {
-        serverBuilder.annotatedService("/", restService, restDecoratorFunction, exceptionHandler)
-    }
-
-    val exceptionInterceptor: GrpcExceptionInterceptor = serviceLocator.get()
-    val webServerConfig: WebServerConfig = serviceLocator.get()
-
-    val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())
-    for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
-        grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, exceptionInterceptor))
-    }
-    val grpcService = grpcServiceBuilder.build()
-
-    serviceLocator.getService(JobWorker::class.java).work()
-
-    val server = serverBuilder
-            // Grpc must be last
-            .decorator(Function { it.decorate(requestScoped) })
-            .serviceUnder("/", grpcService)
-            .apply {
-                if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
-                    sslContext(SessionProtocol.HTTPS, File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
-                    port(8443, SessionProtocol.HTTPS)
-                } else {
-                    port(8070, SessionProtocol.HTTP)
-                }
-            }
-            .defaultRequestTimeout(Duration.ofDays(365))
-            .build()
-            .start()
-
-    listOf(
-            MessageQueue::class.java,
-            EbeanServer::class.java
-    )
-            // Yes, parallel stream is broken by design, but here it should work
-            .parallelStream()
-            .forEach({ serviceLocator.getService(it) })
-
-    server.join()
+    WebServerStarter(serviceLocator).start()
 }
