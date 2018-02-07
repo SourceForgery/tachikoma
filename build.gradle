@@ -29,6 +29,17 @@ apply plugin: 'nebula.lint'
 apply plugin: 'net.researchgate.release'
 apply plugin: 'co.riiid.gradle'
 
+task replaceVersion(type: Copy) {
+    from('kubernetes') {
+        include '**/*.yaml'
+        expand([version: project.version])
+    }
+    into "${project.buildDir}/kubernetes/"
+    includeEmptyDirs = false
+}
+
+githubRelease.dependsOn replaceVersion
+
 def travisTag = System.getenv("TRAVIS_TAG") ?: ""
 
 github {
@@ -41,6 +52,7 @@ github {
     assets = [
             "tachikoma-webserver/build/distributions/tachikoma-webserver-${project.version}.tar",
             "tachikoma-postfix-utils/build/distributions/tachikoma-postfix-utils-${project.version}.tar",
+            "${project.buildDir}/kubernetes/deployment-webserver.yaml"
     ]
 }
 
