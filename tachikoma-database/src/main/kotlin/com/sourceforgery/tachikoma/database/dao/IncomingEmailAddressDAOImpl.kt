@@ -13,7 +13,9 @@ private constructor(
     override fun getByEmail(email: Email) =
             ebeanServer.find(IncomingEmailAddressDBO::class.java)
                     .where()
-                    .eq("mailDomain", email.domain.mailDomain)
-                    .raw("localPart != ? IS NOT TRUE", email.localPart)
+                    .or()
+                    .eq("localPart", email.localPart)
+                    .isNull("localPart")
+                    .endOr()
                     .findOne()
 }
