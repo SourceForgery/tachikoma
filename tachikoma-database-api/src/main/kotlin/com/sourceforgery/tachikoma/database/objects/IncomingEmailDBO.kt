@@ -21,7 +21,7 @@ class IncomingEmailDBO(
         @Column
         val body: ByteArray,
         @ManyToOne
-        val accountDBO: AccountDBO,
+        val account: AccountDBO,
         @Column
         val subject: String
 ) : GenericDBO()

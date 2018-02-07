@@ -156,7 +156,7 @@ private constructor(
                     fromName = fromAddress.personal ?: "",
                     receiverEmail = recipientEmail,
                     receiverName = receiverAddress.personal ?: "",
-                    accountDBO = accountDBO,
+                    account = accountDBO,
                     subject = mimeMessage.subject
             )
             incomingEmailDAO.save(incomingEmailDBO)
