@@ -9,12 +9,13 @@ dependencies {
     binaries project(path: ":tachikoma-webserver", configuration: 'archives')
 }
 
-def tiniBinary = new File("${project.buildDir}/tini")
+def tiniBinary = new File(project.buildDir, "tini")
 
 task downloadTini {
     def tiniUrl = new URL('https://github.com/krallin/tini/releases/download/v0.16.1/tini-static-amd64')
     def tiniChecksum = "d1cb5d71adc01d47e302ea439d70c79bd0864288"
 
+    project.buildDir.mkdirs()
     if (!tiniBinary.exists()) {
         tiniUrl.withInputStream{ i -> tiniBinary.withOutputStream{ it << i }}
     }
