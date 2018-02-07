@@ -16,11 +16,11 @@ class AccountDBO(
         @Column(unique = true)
         val mailDomain: MailDomain
 ) : GenericDBO() {
-    @OneToMany
+    @OneToMany(mappedBy = "account")
     val authentications: List<AuthenticationDBO> = BeanList()
-    @OneToMany
+    @OneToMany(mappedBy = "account")
     val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
-    @OneToMany
+    @OneToMany(mappedBy = "account")
     val incomingEmails: List<IncomingEmailDBO> = BeanList()
 }
 
