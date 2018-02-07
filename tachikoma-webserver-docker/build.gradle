@@ -37,8 +37,6 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
-    addFile(file('src/assets/'))
-
     addFile(tiniBinary)
 
     runCommand('chmod a+rx /tini')
