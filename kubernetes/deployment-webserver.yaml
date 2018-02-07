@@ -18,7 +18,9 @@ spec:
       - name: tachikoma-webserver
         image: sourceforgery/tachikoma-webserver:${version}
         ports:
-        - containerPort: 8443
+        - name: webserver-port
+          protocol: TCP
+          containerPort: 8443
         volumeMounts:
         - name: webserver-config
           mountPath: "/etc/tachikoma/config/"
