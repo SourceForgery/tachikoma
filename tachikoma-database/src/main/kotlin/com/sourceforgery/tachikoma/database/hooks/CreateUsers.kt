@@ -5,7 +5,6 @@ import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
@@ -21,18 +20,23 @@ private constructor(
 
     override fun postStart(ebeanServer: EbeanServer) {
         ebeanServer
-                .find(AccountDBO::class.java)
-                .where()
-                .eq("mailDomain", MAIL_DOMAIN)
-                .findOne()
-                ?: also {
-                    val account = AccountDBO(MAIL_DOMAIN)
-                    LOGGER.error { "Creating new account and authentications for $MAIL_DOMAIN" }
-                    ebeanServer.save(account)
-                    mqManager.setupAccount(MAIL_DOMAIN)
-                    createBackendAuthentication(ebeanServer, account)
-                    createFrontendAuthentication(ebeanServer, account)
-                    createIncomingEmail(ebeanServer, account)
+                .beginTransaction()
+                .use {
+                    ebeanServer
+                            .find(AccountDBO::class.java)
+                            .where()
+                            .eq("mailDomain", MAIL_DOMAIN)
+                            .findOne()
+                            ?: also {
+                                val account = AccountDBO(MAIL_DOMAIN)
+                                LOGGER.error { "Creating new account and authentications for $MAIL_DOMAIN" }
+                                ebeanServer.save(account)
+                                mqManager.setupAccount(MAIL_DOMAIN)
+                                createBackendAuthentication(ebeanServer, account)
+                                createFrontendAuthentication(ebeanServer, account)
+                                createIncomingEmail(ebeanServer, account)
+                            }
+                    it.commit()
                 }
     }
 
