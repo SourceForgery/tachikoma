@@ -4,6 +4,7 @@ import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.auth.AuthenticationMock
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSenderMock
@@ -46,12 +47,8 @@ class Hk2TestBinder : AbstractBinder() {
         bindAsContract(TestHK2RequestContext::class.java)
                 .to(HK2RequestContext::class.java)
                 .`in`(Singleton::class.java)
-        bind(object : DatabaseConfig {
-            override val databaseEncryptionKey = "asdadsadsadsadasdadasdasdadasasd"
-            override val sqlUrl = URI.create("h2://sa@mem/tests-${UUID.randomUUID()}")
-            override val timeDatabaseQueries = false
-            override val createDatabase = true
-        }).to(DatabaseConfig::class.java)
+        bindAsContract(DatabaseTestConfig::class.java)
+                .to(DatabaseConfig::class.java)
         bindAsContract(TestConsumerFactoryImpl::class.java)
                 .to(MQManager::class.java)
                 .`in`(Singleton::class.java)
@@ -63,4 +60,12 @@ class Hk2TestBinder : AbstractBinder() {
                 .to(MQSender::class.java)
                 .`in`(Singleton::class.java)
     }
+}
+
+private class DatabaseTestConfig : DatabaseConfig {
+    override val mailDomain: MailDomain = MailDomain("example.net")
+    override val databaseEncryptionKey = "asdadsadsadsadasdadasdasdadasasd"
+    override val sqlUrl = URI.create("h2://sa@mem/tests-${UUID.randomUUID()}")
+    override val timeDatabaseQueries = false
+    override val createDatabase = true
 }

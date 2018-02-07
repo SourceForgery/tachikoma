@@ -20,6 +20,7 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
 import org.glassfish.hk2.api.Context
@@ -34,12 +35,7 @@ import javax.inject.Singleton
 
 class Hk2TestBinder : AbstractBinder() {
     override fun configure() {
-        bind(object : DatabaseConfig {
-            override val databaseEncryptionKey = "asdadsadsadsadasdadasdasdadasasd"
-            override val sqlUrl = URI.create("h2://sa@mem/tests-${UUID.randomUUID()}")
-            override val timeDatabaseQueries = false
-            override val createDatabase = true
-        })
+        bindAsContract(DatabaseTestConfig::class.java)
                 .to(DatabaseConfig::class.java)
 
         bindAsContract(TestHK2RequestContext::class.java)
@@ -96,4 +92,12 @@ class Hk2TestBinder : AbstractBinder() {
                 .to(DBObjectMapper::class.java)
                 .`in`(Singleton::class.java)
     }
+}
+
+private class DatabaseTestConfig : DatabaseConfig {
+    override val mailDomain = MailDomain("example.net")
+    override val databaseEncryptionKey = "asdadsadsadsadasdadasdasdadasasd"
+    override val sqlUrl = URI.create("h2://sa@mem/tests-${UUID.randomUUID()}")
+    override val timeDatabaseQueries = false
+    override val createDatabase = true
 }
