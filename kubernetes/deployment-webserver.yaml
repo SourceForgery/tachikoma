@@ -23,7 +23,7 @@ spec:
         - name: webserver-config
           mountPath: "/etc/tachikoma/config/"
           readOnly: true
-        - name: webserver-certs
+        - name: webserver-cert
           mountPath: "/etc/tachikoma/cert/"
           readOnly: true
         env:
@@ -37,7 +37,7 @@ spec:
       - name: webserver-config
         secret:
           secretName: tachikoma-webserver-config
-      - name: webserver-certs
+      - name: webserver-cert
         secret:
           secretName: tachikoma-webserver-cert
 ---
