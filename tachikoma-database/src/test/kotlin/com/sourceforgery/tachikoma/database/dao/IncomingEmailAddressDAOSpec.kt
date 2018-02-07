@@ -21,6 +21,7 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @RunWith(JUnitPlatform::class)
 internal class IncomingEmailAddressDAOSpec : Spek({
@@ -158,6 +159,22 @@ internal class IncomingEmailAddressDAOSpec : Spek({
             assertEquals(authentication2.account.id, incomingEmail2!!.account.id)
             assertEquals("", incomingEmail1.localPart)
             assertEquals("b", incomingEmail2.localPart)
+        }
+
+        it("it should be possible to delete an incoming e-mail") {
+
+            val authentication1 = createAuthentication("example.org")
+
+            saveIncomingEmailAddress(authentication1, "a")
+            saveIncomingEmailAddress(authentication1, "b")
+            saveIncomingEmailAddress(authentication1, "")
+
+            incomingEmailAddressDAO.delete(authentication1.account, "")
+
+            val email1 = Email(MailDomain("example.org"), "ab")
+            val incomingEmail1 = incomingEmailAddressDAO.getByEmail(email1)
+
+            assertNull(incomingEmail1)
         }
     }
 })
