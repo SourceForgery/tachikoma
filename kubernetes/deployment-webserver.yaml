@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: tachikoma-webserver
-        image: sourceforgery/tachikoma-webserver:0.0.6-SNAPSHOT
+        image: sourceforgery/tachikoma-webserver:${version}
         ports:
         - containerPort: 8443
         volumeMounts:
