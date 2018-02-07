@@ -38,7 +38,7 @@ private constructor(
 
     private fun createIncomingEmail(ebeanServer: EbeanServer, account: AccountDBO) {
         val incomingAddress = IncomingEmailAddressDBO(
-                localPart = null,
+                localPart = "",
                 account = account
         )
         ebeanServer.save(incomingAddress)
