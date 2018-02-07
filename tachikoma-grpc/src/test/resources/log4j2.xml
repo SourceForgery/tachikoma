@@ -9,5 +9,6 @@
         <Root level="warn">
             <AppenderRef ref="StdOut" />
         </Root>
+        <Logger name="com.sourceforgery.tachikoma.database.hooks.CreateUsers" level="off" />
     </Loggers>
 </Configuration>
