@@ -9,6 +9,22 @@ dependencies {
     binaries project(path: ":tachikoma-webserver", configuration: 'archives')
 }
 
+def tiniBinary = new File("${project.buildDir}/tini")
+
+task downloadTini {
+    def tiniUrl = new URL('https://github.com/krallin/tini/releases/download/v0.16.1/tini-static-amd64')
+    def tiniChecksum = "d1cb5d71adc01d47e302ea439d70c79bd0864288"
+
+    if (!tiniBinary.exists()) {
+        tiniUrl.withInputStream{ i -> tiniBinary.withOutputStream{ it << i }}
+    }
+
+    def calculatedChecksum = java.security.MessageDigest.getInstance("SHA1").digest(tiniBinary.bytes).encodeHex().toString()
+    if (calculatedChecksum != tiniChecksum) {
+        throw new RuntimeException("Failed to download valid tini. Please remove ${tiniBinary} and try again $tiniChecksum != $calculatedChecksum")
+    }
+}
+
 task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
     applicationName = 'tachikoma-webserver'
 
@@ -18,9 +34,13 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install inetutils-syslogd less nvi supervisor openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     addFile(file('src/assets/'))
+
+    addFile(tiniBinary)
+
+    runCommand('chmod a+rx /tini')
 
     addFile {
         configurations.binaries.filter {
@@ -39,7 +59,9 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand("useradd webserver && mkdir -p /var/log/tachikoma && chown webserver:root /var/log/tachikoma")
 
-    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
+    entryPoint(['/tini', '--'])
+
+    defaultCommand(["/opt/tachikoma-webserver/bin/tachikoma-webserver"])
 }
 
 assemble.dependsOn webserverDocker
