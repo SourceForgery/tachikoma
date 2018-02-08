@@ -17,7 +17,7 @@ private constructor(
 ) {
 
     fun addIncomingEmailAddress(request: IncomingEmailAddress) {
-        authentication.requireFrontend()
+        authentication.requireFrontendAdmin()
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
         val incomingEmailAddressDBO = IncomingEmailAddressDBO(
@@ -29,7 +29,7 @@ private constructor(
     }
 
     fun getIncomingEmailAddresses(responseObserver: StreamObserver<IncomingEmailAddress>) {
-        authentication.requireFrontend()
+        authentication.requireFrontendAdmin()
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
         incomingEmailAddressDAO.getAll(accountDBO = authenticationDBO.account)
