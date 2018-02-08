@@ -1,10 +1,13 @@
 #!/bin/bash -eu
 
-if [[ -z "$(find /etc/opendkim/domainkeys -iname *.private)" ]]; then
-  exit 0
+adduser postfix opendkim
+
+if ! ls /etc/opendkim/domainkeys/*._domainkey.*.private | grep -q domain; then
+    echo "No domain keys matching pattern /etc/opendkim/domainkeys/*._domainkey.*.private was found"
+    echo "Skipping dkim configuration and startup"
+    exit 0
 fi
 
-adduser postfix opendkim
 
 cat >> /etc/opendkim.conf <<EOF
 AutoRestart             Yes
@@ -23,13 +26,17 @@ UserID                  opendkim:opendkim
 Socket                  local:/var/spool/postfix/opendkim/opendkim.sock
 EOF
 
-cat >> /etc/opendkim/KeyTable <<EOF
-mail._domainkey.$MAIL_DOMAIN $MAIL_DOMAIN:mail:$(find /etc/opendkim/domainkeys -iname *.private)
-EOF
+echo -n >/etc/opendkim/KeyTable
+echo -n >/etc/opendkim/SigningTable
+for A in /etc/opendkim/domainkeys/*._domainkey.*.private; do
+   nsrecord="${A%%.private}";
+   nsrecord="${nsrecord##*/}";
+   selector="${nsrecord%%._domainkey.*}";
+   domain="${nsrecord##*._domainkey.}";
+   echo "$nsrecord $domain:$selector:$A" >>/etc/opendkim/KeyTable;
+   echo "*@$domain $nsrecord" >>/etc/opendkim/SigningTable;
+done
 
-cat >> /etc/opendkim/SigningTable <<EOF
-*@$MAIL_DOMAIN mail._domainkey.$MAIL_DOMAIN
-EOF
 
 mkdir -p /var/spool/postfix/opendkim
 
