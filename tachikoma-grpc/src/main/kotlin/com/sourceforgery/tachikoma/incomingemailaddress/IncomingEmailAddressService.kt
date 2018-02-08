@@ -43,7 +43,7 @@ private constructor(
     }
 
     fun deleteIncomingEmailAddress(request: IncomingEmailAddress) {
-        authentication.requireFrontend()
+        authentication.requireFrontendAdmin()
         val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
 
         incomingEmailAddressDAO.delete(
