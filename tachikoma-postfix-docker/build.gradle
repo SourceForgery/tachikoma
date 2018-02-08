@@ -22,6 +22,8 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand('apt-get update && apt-get -y --no-install-recommends install inetutils-syslogd less nvi supervisor postfix sasl2-bin opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
+    exposePort(25)
+
     addFile(file('src/assets/'))
 
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
