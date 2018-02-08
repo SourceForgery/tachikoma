@@ -74,3 +74,31 @@ docker run -it -e MAIL_DOMAIN=example.com -e "TACHIKOMA_URL=http://password@172.
 2. When IntelliJ flakes out and complains about trying to use 1.8 stuff on 1.6, go ```Open Module Settings```,
   go ```Facets``` and add Kotlin Facet to _all_ modules (and their partial modules, e.g. main and test) you're having
   problems with. Problem will persist until you catch 'em all.
+
+## Setup ##
+Example `/etc/systemd/system/tachikoma-postfix.service`
+```
+[Unit]
+Description=Tachikoma postfix
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+Environment=name=tachikoma-postfix
+Environment=mailDomain=EXAMPLE.COM
+Environment=backendApiKey=XXXXXXXXXXXXXXXXX
+Environment=webserverHost=TACHIKOMA-SERVER.EXAMPLE.COM
+Environment=image=sourceforgery/tachikoma-postfix:VERSION
+
+ExecStartPre=/usr/bin/docker pull ${image}
+ExecStart=/usr/bin/docker run --rm=true -p 25:25 --name=${name} \
+  -e MAIL_DOMAIN=${mailDomain} \
+  -e TACHIKOMA_URL=https://${backendApiKey}@${webserverHost} \
+  -v /etc/ssl/private/domainkeys:/etc/opendkim/domainkeys:ro \
+  ${image}
+ExecStop=-/usr/bin/docker stop ${name}
+
+[Install]
+WantedBy=multi-user.target
+```
