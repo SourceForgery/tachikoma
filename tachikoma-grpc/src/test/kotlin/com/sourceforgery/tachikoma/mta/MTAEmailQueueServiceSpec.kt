@@ -7,7 +7,8 @@ import com.sourceforgery.tachikoma.auth.AuthenticationMock
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.toTimestamp
-import com.sourceforgery.tachikoma.database.objects.AccountDBO
+import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
@@ -86,15 +87,14 @@ class MTAEmailQueueServiceSpec : Spek({
             mqSequenceFactoryMock = serviceLocator.get()
             clock = serviceLocator.get()
             mqSenderMock = serviceLocator.get()
+            val databaseConfig: DatabaseConfig = serviceLocator.get()
+            val accountDAO: AccountDAO = serviceLocator.get()
 
             // Setup auth
-            val account = AccountDBO(MailDomain("example.net"))
-            ebeanServer.save(account)
-            authenticationDBO = AuthenticationDBO(
-                    role = AuthenticationRole.BACKEND,
-                    account = account
-            )
-            ebeanServer.save(authenticationDBO)
+            val account = accountDAO.getByMailDomain(databaseConfig.mailDomain)!!
+            authenticationDBO =
+                    account.authentications
+                            .first { it.role == AuthenticationRole.BACKEND }
             authentication.from(authenticationDBO)
 
             email = EmailDBO(

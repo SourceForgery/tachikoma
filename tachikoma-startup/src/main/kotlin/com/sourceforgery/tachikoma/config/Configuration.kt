@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.config
 
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MqConfig
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import java.net.URI
@@ -17,4 +18,5 @@ internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServ
     override val createDatabase: Boolean = false
     override val sslCertChainFile = readConfig("SSL_CERT_CHAIN_FILE", "")
     override val sslCertKeyFile = readConfig("SSL_CERT_KEY_FILE", "")
+    override val mailDomain: MailDomain = readConfig("MAIL_DOMAIN", "", MailDomain::class.java)
 }

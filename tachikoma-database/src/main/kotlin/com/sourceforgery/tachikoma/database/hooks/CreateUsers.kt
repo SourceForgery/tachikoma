@@ -1,11 +1,11 @@
 package com.sourceforgery.tachikoma.database.hooks
 
 import com.sourceforgery.tachikoma.common.AuthenticationRole
+import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
@@ -15,31 +15,37 @@ import javax.inject.Inject
 class CreateUsers
 @Inject
 private constructor(
-        private val mqManager: MQManager
+        private val mqManager: MQManager,
+        databaseConfig: DatabaseConfig
 ) : EbeanHook() {
     private val randomString = RandomString(40)
+    private val mailDomain = databaseConfig.mailDomain
 
     override fun postStart(ebeanServer: EbeanServer) {
         ebeanServer
-                .find(AccountDBO::class.java)
-                .where()
-                .eq("mailDomain", MAIL_DOMAIN)
-                .findOne()
-                ?: also {
-                    val account = AccountDBO(MAIL_DOMAIN)
-                    LOGGER.error { "Creating new account and authentications for $MAIL_DOMAIN" }
-                    ebeanServer.save(account)
-                    mqManager.setupAccount(MAIL_DOMAIN)
-                    createBackendAuthentication(ebeanServer, account)
-                    createFrontendAuthentication(ebeanServer, account)
-                    createIncomingEmail(ebeanServer, account)
+                .beginTransaction()
+                .use {
+                    ebeanServer
+                            .find(AccountDBO::class.java)
+                            .where()
+                            .eq("mailDomain", mailDomain)
+                            .findOne()
+                            ?: also {
+                                val account = AccountDBO(mailDomain)
+                                LOGGER.error { "Creating new account and authentications for $mailDomain" }
+                                ebeanServer.save(account)
+                                mqManager.setupAccount(mailDomain)
+                                createBackendAuthentication(ebeanServer, account)
+                                createFrontendAuthentication(ebeanServer, account)
+                                createIncomingEmail(ebeanServer, account)
+                            }
+                    it.commit()
                 }
     }
 
     private fun createIncomingEmail(ebeanServer: EbeanServer, account: AccountDBO) {
         val incomingAddress = IncomingEmailAddressDBO(
-                localPart = null,
-                mailDomain = MAIL_DOMAIN,
+                localPart = "",
                 account = account
         )
         ebeanServer.save(incomingAddress)
@@ -52,7 +58,7 @@ private constructor(
                 role = AuthenticationRole.FRONTEND_ADMIN
         )
         ebeanServer.save(frontendAuthentication)
-        LOGGER.error { "Creating new frontend api with login:password '$MAIL_DOMAIN:${frontendAuthentication.apiToken}'" }
+        LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuthentication.apiToken}'" }
         mqManager.setupAuthentication(
                 mailDomain = account.mailDomain,
                 authenticationId = frontendAuthentication.id,
@@ -66,14 +72,11 @@ private constructor(
                 role = AuthenticationRole.BACKEND,
                 account = account
         )
-        LOGGER.error { "Creating new backend api with login:password '$MAIL_DOMAIN:${backendAuthentication.apiToken}'" }
+        LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuthentication.apiToken}'" }
         ebeanServer.save(backendAuthentication)
     }
 
     companion object {
         val LOGGER = logger()
-        val MAIL_DOMAIN = MailDomain(
-                System.getenv("MAIL_DOMAIN") ?: "example.net"
-        )
     }
 }

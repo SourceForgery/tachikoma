@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.config
 
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.net.URI
 
 interface DatabaseConfig {
@@ -7,4 +8,5 @@ interface DatabaseConfig {
     val sqlUrl: URI
     val timeDatabaseQueries: Boolean
     val createDatabase: Boolean
+    val mailDomain: MailDomain
 }
