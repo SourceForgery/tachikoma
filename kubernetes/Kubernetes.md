@@ -36,8 +36,8 @@ The files need to be called _exactly_ what they are called here
 
 ```
 $ kubectl create secret generic tachikoma-webserver-cert \
- --from-file=./server.pem \
- --from-file=./ca_chain.pem
+ --from-file=./server.crt \
+ --from-file=./server.key
 ```
 
 
