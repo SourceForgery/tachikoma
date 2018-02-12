@@ -29,6 +29,9 @@ apply plugin: 'org.ajoberstar.grgit'
 apply plugin: 'nebula.lint'
 apply plugin: 'net.researchgate.release'
 apply plugin: 'co.riiid.gradle'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 task replaceVersion(type: Copy) {
     from('kubernetes') {
@@ -64,31 +67,6 @@ if (!travisTag.empty) {
     }
     println("Trying to build release")
     check.finalizedBy githubRelease
-
-    apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.bintray'
-
-
-    publishing {
-        publications {
-            TachikomaPublication(MavenPublication) {
-                from components.java
-            }
-        }
-    }
-
-    bintray {
-        user = System.getenv("BINTRAY_USER")
-        key = System.getenv("BINTRAY_KEY")
-        publications = ['TachikomaPublication']
-        pkg {
-            repo = 'Tachikoma'
-            name = 'tachikoma'
-            licenses = ['Apache-2.0']
-            vcsUrl = 'https://github.com/SourceForgery/tachikoma.git'
-        }
-    }
 }
 
 subprojects {
@@ -124,6 +102,10 @@ subprojects {
         maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
         maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
         mavenCentral()
+    }
+
+    if (!travisTag.empty) {
+        check.finalizedBy bintrayUpload
     }
 
     sourceCompatibility = ext.java_version

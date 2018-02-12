@@ -20,6 +20,36 @@ idea {
     }
 }
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+assemble.dependsOn sourceJar
+
+publishing {
+    publications {
+        TachikomaFrontendApiJvm(MavenPublication) {
+            from components.java
+            artifactId project.name
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+bintray {
+    publish = true
+
+    user = System.getenv("BINTRAY_USER")
+    key = System.getenv("BINTRAY_KEY")
+    publications = ['TachikomaFrontendApiJvm']
+    pkg {
+        repo = 'Tachikoma'
+        name = 'tachikoma'
+    }
+}
+
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler
