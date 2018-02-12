@@ -13,8 +13,13 @@ import javax.persistence.Table
 // This is one account (sender) with it's multiple users
 // Every user = one account
 class AccountDBO(
+        // This is the domain allowed in the from field
         @Column(unique = true)
-        val mailDomain: MailDomain
+        val mailDomain: MailDomain,
+
+        // This is the domain where incoming postfix is listening (for unsubscribe)
+        @Column(unique = true)
+        val incomingMxDomain: MailDomain = mailDomain
 ) : GenericDBO() {
     @OneToMany(mappedBy = "account")
     val authentications: List<AuthenticationDBO> = BeanList()

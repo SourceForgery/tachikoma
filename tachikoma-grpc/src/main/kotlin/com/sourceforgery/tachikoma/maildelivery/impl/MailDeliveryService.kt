@@ -115,62 +115,61 @@ private constructor(
                         accountDBO = auth.account,
                         recipient = recipientEmail.address,
                         from = fromEmail
+                )?.let { blockedReason ->
+                    responseObserver.onNext(
+                            EmailQueueStatus.newBuilder()
+                                    .setRejected(Rejected.newBuilder()
+                                            .setRejectReason(blockedReason.toGrpcRejectReason())
+                                            .build()
+                                    )
+                                    .setTransactionId(transaction.id.toGrpcInternal())
+                                    .setRecipient(recipientEmail.address.toGrpcInternal())
+                                    .build()
+                    )
+
+                    // Blocked
+                    return
+                }
+                val messageId = MessageId("${UUID.randomUUID()}@${auth.account.incomingMxDomain}")
+                val emailDBO = EmailDBO(
+                        recipient = recipientEmail,
+                        transaction = transaction,
+                        messageId = messageId
                 )
-                        ?.let { blockedReason ->
-                            responseObserver.onNext(
-                                    EmailQueueStatus.newBuilder()
-                                            .setRejected(Rejected.newBuilder()
-                                                    .setRejectReason(blockedReason.toGrpcRejectReason())
-                                                    .build()
-                                            )
-                                            .setTransactionId(transaction.id.toGrpcInternal())
-                                            .setRecipient(recipientEmail.address.toGrpcInternal())
-                                            .build()
-                            )
-                            blockedReason
-                        }
-                        ?: let {
-                            val messageId = MessageId("${UUID.randomUUID()}@${fromEmail.domain}")
-                            val emailDBO = EmailDBO(
-                                    recipient = recipientEmail,
-                                    transaction = transaction,
-                                    messageId = messageId
-                            )
-                            emailDAO.save(emailDBO)
+                emailDAO.save(emailDBO)
 
-                            emailDBO.body = when (request.bodyCase) {
-                                OutgoingEmail.BodyCase.STATIC -> getStaticBody(
-                                        request = request,
-                                        emailId = emailDBO.id,
-                                        messageId = messageId,
-                                        fromEmail = fromEmail
-                                )
-                                OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
-                                        request = request,
-                                        recipient = recipient,
-                                        emailId = emailDBO.id,
-                                        messageId = messageId,
-                                        fromEmail = fromEmail
-                                )
-                                else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
-                            }
-                            emailDAO.save(emailDBO)
+                emailDBO.body = when (request.bodyCase) {
+                    OutgoingEmail.BodyCase.STATIC -> getStaticBody(
+                            request = request,
+                            emailId = emailDBO.id,
+                            messageId = messageId,
+                            fromEmail = fromEmail
+                    )
+                    OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
+                            request = request,
+                            recipient = recipient,
+                            emailId = emailDBO.id,
+                            messageId = messageId,
+                            fromEmail = fromEmail
+                    )
+                    else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
+                }
+                emailDAO.save(emailDBO)
 
-                            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                                    requestedSendTime = requestedSendTime,
-                                    emailId = emailDBO.id,
-                                    mailDomain = auth.account.mailDomain
-                            ))
+                mqSender.queueJob(jobMessageFactory.createSendEmailJob(
+                        requestedSendTime = requestedSendTime,
+                        emailId = emailDBO.id,
+                        mailDomain = auth.account.mailDomain
+                ))
 
-                            responseObserver.onNext(
-                                    EmailQueueStatus.newBuilder()
-                                            .setEmailId(emailDBO.id.toGrpcInternal())
-                                            .setQueued(Queued.getDefaultInstance())
-                                            .setTransactionId(transaction.id.toGrpcInternal())
-                                            .setRecipient(emailDBO.recipient.toGrpcInternal())
-                                            .build()
-                            )
-                        }
+                responseObserver.onNext(
+                        EmailQueueStatus.newBuilder()
+                                .setEmailId(emailDBO.id.toGrpcInternal())
+                                .setQueued(Queued.getDefaultInstance())
+                                .setTransactionId(transaction.id.toGrpcInternal())
+                                .setRecipient(emailDBO.recipient.toGrpcInternal())
+                                .build()
+                )
             }
         }
     }

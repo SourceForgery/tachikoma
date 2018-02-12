@@ -4,10 +4,13 @@
 #postconf -e myhostname=$MAIL_DOMAIN
 
 postconf -e virtual_transport=lmtp:unix:private/incoming_tachikoma
-postconf -e virtual_mailbox_domains=$MAIL_DOMAIN
+postconf -e virtual_mailbox_domains=$MAIL_DOMAIN,tachikoma.$MAIL_DOMAIN
 postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
 
-echo "@$MAIL_DOMAIN whatever" > /etc/postfix/vmailbox
+cat <<EOF > /etc/postfix/vmailbox
+@$MAIL_DOMAIN whatever
+@tachikoma.$MAIL_DOMAIN whatever
+EOF
 postmap hash:/etc/postfix/vmailbox
 
 # TLS
