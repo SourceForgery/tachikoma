@@ -76,6 +76,18 @@ bintray {
         repo = 'Tachikoma'
         name = 'tachikoma'
     }
+
+    version {
+        gpg {
+            sign = true //Determines whether to GPG sign the files. The default is false
+        }
+        mavenCentralSync {
+            sync = true
+            user = System.getenv("OSS_USER")
+            password = System.getenv("OSS_PASSWORD")
+            close = '1'
+        }
+    }
 }
 
 protobuf {
