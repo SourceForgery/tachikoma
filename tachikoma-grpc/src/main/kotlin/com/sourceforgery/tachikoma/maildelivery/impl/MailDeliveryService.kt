@@ -130,7 +130,7 @@ private constructor(
                     // Blocked
                     return
                 }
-                val messageId = MessageId("${UUID.randomUUID()}@${fromEmail.domain}")
+                val messageId = MessageId("${UUID.randomUUID()}@${auth.account.incomingMxDomain}")
                 val emailDBO = EmailDBO(
                         recipient = recipientEmail,
                         transaction = transaction,
