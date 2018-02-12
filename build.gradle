@@ -56,7 +56,8 @@ github {
     assets = [
             "tachikoma-webserver/build/distributions/tachikoma-webserver-${project.version}.tar",
             "tachikoma-postfix-utils/build/distributions/tachikoma-postfix-utils-${project.version}.tar",
-            "${project.buildDir}/kubernetes/deployment-webserver.yaml"
+            "${project.buildDir}/kubernetes/deployment-webserver.yaml",
+            "tachikoma-frontend-api-proto/build/libs/tachikoma-frontend-api-proto-${project.version}.zip"
     ]
 }
 
