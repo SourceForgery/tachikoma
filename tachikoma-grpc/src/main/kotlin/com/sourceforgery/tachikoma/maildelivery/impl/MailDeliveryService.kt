@@ -269,7 +269,7 @@ private constructor(
         val session = Session.getDefaultInstance(Properties())
         val message = MimeMessage(session)
         message.setFrom(InternetAddress(request.from.email, request.from.name))
-        message.subject = subject
+        message.setSubject(subject, "UTF-8")
 
         addListAndAbuseHeaders(message, emailId, messageId, fromEmail)
 
@@ -285,13 +285,15 @@ private constructor(
         injectTrackingPixel(htmlDoc, emailId)
 
         val htmlPart = MimeBodyPart()
-        htmlPart.setContent(htmlDoc.outerHtml(), "text/html")
+        htmlPart.setContent(htmlDoc.outerHtml(), "text/html; charset=utf-8")
+        htmlPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
         multipart.addBodyPart(htmlPart)
 
         val plaintextPart = MimeBodyPart()
         val plainText = getPlainText(htmlDoc)
 
-        plaintextPart.setContent(plaintextBody ?: plainText, "text/plain")
+        plaintextPart.setContent(plaintextBody ?: plainText, "text/plain; charset=utf-8")
+        plaintextPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
         multipart.addBodyPart(plaintextPart)
 
         message.setContent(multipart)
