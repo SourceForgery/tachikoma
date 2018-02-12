@@ -65,6 +65,7 @@ if (!travisTag.empty) {
     println("Trying to build release")
     check.finalizedBy githubRelease
 
+    apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
 
@@ -80,12 +81,12 @@ if (!travisTag.empty) {
     bintray {
         user = System.getenv("BINTRAY_USER")
         key = System.getenv("BINTRAY_KEY")
+        publications = ['TachikomaPublication']
         pkg {
-            repo = 'tachikoma'
+            repo = 'Tachikoma'
             name = 'tachikoma'
-            userOrg = 'bintray_user'
             licenses = ['Apache-2.0']
-            vcsUrl = 'https://github.com/bintray/gradle-bintray-plugin.git'
+            vcsUrl = 'https://github.com/SourceForgery/tachikoma.git'
         }
     }
 }
