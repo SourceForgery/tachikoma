@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.google.protobuf.Empty
+import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
@@ -13,11 +14,13 @@ internal class MailDeliveryServiceGrpcImpl
 @Inject
 private constructor(
         private val mailDeliveryService: MailDeliveryService,
+        private val authentication: Authentication,
         private val grpcExceptionMap: GrpcExceptionMap
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
     override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) {
         try {
-            mailDeliveryService.getIncomingEmails(responseObserver)
+            authentication.requireFrontend()
+            mailDeliveryService.getIncomingEmails(responseObserver, authentication.authenticationId)
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }
@@ -25,7 +28,13 @@ private constructor(
 
     override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
         try {
-            mailDeliveryService.sendEmail(request, responseObserver)
+            authentication.requireFrontend()
+            mailDeliveryService.sendEmail(
+                    request = request,
+                    responseObserver = responseObserver,
+                    authenticationId = authentication.authenticationId,
+                    sender = authentication.accountId
+            )
             responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))

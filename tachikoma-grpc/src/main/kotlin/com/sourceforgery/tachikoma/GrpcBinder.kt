@@ -7,6 +7,8 @@ import com.sourceforgery.tachikoma.emailstatusevent.EmailStatusEventServiceGrpcI
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.auth.LoginService
 import com.sourceforgery.tachikoma.grpc.frontend.auth.LoginServiceGrpcImpl
+import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
+import com.sourceforgery.tachikoma.identifiers.MessageIdFactoryImpl
 import com.sourceforgery.tachikoma.incomingemailaddress.IncomingEmailAddressService
 import com.sourceforgery.tachikoma.incomingemailaddress.IncomingEmailAddressServiceGrpcImpl
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
@@ -79,6 +81,10 @@ class GrpcBinder : AbstractBinder() {
 
         bindAsContract(UnsubscribeDecoderImpl::class.java)
                 .to(UnsubscribeDecoder::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(MessageIdFactoryImpl::class.java)
+                .to(MessageIdFactory::class.java)
                 .`in`(Singleton::class.java)
     }
 }
