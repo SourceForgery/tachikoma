@@ -101,10 +101,13 @@ class MTAEmailQueueServiceSpec : Spek({
                     recipient = Email("foo@example.net"),
                     recipientName = "Nobody",
                     messageId = MessageId("sdjklfjklsdfkl@example.net"),
+                    metaData = emptyMap(),
                     transaction = EmailSendTransactionDBO(
                             jsonRequest = JsonNodeFactory.instance.objectNode(),
                             fromEmail = Email("foodsjklff@example.net"),
-                            authentication = authenticationDBO
+                            authentication = authenticationDBO,
+                            metaData = emptyMap(),
+                            tags = emptyList()
                     )
             )
             email.body = "${UUID.randomUUID()}"

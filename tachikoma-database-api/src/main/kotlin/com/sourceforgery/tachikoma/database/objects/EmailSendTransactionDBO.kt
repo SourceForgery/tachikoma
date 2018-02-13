@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.objects
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
+import io.ebean.annotation.DbArray
 import io.ebean.annotation.DbJsonB
 import io.ebean.common.BeanList
 import javax.persistence.CascadeType
@@ -24,7 +25,12 @@ class EmailSendTransactionDBO
         @Column
         val fromEmail: Email,
         @ManyToOne
-        val authentication: AuthenticationDBO
+        val authentication: AuthenticationDBO,
+        @DbJsonB
+        val metaData: Map<String, String>,
+        @DbArray
+        val tags: List<String>
+
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])
     val emails: List<EmailDBO> = BeanList()

@@ -4,6 +4,7 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
+import io.ebean.annotation.DbJsonB
 import io.ebean.common.BeanList
 import javax.persistence.CascadeType
 import javax.persistence.Column
@@ -26,7 +27,9 @@ constructor(
         @Column(unique = true)
         var messageId: MessageId,
         @Column
-        var mtaQueueId: String? = null
+        var mtaQueueId: String? = null,
+        @DbJsonB
+        val metaData: Map<String, String>
 ) : GenericDBO() {
 
     @Column(columnDefinition = "TEXT")
@@ -40,13 +43,15 @@ constructor(
             recipient: NamedEmail,
             transaction: EmailSendTransactionDBO,
             messageId: MessageId,
-            mtaQueueId: String? = null
+            mtaQueueId: String? = null,
+            metaData: Map<String, String> = HashMap()
     ) : this(
             recipient = recipient.address,
             recipientName = recipient.name,
             transaction = transaction,
             messageId = messageId,
-            mtaQueueId = mtaQueueId
+            mtaQueueId = mtaQueueId,
+            metaData = metaData
     )
 }
 

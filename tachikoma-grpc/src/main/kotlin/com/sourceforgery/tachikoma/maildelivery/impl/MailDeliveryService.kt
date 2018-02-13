@@ -90,10 +90,13 @@ private constructor(
         if (fromEmail.domain != auth.account.mailDomain) {
             throw InvalidOrInsufficientCredentialsException()
         }
+
         val transaction = EmailSendTransactionDBO(
                 jsonRequest = getRequestData(request),
                 fromEmail = fromEmail,
-                authentication = auth
+                authentication = auth,
+                metaData = request.trackingData.metadataMap,
+                tags = request.trackingData.tagsList
         )
         val requestedSendTime =
                 if (request.hasSendAt()) {
@@ -134,7 +137,8 @@ private constructor(
                 val emailDBO = EmailDBO(
                         recipient = recipientEmail,
                         transaction = transaction,
-                        messageId = messageId
+                        messageId = messageId,
+                        metaData = recipient.metadataMap
                 )
                 emailDAO.save(emailDBO)
 
