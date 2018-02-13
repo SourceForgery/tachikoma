@@ -1,0 +1,38 @@
+Return-Path: bounce-not-really-random1@example.com
+From: Valid From Email <from@example.com>
+Message-ID: <not-really-random1@example.com>
+Subject: Test mail subject
+MIME-Version: 1.0
+Content-Type: multipart/alternative; 
+	boundary="XXXXXX"
+List-Unsubscribe-Post: One-Click
+List-Unsubscribe: <http://localhost/unsubscribe/qgYGqgYDCMIHsgYUfHlQ2b2Y4eDUUG6Wa0oV7-5ys1I>, <mailto:unsub-not-really-random1@example.com?subject=unsub>
+X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@example.com
+X-Report-Abuse: You can also report abuse here: http://http://localhost//abuse/not-really-random1@example.com
+X-Tachikoma-User: 98
+
+--XXXXXX
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+ <head></head>
+ <body>
+  This is a test
+  <img src=3D"http://localhost/t/qgYGqgYDCMIHsgYUfHlQ2b2Y4eDUUG6Wa0oV7-5ys1=
+I" height=3D"1" width=3D"1">
+ </body>
+</html>
+--XXXXXX
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+This is a test
+--XXXXXX
+Content-Type: application/pdf; name=NotReally.pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=NotReally.pdf
+
+qgYUdt6J5W7J+3hrduLSGtgij5IQrneyBg9hcHBsaWNhdGlvbi9wZGa6Bg1Ob3RSZWFsbHkucGRm
+
+--XXXXXX--

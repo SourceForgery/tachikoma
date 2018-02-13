@@ -111,3 +111,14 @@ message UnsubscribedEvent {
 // Message has been marked as spam
 message SpamEvent {
 }
+
+// Attachments
+message Attachment {
+    // The data of the attachment
+    bytes data = 101;
+    // The content type of the attachment
+    string contentType = 102;
+    // Optional
+    // The filename (if any) for this attachment
+    string fileName = 103;
+}

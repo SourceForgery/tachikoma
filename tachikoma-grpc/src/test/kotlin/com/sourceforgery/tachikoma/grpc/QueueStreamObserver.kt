@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.grpc
 
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
 class QueueStreamObserver<V : Any> : StreamObserver<V> {
     val queue = LinkedBlockingQueue<Wrap<V>>()
@@ -16,6 +17,13 @@ class QueueStreamObserver<V : Any> : StreamObserver<V> {
 
     override fun onCompleted() {
         queue.add(Wrap())
+    }
+
+    fun take(milliseconds: Long): V {
+        val wrap = queue.poll(milliseconds, TimeUnit.MILLISECONDS)
+                ?: throw AssertionError("Did not get any result in $milliseconds milliseconds")
+        return wrap.get()
+                ?: throw AssertionError("Didn't expect end of data")
     }
 }
 

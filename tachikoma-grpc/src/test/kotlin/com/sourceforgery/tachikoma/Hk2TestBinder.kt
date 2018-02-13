@@ -5,6 +5,10 @@ import com.sourceforgery.tachikoma.auth.AuthenticationMock
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.MailDomain
+import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
+import com.sourceforgery.tachikoma.identifiers.MessageIdFactoryMock
+import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
+import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQManager
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSenderMock
@@ -58,6 +62,16 @@ class Hk2TestBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(MQSenderMock::class.java)
                 .to(MQSender::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(MailDeliveryService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(DAOHelper::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(JobMessageFactory::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(MessageIdFactoryMock::class.java)
+                .to(MessageIdFactory::class.java)
                 .`in`(Singleton::class.java)
     }
 }

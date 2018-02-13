@@ -123,6 +123,10 @@ message OutgoingEmail {
     // Optional
     // Used for DKIM signing emails
     string signingDomain = 305;
+
+    // Optional
+    // Attached to email
+    repeated Attachment attachments = 401;
 }
 
 // Every email sent will generate one or more of these
