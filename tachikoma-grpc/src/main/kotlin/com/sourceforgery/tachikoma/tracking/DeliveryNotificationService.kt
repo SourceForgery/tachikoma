@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.tracking
 
+import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
@@ -8,9 +9,11 @@ import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.QueuedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.SentEmailTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
+import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.logging.logger
@@ -25,7 +28,7 @@ private constructor(
         private val mqSequenceFactory: MQSequenceFactory,
         private val emailDAO: EmailDAO
 ) {
-    fun notificationStream(responseObserver: StreamObserver<EmailNotification>) {
+    fun notificationStream(responseObserver: StreamObserver<EmailNotification>, request: NotificationStreamParameters) {
         mqSequenceFactory.listenForDeliveryNotifications(AuthenticationId(100), {
             val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(it.emailMessageId))
             if (emailData == null) {
@@ -36,6 +39,12 @@ private constructor(
                 notificationBuilder.recipientEmailAddress = emailData.recipient.toGrpcInternal()
                 notificationBuilder.emailTransactionId = emailData.transaction.id.toGrpcInternal()
                 notificationBuilder.timestamp = it.creationTimestamp
+                if (request.includeTrackingData) {
+                    notificationBuilder.setEmailTrackingData(SentEmailTrackingData.newBuilder())
+                    // TODO Insert logic to retrieve tracking data include it
+                } else {
+                    notificationBuilder.setNoTrackingData(Empty.getDefaultInstance())
+                }
                 @Suppress("UNUSED_VARIABLE")
                 val ignored = when (it.notificationDataCase) {
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGECLICKED -> {

@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.emailstatusevent
 
+import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toInstant
@@ -14,6 +15,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.QueuedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.SentEmailTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SpamEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
@@ -50,6 +52,7 @@ private constructor(
                         else -> throw IllegalArgumentException("$it is not valid for blocking")
                     }
                 }
+        val includeTrackingData = request.includeTrackingData
 
         emailStatusEventDAO.getEvents(
                 accountId = authenticationDBO.account.id,
@@ -60,25 +63,31 @@ private constructor(
         )
                 .forEach {
                     responseObserver.onNext(
-                            getEmailNotification(it)
+                            getEmailNotification(it, includeTrackingData)
                     )
                 }
     }
 
-    private fun getEmailNotification(it: EmailStatusEventDBO): EmailNotification {
+    private fun getEmailNotification(emailStatusEventDBO: EmailStatusEventDBO, includeTrackingData: Boolean): EmailNotification {
         val builder = EmailNotification.newBuilder()
-        builder.emailId = it.email.id.toGrpcInternal()
-        builder.recipientEmailAddress = it.email.recipient.toGrpcInternal()
-        builder.emailTransactionId = it.email.transaction.id.toGrpcInternal()
-        builder.timestamp = it.dateCreated!!.toTimestamp()
-        return when (it.emailStatus) {
+        builder.emailId = emailStatusEventDBO.email.id.toGrpcInternal()
+        builder.recipientEmailAddress = emailStatusEventDBO.email.recipient.toGrpcInternal()
+        builder.emailTransactionId = emailStatusEventDBO.email.transaction.id.toGrpcInternal()
+        builder.timestamp = emailStatusEventDBO.dateCreated!!.toTimestamp()
+        if (includeTrackingData) {
+            builder.setEmailTrackingData(SentEmailTrackingData.newBuilder())
+            // TODO Insert logic to retrieve tracking data include it
+        } else {
+            builder.setNoTrackingData(Empty.getDefaultInstance())
+        }
+        return when (emailStatusEventDBO.emailStatus) {
             EmailStatus.OPENED -> {
-                val ipAddress = it.metaData.ipAddress ?: ""
+                val ipAddress = emailStatusEventDBO.metaData.ipAddress ?: ""
                 builder.setOpenedEvent(OpenedEvent.newBuilder().setIpAddress(ipAddress).build())
             }
 
             EmailStatus.CLICKED -> {
-                val ipAddress = it.metaData.ipAddress ?: ""
+                val ipAddress = emailStatusEventDBO.metaData.ipAddress ?: ""
                 builder.setClickedEvent(ClickedEvent.newBuilder().setIpAddress(ipAddress).build())
             }
             EmailStatus.HARD_BOUNCED -> {
