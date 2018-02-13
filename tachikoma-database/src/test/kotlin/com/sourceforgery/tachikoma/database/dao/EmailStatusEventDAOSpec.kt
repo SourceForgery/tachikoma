@@ -87,12 +87,12 @@ internal class EmailStatusEventDAOSpec : Spek({
                         jsonRequest = jsonRequest,
                         fromEmail = from,
                         authentication = authentication,
-                        metaData = HashMap(),
+                        metaData = emptyMap(),
                         tags = emptyList()
                 ),
                 messageId = MessageId(UUID.randomUUID().toString()),
                 mtaQueueId = null,
-                metaData = HashMap()
+                metaData = emptyMap()
         )
         ebeanServer.save(email)
 
