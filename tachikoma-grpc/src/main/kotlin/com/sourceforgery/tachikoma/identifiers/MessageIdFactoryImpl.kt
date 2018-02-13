@@ -5,5 +5,4 @@ import java.util.UUID
 class MessageIdFactoryImpl : MessageIdFactory {
     override fun createMessageId(mailDomain: MailDomain) =
             MessageId("${UUID.randomUUID()}@${mailDomain}")
-
 }

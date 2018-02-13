@@ -58,7 +58,6 @@ import java.io.StringWriter
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.Properties
-import java.util.UUID
 import java.util.concurrent.Executors
 import javax.activation.DataHandler
 import javax.inject.Inject
@@ -313,7 +312,6 @@ private constructor(
         for (attachment in request.attachmentsList) {
             val attachmentBody = MimeBodyPart()
             attachmentBody.dataHandler = DataHandler(ByteArrayDataSource(attachment.toByteArray(), attachment.contentType))
-//            attachmentBody.setHeader("Content-Transfer-Encoding", "quoted-printable")
             if (attachment.fileName.isNotBlank()) {
                 attachmentBody.fileName = attachment.fileName
             }
@@ -323,7 +321,6 @@ private constructor(
         message.setContent(multipart)
         message.saveChanges()
         message.setHeader("Message-ID", "<${messageId.messageId}>")
-
 
         val result = ByteArrayOutputStream()
         message.writeTo(result)
