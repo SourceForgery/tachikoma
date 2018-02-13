@@ -56,7 +56,7 @@ internal class EmailDAOSpec : Spek({
                 jsonRequest = jsonRequest,
                 fromEmail = from,
                 authentication = authentication,
-                metaData = HashMap(),
+                metaData = emptyMap(),
                 tags = emptyList()
         )
 
@@ -66,7 +66,7 @@ internal class EmailDAOSpec : Spek({
                 transaction = emailSendTransaction,
                 messageId = MessageId("1023"),
                 mtaQueueId = null,
-                metaData = HashMap()
+                metaData = emptyMap()
         )
     }
 
