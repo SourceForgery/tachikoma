@@ -35,6 +35,8 @@ constructor(
     @Column(columnDefinition = "TEXT")
             // TODO should this be a string or a byte array?
     var body: String? = null
+    @Column(columnDefinition = "TEXT")
+    var subject: String? = null
 
     @OneToMany
     val emailStatusEvents: List<EmailStatusEventDBO> = BeanList()
