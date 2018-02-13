@@ -93,7 +93,9 @@ fun main(args: Array<String>) {
                     ?: throw IllegalArgumentException("Can't start without TACHIKOMA_URL")
     )
 
-    val insecure = System.getenv("INSECURE").toBoolean()
+    val insecure = System.getenv("INSECURE")
+            ?.toBoolean()
+            ?: false
 
     Main(tachikomaUrl, mailDomain, insecure)
             .run()
