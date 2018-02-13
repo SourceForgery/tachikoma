@@ -60,7 +60,9 @@ internal class BlockedEmailDAOSpec : Spek({
         val emailSendTransaction = EmailSendTransactionDBO(
                 jsonRequest = jsonRequest,
                 fromEmail = from,
-                authentication = authentication
+                authentication = authentication,
+                metaData = HashMap(),
+                tags = emptyList()
         )
 
         val fromEmail = EmailDBO(
@@ -68,7 +70,8 @@ internal class BlockedEmailDAOSpec : Spek({
                 recipientName = "Mr. Recipient",
                 transaction = emailSendTransaction,
                 messageId = MessageId("1023"),
-                mtaQueueId = null
+                mtaQueueId = null,
+                metaData = HashMap()
         )
 
         return EmailStatusEventDBO(

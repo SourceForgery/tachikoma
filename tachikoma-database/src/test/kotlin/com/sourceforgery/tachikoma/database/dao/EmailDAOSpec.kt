@@ -55,7 +55,9 @@ internal class EmailDAOSpec : Spek({
         val emailSendTransaction = EmailSendTransactionDBO(
                 jsonRequest = jsonRequest,
                 fromEmail = from,
-                authentication = authentication
+                authentication = authentication,
+                metaData = HashMap(),
+                tags = emptyList()
         )
 
         return EmailDBO(
@@ -63,7 +65,8 @@ internal class EmailDAOSpec : Spek({
                 recipientName = "Mr. Recipient",
                 transaction = emailSendTransaction,
                 messageId = MessageId("1023"),
-                mtaQueueId = null
+                mtaQueueId = null,
+                metaData = HashMap()
         )
     }
 

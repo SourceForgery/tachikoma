@@ -86,10 +86,13 @@ internal class EmailStatusEventDAOSpec : Spek({
                 transaction = EmailSendTransactionDBO(
                         jsonRequest = jsonRequest,
                         fromEmail = from,
-                        authentication = authentication
+                        authentication = authentication,
+                        metaData = HashMap(),
+                        tags = emptyList()
                 ),
                 messageId = MessageId(UUID.randomUUID().toString()),
-                mtaQueueId = null
+                mtaQueueId = null,
+                metaData = HashMap()
         )
         ebeanServer.save(email)
 
