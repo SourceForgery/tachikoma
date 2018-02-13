@@ -8,7 +8,6 @@ import io.grpc.Metadata
 import io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.MetadataUtils
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
 import java.net.URI
@@ -58,11 +57,7 @@ class Main(
                         usePlaintext(true)
                     } else {
                         useTransportSecurity()
-                        sslContext(
-                                GrpcSslContexts.forClient()
-                                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                                        .build()
-                        )
+                        sslContext(GrpcSslContexts.forClient().build())
                     }
                 }
                 .idleTimeout(365, TimeUnit.DAYS)
