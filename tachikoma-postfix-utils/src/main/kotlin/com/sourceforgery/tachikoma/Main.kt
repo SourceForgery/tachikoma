@@ -18,7 +18,8 @@ private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRIN
 
 class Main(
         urlWithoutDomain: URI,
-        private val mailDomain: String
+        private val mailDomain: String,
+        private val insecure: Boolean
 ) {
 
     private val tachikomaUrl = addDomain(urlWithoutDomain)
@@ -60,7 +61,11 @@ class Main(
                         useTransportSecurity()
                         sslContext(
                                 GrpcSslContexts.forClient()
-                                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                        .also { ctx ->
+                                            if (insecure) {
+                                                ctx.trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                            }
+                                        }
                                         .build()
                         )
                     }
@@ -88,6 +93,8 @@ fun main(args: Array<String>) {
                     ?: throw IllegalArgumentException("Can't start without TACHIKOMA_URL")
     )
 
-    Main(tachikomaUrl, mailDomain)
+    val insecure = System.getenv("INSECURE").toBoolean()
+
+    Main(tachikomaUrl, mailDomain, insecure)
             .run()
 }
