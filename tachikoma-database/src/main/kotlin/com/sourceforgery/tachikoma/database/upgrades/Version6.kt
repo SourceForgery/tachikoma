@@ -7,9 +7,9 @@ class Version6 : DatabaseUpgrade {
         connection
                 .createStatement()
                 .use {
-                    it.execute("ALTER TABLE e_email ADD COLUMN meta_data JSON NOT NULL")
-                    it.execute("ALTER TABLE e_email_send_transaction ADD COLUMN meta_data JSON NOT NULL")
-                    it.execute("ALTER TABLE e_email_send_transaction ADD COLUMN tags text[] NOT NULL")
+                    it.execute("ALTER TABLE e_email ADD COLUMN meta_data JSON NOT NULL DEFAULT '{}'::JSON")
+                    it.execute("ALTER TABLE e_email_send_transaction ADD COLUMN meta_data JSON NOT NULL DEFAULT '{}'::JSON")
+                    it.execute("ALTER TABLE e_email_send_transaction ADD COLUMN tags text[] NOT NULL DEFAULT array[]::text[]")
                 }
         return -6
     }
