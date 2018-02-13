@@ -8,6 +8,7 @@ import io.grpc.Metadata
 import io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.MetadataUtils
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
 import java.net.URI
@@ -17,7 +18,8 @@ private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRIN
 
 class Main(
         urlWithoutDomain: URI,
-        private val mailDomain: String
+        private val mailDomain: String,
+        private val insecure: Boolean
 ) {
 
     private val tachikomaUrl = addDomain(urlWithoutDomain)
@@ -57,7 +59,15 @@ class Main(
                         usePlaintext(true)
                     } else {
                         useTransportSecurity()
-                        sslContext(GrpcSslContexts.forClient().build())
+                        sslContext(
+                                GrpcSslContexts.forClient()
+                                        .also { ctx ->
+                                            if (insecure) {
+                                                ctx.trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                            }
+                                        }
+                                        .build()
+                        )
                     }
                 }
                 .idleTimeout(365, TimeUnit.DAYS)
@@ -83,6 +93,8 @@ fun main(args: Array<String>) {
                     ?: throw IllegalArgumentException("Can't start without TACHIKOMA_URL")
     )
 
-    Main(tachikomaUrl, mailDomain)
+    val insecure = System.getenv("INSECURE").toBoolean()
+
+    Main(tachikomaUrl, mailDomain, insecure)
             .run()
 }
