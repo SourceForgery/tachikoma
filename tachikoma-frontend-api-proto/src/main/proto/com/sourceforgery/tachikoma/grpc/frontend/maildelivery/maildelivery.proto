@@ -31,7 +31,7 @@ message EmailRecipient {
     map<string, string> metadata = 103;
 }
 
-// Tracking data structure
+// Tracking data structure for a email transaction
 message TrackingData {
     // Special domain used to track links. Used instead of the normal host.
     // See future documentation on how to set up with e.g. nginx/apache httpd/lighttpd which

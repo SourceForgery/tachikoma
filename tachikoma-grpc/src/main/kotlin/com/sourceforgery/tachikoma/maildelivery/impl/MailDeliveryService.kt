@@ -322,6 +322,7 @@ private constructor(
         message.addHeader("List-Unsubscribe-Post", "One-Click")
         message.addHeader("List-Unsubscribe", "<$unsubscribeUri>, <mailto:$unsubscribeEmail?subject=unsub>")
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
+        // TODO Abuse-email should be system-wide config parameter
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
         // TODO Add this url (abuse)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: http://${trackingConfig.baseUrl}/abuse/$messageId")

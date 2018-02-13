@@ -27,6 +27,9 @@ message GetEmailStatusEventsFilter {
 
     // Filter events on zero or more event types
     repeated Event events = 104;
+
+    // Whether to include tracking data in the response or not . Like all bools, defaults to false.
+    bool includeTrackingData = 105;
 }
 
 // Event types available to filter on

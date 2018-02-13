@@ -5,6 +5,7 @@ option java_multiple_files = true;
 package com.sourceforgery.tachikoma.grpc.frontend;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 // Email address without recipient name
 message EmailAddress {
@@ -48,6 +49,26 @@ message EmailNotification {
         UnsubscribedEvent unsubscribedEvent = 207;
         SpamEvent spamEvent = 208;
     }
+    // Optional depending on parameters for the rpc method
+    oneof tracking {
+        SentEmailTrackingData emailTrackingData = 301;
+        google.protobuf.Empty noTrackingData = 302;
+    }
+}
+
+// Tracking data structure for a single email
+message SentEmailTrackingData {
+    // Special domain used to track links. Used instead of the normal host.
+    // See future documentation on how to set up with e.g. nginx/apache httpd/lighttpd which
+    // is necessary for HSTS domains.
+    string trackingDomain = 101;
+
+    // Not sent, but used in search and in callbacks
+    repeated string tags = 102;
+
+    // Data for e.g. callback processing
+    // Transaction metadata merged with recipient metadata
+    map<string, string> metadata = 103;
 }
 
 // Message bounced. Will be retried automatically.
