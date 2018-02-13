@@ -13,6 +13,10 @@ service DeliveryNotificationService {
 
 // Parameters for the notification stream
 message NotificationStreamParameters {
-    // Whether to include tracking data in the response or not . Like all bools, defaults to false.
+    // Whether to include tracking data in the response or not.
+    // Like all bools, defaults to false.
     bool includeTrackingData = 101;
+    // Whether to include subject in the response opr not.
+    // Like all bools, defaults to false.
+    bool includeSubject = 102;
 }

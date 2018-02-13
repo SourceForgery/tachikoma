@@ -149,7 +149,7 @@ private constructor(
                 )
                 emailDAO.save(emailDBO)
 
-                emailDBO.body = when (request.bodyCase) {
+                val pair = when (request.bodyCase) {
                     OutgoingEmail.BodyCase.STATIC -> getStaticBody(
                             request = request,
                             emailId = emailDBO.id,
@@ -167,6 +167,8 @@ private constructor(
                     )
                     else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
                 }
+                emailDBO.subject = pair.first
+                emailDBO.body = pair.second
                 emailDAO.save(emailDBO)
 
                 mqSender.queueJob(jobMessageFactory.createSendEmailJob(
@@ -194,7 +196,7 @@ private constructor(
             messageId: MessageId,
             fromEmail: Email,
             sender: AccountId
-    ): String {
+    ): Pair<String, String> {
         val template = request.template
         if (template.htmlTemplate.isBlank() && template.plaintextTemplate.isBlank()) {
             throw IllegalArgumentException("Needs at least one template (plaintext or html)")
@@ -213,11 +215,12 @@ private constructor(
         val htmlBody = mergeTemplate(template.htmlTemplate, globalVars, recipientVars)
         val plaintextBody = mergeTemplate(template.plaintextTemplate, globalVars, recipientVars)
 
-        return wrapAndPackBody(
+        val subject = mergeTemplate(template.subject, globalVars, recipientVars)
+        return subject to wrapAndPackBody(
                 request = request,
                 htmlBody = htmlBody.emptyToNull(),
                 plaintextBody = plaintextBody.emptyToNull(),
-                subject = mergeTemplate(template.subject, globalVars, recipientVars),
+                subject = subject,
                 emailId = emailId,
                 messageId = messageId,
                 fromEmail = fromEmail,
@@ -231,12 +234,12 @@ private constructor(
             messageId: MessageId,
             fromEmail: Email,
             sender: AccountId
-    ): String {
+    ): Pair<String, String> {
         val static = request.static
         val htmlBody = static.htmlBody.emptyToNull()
         val plaintextBody = static.plaintextBody.emptyToNull()
 
-        return wrapAndPackBody(
+        return static.subject to wrapAndPackBody(
                 request = request,
                 htmlBody = htmlBody,
                 plaintextBody = plaintextBody,

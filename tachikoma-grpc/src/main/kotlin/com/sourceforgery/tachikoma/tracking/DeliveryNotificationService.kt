@@ -7,6 +7,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.MessageId
 import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.QueuedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SentEmailTrackingData
@@ -39,11 +40,21 @@ private constructor(
                 notificationBuilder.recipientEmailAddress = emailData.recipient.toGrpcInternal()
                 notificationBuilder.emailTransactionId = emailData.transaction.id.toGrpcInternal()
                 notificationBuilder.timestamp = it.creationTimestamp
+                notificationBuilder.messageId = MessageId.newBuilder().setMessageId(emailData.messageId.messageId).build()
                 if (request.includeTrackingData) {
-                    notificationBuilder.setEmailTrackingData(SentEmailTrackingData.newBuilder())
-                    // TODO Insert logic to retrieve tracking data include it
+                    notificationBuilder.emailTrackingData =
+                            SentEmailTrackingData.newBuilder()
+                                    .addAllTags(emailData.transaction.tags)
+                                    .putAllMetadata(emailData.transaction.metaData)
+                                    .putAllMetadata(emailData.metaData)
+                                    .build()
                 } else {
                     notificationBuilder.setNoTrackingData(Empty.getDefaultInstance())
+                }
+                if (request.includeSubject) {
+                    emailData.subject?.also {
+                        notificationBuilder.subject = it
+                    }
                 }
                 @Suppress("UNUSED_VARIABLE")
                 val ignored = when (it.notificationDataCase) {

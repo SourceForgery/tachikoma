@@ -39,6 +39,7 @@ message EmailNotification {
     EmailAddress recipientEmailAddress = 102;
     EmailTransactionId emailTransactionId = 103;
     google.protobuf.Timestamp timestamp = 104;
+    MessageId messageId = 105;
     oneof notification {
         SoftBouncedEvent softBouncedEvent = 201;
         HardBouncedEvent hardBouncedEvent = 202;
@@ -54,6 +55,9 @@ message EmailNotification {
         SentEmailTrackingData emailTrackingData = 301;
         google.protobuf.Empty noTrackingData = 302;
     }
+
+    // Optional depending on parameters for the rpc method
+    string subject = 401;
 }
 
 // Tracking data structure for a single email
@@ -121,4 +125,9 @@ message Attachment {
     // Optional
     // The filename (if any) for this attachment
     string fileName = 103;
+}
+
+// MessageId
+message MessageId {
+    string messageId = 101;
 }
