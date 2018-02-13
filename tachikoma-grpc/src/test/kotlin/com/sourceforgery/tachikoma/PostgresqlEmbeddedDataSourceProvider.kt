@@ -13,7 +13,7 @@ private constructor(
     override fun provide(serverConfig: ServerConfig) {
         val pg = EmbeddedPostgres.builder()
                 .setServerConfig("listen_addresses", "127.0.0.1")
-                .setOutputRedirector(ProcessBuilder.Redirect.INHERIT)
+                .setOutputRedirector(ProcessBuilder.Redirect.PIPE)
                 .start()
         serverConfig.databasePlatform = PostgresPlatform()
         serverConfig.isDdlGenerate = false
