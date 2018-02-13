@@ -18,9 +18,11 @@ import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
+import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
 import com.sourceforgery.tachikoma.database.server.LogEverything
+import com.sourceforgery.tachikoma.database.server.PostgresqlDataSourceProvider
 import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.upgrades.Version1
 import com.sourceforgery.tachikoma.database.upgrades.Version2
@@ -65,6 +67,10 @@ class DatabaseBinder : AbstractBinder() {
         bindAsContract(DBObjectMapperImpl::class.java)
                 .to(DBObjectMapper::class.java)
                 .`in`(Singleton::class.java)
+        bindAsContract(PostgresqlDataSourceProvider::class.java)
+                .to(DataSourceProvider::class.java)
+                .`in`(Singleton::class.java)
+                .ranked(-1)
         bindEbeanHooks()
         bindDatabaseUpgrades()
     }

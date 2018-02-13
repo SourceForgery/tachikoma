@@ -17,6 +17,7 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
+import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
@@ -33,7 +34,9 @@ import java.time.Clock
 import java.util.UUID
 import javax.inject.Singleton
 
-class Hk2TestBinder : AbstractBinder() {
+class Hk2TestBinder(
+        private vararg val attributes: TestAttribute
+) : AbstractBinder() {
     override fun configure() {
         bindAsContract(DatabaseTestConfig::class.java)
                 .to(DatabaseConfig::class.java)
@@ -81,6 +84,16 @@ class Hk2TestBinder : AbstractBinder() {
         bind(Clock.systemUTC())
                 .to(Clock::class.java)
 
+        val dataSourceProvider = if (attributes.contains(TestAttribute.POSTGRESQL)) {
+            PostgresqlEmbeddedDataSourceProvider::class.java
+        } else {
+            H2DataSourceProvider::class.java
+        }
+        bindAsContract(dataSourceProvider)
+                .to(DataSourceProvider::class.java)
+                .`in`(Singleton::class.java)
+                .ranked(1)
+
         bind(object : InvokeCounter {
             override fun inc(sql: String?, millis: Long) {
                 // Do nothing
@@ -92,6 +105,10 @@ class Hk2TestBinder : AbstractBinder() {
                 .to(DBObjectMapper::class.java)
                 .`in`(Singleton::class.java)
     }
+}
+
+enum class TestAttribute {
+    POSTGRESQL
 }
 
 private class DatabaseTestConfig : DatabaseConfig {

@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.auth.AuthenticationMock
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
@@ -27,7 +28,9 @@ import java.time.Clock
 import java.util.UUID
 import javax.inject.Singleton
 
-class Hk2TestBinder : AbstractBinder() {
+class Hk2TestBinder(
+        private vararg val attributes: TestAttribute
+) : AbstractBinder() {
     override fun configure() {
         bind(object : TrackingConfig {
             override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd"
@@ -73,7 +76,21 @@ class Hk2TestBinder : AbstractBinder() {
         bindAsContract(MessageIdFactoryMock::class.java)
                 .to(MessageIdFactory::class.java)
                 .`in`(Singleton::class.java)
+
+        val dataSourceProvider = if (attributes.contains(TestAttribute.POSTGRESQL)) {
+            PostgresqlEmbeddedDataSourceProvider::class.java
+        } else {
+            H2DataSourceProvider::class.java
+        }
+        bindAsContract(dataSourceProvider)
+                .to(DataSourceProvider::class.java)
+                .`in`(Singleton::class.java)
+                .ranked(1)
     }
+}
+
+enum class TestAttribute {
+    POSTGRESQL
 }
 
 private class DatabaseTestConfig : DatabaseConfig {
