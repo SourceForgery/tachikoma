@@ -1,6 +1,5 @@
 apply plugin: 'com.google.protobuf'
-apply plugin: 'java'
-apply plugin: 'idea'
+apply from: "$project.rootDir/java.gradle"
 
 dependencies {
     compile "com.google.guava:guava:$guava_version"
@@ -12,6 +11,10 @@ dependencies {
     compile "io.grpc:grpc-protobuf:$grpc_version"
     compile "io.grpc:grpc-stub:$grpc_version"
 }
+
+
+bintray.publications += ['TachikomaFrontendApiJvm']
+
 
 sourceSets {
     main {
@@ -29,27 +32,6 @@ idea {
     }
 }
 
-
-if (JavaVersion.current().isJava8Compatible()) {
-    allprojects {
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet')
-        }
-    }
-}
-
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier = 'source'
-}
-assemble.dependsOn sourceJar
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    from javadoc.destinationDir
-    classifier = 'javadoc'
-}
-assemble.dependsOn javadocJar
-
 publishing {
     publications {
         TachikomaFrontendApiJvm(MavenPublication) {
@@ -63,18 +45,6 @@ publishing {
                 classifier "javadoc"
             }
         }
-    }
-}
-
-bintray {
-    publish = true
-
-    user = System.getenv("BINTRAY_USER")
-    key = System.getenv("BINTRAY_KEY")
-    publications = ['TachikomaFrontendApiJvm']
-    pkg {
-        repo = 'Tachikoma'
-        name = 'tachikoma'
     }
 }
 

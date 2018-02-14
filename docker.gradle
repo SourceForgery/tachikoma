@@ -1,0 +1,4 @@
+apply plugin: 'base'
+apply plugin: 'docker'
+
+project.group = "sourceforgery"

@@ -1,9 +1,9 @@
-apply plugin: 'base'
-apply plugin: 'docker'
+apply from: "${project.rootDir}/docker.gradle"
 
 configurations {
     binaries
 }
+
 
 dependencies {
     binaries project(path: ":tachikoma-postfix-utils", configuration: 'archives')
@@ -46,6 +46,8 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     }
 
     runCommand("chmod a+x /opt/tachikoma-postfix-utils/bin/tachikoma-postfix-utils")
+
+    push = rootProject.extensions.extraProperties.dockerPush
 }
 
 assemble.dependsOn postfixDocker

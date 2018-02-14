@@ -1,0 +1,26 @@
+apply plugin: 'java'
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier = 'source'
+}
+
+tasks.withType(JavaCompile).all {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+assemble.dependsOn sourceJar
+
+assemble.dependsOn javadocJar
