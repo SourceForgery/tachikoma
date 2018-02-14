@@ -24,6 +24,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
+import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcRejectReason
@@ -102,6 +103,7 @@ private constructor(
                 jsonRequest = getRequestData(request),
                 fromEmail = fromEmail,
                 authentication = auth,
+                bcc = request.bccList.map { it.toEmail().address },
                 metaData = request.trackingData.metadataMap,
                 tags = request.trackingData.tagsList
         )
@@ -290,6 +292,15 @@ private constructor(
         val message = MimeMessage(session)
         message.setFrom(InternetAddress(request.from.email, request.from.name))
         message.setSubject(subject, "UTF-8")
+
+        if (request.replyTo.email.isNotBlank()) {
+            val replyToMailDomain = request.replyTo.toEmail().domain.mailDomain
+            val fromMailDomain = request.from.toNamedEmail().address.domain.mailDomain
+            if (replyToMailDomain !== fromMailDomain) {
+                throw IllegalArgumentException("Reply-to email domain $replyToMailDomain not same as from email domain $fromMailDomain")
+            }
+            message.replyTo = arrayOf(InternetAddress(request.replyTo.email))
+        }
 
         addListAndAbuseHeaders(message, emailId, messageId, fromEmail, sender)
 
