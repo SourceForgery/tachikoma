@@ -1,5 +1,4 @@
-apply plugin: 'base'
-apply plugin: 'docker'
+apply from: "${project.rootDir}/docker.gradle"
 
 configurations {
     binaries
@@ -66,6 +65,7 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
     entryPoint(['/tini', '--'])
 
     defaultCommand(["/opt/tachikoma-webserver/bin/tachikoma-webserver"])
+    push = rootProject.extensions.extraProperties.dockerPush
 }
 
 webserverDocker.dependsOn downloadTini

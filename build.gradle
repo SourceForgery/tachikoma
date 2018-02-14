@@ -13,25 +13,22 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.junit.platform:junit-platform-gradle-plugin:1.0.0"
         classpath "se.transmode.gradle:gradle-docker:1.2"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.16-eap-3"
     }
     repositories {
         mavenLocal()
-        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
-        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
-        maven { url "https://plugins.gradle.org/m2/" }
-        maven { url "http://dl.bintray.com/jetbrains/spek" }
+        jcenter()
         mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://dl.bintray.com/jetbrains/spek/" }
+        maven { url "https://dl.bintray.com/kotlin/kotlin-eap/" }
     }
 }
 
+apply from: 'setuprelease.gradle'
+
 apply plugin: 'java'
-apply plugin: 'org.ajoberstar.grgit'
 apply plugin: 'nebula.lint'
-apply plugin: 'net.researchgate.release'
-apply plugin: 'co.riiid.gradle'
-apply plugin: 'java-library'
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.bintray'
 
 task replaceVersion(type: Copy) {
     from('kubernetes') {
@@ -42,47 +39,11 @@ task replaceVersion(type: Copy) {
     includeEmptyDirs = false
 }
 
-githubRelease.dependsOn replaceVersion
-
-def travisTag = System.getenv("TRAVIS_TAG") ?: ""
-
-github {
-    owner = 'SourceForgery'
-    repo = 'tachikoma'
-    token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
-    tagName = travisTag
-    targetCommitish = 'master'
-    name = "v${project.version}"
-    assets = [
-            "tachikoma-webserver/build/distributions/tachikoma-webserver-${project.version}.tar",
-            "tachikoma-postfix-utils/build/distributions/tachikoma-postfix-utils-${project.version}.tar",
-            "${project.buildDir}/kubernetes/deployment-webserver.yaml",
-            "tachikoma-frontend-api-proto/build/libs/tachikoma-frontend-api-proto-${project.version}.zip"
-    ]
-}
-
-if (!travisTag.empty) {
-    // Only activate when we're building a tag (release)
-    if (System.getenv("GITHUB_API_TOKEN") == null) {
-        throw new GroovyRuntimeException("GITHUB_API_TOKEN not set")
-    }
-    println("Trying to build release")
-    check.finalizedBy githubRelease
-}
+assemble.dependsOn replaceVersion
 
 subprojects {
     apply plugin: 'idea'
     apply plugin: 'nebula.lint'
-
-    buildscript {
-        repositories {
-            mavenLocal()
-            maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
-            maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
-            maven { url "https://plugins.gradle.org/m2/" }
-            mavenCentral()
-        }
-    }
 
     gradleLint.criticalRules = ['all-dependency', 'duplicate-dependency-class']
     gradleLint.rules = ['archaic-wrapper']
@@ -100,73 +61,11 @@ subprojects {
 
     repositories {
         mavenLocal()
-        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
-        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
         mavenCentral()
-    }
-
-    if (!travisTag.empty) {
-        check.finalizedBy bintrayUpload
     }
 
     sourceCompatibility = ext.java_version
     targetCompatibility = ext.java_version
-
-    // Add better deprecation warnings
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-        }
-    }
-
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-        apply plugin: 'org.jlleitschuh.gradle.ktlint'
-        apply plugin: "org.jmailen.kotlinter"
-        apply plugin: 'org.junit.platform.gradle.plugin'
-
-        kapt {
-            useBuildCache = true
-        }
-
-        kotlinOptions {
-            languageVersion = "1.2"
-            apiVersion = "1.2"
-            jvmTarget = "1.8"
-            freeCompilerArgs = ["-Xjsr305=strict"]
-            //javaParameters = true   // Useful for reflection.
-        }
-
-        ktlint {
-            debug = false
-            verbose = true
-            android = false
-//            reporter = "checkstyle"
-            ignoreFailures = false
-        }
-
-        dependencies {
-            testCompile "org.jetbrains.spek:spek-api:$spek_version"
-            testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
-            testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-            testCompile 'org.junit.platform:junit-platform-runner:1.0.2'
-            testCompile "org.glassfish.hk2:hk2-locator:$hk2_version"
-            testCompile "org.glassfish.hk2:hk2-utils:$hk2_version"
-            compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-            compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-        }
-    }
-
-    tasks.withType(se.transmode.gradle.plugins.docker.DockerTask).all {
-        project.group = "sourceforgery"
-
-        def currentBranch = System.getenv("TRAVIS_BRANCH") ?: grgit.branch.current.name
-        if (currentBranch == "master" && Boolean.valueOf(System.getenv("DOCKER_PUSH"))) {
-            push = true
-        }
-        if (!travisTag.empty) {
-            push = true
-        }
-    }
 }
 
 group 'com.sourceforgery.tachikoma'

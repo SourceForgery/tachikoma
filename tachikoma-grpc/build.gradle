@@ -1,4 +1,4 @@
-apply plugin: 'kotlin'
+apply from: "${project.rootDir}/kotlin.gradle"
 
 dependencies {
     compile 'com.github.spullara.mustache.java:compiler:0.9.5'
