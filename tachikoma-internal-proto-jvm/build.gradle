@@ -1,25 +1,20 @@
-
-sourceSets {
-    main {
-        resources {
-            srcDirs = ["src/main/proto"]
-        }
-    }
-}
-
 apply plugin: 'com.google.protobuf'
-apply plugin: 'java'
-
+apply from: "${rootDir}/java.gradle"
 
 dependencies {
     compile "com.google.protobuf:protobuf-java:$protoc_version"
     compile project(":tachikoma-protobuf-annotations")
 }
 
-idea {
-    module {
-        sourceDirs += file("${buildDir}/generated/source/proto/main/java/")
-        sourceDirs += file("${buildDir}/generated/source/proto/main/grpc/")
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/proto"]
+        }
+        java {
+            srcDirs += file("${buildDir}/generated/source/proto/main/grpc/")
+            srcDirs += file("${buildDir}/generated/source/proto/main/java/")
+        }
     }
 }
 

@@ -3,7 +3,7 @@ apply plugin: 'java'
 sourceSets {
     main {
         resources {
-            srcDirs= ["src/main/proto"]
+            srcDirs = ["src/main/proto"]
         }
     }
 }
@@ -14,5 +14,7 @@ task zipProtoc([type: Zip]) {
     archiveName "tachikoma-frontend-api-proto-${project.version}.zip"
     destinationDir(file("$buildDir/libs/"))
 }
+
+github.assets += "${buildDir}/libs/tachikoma-frontend-api-proto-${project.version}.zip"
 
 assemble.dependsOn zipProtoc

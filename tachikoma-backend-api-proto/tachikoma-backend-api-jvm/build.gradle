@@ -1,6 +1,5 @@
 apply plugin: 'com.google.protobuf'
-apply plugin: 'java'
-apply plugin: 'idea'
+apply from: "${rootDir}/java.gradle"
 
 dependencies {
     compile "com.google.guava:guava:$guava_version"
@@ -12,13 +11,14 @@ dependencies {
     compile "io.grpc:grpc-stub:$grpc_version"
 }
 
-idea {
-    module {
-        sourceDirs += file("${buildDir}/generated/source/proto/main/java/")
-        sourceDirs += file("${buildDir}/generated/source/proto/main/grpc/")
+sourceSets {
+    main {
+        java {
+            srcDirs += file("${buildDir}/generated/source/proto/main/grpc/")
+            srcDirs += file("${buildDir}/generated/source/proto/main/java/")
+        }
     }
 }
-
 
 protobuf {
     protoc {

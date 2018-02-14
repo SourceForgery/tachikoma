@@ -19,4 +19,6 @@ dependencies {
 
 mainClassName = "com.sourceforgery.tachikoma.MainKt"
 
+github.assets += "${buildDir}/distributions/tachikoma-postfix-utils-${project.version}.tar"
+
 distZip.enabled = false
