@@ -12,9 +12,7 @@ dependencies {
     compile "io.grpc:grpc-stub:$grpc_version"
 }
 
-
-bintray.publications += ['TachikomaFrontendApiJvm']
-
+bintray.publications += 'TachikomaFrontendApiJvm'
 
 sourceSets {
     main {
@@ -22,13 +20,6 @@ sourceSets {
             srcDirs += file("${buildDir}/generated/source/proto/main/grpc/")
             srcDirs += file("${buildDir}/generated/source/proto/main/java/")
         }
-    }
-}
-
-idea {
-    module {
-        sourceDirs += file("${buildDir}/generated/source/proto/main/java/")
-        sourceDirs += file("${buildDir}/generated/source/proto/main/grpc/")
     }
 }
 

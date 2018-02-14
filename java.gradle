@@ -11,7 +11,6 @@ if (JavaVersion.current().isJava8Compatible()) {
     }
 }
 
-
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava
     classifier = 'source'

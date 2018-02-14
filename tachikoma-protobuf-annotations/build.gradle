@@ -1,5 +1,23 @@
-apply plugin: 'java'
+apply from: "${rootDir}/java.gradle"
 
 dependencies {
     compile "com.google.code.findbugs:jsr305:$jsr305_version"
 }
+
+publishing {
+    publications {
+        ProtobufAnnotationsJvm(MavenPublication) {
+            from components.java
+            artifactId project.name
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+        }
+    }
+}
+
+bintray.publications += 'ProtobufAnnotationsJvm'

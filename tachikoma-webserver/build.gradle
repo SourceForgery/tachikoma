@@ -12,6 +12,9 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4j2_version"
 }
 
+github.assets += "${buildDir}/distributions/tachikoma-webserver-${project.version}.tar"
+
+
 mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
 
 distZip.enabled = false

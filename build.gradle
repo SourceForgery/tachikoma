@@ -27,7 +27,6 @@ buildscript {
 
 apply from: 'setuprelease.gradle'
 
-apply plugin: 'java'
 apply plugin: 'nebula.lint'
 
 task replaceVersion(type: Copy) {
