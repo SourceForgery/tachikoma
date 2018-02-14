@@ -1,3 +1,5 @@
+rootProject.name='com.sourceforgery.tachikoma'
+
 include 'tachikoma-protobuf-annotations'
 
 include 'tachikoma-backend-api-proto'
