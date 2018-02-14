@@ -26,6 +26,8 @@ class EmailSendTransactionDBO
         val fromEmail: Email,
         @ManyToOne
         val authentication: AuthenticationDBO,
+        @DbArray
+        val bcc: List<String> = emptyList(),
         @DbJsonB
         val metaData: Map<String, String>,
         @DbArray

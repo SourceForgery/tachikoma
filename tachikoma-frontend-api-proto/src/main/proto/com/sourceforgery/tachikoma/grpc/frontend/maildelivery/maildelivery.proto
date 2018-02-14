@@ -94,11 +94,16 @@ message OutgoingEmail {
     repeated EmailRecipient recipients = 101;
 
     // Optional
-    // Blind CC of ALL emails for e.g. debugging. This will get one email per recipient
-    EmailAddress bcc = 102;
+    // Blind CC of ALL emails for debugging. These will get one email per recipient.
+    // NB! Opening mail / clicking links will be tracked on original email
+    repeated EmailAddress bcc = 102;
 
     // From address
     NamedEmailAddress from = 103;
+
+    // Optional
+    // Reply-to email, must have same domain as from email
+    EmailAddress replyTo = 104;
 
     // Choose one of
     oneof body {

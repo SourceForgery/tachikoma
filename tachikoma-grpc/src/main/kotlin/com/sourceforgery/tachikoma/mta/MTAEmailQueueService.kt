@@ -62,6 +62,7 @@ private constructor(
                         .setFrom(email.transaction.fromEmail.address)
                         .setEmailId(email.id.emailId)
                         .setEmailAddress(email.recipient.address)
+                        .addAllBcc(email.transaction.bcc)
                         .build()
                 responseObserver.onNext(response)
             }

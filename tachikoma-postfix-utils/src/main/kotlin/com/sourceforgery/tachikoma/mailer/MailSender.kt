@@ -27,8 +27,8 @@ class MailSender(
         LOGGER.info { "Connecting. Trying to listen for emails" }
     }
 
-    fun sendEmail(value: EmailMessage): MTAQueuedNotification {
-        LOGGER.info { "Got email: ${value.emailId}" }
+    fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
+        LOGGER.info { "Got email: ${emailMessage.emailId}" }
 
         try {
             Socket("localhost", 25).use { smtpSocket ->
@@ -47,24 +47,29 @@ class MailSender(
                     expect.sendLine("EHLO localhost")
                             .expectNoSmtpError("^250 ")
                     expect.emptyBuffer()
-                    expect.sendLine("MAIL FROM: ${value.from}")
+                    expect.sendLine("MAIL FROM: ${emailMessage.from}")
                             .expectNoSmtpError("^250 ")
-                    expect.sendLine("RCPT TO: ${value.emailAddress}")
+                    expect.sendLine("RCPT TO: ${emailMessage.emailAddress}")
                             .expectNoSmtpError("^250 ")
                     expect.emptyBuffer()
+                    emailMessage.bccList.forEach {
+                        expect.sendLine("RCPT TO: $it")
+                                .expectNoSmtpError("^250 ")
+                        expect.emptyBuffer()
+                    }
                     expect.sendLine("DATA")
                             .expectNoSmtpError("^354 ")
                     expect.expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
-                    val queueId = expect.send(value.body)
+                    val queueId = expect.send(emailMessage.body)
                             .sendLine(".")
                             .expectNoSmtpError("^250 .* queued as (.*)$")
                             .group(1)
                     expect.sendLine("QUIT")
 
-                    LOGGER.info { "Successfully send email: ${value.emailId}" }
+                    LOGGER.info { "Successfully send email: ${emailMessage.emailId}" }
                     return MTAQueuedNotification.newBuilder()
                             .setQueueId(queueId)
-                            .setEmailId(value.emailId)
+                            .setEmailId(emailMessage.emailId)
                             .setSuccess(true)
                             .build()
                 }
@@ -72,7 +77,7 @@ class MailSender(
         } catch (e: Exception) {
             LOGGER.error("", e)
             return MTAQueuedNotification.newBuilder()
-                    .setEmailId(value.emailId)
+                    .setEmailId(emailMessage.emailId)
                     .setSuccess(false)
                     .build()
         }

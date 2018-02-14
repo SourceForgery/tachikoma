@@ -18,6 +18,7 @@ message EmailMessage {
     string emailAddress = 101;
     string from = 102;
     sint64 emailId = 103;
+    repeated string bcc = 104;
 
     string body = 201;
 }
