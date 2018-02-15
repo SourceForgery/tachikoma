@@ -13,11 +13,8 @@ import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
-import com.sourceforgery.tachikoma.grpc.NullStreamObserver
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.hk2.get
-import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.mq.MQSenderMock
 import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
@@ -35,7 +32,6 @@ import java.time.Clock
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 @RunWith(JUnitPlatform::class)
@@ -49,29 +45,6 @@ class MTAEmailQueueServiceSpec : Spek({
         authentication = serviceLocator.get()
     }
     afterEachTest { serviceLocator.shutdown() }
-
-    describe("MTA queue auth", {
-        it("with invalid auth", {
-            authentication.invalidAuth()
-            assertFailsWith(InvalidOrInsufficientCredentialsException::class, {
-                mtaEmailQueueService.getEmails(NullStreamObserver())
-            })
-        })
-
-        it("with frontend auth", {
-            authentication.from(AuthenticationRole.FRONTEND, MailDomain("example.com"))
-            assertFailsWith(InvalidOrInsufficientCredentialsException::class, {
-                mtaEmailQueueService.getEmails(NullStreamObserver())
-            })
-        })
-
-        it("with frontendadmin auth", {
-            authentication.from(AuthenticationRole.FRONTEND_ADMIN, MailDomain("example.com"))
-            assertFailsWith(InvalidOrInsufficientCredentialsException::class, {
-                mtaEmailQueueService.getEmails(NullStreamObserver())
-            })
-        })
-    })
 
     describe("MTA queue service test", {
         lateinit var mqSequenceFactoryMock: MQSequenceFactoryMock
@@ -117,7 +90,7 @@ class MTAEmailQueueServiceSpec : Spek({
         it("Create email test", {
             val responseObserver = QueueStreamObserver<EmailMessage>()
 
-            mtaEmailQueueService.getEmails(responseObserver)
+            mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
 
             mqSequenceFactoryMock.outgoingEmails.add(QueueMessageWrap(OutgoingEmailMessage.newBuilder()
                     .setCreationTimestamp(clock.instant().toTimestamp())
@@ -140,7 +113,7 @@ class MTAEmailQueueServiceSpec : Spek({
         it("Receive queue message", {
 
             val responseObserver = QueueStreamObserver<EmailMessage>()
-            val requestStreamObserver = mtaEmailQueueService.getEmails(responseObserver)
+            val requestStreamObserver = mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
 
             requestStreamObserver.onNext(MTAQueuedNotification.newBuilder()
                     .setEmailId(email.id.emailId)

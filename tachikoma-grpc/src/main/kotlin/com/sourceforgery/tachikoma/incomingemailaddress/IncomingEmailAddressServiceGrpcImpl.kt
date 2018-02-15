@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.incomingemailaddress
 
 import com.google.protobuf.Empty
+import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddressServiceGrpc
@@ -11,12 +12,14 @@ internal class IncomingEmailAddressServiceGrpcImpl
 @Inject
 private constructor(
         private val incomingEmailAddressService: IncomingEmailAddressService,
-        private val grpcExceptionMap: GrpcExceptionMap
+        private val grpcExceptionMap: GrpcExceptionMap,
+        private val authentication: Authentication
 ) : IncomingEmailAddressServiceGrpc.IncomingEmailAddressServiceImplBase() {
 
     override fun addIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) {
         try {
-            incomingEmailAddressService.addIncomingEmailAddress(request)
+            authentication.requireFrontendAdmin()
+            incomingEmailAddressService.addIncomingEmailAddress(request, authentication.authenticationId)
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } catch (e: Exception) {
@@ -26,7 +29,8 @@ private constructor(
 
     override fun getIncomingEmailAddresses(request: Empty, responseObserver: StreamObserver<IncomingEmailAddress>) {
         try {
-            incomingEmailAddressService.getIncomingEmailAddresses(responseObserver)
+            authentication.requireFrontendAdmin()
+            incomingEmailAddressService.getIncomingEmailAddresses(responseObserver, authentication.authenticationId)
             responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
@@ -35,7 +39,8 @@ private constructor(
 
     override fun deleteIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) {
         try {
-            incomingEmailAddressService.deleteIncomingEmailAddress(request)
+            authentication.requireFrontendAdmin()
+            incomingEmailAddressService.deleteIncomingEmailAddress(request, authentication.authenticationId)
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } catch (e: Exception) {

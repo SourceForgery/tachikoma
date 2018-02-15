@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.emailstatusevent
 
 import com.google.protobuf.Empty
-import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
@@ -23,20 +22,19 @@ import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.Event
 import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.GetEmailStatusEventsFilter
 import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
+import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
 internal class EmailStatusEventService
 @Inject
 private constructor(
-        private val authentication: Authentication,
         private val authenticationDAO: AuthenticationDAO,
         private val emailStatusEventDAO: EmailStatusEventDAO
 ) {
-    fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>) {
+    fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>, authenticationId: AuthenticationId) {
 
-        authentication.requireFrontend()
-        val authenticationDBO = authenticationDAO.getActiveById(authentication.authenticationId)!!
+        val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
         val events: List<EmailStatus> = request.eventsList
                 .map {
