@@ -36,7 +36,6 @@ private constructor(
         private val emailStatusEventDAO: EmailStatusEventDAO,
         private val remoteIP: RemoteIP,
         private val mqSender: MQSender
-
 ) : RestService {
     @Get("regex:^/t/(?<trackingData>.*)")
     @ProduceType("image/gif")
@@ -55,11 +54,10 @@ private constructor(
             emailStatusEventDAO.save(emailStatusEvent)
 
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
-                    .setCreationTimestamp(emailStatusEvent.dateCreated.toTimestamp())
+                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                     .setEmailMessageId(email.id.emailId)
                     .setMessageOpened(MessageOpened.newBuilder().setIpAddress(remoteIP.remoteAddress))
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
-
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
@@ -84,7 +82,7 @@ private constructor(
             emailStatusEventDAO.save(emailStatusEvent)
 
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
-                    .setCreationTimestamp(emailStatusEvent.dateCreated.toTimestamp())
+                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                     .setEmailMessageId(email.id.emailId)
                     .setMessageClicked(MessageClicked.newBuilder()
                             .setIpAddress(remoteIP.remoteAddress)
