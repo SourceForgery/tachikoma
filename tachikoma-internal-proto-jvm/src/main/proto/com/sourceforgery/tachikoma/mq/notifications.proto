@@ -46,6 +46,7 @@ message MessageOpened {
 // This represents a single email that has been opened(link has been clicked)
 message MessageClicked {
     string ipAddress = 101;
+    string clickedUrl = 102;
 }
 
 // This represents a single email that has been delivered to MTA (mail is being sent)
