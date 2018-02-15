@@ -22,7 +22,10 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Proxy
 import java.util.Base64
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -37,43 +40,51 @@ private constructor(
 
     private val apiKeyCache = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.MINUTES)
-            .build(CacheLoader.from<String, AuthenticationImpl?>({ parseApiTokenHeader(it) }))
+            .build(CacheLoader.from<String, Authentication?>({ parseApiTokenHeader(it) }))
 
     override fun provide() =
             parseWebTokenHeader()
                     ?: parseApiTokenHeader()
                     ?: NO_AUTHENTICATION
 
-    private fun parseApiTokenHeader(): AuthenticationImpl? =
-            apiKeyCache.getUnchecked(httpHeaders[APITOKEN_HEADER])
+    private fun parseApiTokenHeader(): Authentication? =
+            httpHeaders[APITOKEN_HEADER]
+                    ?.let {
+                        try {
+                            apiKeyCache[it]
+                        } catch (e: ExecutionException) {
+                            throw e.cause!!
+                        }
+                    }
 
-    private fun parseApiTokenHeader(header: String?): AuthenticationImpl? =
+    private fun parseApiTokenHeader(header: String?): Authentication =
             header
                     ?.let {
                         MailDomain(it.substringBefore(':')) to it.substringAfter(':')
                     }
                     ?.let { splitAuthString ->
-                        // TODO Needs to be handled better. This is slow and hits the database
-                        // for every request
                         authenticationDAO.validateApiToken(splitAuthString.second)
                                 ?.let { auth ->
                                     if (auth.account.mailDomain == splitAuthString.first) {
-                                        auth
+                                        AuthenticationImpl(
+                                                // No webtoken should allow backend
+                                                role = auth.role,
+                                                authenticationId = auth.id,
+                                                accountId = auth.account.id,
+                                                accountDAO = accountDAO
+                                        )
                                     } else {
                                         LOGGER.warn { "Incorrect domain(${splitAuthString.first}) for account ${auth.account.id})" }
-                                        throw InvalidOrInsufficientCredentialsException("Incorrect domain(${splitAuthString.first}")
+                                        wrapException("Incorrect domain(${splitAuthString.first}")
                                     }
                                 }
+                                ?: wrapException("Nonexistant domain(${splitAuthString.first}")
                     }
-                    ?.let {
-                        AuthenticationImpl(
-                                // No webtoken should allow backend
-                                role = it.role,
-                                authenticationId = it.id,
-                                accountId = it.account.id,
-                                accountDAO = accountDAO
-                        )
-                    }
+                    ?: NO_AUTHENTICATION
+
+    private fun wrapException(error: String): Authentication {
+        return ThrowingAuthentication({ InvalidOrInsufficientCredentialsException(error) })
+    }
 
     private fun parseWebTokenHeader(): Authentication? {
         val webtokenHeader = httpHeaders[WEBTOKEN_HEADER]
@@ -111,34 +122,8 @@ private constructor(
     companion object {
         val LOGGER = logger()
         val BASE64_DECODER = Base64.getDecoder()!!
-        val NO_AUTHENTICATION = object : Authentication {
-            override fun requireFrontend(): AccountId {
-                throw NoAuthorizationCredentialsException()
-            }
-
-            override fun requireBackend(): AccountId {
-                throw NoAuthorizationCredentialsException()
-            }
-
-            override fun requireFrontendAdmin(): AccountId {
-                throw NoAuthorizationCredentialsException()
-            }
-
-            override fun requireAdmin(): AccountId {
-                throw NoAuthorizationCredentialsException()
-            }
-
-            override val mailDomain: MailDomain
-                get() = throw NoAuthorizationCredentialsException()
-
-            override val authenticationId: AuthenticationId
-                get() = throw NoAuthorizationCredentialsException()
-
-            override val accountId: AccountId
-                get() = throw NoAuthorizationCredentialsException()
-
-            override val valid: Boolean = false
-        }
+        val NO_AUTHENTICATION: Authentication =
+                ThrowingAuthentication({ NoAuthorizationCredentialsException() })
 
         val WEBTOKEN_HEADER = AsciiString("x-webtoken")
         val APITOKEN_HEADER = AsciiString("x-apitoken")
@@ -200,3 +185,24 @@ fun AuthRole.toAuthenticationRole() =
             AuthRole.FRONTEND_ADMIN -> AuthenticationRole.FRONTEND_ADMIN
             AuthRole.UNRECOGNIZED -> throw InvalidOrInsufficientCredentialsException("Webtoken is invalid")
         }
+
+private class ThrowingAuthentication(private val t: () -> RuntimeException) : Authentication {
+    override fun requireFrontend(): AccountId = throw t()
+
+    override fun requireBackend(): AccountId = throw t()
+
+    override fun requireFrontendAdmin(): AccountId = throw t()
+
+    override fun requireAdmin(): AccountId = throw t()
+
+    override val mailDomain: MailDomain
+        get() = throw t()
+
+    override val authenticationId: AuthenticationId
+        get() = throw t()
+
+    override val accountId: AccountId
+        get() = throw t()
+
+    override val valid: Boolean = false
+}
