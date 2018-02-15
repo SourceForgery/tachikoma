@@ -9,6 +9,7 @@ spec:
   selector:
     matchLabels:
       app: tachikoma-webserver
+  revisionHistoryLimit: 2
   template:
     metadata:
       labels:
