@@ -29,8 +29,12 @@ private constructor(
         private val mqSequenceFactory: MQSequenceFactory,
         private val emailDAO: EmailDAO
 ) {
-    fun notificationStream(responseObserver: StreamObserver<EmailNotification>, request: NotificationStreamParameters) {
-        mqSequenceFactory.listenForDeliveryNotifications(AuthenticationId(100), {
+    fun notificationStream(
+            responseObserver: StreamObserver<EmailNotification>,
+            request: NotificationStreamParameters,
+            authenticationId: AuthenticationId
+    ) {
+        mqSequenceFactory.listenForDeliveryNotifications(authenticationId, {
             val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(it.emailMessageId))
             if (emailData == null) {
                 LOGGER.error("Got event with non-existing email " + it.emailMessageId)
