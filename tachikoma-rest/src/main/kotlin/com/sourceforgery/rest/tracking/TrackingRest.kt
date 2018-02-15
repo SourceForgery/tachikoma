@@ -9,12 +9,18 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.ProduceType
 import com.sourceforgery.rest.RestService
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
+import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.logging.logger
+import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
+import com.sourceforgery.tachikoma.mq.MQSender
+import com.sourceforgery.tachikoma.mq.MessageClicked
+import com.sourceforgery.tachikoma.mq.MessageOpened
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import io.netty.util.AsciiString
@@ -28,7 +34,8 @@ private constructor(
         private val trackingDecoder: TrackingDecoder,
         private val emailDAO: EmailDAO,
         private val emailStatusEventDAO: EmailStatusEventDAO,
-        private val remoteIP: RemoteIP
+        private val remoteIP: RemoteIP,
+        private val mqSender: MQSender
 
 ) : RestService {
     @Get("regex:^/t/(?<trackingData>.*)")
@@ -46,6 +53,13 @@ private constructor(
                     )
             )
             emailStatusEventDAO.save(emailStatusEvent)
+
+            val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
+                    .setCreationTimestamp(emailStatusEvent.dateCreated.toTimestamp())
+                    .setEmailMessageId(email.id.emailId)
+                    .setMessageOpened(MessageOpened.newBuilder().setIpAddress(remoteIP.remoteAddress))
+            mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
+
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
@@ -68,6 +82,15 @@ private constructor(
                             trackingLink = trackingData.redirectUrl
                     ))
             emailStatusEventDAO.save(emailStatusEvent)
+
+            val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
+                    .setCreationTimestamp(emailStatusEvent.dateCreated.toTimestamp())
+                    .setEmailMessageId(email.id.emailId)
+                    .setMessageClicked(MessageClicked.newBuilder()
+                            .setIpAddress(remoteIP.remoteAddress)
+                            .setClickedUrl(trackingData.redirectUrl)
+                    )
+            mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
 
             return HttpResponse.of(
                     HttpStatus.TEMPORARY_REDIRECT,
