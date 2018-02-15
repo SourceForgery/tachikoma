@@ -22,8 +22,6 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import io.netty.util.AsciiString
 import org.glassfish.hk2.api.Factory
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Proxy
 import java.util.Base64
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
