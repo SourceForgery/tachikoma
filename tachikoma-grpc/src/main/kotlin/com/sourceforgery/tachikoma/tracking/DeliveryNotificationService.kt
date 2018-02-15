@@ -59,7 +59,10 @@ private constructor(
                 @Suppress("UNUSED_VARIABLE")
                 val ignored = when (it.notificationDataCase) {
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGECLICKED -> {
-                        notificationBuilder.clickedEvent = ClickedEvent.newBuilder().setIpAddress(it.messageClicked.ipAddress).build()
+                        notificationBuilder.clickedEvent = ClickedEvent.newBuilder()
+                                .setIpAddress(it.messageClicked.ipAddress)
+                                .setClickedUrl(it.messageClicked.clickedUrl)
+                                .build()
                     }
                     DeliveryNotificationMessage.NotificationDataCase.MESSAGEHARDBOUNCED -> {
                         notificationBuilder.hardBouncedEvent = HardBouncedEvent.getDefaultInstance()

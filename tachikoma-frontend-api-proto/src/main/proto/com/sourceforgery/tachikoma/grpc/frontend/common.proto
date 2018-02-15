@@ -104,6 +104,8 @@ message OpenedEvent {
 message ClickedEvent {
     // Ip address that clicked the link
     string ipAddress = 101;
+    // Url clicked in the email
+    string clickedUrl = 102;
 }
 
 // Message has caused receiver to unsubscribe
