@@ -64,7 +64,8 @@ private constructor(
                     emailStatus = EmailStatus.CLICKED,
                     email = email,
                     metaData = StatusEventMetaData(
-                            ipAddress = remoteIP.remoteAddress
+                            ipAddress = remoteIP.remoteAddress,
+                            trackingLink = trackingData.redirectUrl
                     ))
             emailStatusEventDAO.save(emailStatusEvent)
 
