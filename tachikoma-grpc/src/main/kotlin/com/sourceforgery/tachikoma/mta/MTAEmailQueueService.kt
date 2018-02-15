@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.mta
 
-import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
@@ -15,6 +14,7 @@ import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
 import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.identifiers.EmailId
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
@@ -44,14 +44,12 @@ private constructor(
         private val emailStatusEventDAO: EmailStatusEventDAO,
         private val blockedEmailDAO: BlockedEmailDAO,
         private val mqSender: MQSender,
-        private val incomingEmailAddressDAO: IncomingEmailAddressDAO,
-        private val authentication: Authentication
+        private val incomingEmailAddressDAO: IncomingEmailAddressDAO
 ) {
-    fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
-        authentication.requireBackend()
+    fun getEmails(responseObserver: StreamObserver<EmailMessage>, mailDomain: MailDomain): StreamObserver<MTAQueuedNotification> {
         LOGGER.info { "MTA connected" }
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
-        val future = mqSequenceFactory.listenForOutgoingEmails(authentication.mailDomain, {
+        val future = mqSequenceFactory.listenForOutgoingEmails(mailDomain, {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
             if (email == null) {
                 LOGGER.warn { "Nothing found when looking trying to send email with id: " + it.emailId }
