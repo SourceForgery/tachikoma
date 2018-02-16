@@ -58,7 +58,7 @@ docker run -it -e MAIL_DOMAIN_MX=<true/false> -e TACHIKOMA_URL=<webserver url> t
 
 E.g.
 ```
-docker run -it -e MAIL_DOMAIN_MX=true -e "TACHIKOMA_URL=http://password@172.17.0.1:8070/" tachikoma/tachikoma-postfix:0.0.1-SNAPSHOT
+docker run -it -e MAIL_DOMAIN_MX=true -e "TACHIKOMA_URL=http://example.com:password@172.17.0.1:8070/" tachikoma/tachikoma-postfix:0.0.1-SNAPSHOT
 ```
 
 **Recommendations**
@@ -66,7 +66,7 @@ docker run -it -e MAIL_DOMAIN_MX=true -e "TACHIKOMA_URL=http://password@172.17.0
 * Only run ```gradlew build```, ```gradlew clean build``` should not be necessary and slows down development a *lot*.
 * Because of my weak Gradle-fu, updated .proto-files does not trigger rebuild of
   the rest of the api-projects. ```gradle clean build``` is necessary,
-  *but only in the api projects*
+  *but only in the api projects*.
 
 
 **Getting around some quirks**
@@ -94,7 +94,7 @@ Environment=image=sourceforgery/tachikoma-postfix:VERSION
 ExecStartPre=/usr/bin/docker pull ${image}
 ExecStart=/usr/bin/docker run --rm=true -p 25:25 --name=${name} \
   -e MAIL_DOMAIN_MX=false \
-  -e TACHIKOMA_URL=https://${backendApiKey}@${webserverHost} \
+  -e TACHIKOMA_URL=https://${mailDomain}:${backendApiKey}@${webserverHost} \
   -v /etc/ssl/private/domainkeys:/etc/opendkim/domainkeys:ro \
   ${image}
 ExecStop=-/usr/bin/docker stop ${name}
