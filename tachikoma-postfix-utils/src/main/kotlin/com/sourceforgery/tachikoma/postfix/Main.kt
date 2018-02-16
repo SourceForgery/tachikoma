@@ -18,18 +18,17 @@ private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRIN
 
 class Main(
         urlWithoutDomain: URI,
-        private val mailDomain: String,
         private val insecure: Boolean
 ) {
 
-    private val tachikomaUrl = addDomain(urlWithoutDomain)
+    private val tachikomaUrl = addPort(urlWithoutDomain)
 
     private fun withoutPassword(uri: URI): String {
         val query = uri.rawQuery?.let { "?$it" } ?: ""
         return "${uri.scheme}://${uri.host}${uri.path ?: "/"}$query"
     }
 
-    private fun addDomain(uri: URI): URI {
+    private fun addPort(uri: URI): URI {
         val query = uri.rawQuery?.let { "?$it" } ?: ""
         val port: Int =
                 if (uri.port == -1) {
@@ -41,7 +40,7 @@ class Main(
                 } else {
                     uri.port
                 }
-        return URI.create("${uri.scheme}://$mailDomain:${uri.userInfo}@${uri.host}:$port${uri.path ?: "/"}$query")
+        return URI.create("${uri.scheme}://${uri.userInfo}@${uri.host}:$port${uri.path ?: "/"}$query")
     }
 
     fun run() {
@@ -85,9 +84,6 @@ class Main(
 fun main(args: Array<String>) {
     InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
 
-    val mailDomain = System.getenv("MAIL_DOMAIN")
-            ?: throw IllegalArgumentException("Can't start without MAIL_DOMAIN")
-
     val tachikomaUrl = URI.create(
             System.getenv("TACHIKOMA_URL")
                     ?: throw IllegalArgumentException("Can't start without TACHIKOMA_URL")
@@ -97,6 +93,6 @@ fun main(args: Array<String>) {
             ?.toBoolean()
             ?: false
 
-    Main(tachikomaUrl, mailDomain, insecure)
+    Main(tachikomaUrl, insecure)
             .run()
 }

@@ -53,12 +53,12 @@ the webserver (for e.g. gRPC) at port 8070.
 
 To start the docker (with the Postfix email server), run
 ```
-docker run -it -e MAIL_DOMAIN=<maildomain> -e TACHIKOMA_URL=<webserver url> tachikoma/tachikoma-postfix:<version>
+docker run -it -e MAIL_DOMAIN_MX=<true/false> -e TACHIKOMA_URL=<webserver url> tachikoma/tachikoma-postfix:<version>
 ```
 
 E.g.
 ```
-docker run -it -e MAIL_DOMAIN=example.com -e "TACHIKOMA_URL=http://password@172.17.0.1:8070/" tachikoma/tachikoma-postfix:0.0.1-SNAPSHOT
+docker run -it -e MAIL_DOMAIN_MX=true -e "TACHIKOMA_URL=http://password@172.17.0.1:8070/" tachikoma/tachikoma-postfix:0.0.1-SNAPSHOT
 ```
 
 **Recommendations**
@@ -93,7 +93,7 @@ Environment=image=sourceforgery/tachikoma-postfix:VERSION
 
 ExecStartPre=/usr/bin/docker pull ${image}
 ExecStart=/usr/bin/docker run --rm=true -p 25:25 --name=${name} \
-  -e MAIL_DOMAIN=${mailDomain} \
+  -e MAIL_DOMAIN_MX=false \
   -e TACHIKOMA_URL=https://${backendApiKey}@${webserverHost} \
   -v /etc/ssl/private/domainkeys:/etc/opendkim/domainkeys:ro \
   ${image}

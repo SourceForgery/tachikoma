@@ -3,14 +3,28 @@
 #postconf -F '*/*/chroot = n'
 #postconf -e myhostname=$MAIL_DOMAIN
 
+tmp1="${TACHIKOMA_URL##*@}"
+# Hostname is the tachikoma MX domain
+TACHIKOMA_HOSTNAME="${tmp1%%/*}"
+
+tmp2="${TACHIKOMA_URL#*://}"
+# Username is maildomain
+MAIL_DOMAIN="${tmp2%%:*}"
+
+echo "@${TACHIKOMA_HOSTNAME} whatever" >/etc/postfix/vmailbox
+
+if [ ${MAIL_DOMAIN_MX:=false} = true ]; then
+  # Listen for incoming emails to the main domain (i.e. not just the TACHIKOMA_HOSTNAME)
+  postconf -e virtual_mailbox_domains="$MAIL_DOMAIN,$TACHIKOMA_HOSTNAME"
+  echo "@$MAIL_DOMAIN whatever" >>/etc/postfix/vmailbox
+else
+  # Only listen for incoming unsubscribe/bounce emails (i.e. only listen on TACHIKOMA_HOSTNAME)
+  postconf -e virtual_mailbox_domains="$TACHIKOMA_HOSTNAME"
+fi
+
 postconf -e virtual_transport=lmtp:unix:private/incoming_tachikoma
-postconf -e virtual_mailbox_domains=$MAIL_DOMAIN,tachikoma.$MAIL_DOMAIN
 postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
 
-cat <<EOF > /etc/postfix/vmailbox
-@$MAIL_DOMAIN whatever
-@tachikoma.$MAIL_DOMAIN whatever
-EOF
 postmap hash:/etc/postfix/vmailbox
 
 # TLS
