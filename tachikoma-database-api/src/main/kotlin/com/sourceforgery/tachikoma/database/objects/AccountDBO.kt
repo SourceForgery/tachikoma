@@ -15,11 +15,7 @@ import javax.persistence.Table
 class AccountDBO(
         // This is the domain allowed in the from field
         @Column(unique = true)
-        val mailDomain: MailDomain,
-
-        // This is the domain where incoming postfix is listening (for unsubscribe)
-        @Column(unique = true)
-        val incomingMxDomain: MailDomain = mailDomain
+        val mailDomain: MailDomain
 ) : GenericDBO() {
     @OneToMany(mappedBy = "account")
     val authentications: List<AuthenticationDBO> = BeanList()
