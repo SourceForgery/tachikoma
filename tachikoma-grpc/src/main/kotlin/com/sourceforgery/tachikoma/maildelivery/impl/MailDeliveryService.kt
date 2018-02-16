@@ -142,7 +142,7 @@ private constructor(
                     // Blocked
                     return
                 }
-                val messageId = messageIdFactory.createMessageId(auth.account.incomingMxDomain)
+                val messageId = messageIdFactory.createMessageId()
                 val emailDBO = EmailDBO(
                         recipient = recipientEmail,
                         transaction = transaction,

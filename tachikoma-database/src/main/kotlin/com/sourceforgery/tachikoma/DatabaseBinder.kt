@@ -32,6 +32,7 @@ import com.sourceforgery.tachikoma.database.upgrades.Version5
 import com.sourceforgery.tachikoma.database.upgrades.Version6
 import com.sourceforgery.tachikoma.database.upgrades.Version7
 import com.sourceforgery.tachikoma.database.upgrades.Version8
+import com.sourceforgery.tachikoma.database.upgrades.Version9
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import io.ebean.EbeanServer
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -99,7 +100,8 @@ class DatabaseBinder : AbstractBinder() {
                 Version5::class.java,
                 Version6::class.java,
                 Version7::class.java,
-                Version8::class.java
+                Version8::class.java,
+                Version9::class.java
         )
         var idx = 0
         for (databaseUpgrade in databaseUpgrades) {
