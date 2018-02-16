@@ -7,6 +7,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
+import com.sourceforgery.tachikoma.logging.logger
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
@@ -20,6 +21,7 @@ private constructor(
     override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) {
         try {
             authentication.requireFrontend()
+            LOGGER.info { "Connected, getting incoming mails from ${authentication.mailDomain}" }
             mailDeliveryService.getIncomingEmails(responseObserver, authentication.authenticationId)
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
@@ -39,5 +41,9 @@ private constructor(
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }
+    }
+
+    companion object {
+        private val LOGGER = logger()
     }
 }
