@@ -63,7 +63,6 @@ private constructor(
                         .addAllBcc(email.transaction.bcc)
                         .build()
                 responseObserver.onNext(response)
-                responseObserver.onCompleted()
             }
         })
         future.addListener(Runnable {
