@@ -23,7 +23,7 @@ private constructor(
             blockedEmailService.getBlockedEmails(responseObserver, authentication.authenticationId)
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 
@@ -33,7 +33,7 @@ private constructor(
             blockedEmailService.removeBlockedEmail(request, authentication.authenticationId)
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 }

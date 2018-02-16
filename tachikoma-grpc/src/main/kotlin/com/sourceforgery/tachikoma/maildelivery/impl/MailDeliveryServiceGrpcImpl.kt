@@ -24,7 +24,7 @@ private constructor(
             LOGGER.info { "Connected, getting incoming mails from ${authentication.mailDomain}" }
             mailDeliveryService.getIncomingEmails(responseObserver, authentication.authenticationId)
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 
@@ -39,7 +39,7 @@ private constructor(
             )
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 

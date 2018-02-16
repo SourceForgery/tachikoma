@@ -18,7 +18,7 @@ private constructor(
             authentication.requireBackend()
             mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
             NullStreamObserver()
         }
     }
@@ -30,7 +30,7 @@ private constructor(
             responseObserver.onNext(MailAcceptanceResult.newBuilder().setAcceptanceStatus(acceptanceResult).build())
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 }

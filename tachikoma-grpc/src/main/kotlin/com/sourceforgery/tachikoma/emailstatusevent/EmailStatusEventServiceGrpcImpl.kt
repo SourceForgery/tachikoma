@@ -22,7 +22,7 @@ private constructor(
             emailStatsEventService.getEmailStatusEvents(request, responseObserver, authentication.authenticationId)
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 }

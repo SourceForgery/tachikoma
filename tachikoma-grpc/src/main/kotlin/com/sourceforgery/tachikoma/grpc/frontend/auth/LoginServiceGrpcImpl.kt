@@ -15,7 +15,7 @@ private constructor(
             val response = loginService.login(request)
             responseObserver.onNext(response)
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 }

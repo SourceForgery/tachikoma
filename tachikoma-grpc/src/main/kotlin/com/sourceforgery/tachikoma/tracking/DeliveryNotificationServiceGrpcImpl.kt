@@ -26,7 +26,7 @@ private constructor(
                     authenticationId = authentication.authenticationId
             )
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 

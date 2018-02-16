@@ -23,7 +23,7 @@ private constructor(
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 
@@ -33,7 +33,7 @@ private constructor(
             incomingEmailAddressService.getIncomingEmailAddresses(responseObserver, authentication.authenticationId)
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 
@@ -44,7 +44,7 @@ private constructor(
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvert(e))
+            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 }
