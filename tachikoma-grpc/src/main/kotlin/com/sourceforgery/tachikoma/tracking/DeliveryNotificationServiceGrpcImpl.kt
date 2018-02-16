@@ -25,7 +25,6 @@ private constructor(
                     request = request,
                     authenticationId = authentication.authenticationId
             )
-            responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvert(e))
         }
