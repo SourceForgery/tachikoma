@@ -153,6 +153,7 @@ private constructor(
             }
         }
         channel.basicConsume(messageQueue.name, false, consumer)
+        channel.addShutdownListener({ future.cancel(false) })
         return future
     }
 
