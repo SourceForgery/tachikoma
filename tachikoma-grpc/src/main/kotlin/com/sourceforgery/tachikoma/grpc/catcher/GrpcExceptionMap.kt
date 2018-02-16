@@ -22,7 +22,10 @@ private constructor(
             logger.warn("Exception in gRPC", t)
         }
 
-        override fun status(t: Throwable) = Status.fromThrowable(t).withDescription(stackToString(t).substring(0, 6000))
+        override fun status(t: Throwable): Status {
+            val stackToString = stackToString(t)
+            return Status.fromThrowable(t).withDescription(stackToString.substring(0, Math.min(stackToString.length, 6000)))
+        }
     }
 
     fun findCatcher(key: Throwable): GrpcExceptionCatcher<Throwable> {
