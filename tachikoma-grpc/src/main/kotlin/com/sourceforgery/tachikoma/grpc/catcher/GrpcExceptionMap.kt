@@ -51,7 +51,7 @@ private constructor(
         return defaultCatcher
     }
 
-    fun findAndConvertAndLog(t: Throwable): StatusRuntimeException  {
+    fun findAndConvertAndLog(t: Throwable): StatusRuntimeException {
         val catcher = findCatcher(t)
         catcher.logError(t)
         return catcher.toException(t)
