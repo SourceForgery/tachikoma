@@ -17,7 +17,7 @@ dependencies {
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
 }
 
-mainClassName = "com.sourceforgery.tachikoma.MainKt"
+mainClassName = "com.sourceforgery.tachikoma.postfix.MainKt"
 
 github.assets += "${buildDir}/distributions/tachikoma-postfix-utils-${project.version}.tar"
 

@@ -1,4 +1,4 @@
-package com.sourceforgery.tachikoma
+package com.sourceforgery.tachikoma.postfix
 
 import com.sourceforgery.tachikoma.incoming.IncomingEmail
 import com.sourceforgery.tachikoma.logging.logger
