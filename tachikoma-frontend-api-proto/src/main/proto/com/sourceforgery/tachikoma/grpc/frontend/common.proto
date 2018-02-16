@@ -43,7 +43,7 @@ message EmailNotification {
     oneof notification {
         SoftBouncedEvent softBouncedEvent = 201;
         HardBouncedEvent hardBouncedEvent = 202;
-        DeliveredEvent delivereddEvent = 203;
+        DeliveredEvent deliveredEvent = 203;
         QueuedEvent queuedEvent = 204;
         OpenedEvent openedEvent = 205;
         ClickedEvent clickedEvent = 206;

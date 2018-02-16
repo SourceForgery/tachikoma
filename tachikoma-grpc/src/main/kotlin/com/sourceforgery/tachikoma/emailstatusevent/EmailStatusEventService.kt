@@ -92,7 +92,7 @@ private constructor(
                 builder.setHardBouncedEvent(HardBouncedEvent.getDefaultInstance())
             }
             EmailStatus.DELIVERED -> {
-                builder.setDelivereddEvent(DeliveredEvent.getDefaultInstance())
+                builder.setDeliveredEvent(DeliveredEvent.getDefaultInstance())
             }
             EmailStatus.SOFT_BOUNCED -> {
                 builder.setSoftBouncedEvent(SoftBouncedEvent.getDefaultInstance())

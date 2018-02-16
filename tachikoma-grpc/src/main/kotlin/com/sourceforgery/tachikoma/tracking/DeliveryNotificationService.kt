@@ -111,7 +111,7 @@ private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: 
             openedEvent = OpenedEvent.newBuilder().setIpAddress(deliveryNotificationMessage.messageOpened.ipAddress).build()
         }
         DeliveryNotificationMessage.NotificationDataCase.MESSAGEDELIVERED -> {
-            delivereddEvent = DeliveredEvent.getDefaultInstance()
+            deliveredEvent = DeliveredEvent.getDefaultInstance()
         }
         DeliveryNotificationMessage.NotificationDataCase.MESSAGESOFTBOUNCED -> {
             softBouncedEvent = SoftBouncedEvent.getDefaultInstance()
