@@ -101,7 +101,7 @@ class MTAEmailQueueServiceSpec : Spek({
             mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
             mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
 
-            assertEquals(responseObserver.queue.size, 1)
+            assertEquals(1, responseObserver.queue.size)
             val emailMessage = responseObserver.queue.take().get()
                     ?: throw NullPointerException("Should not be a onComplete event")
             assertNotNull(responseObserver)
