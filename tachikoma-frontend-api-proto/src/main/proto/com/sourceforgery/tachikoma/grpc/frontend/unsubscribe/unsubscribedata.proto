@@ -9,6 +9,8 @@ package com.sourceforgery.tachikoma.grpc.frontend.unsubscribe;
 message UnsubscribeData {
     // The email that wants to unsubscribe
     EmailId emailId = 101;
+    // The url where the redirect will go
+    string redirectUrl = 102;
 }
 
 message SignedUnsubscribeData {

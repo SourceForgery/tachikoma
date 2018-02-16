@@ -4,6 +4,7 @@ import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.server.annotation.ConsumeType
 import com.linecorp.armeria.server.annotation.ConsumeTypes
+import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.rest.RestService
@@ -16,6 +17,7 @@ import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
+import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
@@ -48,35 +50,53 @@ private constructor(
                 throw IllegalArgumentException("Not valid One-Click unsubscribe form data $listUnsubscribe")
             }
 
-            val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
-
-            val email = emailDAO.fetchEmailData(unsubscribeData.emailId.toEmailId())!!
-            val emailStatusEvent = EmailStatusEventDBO(
-                    emailStatus = EmailStatus.UNSUBSCRIBE,
-                    email = email,
-                    metaData = StatusEventMetaData(
-                            ipAddress = remoteIP.remoteAddress
-                    )
-            )
-            emailStatusEventDAO.save(emailStatusEvent)
-            blockedEmailDAO.block(emailStatusEvent)
-
-            val notificationMessage = DeliveryNotificationMessage
-                    .newBuilder()
-                    .setCreationTimestamp(clock.instant().toTimestamp())
-                    .setEmailMessageId(email.id.emailId)
-                    .setMessageUnsubscribed(
-                            MessageUnsubscribed
-                                    .newBuilder()
-                                    .setIpAddress(remoteIP.remoteAddress)
-                    )
-                    .build()
-            mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
+            createAndSendUnsubscribeEvent(unsubscribeDataString)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })
         }
         return HttpResponse.of(HttpStatus.OK)
+    }
+
+    @Get("regex:^/clickunsubscribe/(?<unsubscribeData>.*)")
+    fun unsubscribe(
+            @Param("unsubscribeData") unsubscribeDataString: String
+    ): HttpResponse {
+        try {
+            val unsubscribeData = createAndSendUnsubscribeEvent(unsubscribeDataString)
+            val redirectUrl = unsubscribeData.redirectUrl
+        } catch (e: Exception) {
+            LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
+            LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })
+        }
+        return HttpResponse.of(HttpStatus.OK)
+    }
+
+    private fun createAndSendUnsubscribeEvent(unsubscribeDataString: String): UnsubscribeData {
+        val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
+        val email = emailDAO.fetchEmailData(unsubscribeData.emailId.toEmailId())!!
+        val emailStatusEvent = EmailStatusEventDBO(
+                emailStatus = EmailStatus.UNSUBSCRIBE,
+                email = email,
+                metaData = StatusEventMetaData(
+                        ipAddress = remoteIP.remoteAddress
+                )
+        )
+        emailStatusEventDAO.save(emailStatusEvent)
+        blockedEmailDAO.block(emailStatusEvent)
+
+        val notificationMessage = DeliveryNotificationMessage
+                .newBuilder()
+                .setCreationTimestamp(clock.instant().toTimestamp())
+                .setEmailMessageId(email.id.emailId)
+                .setMessageUnsubscribed(
+                        MessageUnsubscribed
+                                .newBuilder()
+                                .setIpAddress(remoteIP.remoteAddress)
+                )
+                .build()
+        mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
+        return unsubscribeData
     }
 
     companion object {
