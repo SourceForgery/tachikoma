@@ -56,6 +56,7 @@ import org.jsoup.safety.Whitelist
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
+import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.Properties
@@ -349,14 +350,7 @@ private constructor(
         // TODO Headers to set:
         // List-Help (IMPORTANT): <https://support.google.com/a/example.com/bin/topic.py?topic=25838>, <mailto:debug+help@example.com>
 
-        val unsubscribeData = UnsubscribeData.newBuilder()
-                .setEmailId(emailId.toGrpcInternal())
-                .build()
-        val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
-
-        val unsubscribeUri = URIBuilderTiny(trackingConfig.baseUrl)
-                .appendPaths("unsubscribe", unsubscribeUrl)
-                .build()
+        val unsubscribeUri = createUnsubscribeLink(emailId)
 
         val unsubscribeEmail = Email("unsub-$messageId")
         val bounceReturnPathEmail = Email("bounce-$messageId")
@@ -372,6 +366,37 @@ private constructor(
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
 
+    private fun createUnsubscribeLink(emailId: EmailId, redirectUri: String = ""): URI? {
+        val path = if (redirectUri.isNotBlank()) {
+            "unsubscribeClick"
+        } else {
+            "unsubscribe"
+        }
+        val unsubscribeData = UnsubscribeData.newBuilder()
+                .setEmailId(emailId.toGrpcInternal())
+                .setRedirectUrl(redirectUri)
+                .build()
+        val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
+
+        val unsubscribeUri = URIBuilderTiny(trackingConfig.baseUrl)
+                .appendPaths(path, unsubscribeUrl)
+                .build()
+        return unsubscribeUri
+    }
+
+    private fun createTrackingLink(emailId: EmailId, originalUri: String): URI? {
+        val trackingData = UrlTrackingData.newBuilder()
+                .setEmailId(emailId.toGrpcInternal())
+                .setRedirectUrl(originalUri)
+                .build()
+        val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
+
+        val trackingUri = URIBuilderTiny(trackingConfig.baseUrl)
+                .appendPaths("c", trackingUrl)
+                .build()
+        return trackingUri
+    }
+
     private fun getPlainText(doc: Document): String {
         // Keeps some structure in the plain text mail version, removes all html tags and keeps indentation and line breaks
         return Jsoup
@@ -382,17 +407,17 @@ private constructor(
     private fun replaceLinks(doc: Document, emailId: EmailId) {
         val links = doc.select("a[href]")
         links.forEach({
-            val trackingData = UrlTrackingData.newBuilder()
-                    .setEmailId(emailId.toGrpcInternal())
-                    .setRedirectUrl(it.attr("href"))
-                    .build()
-            val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
-
-            val trackingUri = URIBuilderTiny(trackingConfig.baseUrl)
-                    .appendPaths("c", trackingUrl)
-                    .build()
-
-            it.attr("href", trackingUri.toString())
+            val originalUri = it.attr("href") ?: ""
+            val newUri = if (it.attr("data-unsub") != null) {
+                // Convert into unsubscribe link
+                createUnsubscribeLink(emailId, originalUri)
+                        .toString()
+            } else {
+                // Track link click
+                createTrackingLink(emailId, originalUri)
+                        .toString()
+            }
+            it.attr("href", newUri)
         })
     }
 
