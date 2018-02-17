@@ -8,6 +8,8 @@ import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAOImpl
+import com.sourceforgery.tachikoma.database.dao.EmailSendTransactionDAO
+import com.sourceforgery.tachikoma.database.dao.EmailSendTransactionDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
@@ -43,27 +45,7 @@ class DatabaseBinder : AbstractBinder() {
         bindFactory(EbeanServerFactory::class.java)
                 .to(EbeanServer::class.java)
                 .`in`(Singleton::class.java)
-        bindAsContract(BlockedEmailDAOImpl::class.java)
-                .to(BlockedEmailDAO::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(EmailDAOImpl::class.java)
-                .to(EmailDAO::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(AuthenticationDAOImpl::class.java)
-                .to(AuthenticationDAO::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(EmailStatusEventDAOImpl::class.java)
-                .to(EmailStatusEventDAO::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(IncomingEmailDAOImpl::class.java)
-                .to(IncomingEmailDAO::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(IncomingEmailAddressDAOImpl::class.java)
-                .to(IncomingEmailAddressDAO::class.java)
-                .`in`(Singleton::class.java)
-        bindAsContract(AccountDAOImpl::class.java)
-                .to(AccountDAO::class.java)
-                .`in`(Singleton::class.java)
+        bindDAO()
         bindAsContract(LogEverything::class.java)
                 .to(InvokeCounter::class.java)
                 .`in`(RequestScoped::class.java)
@@ -76,6 +58,33 @@ class DatabaseBinder : AbstractBinder() {
                 .ranked(-1)
         bindEbeanHooks()
         bindDatabaseUpgrades()
+    }
+
+    private fun bindDAO() {
+        bindAsContract(AccountDAOImpl::class.java)
+                .to(AccountDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(AuthenticationDAOImpl::class.java)
+                .to(AuthenticationDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(BlockedEmailDAOImpl::class.java)
+                .to(BlockedEmailDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(EmailDAOImpl::class.java)
+                .to(EmailDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(EmailSendTransactionDAOImpl::class.java)
+                .to(EmailSendTransactionDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(EmailStatusEventDAOImpl::class.java)
+                .to(EmailStatusEventDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(IncomingEmailAddressDAOImpl::class.java)
+                .to(IncomingEmailAddressDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(IncomingEmailDAOImpl::class.java)
+                .to(IncomingEmailDAO::class.java)
+                .`in`(Singleton::class.java)
     }
 
     private fun bindEbeanHooks() {

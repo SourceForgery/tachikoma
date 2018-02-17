@@ -11,6 +11,7 @@ import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.dao.EmailSendTransactionDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
@@ -76,6 +77,7 @@ private constructor(
         private val trackingConfig: TrackingConfig,
         private val dbObjectMapper: DBObjectMapper,
         private val emailDAO: EmailDAO,
+        private val emailSendTransactionDAO: EmailSendTransactionDAO,
         private val blockedEmailDAO: BlockedEmailDAO,
         private val mqSender: MQSender,
         private val mqSequenceFactory: MQSequenceFactory,
@@ -116,6 +118,8 @@ private constructor(
                 }
 
         ebeanServer.createTransaction().use {
+            emailSendTransactionDAO.save(transaction)
+
             for (recipient in request.recipientsList) {
 
                 val recipientEmail = auth.recipientOverride
@@ -124,11 +128,13 @@ private constructor(
                         }
                         ?: recipient.toNamedEmail()
 
-                blockedEmailDAO.getBlockedReason(
+                val blockedReason = blockedEmailDAO.getBlockedReason(
                         accountDBO = auth.account,
                         recipient = recipientEmail.address,
                         from = fromEmail
-                )?.let { blockedReason ->
+                )
+
+                if (blockedReason != null) {
                     responseObserver.onNext(
                             EmailQueueStatus.newBuilder()
                                     .setRejected(Rejected.newBuilder()
@@ -139,10 +145,10 @@ private constructor(
                                     .setRecipient(recipientEmail.address.toGrpcInternal())
                                     .build()
                     )
-
                     // Blocked
-                    return
+                    continue
                 }
+
                 val messageId = messageIdFactory.createMessageId()
                 val emailDBO = EmailDBO(
                         recipient = recipientEmail,
