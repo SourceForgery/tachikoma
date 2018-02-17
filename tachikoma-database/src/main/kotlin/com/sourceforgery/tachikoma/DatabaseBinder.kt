@@ -8,6 +8,8 @@ import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAOImpl
+import com.sourceforgery.tachikoma.database.dao.EmailSendTransactionDAO
+import com.sourceforgery.tachikoma.database.dao.EmailSendTransactionDAOImpl
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
@@ -70,6 +72,9 @@ class DatabaseBinder : AbstractBinder() {
                 .`in`(Singleton::class.java)
         bindAsContract(EmailDAOImpl::class.java)
                 .to(EmailDAO::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(EmailSendTransactionDAOImpl::class.java)
+                .to(EmailSendTransactionDAO::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(EmailStatusEventDAOImpl::class.java)
                 .to(EmailStatusEventDAO::class.java)
