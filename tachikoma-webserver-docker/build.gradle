@@ -20,6 +20,13 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand('apt-get update && apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls supervisor less nvi openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
+    runCommand("""
+        mkdir -p /etc/tachikoma/rsyslog/ &&
+        chown -R syslog:syslog /etc/tachikoma/rsyslog/ &&
+        touch /etc/tachikoma/rsyslog/external.conf &&
+        ln -s /etc/tachikoma/rsyslog/external.conf /etc/rsyslog.d/external.conf
+        """.replaceAll('\n', ' '))
+
     exposePort(8443)
     exposePort(8070)
 

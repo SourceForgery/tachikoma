@@ -30,8 +30,7 @@ spec:
           mountPath: "/etc/tachikoma/cert/"
           readOnly: true
         - name: webserver-rsyslog
-          mountPath: "/etc/rsyslog.d/external.conf"
-          subPath: external.conf
+          mountPath: "/etc/tachikoma/rsyslog/"
           readOnly: true
         env:
         - name: TACHIKOMA_CONFIG
