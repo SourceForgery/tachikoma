@@ -5,23 +5,15 @@
         <Property name="name">postfix-utils</Property>
     </Properties>
     <Appenders>
+        <Syslog name="syslog" appName="tachikoma" newLine="true" host="localhost" port="514" protocol="TCP" />
         <Console name="StdOut" target="SYSTEM_OUT">
             <PatternLayout pattern="${pattern}" />
         </Console>
-        <RollingFile name="RollingFile" fileName="/var/log/tachikoma/${name}.log"
-            filePattern="/var/log/tachikoma/${name}-%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="${pattern}" />
-            <Policies>
-                <TimeBasedTriggeringPolicy /><!-- Rotated everyday -->
-                <SizeBasedTriggeringPolicy size="100 MB" /> <!-- Or every 100 MB -->
-            </Policies>
-            <DefaultRolloverStrategy max="10" />
-        </RollingFile>
     </Appenders>
     <Loggers>
         <Root level="info">
+            <AppenderRef ref="syslog" />
             <AppenderRef ref="StdOut" />
-            <AppenderRef ref="RollingFile" />
         </Root>
         <!-- <Logger name="smtp.incoming.debug" level="trace" />-->
     </Loggers>
