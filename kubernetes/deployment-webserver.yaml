@@ -29,6 +29,10 @@ spec:
         - name: webserver-cert
           mountPath: "/etc/tachikoma/cert/"
           readOnly: true
+        - name: webserver-rsyslog
+          mountPath: "/etc/rsyslog.d/external.conf"
+          subPath: external.conf
+          readOnly: true
         env:
         - name: TACHIKOMA_CONFIG
           value: "/etc/tachikoma/config/tachikoma.properties"
@@ -43,6 +47,9 @@ spec:
       - name: webserver-cert
         secret:
           secretName: tachikoma-webserver-cert
+      - name: webserver-rsyslog
+        secret:
+          secretName: tachikoma-webserver-rsyslog
 ---
 kind: Service
 apiVersion: v1
