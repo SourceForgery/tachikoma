@@ -20,7 +20,7 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install inetutils-syslogd less nvi supervisor postfix sasl2-bin opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls less nvi supervisor postfix sasl2-bin opendkim opendkim-tools openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     exposePort(25)
 
@@ -28,9 +28,9 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
-    runCommand("mkfifo /opt/maillog_pipe && chown postfix:postfix /opt/maillog_pipe")
+    runCommand("mkfifo /opt/maillog_pipe && chown syslog:postfix /opt/maillog_pipe")
 
-    runCommand('mkdir -p /var/log/tachikoma && chown postfix:postfix /var/log/tachikoma')
+    runCommand('adduser syslog postfix')
 
     addFile {
         configurations.binaries.filter {
