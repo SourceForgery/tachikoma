@@ -9,7 +9,6 @@ dependencies {
 }
 
 task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
-    dependsOn downloadTini
 
     applicationName = 'tachikoma-webserver'
 
@@ -19,14 +18,14 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install less nvi openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('apt-get update && apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls supervisor less nvi openjdk-8-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*')
 
     exposePort(8443)
     exposePort(8070)
 
-    addFile(project.extensions.extraProperties.tiniBinary)
+    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
-    runCommand('chmod a+rx /tini')
+    addFile(file('src/assets/'))
 
     addFile {
         configurations.binaries.filter {
@@ -45,9 +44,6 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand("useradd webserver && mkdir -p /var/log/tachikoma && chown webserver:root /var/log/tachikoma")
 
-    entryPoint(['/tini', '--'])
-
-    defaultCommand(["/opt/tachikoma-webserver/bin/tachikoma-webserver"])
     push = rootProject.extensions.extraProperties.dockerPush
 }
 
