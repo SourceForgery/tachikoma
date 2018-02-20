@@ -11,7 +11,7 @@ import java.util.Locale
 import java.util.Properties
 import java.util.UUID
 
-internal fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
+fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
     val stringValue = ConfigData.getProperty(configKey, default)
     try {
         return if (clazz == UUID::class.java) {
@@ -40,15 +40,15 @@ private fun <T> valueOf(clazz: Class<T>, stringValue: String): T {
     }
 }
 
-internal fun readConfig(configKey: String, default: Boolean) =
+fun readConfig(configKey: String, default: Boolean) =
         readConfig(configKey, default.toString(), Boolean::class.java)
 
-internal fun readConfig(configKey: String, default: String) =
+fun readConfig(configKey: String, default: String) =
         readConfig(configKey, default, String::class.java)
 
 private const val REALLY_BAD_KEY = "really_really_poor_dev_encryption_key"
 
-internal fun readEncryptionConfig(configKey: String) =
+fun readEncryptionConfig(configKey: String) =
         readConfig(configKey, REALLY_BAD_KEY)
                 .also {
                     if (it == REALLY_BAD_KEY) {
@@ -57,13 +57,13 @@ internal fun readEncryptionConfig(configKey: String) =
                     }
                 }
 
-internal fun readConfig(configKey: String, default: Int) =
+fun readConfig(configKey: String, default: Int) =
         readConfig(configKey, default.toString(), Int::class.java)
 
-internal fun readConfig(configKey: String, default: Long) =
+fun readConfig(configKey: String, default: Long) =
         readConfig(configKey, default.toString(), Long::class.java)
 
-internal fun <T> lazyConfig(configKey: String, default: String, clazz: Class<T>): Lazy<T> {
+fun <T> lazyConfig(configKey: String, default: String, clazz: Class<T>): Lazy<T> {
     if (configKey.toUpperCase(Locale.US) != configKey) {
         throw IllegalArgumentException("Only accepts uppercase")
     }
@@ -72,16 +72,16 @@ internal fun <T> lazyConfig(configKey: String, default: String, clazz: Class<T>)
     }
 }
 
-internal fun lazyConfig(configKey: String, default: Boolean) =
+fun lazyConfig(configKey: String, default: Boolean) =
         lazyConfig(configKey, default.toString(), Boolean::class.java)
 
-internal fun lazyConfig(configKey: String, default: String) =
+fun lazyConfig(configKey: String, default: String) =
         lazyConfig(configKey, default, String::class.java)
 
-internal fun lazyConfig(configKey: String, default: Int) =
+fun lazyConfig(configKey: String, default: Int) =
         lazyConfig(configKey, default.toString(), Int::class.java)
 
-internal fun lazyConfig(configKey: String, default: Long) =
+fun lazyConfig(configKey: String, default: Long) =
         lazyConfig(configKey, default.toString(), Long::class.java)
 
 private object ConfigData {

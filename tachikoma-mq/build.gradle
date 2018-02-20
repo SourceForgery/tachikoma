@@ -2,6 +2,7 @@ apply from: "${project.rootDir}/kotlin.gradle"
 
 dependencies {
     compile project(':tachikoma-internal-api')
+    compile project(':tachikoma-common')
 
     compile 'com.rabbitmq:amqp-client:5.1.1'
 }

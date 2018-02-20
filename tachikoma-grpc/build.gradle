@@ -8,6 +8,7 @@ dependencies {
     compile "com.linecorp.armeria:armeria:$armeria_version"
     compile "com.linecorp.armeria:armeria-grpc:$armeria_version"
 
+    compile project(':tachikoma-common')
     compile project(':tachikoma-internal-api')
     compile project(':tachikoma-database-api')
 

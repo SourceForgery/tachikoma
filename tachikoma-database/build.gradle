@@ -1,6 +1,7 @@
 apply from: "${project.rootDir}/kotlin.gradle"
 
 dependencies {
+    compile project(':tachikoma-common')
     compile project(":tachikoma-internal-api")
     compile project(":tachikoma-database-api")
 

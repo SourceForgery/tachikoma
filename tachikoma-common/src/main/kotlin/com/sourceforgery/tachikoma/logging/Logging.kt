@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger
  * code like this:
  *
  * ```
- * import com.sourceforgery.tachikoma.logging.Logging
+ * import com.sourceforgery.tachikoma.com.sourceforgery.tachikoma.logging.Logging
  *
  * class MyClass: Logging {
  *   override val log: Logger = logger()
