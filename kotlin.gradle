@@ -8,7 +8,7 @@ dependencies {
     testCompile "org.jetbrains.spek:spek-api:$spek_version"
     testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-    testCompile 'org.junit.platform:junit-platform-runner:1.0.2'
+    testCompile 'org.junit.platform:junit-platform-runner:1.1.0'
     testCompile "org.glassfish.hk2:hk2-locator:$hk2_version"
     testCompile "org.glassfish.hk2:hk2-utils:$hk2_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
