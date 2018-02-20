@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorInterval="30" packages="com.sourceforgery.tachikoma.logging">
     <Properties>
-        <Property name="pattern">%d{ISO8601} %-5p - [%t] %-26.26c{1} - %X{tag} - %m</Property>
+        <Property name="pattern">%-5p - [%t] %-26.26c{1} - %m</Property>
         <Property name="name">tachikoma-webserver</Property>
     </Properties>
     <Appenders>
@@ -10,7 +10,7 @@
         </Syslog>
 
         <Console name="StdOut" target="SYSTEM_OUT">
-            <PatternLayout pattern="${pattern}\n"/>
+            <PatternLayout pattern="%d{ISO8601} ${pattern}\n"/>
         </Console>
     </Appenders>
     <Loggers>

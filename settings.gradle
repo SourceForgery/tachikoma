@@ -12,6 +12,8 @@ include 'tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm'
 include 'tachikoma-internal-proto-jvm'
 include 'tachikoma-internal-api'
 
+include 'tachikoma-common'
+
 include 'tachikoma-database-api'
 include 'tachikoma-database'
 include 'tachikoma-mq'
