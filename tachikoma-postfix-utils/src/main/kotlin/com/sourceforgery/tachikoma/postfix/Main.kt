@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.postfix
 
+import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.incoming.IncomingEmail
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mailer.MailSender
@@ -16,12 +17,12 @@ import java.util.concurrent.TimeUnit
 
 private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
 
-class Main(
-        urlWithoutDomain: URI,
-        private val insecure: Boolean
+class Main
+internal constructor(
+        private val configuration: Configuration
 ) {
 
-    private val tachikomaUrl = addPort(urlWithoutDomain)
+    private val tachikomaUrl = addPort(configuration.tachikomaUrl)
 
     private fun withoutPassword(uri: URI): String {
         val query = uri.rawQuery?.let { "?$it" } ?: ""
@@ -61,7 +62,7 @@ class Main(
                         sslContext(
                                 GrpcSslContexts.forClient()
                                         .also { ctx ->
-                                            if (insecure) {
+                                            if (configuration.insecure) {
                                                 ctx.trustManager(InsecureTrustManagerFactory.INSTANCE)
                                             }
                                         }
@@ -84,15 +85,7 @@ class Main(
 fun main(args: Array<String>) {
     InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
 
-    val tachikomaUrl = URI.create(
-            System.getenv("TACHIKOMA_URL")
-                    ?: throw IllegalArgumentException("Can't start without TACHIKOMA_URL")
-    )
-
-    val insecure = System.getenv("INSECURE")
-            ?.toBoolean()
-            ?: false
-
-    Main(tachikomaUrl, insecure)
+    val configuration = Configuration()
+    Main(configuration)
             .run()
 }
