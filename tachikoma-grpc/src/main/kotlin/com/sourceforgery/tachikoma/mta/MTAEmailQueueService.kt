@@ -47,7 +47,7 @@ private constructor(
         private val incomingEmailAddressDAO: IncomingEmailAddressDAO
 ) {
     fun getEmails(responseObserver: StreamObserver<EmailMessage>, mailDomain: MailDomain): StreamObserver<MTAQueuedNotification> {
-        LOGGER.info { "MTA connected" }
+        LOGGER.info { "MTA connected with mail domain $mailDomain " }
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
         val future = mqSequenceFactory.listenForOutgoingEmails(mailDomain, {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
@@ -121,7 +121,7 @@ private constructor(
                                     .build()
                     )
 
-                    LOGGER.info { "Wasn't able to deliver message with emailId emailId: $emailId" }
+                    LOGGER.error { "Wasn't able to deliver message with emailId: $emailId" }
                 }
             }
 

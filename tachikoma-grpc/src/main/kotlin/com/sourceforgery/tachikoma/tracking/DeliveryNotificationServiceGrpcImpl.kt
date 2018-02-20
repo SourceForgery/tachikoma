@@ -19,7 +19,7 @@ private constructor(
     override fun notificationStream(request: NotificationStreamParameters, responseObserver: StreamObserver<EmailNotification>) {
         try {
             authentication.requireFrontend()
-            LOGGER.info { "Connected, getting delivery notifications from ${authentication.mailDomain}" }
+            LOGGER.info { "Connected, user ${authentication.authenticationId} getting delivery notifications from ${authentication.mailDomain}" }
             deliveryNotificationService.notificationStream(
                     responseObserver = responseObserver,
                     request = request,
