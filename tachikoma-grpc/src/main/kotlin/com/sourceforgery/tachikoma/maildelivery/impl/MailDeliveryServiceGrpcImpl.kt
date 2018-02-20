@@ -21,7 +21,7 @@ private constructor(
     override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) {
         try {
             authentication.requireFrontend()
-            LOGGER.info { "Connected, getting incoming mails from ${authentication.mailDomain}" }
+            LOGGER.info { "Connected, user ${authentication.authenticationId} getting incoming mails from ${authentication.mailDomain}" }
             mailDeliveryService.getIncomingEmails(responseObserver, authentication.authenticationId)
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
