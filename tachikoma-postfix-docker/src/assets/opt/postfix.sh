@@ -1,7 +1,6 @@
 #!/bin/bash -eu
 
 #postconf -F '*/*/chroot = n'
-#postconf -e myhostname=$MAIL_DOMAIN
 
 tmp1="${TACHIKOMA_URL##*@}"
 # Hostname is the tachikoma MX domain
@@ -12,6 +11,8 @@ tmp2="${TACHIKOMA_URL#*://}"
 MAIL_DOMAIN="${tmp2%%:*}"
 
 echo "@${TACHIKOMA_HOSTNAME} whatever" >/etc/postfix/vmailbox
+
+postconf -e myhostname="${TACHIKOMA_HOSTNAME}"
 
 if [ ${MAIL_DOMAIN_MX:=false} = true ]; then
   # Listen for incoming emails to the main domain (i.e. not just the TACHIKOMA_HOSTNAME)
