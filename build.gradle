@@ -17,6 +17,7 @@ buildscript {
         classpath "se.transmode.gradle:gradle-docker:1.2"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.16-eap-3"
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
+        classpath 'com.github.shyiko:ktlint:0.15.1'
     }
     repositories {
         mavenLocal()
