@@ -201,7 +201,7 @@ private constructor(
     }
 
     /**
-     * Formats a [org.apache.logging.log4j.core.LogEvent] in conformance with the RFC 5424 Syslog specification.
+     * Formats a org.apache.logging.log4j.core.LogEvent in conformance with the RFC 5424 Syslog specification.
      *
      * @param event The LogEvent.
      * @return The RFC 5424 String representation of the LogEvent.
