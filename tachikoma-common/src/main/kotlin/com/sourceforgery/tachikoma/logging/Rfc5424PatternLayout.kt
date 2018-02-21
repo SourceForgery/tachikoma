@@ -47,7 +47,7 @@ import java.util.regex.Matcher
 class Rfc5424PatternLayout
 private constructor(
         config: Configuration?,
-        private val facility: Facility,
+        val facility: Facility,
         id: String?,
         private val enterpriseNumber: Int,
         private val includeMdc: Boolean,
@@ -261,7 +261,7 @@ private constructor(
     }
 
     private fun appendProcessId(buffer: StringBuilder) {
-        buffer.append(getProcId())
+        buffer.append(procId)
     }
 
     private fun appendMessageId(buffer: StringBuilder, message: Message) {
@@ -310,7 +310,7 @@ private constructor(
         val message = event.message
         val isStructured = message is StructuredDataMessage || message is StructuredDataCollectionMessage
 
-        if (!isStructured && fieldFormatters != null && fieldFormatters.isEmpty() && !includeMdc) {
+        if (!isStructured && !includeMdc && fieldFormatters?.isEmpty() == true) {
             buffer.append('-')
             return
         }
@@ -333,7 +333,7 @@ private constructor(
             val mdcSdIdStr = mdcSdId.toString()
             val union = sdElements[mdcSdIdStr]
             if (union != null) {
-                union.union(contextMap)
+                union.fields.putAll(contextMap)
                 sdElements[mdcSdIdStr] = union
             } else {
                 val formattedContextMap = StructuredDataElement(contextMap, mdcPrefix, false)
@@ -368,7 +368,7 @@ private constructor(
 
         if (sdElements.containsKey(sdId)) {
             val union = sdElements[id.toString()]!!
-            union.union(map)
+            union.fields.putAll(map)
             sdElements[sdId] = union
         } else {
             val formattedData = StructuredDataElement(map, eventPrefix, false)
@@ -390,18 +390,6 @@ private constructor(
         for (item in NEWLINE_PATTERN.split(text.trim())) {
             buffer.append("$addHeader-  ${item.replace("\t", "    ")}$LF")
         }
-    }
-
-    protected fun getProcId(): String {
-        return procId
-    }
-
-    protected fun getMdcExcludes(): List<String>? {
-        return mdcExcludes
-    }
-
-    protected fun getMdcIncludes(): List<String>? {
-        return mdcIncludes
     }
 
     private fun computeTimeStampString(now: Long): String? {
@@ -448,9 +436,9 @@ private constructor(
         sb.append('[')
         sb.append(id)
         if (mdcSdId.toString() != id) {
-            appendMap(data.prefix, data.getFields(), sb, noopChecker)
+            appendMap(data.prefix, data.fields, sb, noopChecker)
         } else {
-            appendMap(data.prefix, data.getFields(), sb, checker)
+            appendMap(data.prefix, data.fields, sb, checker)
         }
         sb.append(']')
     }
@@ -560,13 +548,13 @@ private constructor(
         }
     }
 
-    private inner class StructuredDataElement(
-            private val fields: MutableMap<String, String>,
+    private class StructuredDataElement(
+            internal val fields: MutableMap<String, String>,
             internal val prefix: String?,
             private val discardIfEmpty: Boolean
     ) {
 
-        internal fun discard(): Boolean {
+        fun discard(): Boolean {
             if (discardIfEmpty == false) {
                 return false
             }
@@ -579,18 +567,6 @@ private constructor(
             }
             return !foundNotEmptyValue
         }
-
-        internal fun union(addFields: Map<String, String>) {
-            this.fields.putAll(addFields)
-        }
-
-        internal fun getFields(): Map<String, String> {
-            return this.fields
-        }
-    }
-
-    fun getFacility(): Facility {
-        return facility
     }
 
     companion object {
