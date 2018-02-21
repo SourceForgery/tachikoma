@@ -130,9 +130,7 @@ private constructor(
     }
 
     private fun toTrimmedArray(str: String?): List<String>? {
-        if (str == null) {
-            return null
-        }
+        str ?: return null
         val list = str.split(Patterns.COMMA_SEPARATOR.toRegex()).dropLastWhile { it.isEmpty() }
         return if (list.isNotEmpty()) {
             list.map { str.trim(' ') }
@@ -251,13 +249,11 @@ private constructor(
     }
 
     private fun appendAppName(buffer: StringBuilder) {
-        if (appName != null) {
-            buffer.append(appName)
-        } else if (configName != null) {
-            buffer.append(configName)
-        } else {
-            buffer.append('-')
-        }
+        buffer.append(when {
+            appName != null -> appName
+            configName != null -> configName
+            else -> "-"
+        })
     }
 
     private fun appendProcessId(buffer: StringBuilder) {
@@ -267,13 +263,11 @@ private constructor(
     private fun appendMessageId(buffer: StringBuilder, message: Message) {
         val isStructured = message is StructuredDataMessage
         val type = if (isStructured) (message as StructuredDataMessage).type else null
-        if (type != null) {
-            buffer.append(type)
-        } else if (messageId != null) {
-            buffer.append(messageId)
-        } else {
-            buffer.append('-')
-        }
+        buffer.append(when {
+            type != null -> type
+            messageId != null -> messageId
+            else -> "-"
+        })
     }
 
     private fun appendMessage(buffer: StringBuilder, event: LogEvent) {
@@ -289,16 +283,16 @@ private constructor(
             sb.toString()
         }
 
-        if (text != null && text.isNotEmpty()) {
+        if (!text.isNullOrEmpty()) {
             buffer.append(' ').append(escapeNewlines(text, escapeNewLine))
         }
 
         if (includeNewLine) {
-            buffer.append(LF)
+            buffer.append("\n")
         }
 
         if (exceptionFormatters != null && event.thrown != null) {
-            val exception = StringBuilder(LF)
+            val exception = StringBuilder()
             for (formatter in exceptionFormatters!!) {
                 formatter.format(event, exception)
             }
@@ -329,7 +323,7 @@ private constructor(
             }
         }
 
-        if (includeMdc && contextMap.size > 0) {
+        if (includeMdc && contextMap.isNotEmpty()) {
             val mdcSdIdStr = mdcSdId.toString()
             val union = sdElements[mdcSdIdStr]
             if (union != null) {
@@ -388,7 +382,7 @@ private constructor(
             it.toString()
         }
         for (item in NEWLINE_PATTERN.split(text.trim())) {
-            buffer.append("$addHeader-  ${item.replace("\t", "    ")}$LF")
+            buffer.append("$addHeader-  ${item.replace("\t", "    ")}\n")
         }
     }
 
@@ -416,17 +410,6 @@ private constructor(
         return dateString
     }
 
-    private fun pad(`val`: Int, max: Int, buf: StringBuilder) {
-        var maxxer = max
-        while (maxxer > 1) {
-            if (`val` < maxxer) {
-                buf.append('0')
-            }
-            maxxer /= TWO_DIGITS
-        }
-        buf.append(Integer.toString(`val`))
-    }
-
     private fun formatStructuredElement(id: String?, data: StructuredDataElement,
                                         sb: StringBuilder, checker: ListChecker?) {
         if (id == null && defaultId == null || data.discard()) {
@@ -445,7 +428,7 @@ private constructor(
 
     private fun getId(id: StructuredDataId?): String {
         val sb = StringBuilder()
-        if (id == null || id.name == null) {
+        if (id?.name == null) {
             sb.append(defaultId)
         } else {
             sb.append(id.name)
@@ -555,7 +538,7 @@ private constructor(
     ) {
 
         fun discard(): Boolean {
-            if (discardIfEmpty == false) {
+            if (!discardIfEmpty) {
                 return false
             }
             var foundNotEmptyValue = false
@@ -675,11 +658,6 @@ private constructor(
          */
         const val DEFAULT_MDCID = "mdc"
 
-        private val LF = "\n"
-        private val TWO_DIGITS = 10
-        private val THREE_DIGITS = 100
-        private val MILLIS_PER_MINUTE = 60000
-        private val MINUTES_PER_HOUR = 60
-        private val COMPONENT_KEY = "RFC5424-Converter"
+        private const val COMPONENT_KEY = "RFC5424-Converter"
     }
 }
