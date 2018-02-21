@@ -2,11 +2,30 @@
 
 #postconf -F '*/*/chroot = n'
 
-tmp1="${TACHIKOMA_URL##*@}"
+
+readEnv() {
+  local key=$1
+  local line=""
+
+  cat ${TACHIKOMA_CONFIG:-${HOME}/.tachikoma.config} | \
+    while read line; do
+      if [ ${line%%=*} = $key ]; then
+        echo ${line#*=}
+        return 0
+      fi
+    done
+  echo $(eval echo \${$key:-})
+  return
+}
+
+url="$(readEnv TACHIKOMA_URL)"
+mailDomainMx="$(readEnv MAIL_DOMAIN_MX)"
+
+tmp1="${url##*@}"
 # Hostname is the tachikoma MX domain
 TACHIKOMA_HOSTNAME="${tmp1%%/*}"
 
-tmp2="${TACHIKOMA_URL#*://}"
+tmp2="${url#*://}"
 # Username is maildomain
 MAIL_DOMAIN="${tmp2%%:*}"
 
@@ -14,7 +33,7 @@ echo "@${TACHIKOMA_HOSTNAME} whatever" >/etc/postfix/vmailbox
 
 postconf -e myhostname="${TACHIKOMA_HOSTNAME}"
 
-if [ ${MAIL_DOMAIN_MX:=false} = true ]; then
+if [ ${mailDomainMx:-false} = true ]; then
   # Listen for incoming emails to the main domain (i.e. not just the TACHIKOMA_HOSTNAME)
   postconf -e virtual_mailbox_domains="$MAIL_DOMAIN,$TACHIKOMA_HOSTNAME"
   echo "@$MAIL_DOMAIN whatever" >>/etc/postfix/vmailbox
