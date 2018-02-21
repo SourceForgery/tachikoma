@@ -12,7 +12,10 @@ before_install:
 - docker version
 - docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
 notifications:
-  irc: "chat.freenode.net#tachikoma-esp"
+  irc:
+    channels:
+      - "chat.freenode.net#tachikoma-esp"
+    skip_join: true
 env:
   global:
   - secure: WOWegemTsgvlEZZzCF7C9ozXXuC/Z0LuhMsIvExFJLCHahxYBdY/QgXDj+HaB+E8Lcf8aWDDKXNbCfQLhEDmZFIefITahR96Ejd0PPB1u3qmJ3Xycbfv6/ZQ0xSz88Td8WU+6yEwl2hIk78AQ0rmWOT3y4z1GAc8EUUuz6HYCiDN44N/clDbBa0wKo32W5KUZ9pk0gHTBY7u4R3tBooP8R18dPTSOnZ4krKIgqzyN0pc2+YhJ8thRCf75s+pcufV/yZnX7p1hYAekhwZveIHPG2JJUL4qh2riU9l0g82sA1FWecOU7rA08gCIgcwU6oliX/422ZRrmOj8WHE+KgGMmWXTuDcBovAjYQ4sYBwrXTC0k+0J5DjaTP6D241BbIq3dUlVmt/JDqEGvP1tBIP0BDnL9GKmlp1MIkFU56ChpKbhxHMGtvZ/Zz5AVrhQbWOkDPVUsXz9GmuIMJ8pa1MPr3hR+MlkMOrC572BdJYzi1HIid4pgEmrSiRvdC9+eKcIpdDzMvrzxSS0OjaYz7e6JKxPjgWvzWkeVJJ1JeMcpW9lZ9d6ZGjhM6cpaAR9ckJtfo6KMV/hZqG+PrR42m1kY/L7MuDzkl2GRfz0OcNERR+yBWO8UuBQXWtY1bg8peAPxugISUakICHSDbsP7nsL8u/4DEYMMVrJdXgKe9Hue4=
