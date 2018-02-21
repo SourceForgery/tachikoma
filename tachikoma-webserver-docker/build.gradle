@@ -54,4 +54,4 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
     push = rootProject.extensions.extraProperties.dockerPush
 }
 
-assemble.dependsOn webserverDocker
+dockerTask.dependsOn webserverDocker
