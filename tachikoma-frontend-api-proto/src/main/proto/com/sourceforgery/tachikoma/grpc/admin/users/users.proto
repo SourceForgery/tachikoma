@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+import "google/protobuf/timestamp.proto";
+
+package com.sourceforgery.tachikoma.grpc.frontend.blockedemail;
+
+service UserService {
+
+    // Removes the blocked email based on specified from and recipient addresses
+    rpc removeUser (RemoveUserRequest) returns (RemoveUserResponse);
+
+    // Returns all blocked email addresses
+    rpc getUsers (GetUsersRequest) returns (stream User);
+
+    // Add user
+    rpc addUser (AddUserRequest) returns (User);
+
+    // Add user
+    rpc modifyUser (UpdateUserRequest) returns (User);
+}
+
+
+message GetUsersRequest {
+    string mailDomain = 101;
+}
+
+message User {
+    // The id of the user
+    AuthenticationId authId = 101;
+    // If the user is active
+    bool active = 102;
+    // If the user has a password set
+    bool hasPassword = 103;
+    // If the user has an apiToken set
+    bool hasApiToken = 104;
+    // What role the user has
+    UserRole authenticationRole = 105;
+    // Which mail domain the user has
+    string mailDomain = 106;
+    // Which address _all_ emails will go to (optional)
+    EmailAddress recipient_override = 107;
+    // The creation date of the user
+    google.protobuf.Timestamp dateCreated = 108;
+    // The date that the user was last updated
+    google.protobuf.Timestamp lastUpdated = 109;
+    // username of the user
+    string username = 110;
+}
+
+// Request for removing a user
+message RemoveUserRequest {
+    AuthenticationId userToRemove = 101;
+}
+
+// Future-proof response
+message RemoveUserResponse {
+}
+
+// Represents a users id
+message AuthenticationId {
+    sint64 id = 1;
+}
+
+message AddUserRequest {
+    // If the user is active
+    bool active = 102;
+    // The password to log in with (optional)
+    string password = 103;
+    // If the user has an apiToken set
+    string apiToken = 104;
+    // What role the user has
+    UserRole authenticationRole = 105;
+    // Which mail domain the user has
+    string mailDomain = 106;
+    // Which address _all_ emails will go to (optional)
+    EmailAddress recipient_override = 107;
+    // The username of the user
+    string username = 110;
+}
+
+message UpdateUserRequest {
+    // The id of the user
+    AuthenticationId authId = 101;
+    // If the user is active
+    bool active = 102;
+    // The password to log in with (optional)
+    string password = 103;
+    // If the user has an apiToken set
+    string apiToken = 104;
+    // What role the user has
+    UserRole authenticationRole = 105;
+    // Which address _all_ emails will go to (optional)
+    EmailAddress recipient_override = 107;
+    // The username of the user
+    string username = 110;
+}
+
+enum UserRole {
+    BACKEND = 0;
+    FRONTEND = 1;
+    FRONTEND_ADMIN = 2;
+}
