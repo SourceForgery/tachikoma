@@ -6,7 +6,7 @@
     </Properties>
     <Appenders>
         <Syslog name="syslog" host="localhost" port="514" protocol="TCP">
-            <Rfc5424PatternLayout appName="tachikoma/webserver" mdcId="tachikoma" newLine="true" pattern="${pattern}"/>
+            <Rfc5424PatternLayout appName="tachikoma/webserver" mdcId="tachikoma" pattern="${pattern}" />
         </Syslog>
 
         <Console name="StdOut" target="SYSTEM_OUT">

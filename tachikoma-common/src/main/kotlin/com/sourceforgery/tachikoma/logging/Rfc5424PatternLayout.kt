@@ -35,19 +35,19 @@ import org.apache.logging.log4j.util.StringBuilders
 import org.apache.logging.log4j.util.Strings
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-import java.util.Calendar
-import java.util.GregorianCalendar
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.HashMap
 import java.util.TreeMap
 import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 @Suppress("unused")
 @Plugin(name = "Rfc5424PatternLayout", category = Node.CATEGORY, elementType = Layout.ELEMENT_TYPE, printObject = true)
 class Rfc5424PatternLayout
 private constructor(
         config: Configuration?,
-        private val facility: Facility,
+        val facility: Facility,
         id: String?,
         private val enterpriseNumber: Int,
         private val includeMdc: Boolean,
@@ -86,6 +86,8 @@ private constructor(
     private val fieldFormatters: Map<String, FieldFormatter>?
     private val procId: String
     private val pattern: List<PatternFormatter>
+
+    private val syncObj = Any()
 
     init {
         val exceptionParser = createPatternParser(config, ThrowablePatternConverter::class.java)
@@ -128,9 +130,7 @@ private constructor(
     }
 
     private fun toTrimmedArray(str: String?): List<String>? {
-        if (str == null) {
-            return null
-        }
+        str ?: return null
         val list = str.split(Patterns.COMMA_SEPARATOR.toRegex()).dropLastWhile { it.isEmpty() }
         return if (list.isNotEmpty()) {
             list.map { str.trim(' ') }
@@ -208,6 +208,15 @@ private constructor(
      */
     override fun toSerializable(event: LogEvent): String {
         val buf = AbstractStringLayout.getStringBuilder()
+        addHeader(event, buf)
+        appendStructuredElements(buf, event)
+        appendMessage(buf, event)
+        return if (useTlsMessageFormat) {
+            TlsSyslogFrame(buf.toString()).toString()
+        } else buf.toString()
+    }
+
+    private fun addHeader(event: LogEvent, buf: StringBuilder) {
         appendPriority(buf, event.level)
         appendTimestamp(buf, event.timeMillis)
         appendSpace(buf)
@@ -219,11 +228,6 @@ private constructor(
         appendSpace(buf)
         appendMessageId(buf, event.message)
         appendSpace(buf)
-        appendStructuredElements(buf, event)
-        appendMessage(buf, event)
-        return if (useTlsMessageFormat) {
-            TlsSyslogFrame(buf.toString()).toString()
-        } else buf.toString()
     }
 
     private fun appendPriority(buffer: StringBuilder, logLevel: Level) {
@@ -245,29 +249,25 @@ private constructor(
     }
 
     private fun appendAppName(buffer: StringBuilder) {
-        if (appName != null) {
-            buffer.append(appName)
-        } else if (configName != null) {
-            buffer.append(configName)
-        } else {
-            buffer.append('-')
-        }
+        buffer.append(when {
+            appName != null -> appName
+            configName != null -> configName
+            else -> "-"
+        })
     }
 
     private fun appendProcessId(buffer: StringBuilder) {
-        buffer.append(getProcId())
+        buffer.append(procId)
     }
 
     private fun appendMessageId(buffer: StringBuilder, message: Message) {
         val isStructured = message is StructuredDataMessage
         val type = if (isStructured) (message as StructuredDataMessage).type else null
-        if (type != null) {
-            buffer.append(type)
-        } else if (messageId != null) {
-            buffer.append(messageId)
-        } else {
-            buffer.append('-')
-        }
+        buffer.append(when {
+            type != null -> type
+            messageId != null -> messageId
+            else -> "-"
+        })
     }
 
     private fun appendMessage(buffer: StringBuilder, event: LogEvent) {
@@ -283,19 +283,20 @@ private constructor(
             sb.toString()
         }
 
-        if (text != null && text.isNotEmpty()) {
+        if (!text.isNullOrEmpty()) {
             buffer.append(' ').append(escapeNewlines(text, escapeNewLine))
         }
 
+        if (includeNewLine) {
+            buffer.append("\n")
+        }
+
         if (exceptionFormatters != null && event.thrown != null) {
-            val exception = StringBuilder(LF)
+            val exception = StringBuilder()
             for (formatter in exceptionFormatters!!) {
                 formatter.format(event, exception)
             }
-            buffer.append(escapeNewlines(exception.toString(), escapeNewLine))
-        }
-        if (includeNewLine) {
-            buffer.append(LF)
+            escapeException(event, exception.toString(), buffer)
         }
     }
 
@@ -303,7 +304,7 @@ private constructor(
         val message = event.message
         val isStructured = message is StructuredDataMessage || message is StructuredDataCollectionMessage
 
-        if (!isStructured && fieldFormatters != null && fieldFormatters.isEmpty() && !includeMdc) {
+        if (!isStructured && !includeMdc && fieldFormatters?.isEmpty() == true) {
             buffer.append('-')
             return
         }
@@ -322,11 +323,11 @@ private constructor(
             }
         }
 
-        if (includeMdc && contextMap.size > 0) {
+        if (includeMdc && contextMap.isNotEmpty()) {
             val mdcSdIdStr = mdcSdId.toString()
             val union = sdElements[mdcSdIdStr]
             if (union != null) {
-                union.union(contextMap)
+                union.fields.putAll(contextMap)
                 sdElements[mdcSdIdStr] = union
             } else {
                 val formattedContextMap = StructuredDataElement(contextMap, mdcPrefix, false)
@@ -361,7 +362,7 @@ private constructor(
 
         if (sdElements.containsKey(sdId)) {
             val union = sdElements[id.toString()]!!
-            union.union(map)
+            union.fields.putAll(map)
             sdElements[sdId] = union
         } else {
             val formattedData = StructuredDataElement(map, eventPrefix, false)
@@ -372,81 +373,41 @@ private constructor(
     private fun escapeNewlines(text: String, replacement: String?): String {
         return if (null == replacement) {
             text
-        } else NEWLINE_PATTERN.matcher(text).replaceAll(replacement)
+        } else NEWLINE_PATTERN.replace(text, replacement)
     }
 
-    protected fun getProcId(): String {
-        return procId
-    }
-
-    protected fun getMdcExcludes(): List<String>? {
-        return mdcExcludes
-    }
-
-    protected fun getMdcIncludes(): List<String>? {
-        return mdcIncludes
+    private fun escapeException(event: LogEvent, text: String, buffer: StringBuilder) {
+        val addHeader = StringBuilder().let {
+            addHeader(event, it)
+            it.toString()
+        }
+        for (item in NEWLINE_PATTERN.split(text.trim())) {
+            buffer.append("$addHeader-  ${item.replace("\t", "    ")}\n")
+        }
     }
 
     private fun computeTimeStampString(now: Long): String? {
         val last: Long =
-                synchronized(this) {
+                synchronized(syncObj) {
                     if (now == lastTimestamp) {
                         return timestampStr
                     }
                     lastTimestamp
                 }
+        val dt = ZonedDateTime
+                .ofInstant(
+                        Instant.ofEpochMilli(now),
+                        ZoneId.systemDefault()
+                )!!
 
-        val buffer = StringBuilder()
-        val cal = GregorianCalendar()
-        cal.timeInMillis = now
-        buffer.append(Integer.toString(cal.get(Calendar.YEAR)))
-        buffer.append('-')
-        pad(cal.get(Calendar.MONTH) + 1, TWO_DIGITS, buffer)
-        buffer.append('-')
-        pad(cal.get(Calendar.DAY_OF_MONTH), TWO_DIGITS, buffer)
-        buffer.append('T')
-        pad(cal.get(Calendar.HOUR_OF_DAY), TWO_DIGITS, buffer)
-        buffer.append(':')
-        pad(cal.get(Calendar.MINUTE), TWO_DIGITS, buffer)
-        buffer.append(':')
-        pad(cal.get(Calendar.SECOND), TWO_DIGITS, buffer)
-        buffer.append('.')
-        pad(cal.get(Calendar.MILLISECOND), THREE_DIGITS, buffer)
-
-        var tzmin = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / MILLIS_PER_MINUTE
-        if (tzmin == 0) {
-            buffer.append('Z')
-        } else {
-            if (tzmin < 0) {
-                tzmin = -tzmin
-                buffer.append('-')
-            } else {
-                buffer.append('+')
-            }
-            val tzhour = tzmin / MINUTES_PER_HOUR
-            tzmin -= tzhour * MINUTES_PER_HOUR
-            pad(tzhour, TWO_DIGITS, buffer)
-            buffer.append(':')
-            pad(tzmin, TWO_DIGITS, buffer)
-        }
-        synchronized(this) {
+        val dateString = "${dt.toLocalDateTime()}${dt.offset}"
+        synchronized(syncObj) {
             if (last == lastTimestamp) {
                 lastTimestamp = now
-                timestampStr = buffer.toString()
+                timestampStr = dateString
             }
         }
-        return buffer.toString()
-    }
-
-    private fun pad(`val`: Int, max: Int, buf: StringBuilder) {
-        var maxxer = max
-        while (maxxer > 1) {
-            if (`val` < maxxer) {
-                buf.append('0')
-            }
-            maxxer /= TWO_DIGITS
-        }
-        buf.append(Integer.toString(`val`))
+        return dateString
     }
 
     private fun formatStructuredElement(id: String?, data: StructuredDataElement,
@@ -458,16 +419,16 @@ private constructor(
         sb.append('[')
         sb.append(id)
         if (mdcSdId.toString() != id) {
-            appendMap(data.prefix, data.getFields(), sb, noopChecker)
+            appendMap(data.prefix, data.fields, sb, noopChecker)
         } else {
-            appendMap(data.prefix, data.getFields(), sb, checker)
+            appendMap(data.prefix, data.fields, sb, checker)
         }
         sb.append(']')
     }
 
     private fun getId(id: StructuredDataId?): String {
         val sb = StringBuilder()
-        if (id == null || id.name == null) {
+        if (id?.name == null) {
             sb.append(defaultId)
         } else {
             sb.append(id.name)
@@ -505,7 +466,7 @@ private constructor(
     }
 
     private fun escapeSDParams(value: String): String {
-        return PARAM_VALUE_ESCAPE_PATTERN.matcher(value).replaceAll("\\\\$0")
+        return PARAM_VALUE_ESCAPE_PATTERN.replace(value, "\\\\$0")
     }
 
     /**
@@ -570,14 +531,14 @@ private constructor(
         }
     }
 
-    private inner class StructuredDataElement(
-            private val fields: MutableMap<String, String>,
+    private class StructuredDataElement(
+            internal val fields: MutableMap<String, String>,
             internal val prefix: String?,
             private val discardIfEmpty: Boolean
     ) {
 
-        internal fun discard(): Boolean {
-            if (discardIfEmpty == false) {
+        fun discard(): Boolean {
+            if (!discardIfEmpty) {
                 return false
             }
             var foundNotEmptyValue = false
@@ -589,18 +550,6 @@ private constructor(
             }
             return !foundNotEmptyValue
         }
-
-        internal fun union(addFields: Map<String, String>) {
-            this.fields.putAll(addFields)
-        }
-
-        internal fun getFields(): Map<String, String> {
-            return this.fields
-        }
-    }
-
-    fun getFacility(): Facility {
-        return facility
     }
 
     companion object {
@@ -640,21 +589,21 @@ private constructor(
                 @PluginAttribute(value = "mdcId", defaultString = DEFAULT_MDCID) mdcId: String,
                 @PluginAttribute("mdcPrefix") mdcPrefix: String?,
                 @PluginAttribute("eventPrefix") eventPrefix: String?,
-                @PluginAttribute(value = "newLine") newLine: Boolean?,
+                @PluginAttribute(value = "newLine", defaultBoolean = true) newLine: Boolean,
                 @PluginAttribute("newLineEscape") escapeNL: String?,
                 @PluginAttribute("appName") appName: String,
                 @PluginAttribute("messageId") msgId: String?,
                 @PluginAttribute("mdcExcludes") excludes: String?,
                 @PluginAttribute("mdcIncludes") includes: String?,
                 @PluginAttribute("mdcRequired") required: String?,
-                @PluginAttribute("exceptionPattern") exceptionPattern: String?,
+                @PluginAttribute("exceptionPattern", defaultString = "%ex") exceptionPattern: String,
                 // RFC 5425
                 @PluginAttribute(value = "useTlsMessageFormat") useTlsMessageFormat: Boolean?,
                 @PluginElement("LoggerFields") loggerFields: Array<LoggerFields>?,
                 @PluginConfiguration config: Configuration,
                 @PluginAttribute(value = "pattern", defaultString = "%m") pattern: String): Rfc5424PatternLayout {
             val fixedIncludes = includes
-                    ?. let {
+                    ?.let {
                         if (excludes != null) {
                             AbstractLayout.LOGGER.error("mdcIncludes and mdcExcludes are mutually exclusive. Includes wil be ignored")
                             null
@@ -668,7 +617,7 @@ private constructor(
                     id = id,
                     enterpriseNumber = enterpriseNumber,
                     includeMdc = includeMDC,
-                    includeNewLine = newLine ?: false,
+                    includeNewLine = newLine,
                     escapeNL = escapeNL,
                     mdcId = mdcId,
                     mdcPrefix = mdcPrefix,
@@ -697,22 +646,18 @@ private constructor(
         /**
          * Match newlines in a platform-independent manner.
          */
-        val NEWLINE_PATTERN = Pattern.compile("\\r?\\n")
+        val NEWLINE_PATTERN = Regex("\\r?\\n")
         /**
          * Match characters which require escaping.
          */
-        val PARAM_VALUE_ESCAPE_PATTERN = Pattern.compile("[\"\\]\\\\]")
+        val PARAM_VALUE_ESCAPE_PATTERN = Regex("[\"\\]\\\\]")
 
+        val TAB_FINDER = Regex("\t")
         /**
          * Default MDC ID: {@value} .
          */
         const val DEFAULT_MDCID = "mdc"
 
-        private val LF = "\n"
-        private val TWO_DIGITS = 10
-        private val THREE_DIGITS = 100
-        private val MILLIS_PER_MINUTE = 60000
-        private val MINUTES_PER_HOUR = 60
-        private val COMPONENT_KEY = "RFC5424-Converter"
+        private const val COMPONENT_KEY = "RFC5424-Converter"
     }
 }
