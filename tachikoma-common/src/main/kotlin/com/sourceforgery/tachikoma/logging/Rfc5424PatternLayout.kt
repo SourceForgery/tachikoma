@@ -40,7 +40,6 @@ import java.util.GregorianCalendar
 import java.util.HashMap
 import java.util.TreeMap
 import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 @Suppress("unused")
 @Plugin(name = "Rfc5424PatternLayout", category = Node.CATEGORY, elementType = Layout.ELEMENT_TYPE, printObject = true)
@@ -208,6 +207,15 @@ private constructor(
      */
     override fun toSerializable(event: LogEvent): String {
         val buf = AbstractStringLayout.getStringBuilder()
+        addHeader(event, buf)
+        appendStructuredElements(buf, event)
+        appendMessage(buf, event)
+        return if (useTlsMessageFormat) {
+            TlsSyslogFrame(buf.toString()).toString()
+        } else buf.toString()
+    }
+
+    private fun addHeader(event: LogEvent, buf: StringBuilder) {
         appendPriority(buf, event.level)
         appendTimestamp(buf, event.timeMillis)
         appendSpace(buf)
@@ -219,11 +227,6 @@ private constructor(
         appendSpace(buf)
         appendMessageId(buf, event.message)
         appendSpace(buf)
-        appendStructuredElements(buf, event)
-        appendMessage(buf, event)
-        return if (useTlsMessageFormat) {
-            TlsSyslogFrame(buf.toString()).toString()
-        } else buf.toString()
     }
 
     private fun appendPriority(buffer: StringBuilder, logLevel: Level) {
@@ -287,15 +290,16 @@ private constructor(
             buffer.append(' ').append(escapeNewlines(text, escapeNewLine))
         }
 
+        if (includeNewLine) {
+            buffer.append(LF)
+        }
+
         if (exceptionFormatters != null && event.thrown != null) {
             val exception = StringBuilder(LF)
             for (formatter in exceptionFormatters!!) {
                 formatter.format(event, exception)
             }
-            buffer.append(escapeNewlines(exception.toString(), escapeNewLine))
-        }
-        if (includeNewLine) {
-            buffer.append(LF)
+            escapeException(event, exception.toString(), buffer)
         }
     }
 
@@ -372,7 +376,17 @@ private constructor(
     private fun escapeNewlines(text: String, replacement: String?): String {
         return if (null == replacement) {
             text
-        } else NEWLINE_PATTERN.matcher(text).replaceAll(replacement)
+        } else NEWLINE_PATTERN.replace(text, replacement)
+    }
+
+    private fun escapeException(event: LogEvent, text: String, buffer: StringBuilder) {
+        val addHeader = StringBuilder().let {
+            addHeader(event, it)
+            it.toString()
+        }
+        for (item in NEWLINE_PATTERN.split(text.trim())) {
+            buffer.append("$addHeader-  ${item.replace("\t", "    ")}$LF")
+        }
     }
 
     protected fun getProcId(): String {
@@ -505,7 +519,7 @@ private constructor(
     }
 
     private fun escapeSDParams(value: String): String {
-        return PARAM_VALUE_ESCAPE_PATTERN.matcher(value).replaceAll("\\\\$0")
+        return PARAM_VALUE_ESCAPE_PATTERN.replace(value, "\\\\$0")
     }
 
     /**
@@ -640,21 +654,21 @@ private constructor(
                 @PluginAttribute(value = "mdcId", defaultString = DEFAULT_MDCID) mdcId: String,
                 @PluginAttribute("mdcPrefix") mdcPrefix: String?,
                 @PluginAttribute("eventPrefix") eventPrefix: String?,
-                @PluginAttribute(value = "newLine") newLine: Boolean?,
+                @PluginAttribute(value = "newLine", defaultBoolean = true) newLine: Boolean,
                 @PluginAttribute("newLineEscape") escapeNL: String?,
                 @PluginAttribute("appName") appName: String,
                 @PluginAttribute("messageId") msgId: String?,
                 @PluginAttribute("mdcExcludes") excludes: String?,
                 @PluginAttribute("mdcIncludes") includes: String?,
                 @PluginAttribute("mdcRequired") required: String?,
-                @PluginAttribute("exceptionPattern") exceptionPattern: String?,
+                @PluginAttribute("exceptionPattern", defaultString = "%ex") exceptionPattern: String,
                 // RFC 5425
                 @PluginAttribute(value = "useTlsMessageFormat") useTlsMessageFormat: Boolean?,
                 @PluginElement("LoggerFields") loggerFields: Array<LoggerFields>?,
                 @PluginConfiguration config: Configuration,
                 @PluginAttribute(value = "pattern", defaultString = "%m") pattern: String): Rfc5424PatternLayout {
             val fixedIncludes = includes
-                    ?. let {
+                    ?.let {
                         if (excludes != null) {
                             AbstractLayout.LOGGER.error("mdcIncludes and mdcExcludes are mutually exclusive. Includes wil be ignored")
                             null
@@ -668,7 +682,7 @@ private constructor(
                     id = id,
                     enterpriseNumber = enterpriseNumber,
                     includeMdc = includeMDC,
-                    includeNewLine = newLine ?: false,
+                    includeNewLine = newLine,
                     escapeNL = escapeNL,
                     mdcId = mdcId,
                     mdcPrefix = mdcPrefix,
@@ -697,12 +711,13 @@ private constructor(
         /**
          * Match newlines in a platform-independent manner.
          */
-        val NEWLINE_PATTERN = Pattern.compile("\\r?\\n")
+        val NEWLINE_PATTERN = Regex("\\r?\\n")
         /**
          * Match characters which require escaping.
          */
-        val PARAM_VALUE_ESCAPE_PATTERN = Pattern.compile("[\"\\]\\\\]")
+        val PARAM_VALUE_ESCAPE_PATTERN = Regex("[\"\\]\\\\]")
 
+        val TAB_FINDER = Regex("\t")
         /**
          * Default MDC ID: {@value} .
          */

@@ -75,7 +75,7 @@ class MailSender(
                 }
             }
         } catch (e: Exception) {
-            LOGGER.error("", e)
+            LOGGER.error("Failed to send message", e)
             return MTAQueuedNotification.newBuilder()
                     .setEmailId(emailMessage.emailId)
                     .setSuccess(false)
