@@ -32,6 +32,8 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
+    runCommand("sed '/imklog/d' -i /etc/rsyslog.conf")
+
     addFile(file('src/assets/'))
 
     addFile {
