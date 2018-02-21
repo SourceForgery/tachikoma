@@ -22,3 +22,10 @@ task downloadTini {
 
 ext.tiniBinary = new File(project.buildDir, "tini")
 
+
+task dockerTask {
+}
+
+if ((System.properties["skipDocker"] ?: "false") == "false") {
+    assemble.dependsOn dockerTask
+}

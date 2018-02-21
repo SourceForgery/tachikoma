@@ -50,4 +50,4 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     push = rootProject.extensions.extraProperties.dockerPush
 }
 
-assemble.dependsOn postfixDocker
+dockerTask.dependsOn postfixDocker
