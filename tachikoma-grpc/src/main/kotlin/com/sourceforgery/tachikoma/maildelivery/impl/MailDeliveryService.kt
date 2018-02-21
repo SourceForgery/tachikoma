@@ -385,10 +385,9 @@ private constructor(
                 .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
-        val unsubscribeUri = URIBuilderTiny(trackingConfig.baseUrl)
+        return URIBuilderTiny(trackingConfig.baseUrl)
                 .appendPaths(path, unsubscribeUrl)
                 .build()
-        return unsubscribeUri
     }
 
     private fun createTrackingLink(emailId: EmailId, originalUri: String): URI? {
@@ -398,10 +397,9 @@ private constructor(
                 .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-        val trackingUri = URIBuilderTiny(trackingConfig.baseUrl)
+        return URIBuilderTiny(trackingConfig.baseUrl)
                 .appendPaths("c", trackingUrl)
                 .build()
-        return trackingUri
     }
 
     private fun getPlainText(doc: Document): String {
