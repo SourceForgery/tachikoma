@@ -38,7 +38,6 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.Calendar
 import java.util.HashMap
 import java.util.TreeMap
 import java.util.regex.Matcher
@@ -87,6 +86,8 @@ private constructor(
     private val fieldFormatters: Map<String, FieldFormatter>?
     private val procId: String
     private val pattern: List<PatternFormatter>
+
+    private val syncObj = Any()
 
     init {
         val exceptionParser = createPatternParser(config, ThrowablePatternConverter::class.java)
@@ -405,7 +406,7 @@ private constructor(
 
     private fun computeTimeStampString(now: Long): String? {
         val last: Long =
-                synchronized(this) {
+                synchronized(syncObj) {
                     if (now == lastTimestamp) {
                         return timestampStr
                     }
@@ -418,7 +419,7 @@ private constructor(
                 )!!
 
         val dateString = "${dt.toLocalDateTime()}${dt.offset}"
-        synchronized(this) {
+        synchronized(syncObj) {
             if (last == lastTimestamp) {
                 lastTimestamp = now
                 timestampStr = dateString
