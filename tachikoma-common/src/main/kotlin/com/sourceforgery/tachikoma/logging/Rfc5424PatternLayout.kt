@@ -35,8 +35,10 @@ import org.apache.logging.log4j.util.StringBuilders
 import org.apache.logging.log4j.util.Strings
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.Calendar
-import java.util.GregorianCalendar
 import java.util.HashMap
 import java.util.TreeMap
 import java.util.regex.Matcher
@@ -409,47 +411,20 @@ private constructor(
                     }
                     lastTimestamp
                 }
+        val dt = ZonedDateTime
+                .ofInstant(
+                        Instant.ofEpochMilli(now),
+                        ZoneId.systemDefault()
+                )!!
 
-        val buffer = StringBuilder()
-        val cal = GregorianCalendar()
-        cal.timeInMillis = now
-        buffer.append(Integer.toString(cal.get(Calendar.YEAR)))
-        buffer.append('-')
-        pad(cal.get(Calendar.MONTH) + 1, TWO_DIGITS, buffer)
-        buffer.append('-')
-        pad(cal.get(Calendar.DAY_OF_MONTH), TWO_DIGITS, buffer)
-        buffer.append('T')
-        pad(cal.get(Calendar.HOUR_OF_DAY), TWO_DIGITS, buffer)
-        buffer.append(':')
-        pad(cal.get(Calendar.MINUTE), TWO_DIGITS, buffer)
-        buffer.append(':')
-        pad(cal.get(Calendar.SECOND), TWO_DIGITS, buffer)
-        buffer.append('.')
-        pad(cal.get(Calendar.MILLISECOND), THREE_DIGITS, buffer)
-
-        var tzmin = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / MILLIS_PER_MINUTE
-        if (tzmin == 0) {
-            buffer.append('Z')
-        } else {
-            if (tzmin < 0) {
-                tzmin = -tzmin
-                buffer.append('-')
-            } else {
-                buffer.append('+')
-            }
-            val tzhour = tzmin / MINUTES_PER_HOUR
-            tzmin -= tzhour * MINUTES_PER_HOUR
-            pad(tzhour, TWO_DIGITS, buffer)
-            buffer.append(':')
-            pad(tzmin, TWO_DIGITS, buffer)
-        }
+        val dateString = "${dt.toLocalDateTime()}${dt.offset}"
         synchronized(this) {
             if (last == lastTimestamp) {
                 lastTimestamp = now
-                timestampStr = buffer.toString()
+                timestampStr = dateString
             }
         }
-        return buffer.toString()
+        return dateString
     }
 
     private fun pad(`val`: Int, max: Int, buf: StringBuilder) {
