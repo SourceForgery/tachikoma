@@ -13,7 +13,7 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Root level="info">
+        <Root level="trace">
             <AppenderRef ref="syslog" />
             <AppenderRef ref="StdOut" />
         </Root>
