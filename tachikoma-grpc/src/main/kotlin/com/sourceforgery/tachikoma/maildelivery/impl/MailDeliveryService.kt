@@ -145,6 +145,7 @@ private constructor(
                                     .setRecipient(recipientEmail.address.toGrpcInternal())
                                     .build()
                     )
+                    LOGGER.debug { "Email to ${recipientEmail.address} had unsubscribed emails from ${fromEmail}, hence bounced" }
                     // Blocked
                     continue
                 }
