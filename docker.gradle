@@ -22,7 +22,6 @@ task downloadTini {
 
 ext.tiniBinary = new File(project.buildDir, "tini")
 
-
 task dockerTask {
 }
 

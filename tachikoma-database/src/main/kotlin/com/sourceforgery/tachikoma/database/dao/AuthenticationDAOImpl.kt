@@ -17,7 +17,7 @@ private constructor(
             ebeanServer
                     .find(AuthenticationDBO::class.java)
                     .where()
-                    .eq("username", username)
+                    .eq("login", username)
                     .findOne()
 
     override fun validateApiToken(apiToken: String): AuthenticationDBO? {
@@ -36,4 +36,8 @@ private constructor(
                     .eq("dbId", authenticationId.authenticationId)
                     .eq("active", true)
                     .findOne()!!
+
+    override fun deleteById(authenticationId: AuthenticationId) {
+        ebeanServer.delete(AuthenticationDBO::class.java, authenticationId.authenticationId)
+    }
 }

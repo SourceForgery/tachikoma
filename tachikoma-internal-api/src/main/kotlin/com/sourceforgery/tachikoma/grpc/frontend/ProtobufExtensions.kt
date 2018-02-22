@@ -53,14 +53,20 @@ fun WebTokenAuthData.toAuthenticationId(): AuthenticationId? {
     }
 }
 
+fun AuthenticationId.toAuthenticationId() =
+        com.sourceforgery.tachikoma.grpc.frontend.AuthenticationId.newBuilder().setId(authenticationId).build()
+
+fun com.sourceforgery.tachikoma.grpc.frontend.AuthenticationId.toAuthenticationId() =
+        AuthenticationId(id)
+
 fun EmailRecipient.toNamedEmail() =
         com.sourceforgery.tachikoma.common.NamedEmail(
                 address = namedEmail.email,
                 name = namedEmail.name
         )
 
-fun String.emptyToNull() =
-        if (this.isEmpty()) {
+fun String?.emptyToNull() =
+        if (this == null || this.isEmpty()) {
             null
         } else {
             this

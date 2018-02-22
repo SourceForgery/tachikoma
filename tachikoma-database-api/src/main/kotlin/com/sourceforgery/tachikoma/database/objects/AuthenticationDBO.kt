@@ -17,15 +17,15 @@ class AuthenticationDBO(
         @Column
         var encryptedPassword: String? = null,
 
-        @Column(unique = true)
-        val username: String? = null,
+        @Column(unique = true, name = "username")
+        val login: String? = null,
 
         @Column(unique = true)
         @Encrypted
         var apiToken: String? = null,
 
         @Column
-        val role: AuthenticationRole,
+        var role: AuthenticationRole,
 
         @ManyToOne
         val account: AccountDBO,

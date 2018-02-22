@@ -58,7 +58,7 @@ internal class EmailStatusEventDAOSpec : Spek({
         ebeanServer.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                username = domain,
+                login = domain,
                 encryptedPassword = UUID.randomUUID().toString(),
                 apiToken = UUID.randomUUID().toString(),
                 role = AuthenticationRole.BACKEND,

@@ -13,13 +13,13 @@ service UserService {
     rpc removeUser (RemoveUserRequest) returns (RemoveUserResponse);
 
     // Returns all blocked email addresses
-    rpc getUsers (GetUsersRequest) returns (stream User);
+    rpc getFrontendUsers (GetUsersRequest) returns (stream FrontendUser);
 
     // Add user
-    rpc addUser (AddUserRequest) returns (User);
+    rpc addFrontendUser (AddUserRequest) returns (ModifyUserResponse);
 
     // Add user
-    rpc modifyUser (UpdateUserRequest) returns (User);
+    rpc modifyFrontendUser (ModifyUserRequest) returns (ModifyUserResponse);
 }
 
 
@@ -27,27 +27,35 @@ message GetUsersRequest {
     string mailDomain = 101;
 }
 
-message User {
+message FrontendUser {
     // The id of the user
     AuthenticationId authId = 101;
     // If the user is active
     bool active = 102;
+    // login of the user (optional, only set if hasPassword)
+    string login = 103;
     // If the user has a password set
-    bool hasPassword = 103;
+    bool hasPassword = 104;
     // If the user has an apiToken set
-    bool hasApiToken = 104;
+    bool hasApiToken = 105;
     // What role the user has
-    UserRole authenticationRole = 105;
+    FrontendUserRole authenticationRole = 106;
     // Which mail domain the user has
-    string mailDomain = 106;
+    string mailDomain = 107;
     // Which address _all_ emails will go to (optional)
-    EmailAddress recipient_override = 107;
+    EmailAddress recipient_override = 108;
     // The creation date of the user
-    google.protobuf.Timestamp dateCreated = 108;
+    google.protobuf.Timestamp dateCreated = 109;
     // The date that the user was last updated
-    google.protobuf.Timestamp lastUpdated = 109;
-    // username of the user
-    string username = 110;
+    google.protobuf.Timestamp lastUpdated = 110;
+}
+
+// The response from the requested user
+message ModifyUserResponse {
+    // The newly created user
+    FrontendUser user = 101;
+    // ApiToken (optional, only available when requested )
+    string apiToken = 102;
 }
 
 // Request for removing a user
@@ -59,47 +67,51 @@ message RemoveUserRequest {
 message RemoveUserResponse {
 }
 
-// Represents a users id
-message AuthenticationId {
-    sint64 id = 1;
+message PasswordAuth {
+    // The login of the user
+    string login = 102;
+    // The password to log in with
+    string password = 10;
 }
 
 message AddUserRequest {
     // If the user is active
-    bool active = 102;
-    // The password to log in with (optional)
-    string password = 103;
-    // If the user has an apiToken set
-    string apiToken = 104;
+    bool active = 101;
+    // The login+password of the user (optional)
+    PasswordAuth passwordAuth = 102;
+    // If the user should get an apiToken
+    bool addApiToken = 103;
     // What role the user has
-    UserRole authenticationRole = 105;
+    FrontendUserRole authenticationRole = 106;
     // Which mail domain the user has
-    string mailDomain = 106;
+    string mailDomain = 107;
     // Which address _all_ emails will go to (optional)
-    EmailAddress recipient_override = 107;
-    // The username of the user
-    string username = 110;
+    EmailAddress recipient_override = 108;
 }
 
-message UpdateUserRequest {
+message ModifyUserRequest {
     // The id of the user
     AuthenticationId authId = 101;
     // If the user is active
     bool active = 102;
-    // The password to log in with (optional)
-    string password = 103;
-    // If the user has an apiToken set
-    string apiToken = 104;
+    // The new password of the user
+    // (optional and requires previous login credentials)
+    string newPassword = 103;
+    // Set or keep
+    ApiToken apiToken = 104;
     // What role the user has
-    UserRole authenticationRole = 105;
+    FrontendUserRole authenticationRole = 105;
     // Which address _all_ emails will go to (optional)
     EmailAddress recipient_override = 107;
-    // The username of the user
-    string username = 110;
 }
 
-enum UserRole {
-    BACKEND = 0;
-    FRONTEND = 1;
-    FRONTEND_ADMIN = 2;
+enum ApiToken {
+    NO_ACTION = 0;
+    RESET_API_TOKEN = 1;
+    REMOVE_API_TOKEN = 2;
+}
+
+enum FrontendUserRole {
+    FRONTEND = 0;
+    FRONTEND_ADMIN = 1;
 }

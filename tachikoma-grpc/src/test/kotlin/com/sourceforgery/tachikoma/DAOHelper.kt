@@ -19,7 +19,7 @@ private constructor(
         ebeanServer.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                username = domain.mailDomain,
+                login = domain.mailDomain,
                 encryptedPassword = UUID.randomUUID().toString(),
                 apiToken = UUID.randomUUID().toString(),
                 role = AuthenticationRole.BACKEND,
