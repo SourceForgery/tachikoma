@@ -67,6 +67,7 @@ private constructor(
                     future.get()
                     responseObserver.onCompleted()
                 } catch (e: ExecutionException) {
+                    LOGGER.error("", e)
                     responseObserver.onError(e)
                 }
             }
