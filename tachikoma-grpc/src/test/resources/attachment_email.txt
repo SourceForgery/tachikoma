@@ -12,22 +12,17 @@ X-Report-Abuse: You can also report abuse here: http://http://localhost//abuse/n
 X-Tachikoma-User: 98
 
 --XXXXXX
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-<html>
- <head></head>
- <body>
-  This is a test
-  <img src=3D"http://localhost/t/qgYGqgYDCMIHsgYUfHlQ2b2Y4eDUUG6Wa0oV7-5ys1=
-I" height=3D"1" width=3D"1">
- </body>
-</html>
---XXXXXX
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 This is a test
+--XXXXXX
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head></head><body>This is a test<img src=3D"http://localhost/t/qgYGq=
+gYDCMIHsgYUfHlQ2b2Y4eDUUG6Wa0oV7-5ys1I" height=3D"1" width=3D"1"></body></h=
+tml>
 --XXXXXX
 Content-Type: application/pdf; name=NotReally.pdf
 Content-Transfer-Encoding: base64
