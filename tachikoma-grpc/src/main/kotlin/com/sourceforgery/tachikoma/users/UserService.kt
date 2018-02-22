@@ -121,20 +121,22 @@ private constructor(
 
     private fun toUser(auth: AuthenticationDBO): FrontendUser {
         return FrontendUser.newBuilder()
-                .setActive(auth.active)
-                .setAuthId(auth.id.toAuthenticationId())
-                .setAuthenticationRole(when (auth.role) {
-                    AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
-                    AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
-                    else -> throw IllegalArgumentException("${auth.role} is not implemented")
-                })
-                .setDateCreated(auth.dateCreated!!.toTimestamp())
-                .setLastUpdated(auth.lastUpdated!!.toTimestamp())
-                .setHasPassword(auth.encryptedPassword != null)
-                .setLogin(auth.login.orEmpty())
-                .setMailDomain(auth.account.mailDomain.mailDomain)
-                .setRecipientOverride(auth.recipientOverride?.toGrpcInternal())
-                .setHasApiToken(auth.apiToken != null)
+                .apply {
+                    active = auth.active
+                    authId = auth.id.toAuthenticationId()
+                    authenticationRole = when (auth.role) {
+                        AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
+                        AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
+                        else -> throw IllegalArgumentException("${auth.role} is not implemented")
+                    }
+                    dateCreated = auth.dateCreated!!.toTimestamp()
+                    lastUpdated = auth.lastUpdated!!.toTimestamp()
+                    hasPassword = auth.encryptedPassword != null
+                    login = auth.login.orEmpty()
+                    mailDomain = auth.account.mailDomain.mailDomain
+                    recipientOverride = auth.recipientOverride?.toGrpcInternal()
+                    hasApiToken = auth.apiToken != null
+                }
                 .build()
     }
 }
