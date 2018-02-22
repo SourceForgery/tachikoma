@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.tracking
 
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
@@ -23,6 +24,7 @@ import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import javax.inject.Inject
 
@@ -52,14 +54,23 @@ private constructor(
                 callback = deliveryNotificationCallback
         )
         future.addListener(
-                Runnable {
-                    val cancelled = serverCallStreamObserver?.isCancelled ?: true
-                    if (!cancelled) {
-                        responseObserver.onCompleted()
-                    }
-                },
+                runnable(serverCallStreamObserver, future, responseObserver),
                 responseCloser
         )
+    }
+
+    private fun runnable(serverCallStreamObserver: ServerCallStreamObserver<*>?, future: ListenableFuture<Void>, responseObserver: StreamObserver<*>): Runnable {
+        return Runnable {
+            val cancelled = serverCallStreamObserver?.isCancelled ?: true
+            if (!cancelled) {
+                try {
+                    future.get()
+                    responseObserver.onCompleted()
+                } catch (e: ExecutionException) {
+                    responseObserver.onError(e)
+                }
+            }
+        }
     }
 
     companion object {
@@ -69,30 +80,30 @@ private constructor(
 }
 
 private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO, request: NotificationStreamParameters): EmailNotification? {
-    val notificationBuilder = EmailNotification.newBuilder()
-    notificationBuilder.emailId = emailData.id.toGrpcInternal()
-    notificationBuilder.recipientEmailAddress = emailData.recipient.toGrpcInternal()
-    notificationBuilder.emailTransactionId = emailData.transaction.id.toGrpcInternal()
-    notificationBuilder.timestamp = this.creationTimestamp
-    notificationBuilder.messageId = MessageId.newBuilder().setMessageId(emailData.messageId.messageId).build()
-    if (request.includeTrackingData) {
-        notificationBuilder.emailTrackingData =
-                SentEmailTrackingData.newBuilder()
-                        .addAllTags(emailData.transaction.tags)
-                        .putAllMetadata(emailData.transaction.metaData)
-                        .putAllMetadata(emailData.metaData)
-                        .build()
-    } else {
-        notificationBuilder.setNoTrackingData(Empty.getDefaultInstance())
-    }
-    if (request.includeSubject) {
-        emailData.subject?.also {
-            notificationBuilder.subject = it
+    return EmailNotification.newBuilder().apply {
+        emailId = emailData.id.toGrpcInternal()
+        recipientEmailAddress = emailData.recipient.toGrpcInternal()
+        emailTransactionId = emailData.transaction.id.toGrpcInternal()
+        timestamp = this@toEmailNotification.creationTimestamp
+        messageId = MessageId.newBuilder().setMessageId(emailData.messageId.messageId).build()
+
+        if (request.includeTrackingData) {
+            emailTrackingData =
+                    SentEmailTrackingData.newBuilder()
+                            .addAllTags(emailData.transaction.tags)
+                            .putAllMetadata(emailData.transaction.metaData)
+                            .putAllMetadata(emailData.metaData)
+                            .build()
+        } else {
+            noTrackingData = Empty.getDefaultInstance()
         }
-    }
-    notificationBuilder.setEventData(this)
-    return notificationBuilder
-            .build()
+        if (request.includeSubject) {
+            emailData.subject?.also {
+                subject = it
+            }
+        }
+        setEventData(this@toEmailNotification)
+    }.build()
 }
 
 private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: DeliveryNotificationMessage): Any {
