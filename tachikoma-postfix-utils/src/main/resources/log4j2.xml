@@ -17,6 +17,7 @@
             <AppenderRef ref="syslog" />
             <AppenderRef ref="StdOut" />
         </Root>
+	<Logger name="com.sourceforgery.tachikoma" level="trace" />
         <!-- <Logger name="smtp.incoming.debug" level="trace" />-->
     </Loggers>
 </Configuration>

@@ -14,11 +14,13 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Root level="debug">
+        <Root level="info">
             <AppenderRef ref="syslog" />
             <AppenderRef ref="StdOut" />
         </Root>
-        <!--<Logger name="sql.log_everything" level="trace" />-->
+	<Logger name="com.sourceforgery.tachikoma" level="trace" />
+	<Logger name="io.ebean" level="warn" />
+	<!--<Logger name="sql.log_everything" level="trace" />-->
         <Logger name="com.linecorp.armeria.common.Flags" level="warn"/>
     </Loggers>
 </Configuration>
