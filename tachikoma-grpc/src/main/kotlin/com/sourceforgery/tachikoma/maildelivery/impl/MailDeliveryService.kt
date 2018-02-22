@@ -329,7 +329,7 @@ private constructor(
         injectTrackingPixel(htmlDoc, emailId)
 
         val plaintextPart = MimeBodyPart()
-        val plainText = HtmlToPlainText().getPlainText(htmlDoc)
+        val plainText = HtmlToPlainText.getPlainText(htmlDoc)
 
         plaintextPart.setContent(plaintextBody ?: plainText, "text/plain; charset=utf-8")
         plaintextPart.setHeader("Content-Transfer-Encoding", "quoted-printable")

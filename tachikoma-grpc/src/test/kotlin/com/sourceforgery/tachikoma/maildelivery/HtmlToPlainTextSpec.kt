@@ -13,9 +13,8 @@ class HtmlToPlainTextSpec : Spek({
 
     describe("Convert simple html to plain text", {
         it("simple", {
-            val htmlToPlainText = HtmlToPlainText()
 
-            val plainText = htmlToPlainText.getPlainText(simpleHtmlDoc)
+            val plainText = HtmlToPlainText.getPlainText(simpleHtmlDoc)
 
             assertEquals(simpleHtmlText, plainText)
         })

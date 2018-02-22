@@ -13,7 +13,9 @@ import org.jsoup.select.NodeVisitor
  * scrape.
  * @author Jonathan Hedley, jonathan@hedley.net
  */
-class HtmlToPlainText {
+object HtmlToPlainText {
+
+    private const val maxWidth = 80
 
     /**
      * Format an Element to plain-text
@@ -28,7 +30,7 @@ class HtmlToPlainText {
     }
 
     // the formatting rules, implemented in a breadth-first DOM traverse
-    private inner class FormattingVisitor : NodeVisitor {
+    private class FormattingVisitor : NodeVisitor {
         private var width = 0
         private val accum = StringBuilder() // holds the accumulated text
 
@@ -95,9 +97,5 @@ class HtmlToPlainText {
         override fun toString(): String {
             return accum.toString()
         }
-    }
-
-    companion object {
-        private const val maxWidth = 80
     }
 }
