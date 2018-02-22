@@ -102,7 +102,7 @@ message ModifyUserRequest {
     // What role the user has
     FrontendUserRole authenticationRole = 105;
     // Which address _all_ emails will go to (optional)
-    EmailAddress recipient_override = 107;
+    EmailAddress recipientOverride = 107;
 }
 
 enum ApiToken {
