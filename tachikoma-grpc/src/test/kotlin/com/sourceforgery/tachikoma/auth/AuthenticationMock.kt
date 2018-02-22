@@ -59,9 +59,12 @@ class AuthenticationMock(
         return accountId
     }
 
-    override fun requireFrontendAdmin(): AccountId {
+    override fun requireFrontendAdmin(mailDomain: MailDomain): AccountId {
         requireValid()
         if (role != AuthenticationRole.FRONTEND_ADMIN) {
+            throw InvalidOrInsufficientCredentialsException()
+        }
+        if (_mailDomain != mailDomain) {
             throw InvalidOrInsufficientCredentialsException()
         }
         return accountId

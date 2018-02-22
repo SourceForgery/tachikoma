@@ -23,6 +23,8 @@ import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
+import com.sourceforgery.tachikoma.users.UserService
+import com.sourceforgery.tachikoma.users.UserServiceGrpcImpl
 import io.grpc.BindableService
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
@@ -70,6 +72,12 @@ class GrpcBinder : AbstractBinder() {
                 .to(BindableService::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(LoginService::class.java)
+                .`in`(Singleton::class.java)
+
+        bindAsContract(UserServiceGrpcImpl::class.java)
+                .to(BindableService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(UserService::class.java)
                 .`in`(Singleton::class.java)
 
         bindAsContract(GrpcExceptionMap::class.java)

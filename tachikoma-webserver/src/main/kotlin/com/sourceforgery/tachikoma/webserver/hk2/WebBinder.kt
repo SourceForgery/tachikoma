@@ -15,6 +15,7 @@ import com.sourceforgery.tachikoma.webserver.AuthenticationFactory
 import com.sourceforgery.tachikoma.webserver.RemoteIPImpl
 import com.sourceforgery.tachikoma.webserver.catchers.InvalidOrInsufficientCredentialsCatcher
 import com.sourceforgery.tachikoma.webserver.catchers.NoAuthorizationCredentialsCatcher
+import com.sourceforgery.tachikoma.webserver.catchers.NotFoundCatcher
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
@@ -70,7 +71,8 @@ class WebBinder : AbstractBinder() {
     private fun bindCatchers() {
         val classes = listOf(
                 InvalidOrInsufficientCredentialsCatcher::class.java,
-                NoAuthorizationCredentialsCatcher::class.java
+                NoAuthorizationCredentialsCatcher::class.java,
+                NotFoundCatcher::class.java
         )
         for (clazz in classes) {
             bindAsContract(clazz)
