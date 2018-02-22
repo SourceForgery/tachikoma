@@ -85,7 +85,8 @@ private constructor(
             internalCreateUsers.setApiToken(auth)
         }
 
-        request.newPassword.emptyToNull()
+        request.newPassword
+                .emptyToNull()
                 ?.let {
                     if (auth.login != null) {
                         auth.encryptedPassword = PasswordStorage.createHash(it)
