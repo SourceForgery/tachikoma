@@ -2,9 +2,13 @@ package com.sourceforgery.tachikoma.auth
 
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
+import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.AddUserRequest
+import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.ApiToken
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.FrontendUserRole
+import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.ModifyUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.PasswordAuth
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
@@ -17,7 +21,10 @@ import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(JUnitPlatform::class)
 class UserServiceSpec : Spek({
@@ -30,7 +37,7 @@ class UserServiceSpec : Spek({
         authenticationDAO = serviceLocator.get()
     }
 
-    fun createUser() {
+    fun createUser(): AuthenticationDBO {
         val b4 = AddUserRequest.newBuilder()
                 .setActive(true)
                 .setAddApiToken(false)
@@ -56,12 +63,21 @@ class UserServiceSpec : Spek({
         assertNull(actual.apiToken)
         assertNull(resp.apiToken)
 
+        assertTrue(PasswordStorage.verifyPassword(b4.passwordAuth.password, actual.encryptedPassword!!))
 
+        assertNull(actual.recipientOverride)
+        assertFalse(user.hasRecipientOverride())
 
-
+        assertEquals(b4.mailDomain, actual.account.mailDomain.mailDomain)
+        return actual
     }
 
     it("create & modify user", {
-        createUser()
+        val newUser = createUser()
+        val b4 = ModifyUserRequest.newBuilder()
+                .setActive(false)
+                .setApiToken(ApiToken.RESET_API_TOKEN)
+                .build()
+        userService.modifyFrontendUser(b4)
     })
 })
