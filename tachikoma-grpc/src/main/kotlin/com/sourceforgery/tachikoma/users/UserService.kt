@@ -20,6 +20,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveUserResponse
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.grpc.frontend.toEmail
+import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.grpc.stub.StreamObserver
@@ -125,11 +126,7 @@ private constructor(
                 .apply {
                     active = auth.active
                     authId = auth.id.toAuthenticationId()
-                    authenticationRole = when (auth.role) {
-                        AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
-                        AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
-                        else -> throw IllegalArgumentException("${auth.role} is not implemented")
-                    }
+                    authenticationRole = auth.role.toFrontendRole()
                     dateCreated = auth.dateCreated!!.toTimestamp()
                     lastUpdated = auth.lastUpdated!!.toTimestamp()
                     hasPassword = auth.encryptedPassword != null

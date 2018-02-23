@@ -4,6 +4,7 @@ import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.grpc.frontend.auth.AuthRole
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
+import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.FrontendUserRole
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.identifiers.AccountId
@@ -99,4 +100,11 @@ fun AuthenticationRole.toRole() =
             AuthenticationRole.BACKEND -> AuthRole.BACKEND
             AuthenticationRole.FRONTEND -> AuthRole.FRONTEND
             AuthenticationRole.FRONTEND_ADMIN -> AuthRole.FRONTEND_ADMIN
+        }
+
+fun AuthenticationRole.toFrontendRole() =
+        when (this) {
+            AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
+            AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
+            else -> throw IllegalArgumentException("${this} is not implemented as frontend role")
         }
