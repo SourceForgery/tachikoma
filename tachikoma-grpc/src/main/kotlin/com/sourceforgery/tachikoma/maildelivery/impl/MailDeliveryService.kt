@@ -378,7 +378,7 @@ private constructor(
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
 
-    private fun createUnsubscribeLink(emailId: EmailId, redirectUri: String = ""): URI? {
+    private fun createUnsubscribeLink(emailId: EmailId, redirectUri: String = ""): URI {
         val path = if (redirectUri.isNotBlank()) {
             "unsubscribeClick"
         } else {
@@ -395,7 +395,7 @@ private constructor(
                 .build()
     }
 
-    private fun createTrackingLink(emailId: EmailId, originalUri: String): URI? {
+    private fun createTrackingLink(emailId: EmailId, originalUri: String): URI {
         val trackingData = UrlTrackingData.newBuilder()
                 .setEmailId(emailId.toGrpcInternal())
                 .setRedirectUrl(originalUri)
@@ -411,16 +411,17 @@ private constructor(
         val links = doc.select("a[href]")
         links.forEach({
             val originalUri = it.attr("href") ?: ""
-            val newUri = if (it.hasAttr("data-unsub")) {
-                // Convert into unsubscribe link
-                createUnsubscribeLink(emailId, originalUri)
-                        .toString()
-            } else {
-                // Track link click
-                createTrackingLink(emailId, originalUri)
-                        .toString()
-            }
-            it.attr("href", newUri)
+            val newUri = UNSUB_REGEX.matchEntire(originalUri)
+                    ?.let {
+                        // Convert into unsubscribe link
+                        createUnsubscribeLink(emailId, it.groupValues[1])
+                    }
+                    ?: let {
+                        // Track link click
+                        createTrackingLink(emailId, originalUri)
+                    }
+
+            it.attr("href", newUri.toString())
         })
     }
 
@@ -463,6 +464,7 @@ private constructor(
     }
 
     companion object {
+        private val UNSUB_REGEX = Regex("\\*\\|UNSUB:(.*)\\|\\*")
         private val LOGGER = logger()
         private val PRINTER = JsonFormat.printer()!!
         private val responseCloser = Executors.newCachedThreadPool()
