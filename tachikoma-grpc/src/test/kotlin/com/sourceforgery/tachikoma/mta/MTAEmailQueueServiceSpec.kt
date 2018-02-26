@@ -66,7 +66,6 @@ class MTAEmailQueueServiceSpec : Spek({
         return authenticationDBO
     }
 
-
     describe("MTA queue service test", {
         lateinit var mqSequenceFactoryMock: MQSequenceFactoryMock
         lateinit var mqSenderMock: MQSenderMock
