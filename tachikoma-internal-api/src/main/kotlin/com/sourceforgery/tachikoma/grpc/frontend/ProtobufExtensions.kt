@@ -106,5 +106,5 @@ fun AuthenticationRole.toFrontendRole() =
         when (this) {
             AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
             AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
-            else -> throw IllegalArgumentException("${this} is not implemented as frontend role")
+            else -> throw IllegalArgumentException("$this is not implemented as frontend role")
         }
