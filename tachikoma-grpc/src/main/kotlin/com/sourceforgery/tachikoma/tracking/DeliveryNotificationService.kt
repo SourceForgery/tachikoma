@@ -2,9 +2,11 @@ package com.sourceforgery.tachikoma.tracking
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.protobuf.Empty
+import com.sourceforgery.tachikoma.assertGrpcOpen
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
+import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
@@ -32,7 +34,8 @@ internal class DeliveryNotificationService
 @Inject
 private constructor(
         private val mqSequenceFactory: MQSequenceFactory,
-        private val emailDAO: EmailDAO
+        private val emailDAO: EmailDAO,
+        private val grpcExceptionMap: GrpcExceptionMap
 ) {
     fun notificationStream(
             responseObserver: StreamObserver<EmailNotification>,
@@ -46,6 +49,7 @@ private constructor(
                 LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
             } else {
                 val emailNotification = deliveryNotificationMessage.toEmailNotification(emailData, request)
+                assertGrpcOpen(responseObserver)
                 responseObserver.onNext(emailNotification)
             }
         }
@@ -53,6 +57,10 @@ private constructor(
                 authenticationId = authenticationId,
                 callback = deliveryNotificationCallback
         )
+        serverCallStreamObserver
+                ?.setOnCancelHandler {
+                    future.cancel(true)
+                }
         future.addListener(
                 runnable(serverCallStreamObserver, future, responseObserver),
                 responseCloser
@@ -67,8 +75,7 @@ private constructor(
                     future.get()
                     responseObserver.onCompleted()
                 } catch (e: ExecutionException) {
-                    LOGGER.error("", e)
-                    responseObserver.onError(e)
+                    responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
                 }
             }
         }
