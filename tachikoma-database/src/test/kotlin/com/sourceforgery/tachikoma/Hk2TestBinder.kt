@@ -100,7 +100,6 @@ class Hk2TestBinder(
                 .to(InternalCreateUserService::class.java)
                 .`in`(Singleton::class.java)
 
-
         bind(object : InvokeCounter {
             override fun inc(sql: String?, millis: Long) {
                 // Do nothing
