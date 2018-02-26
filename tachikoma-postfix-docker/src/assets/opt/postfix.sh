@@ -23,7 +23,7 @@ mailDomainMx="$(readEnv MAIL_DOMAIN_MX)"
 
 tmp1="${url##*@}"
 # Hostname is the tachikoma MX domain
-TACHIKOMA_HOSTNAME="${tmp1%%/*}"
+TACHIKOMA_HOSTNAME="${tmp1%%[/:]*}"
 
 tmp2="${url#*://}"
 # Username is maildomain

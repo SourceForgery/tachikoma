@@ -39,6 +39,7 @@ import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.logging.logger
+import com.sourceforgery.tachikoma.maildelivery.HtmlToPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
@@ -53,7 +54,6 @@ import net.moznion.uribuildertiny.URIBuilderTiny
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.safety.Whitelist
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
@@ -319,21 +319,26 @@ private constructor(
         val multipart = MimeMultipart("alternative")
 
         val htmlDoc = Jsoup.parse(htmlBody ?: "<html><body>$plaintextBody</body></html>")
+                .apply {
+                    outputSettings()
+                            .indentAmount(0)
+                            .prettyPrint(false)
+                }
 
         replaceLinks(htmlDoc, emailId)
         injectTrackingPixel(htmlDoc, emailId)
+
+        val plaintextPart = MimeBodyPart()
+        val plainText = HtmlToPlainText.getPlainText(htmlDoc)
+
+        plaintextPart.setContent(plaintextBody ?: plainText, "text/plain; charset=utf-8")
+        plaintextPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
+        multipart.addBodyPart(plaintextPart)
 
         val htmlPart = MimeBodyPart()
         htmlPart.setContent(htmlDoc.outerHtml(), "text/html; charset=utf-8")
         htmlPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
         multipart.addBodyPart(htmlPart)
-
-        val plaintextPart = MimeBodyPart()
-        val plainText = getPlainText(htmlDoc)
-
-        plaintextPart.setContent(plaintextBody ?: plainText, "text/plain; charset=utf-8")
-        plaintextPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
-        multipart.addBodyPart(plaintextPart)
 
         for (attachment in request.attachmentsList) {
             val attachmentBody = MimeBodyPart()
@@ -373,7 +378,7 @@ private constructor(
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
 
-    private fun createUnsubscribeLink(emailId: EmailId, redirectUri: String = ""): URI? {
+    private fun createUnsubscribeLink(emailId: EmailId, redirectUri: String = ""): URI {
         val path = if (redirectUri.isNotBlank()) {
             "unsubscribeClick"
         } else {
@@ -390,7 +395,7 @@ private constructor(
                 .build()
     }
 
-    private fun createTrackingLink(emailId: EmailId, originalUri: String): URI? {
+    private fun createTrackingLink(emailId: EmailId, originalUri: String): URI {
         val trackingData = UrlTrackingData.newBuilder()
                 .setEmailId(emailId.toGrpcInternal())
                 .setRedirectUrl(originalUri)
@@ -402,27 +407,21 @@ private constructor(
                 .build()
     }
 
-    private fun getPlainText(doc: Document): String {
-        // Keeps some structure in the plain text mail version, removes all html tags and keeps indentation and line breaks
-        return Jsoup
-                .clean(doc.html(), "", Whitelist.none(), Document.OutputSettings().prettyPrint(false))
-                .trim()
-    }
-
     private fun replaceLinks(doc: Document, emailId: EmailId) {
         val links = doc.select("a[href]")
         links.forEach({
             val originalUri = it.attr("href") ?: ""
-            val newUri = if (it.attr("data-unsub") != null) {
-                // Convert into unsubscribe link
-                createUnsubscribeLink(emailId, originalUri)
-                        .toString()
-            } else {
-                // Track link click
-                createTrackingLink(emailId, originalUri)
-                        .toString()
-            }
-            it.attr("href", newUri)
+            val newUri = UNSUB_REGEX.matchEntire(originalUri)
+                    ?.let {
+                        // Convert into unsubscribe link
+                        createUnsubscribeLink(emailId, it.groupValues[1])
+                    }
+                    ?: let {
+                        // Track link click
+                        createTrackingLink(emailId, originalUri)
+                    }
+
+            it.attr("href", newUri.toString())
         })
     }
 
@@ -465,6 +464,7 @@ private constructor(
     }
 
     companion object {
+        private val UNSUB_REGEX = Regex("\\*\\|UNSUB:(.*)\\|\\*")
         private val LOGGER = logger()
         private val PRINTER = JsonFormat.printer()!!
         private val responseCloser = Executors.newCachedThreadPool()

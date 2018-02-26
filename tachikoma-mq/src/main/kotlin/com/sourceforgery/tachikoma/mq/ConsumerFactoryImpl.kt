@@ -142,6 +142,7 @@ private constructor(
                     channel.basicAck(envelope.deliveryTag, false)
                     handledResult = true
                 } catch (e: Exception) {
+                    LOGGER.error("", e)
                     future.setException(e)
                     handledResult = true
                 } finally {
