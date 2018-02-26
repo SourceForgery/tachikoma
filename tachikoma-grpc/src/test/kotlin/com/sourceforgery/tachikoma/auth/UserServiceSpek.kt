@@ -21,7 +21,6 @@ import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -78,6 +77,6 @@ class UserServiceSpec : Spek({
                 .setActive(false)
                 .setApiToken(ApiToken.RESET_API_TOKEN)
                 .build()
-        userService.modifyFrontendUser(b4)
+        userService.modifyFrontendUser(b4, newUser)
     })
 })
