@@ -2,8 +2,10 @@ package com.sourceforgery.tachikoma.auth
 
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
+import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.AddUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.ApiToken
@@ -13,15 +15,19 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.PasswordAuth
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
 import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.users.UserService
+import io.ebean.EbeanServer
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -30,13 +36,33 @@ class UserServiceSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
     lateinit var userService: UserService
     lateinit var authenticationDAO: AuthenticationDAO
+    lateinit var ebeanServer: EbeanServer
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
         userService = serviceLocator.get()
         authenticationDAO = serviceLocator.get()
+        ebeanServer = serviceLocator.get()
     }
 
+    fun createAuthentication(domain: String): AuthenticationDBO {
+        val accountDBO = AccountDBO(MailDomain(domain))
+        ebeanServer.save(accountDBO)
+
+        val authenticationDBO = AuthenticationDBO(
+                login = domain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.FRONTEND_ADMIN,
+                account = accountDBO
+        )
+        ebeanServer.save(authenticationDBO)
+
+        return authenticationDBO
+    }
+
+
     fun createUser(): AuthenticationDBO {
+        val auth = createAuthentication("example.com")
         val b4 = AddUserRequest.newBuilder()
                 .setActive(true)
                 .setAddApiToken(false)
@@ -60,7 +86,7 @@ class UserServiceSpec : Spek({
         assertEquals(b4.authenticationRole, actual.role.toFrontendRole())
 
         assertNull(actual.apiToken)
-        assertNull(resp.apiToken)
+        assertTrue(resp.apiToken.isEmpty())
 
         assertTrue(PasswordStorage.verifyPassword(b4.passwordAuth.password, actual.encryptedPassword!!))
 
@@ -73,10 +99,29 @@ class UserServiceSpec : Spek({
 
     it("create & modify user", {
         val newUser = createUser()
-        val b4 = ModifyUserRequest.newBuilder()
+        val before = ModifyUserRequest.newBuilder()
                 .setActive(false)
                 .setApiToken(ApiToken.RESET_API_TOKEN)
                 .build()
-        userService.modifyFrontendUser(b4, newUser)
+        val oldApiToken = newUser.apiToken
+        val oldMailDomain = newUser.account.mailDomain
+        val resp = userService.modifyFrontendUser(before, newUser)
+
+        val user = resp.user
+        val actual = authenticationDAO.getById(user.authId.toAuthenticationId())!!
+        assertEquals(before.active, user.active)
+        assertEquals(before.active, actual.active)
+
+        assertEquals(before.authenticationRole, user.authenticationRole)
+        assertEquals(before.authenticationRole, actual.role.toFrontendRole())
+
+        assertEquals(actual.apiToken, resp.apiToken)
+
+        assertNull(actual.recipientOverride)
+        assertFalse(user.hasRecipientOverride())
+
+        assertEquals(oldMailDomain, actual.account.mailDomain)
+
+        assertNotEquals(oldApiToken, actual.apiToken)
     })
 })

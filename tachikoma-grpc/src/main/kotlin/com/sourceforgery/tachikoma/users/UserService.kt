@@ -35,8 +35,8 @@ private constructor(
 ) {
     fun addFrontendUser(request: AddUserRequest): ModifyUserResponse {
         val role = frontendRole(request.authenticationRole)
-        val password: String? = request.passwordAuth.login.emptyToNull()
-        val login: String? = request.passwordAuth.password.emptyToNull()
+        val password: String? = request.passwordAuth.password.emptyToNull()
+        val login: String? = request.passwordAuth.login.emptyToNull()
         val recipientOverride = if (request.hasRecipientOverride() && request.recipientOverride.email.isNotEmpty()) {
             request.recipientOverride.toEmail()
         } else {
@@ -68,7 +68,7 @@ private constructor(
                 else -> throw IllegalArgumentException("$userRole is not implemented")
             }
 
-    fun modifyFrontendUser(request: ModifyUserRequest, auth: AuthenticationDBO): ModifyUserResponse? {
+    fun modifyFrontendUser(request: ModifyUserRequest, auth: AuthenticationDBO): ModifyUserResponse {
         val addApiToken = request.apiToken == ApiToken.RESET_API_TOKEN
         if (request.apiToken == ApiToken.REMOVE_API_TOKEN) {
             auth.apiToken = null
@@ -132,7 +132,9 @@ private constructor(
                     hasPassword = auth.encryptedPassword != null
                     login = auth.login.orEmpty()
                     mailDomain = auth.account.mailDomain.mailDomain
-                    recipientOverride = auth.recipientOverride?.toGrpcInternal()
+                    auth.recipientOverride?.also {
+                        recipientOverride = it.toGrpcInternal()
+                    }
                     hasApiToken = auth.apiToken != null
                 }
                 .build()
