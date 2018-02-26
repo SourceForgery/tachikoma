@@ -16,6 +16,7 @@ import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
 import com.sourceforgery.tachikoma.config.WebServerConfig
+import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobWorker
@@ -104,6 +105,7 @@ class WebServerStarter(
 
     fun start() {
         try {
+            startDatabase()
             val server = startServerInBackground()
             startBackgroundWorkers()
             initClientsInBackground()
@@ -113,6 +115,15 @@ class WebServerStarter(
             serviceLocator.shutdown()
             throw e
         }
+    }
+
+    private fun startDatabase() {
+        serviceLocator
+                .getServiceHandle(CreateUsers::class.java)
+                .also {
+                    it.service.createUsers()
+                    it.destroy()
+                }
     }
 
     companion object {

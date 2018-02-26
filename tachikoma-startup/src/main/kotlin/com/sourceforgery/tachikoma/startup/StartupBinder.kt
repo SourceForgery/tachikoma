@@ -1,12 +1,10 @@
 package com.sourceforgery.tachikoma.startup
 
-import com.sourceforgery.tachikoma.auth.InternalCreateUserServiceImpl
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.config.DebugConfig
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.config.WebtokenAuthConfig
-import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.mq.MqConfig
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -21,10 +19,6 @@ class StartupBinder : AbstractBinder() {
                 .to(WebServerConfig::class.java)
                 .to(DebugConfig::class.java)
                 .to(WebtokenAuthConfig::class.java)
-                .`in`(Singleton::class.java)
-
-        bindAsContract(InternalCreateUserServiceImpl::class.java)
-                .to(InternalCreateUserService::class.java)
                 .`in`(Singleton::class.java)
     }
 }

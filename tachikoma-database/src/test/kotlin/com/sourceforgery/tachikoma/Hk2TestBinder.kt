@@ -1,6 +1,8 @@
 package com.sourceforgery.tachikoma
 
+import com.sourceforgery.tachikoma.auth.InternalCreateUserServiceImpl
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.dao.AccountDAOImpl
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
@@ -93,6 +95,11 @@ class Hk2TestBinder(
                 .to(DataSourceProvider::class.java)
                 .`in`(Singleton::class.java)
                 .ranked(1)
+
+        bindAsContract(InternalCreateUserServiceImpl::class.java)
+                .to(InternalCreateUserService::class.java)
+                .`in`(Singleton::class.java)
+
 
         bind(object : InvokeCounter {
             override fun inc(sql: String?, millis: Long) {
