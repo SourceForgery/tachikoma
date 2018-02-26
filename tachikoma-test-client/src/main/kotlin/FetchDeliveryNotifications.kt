@@ -9,7 +9,6 @@ import io.grpc.stub.StreamObserver
 import java.util.concurrent.TimeUnit
 
 private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
-private val FRONTEND_API_TOKEN = "example.net:Oufeing2ieth2aequie2ia2ahc3yoonaiw5iey5xifuxoo4tai"
 
 fun main(args: Array<String>) {
     val metadataAuth = Metadata()
@@ -46,4 +45,3 @@ fun main(args: Array<String>) {
     }
     System.err.println("Done complete")
 }
-
