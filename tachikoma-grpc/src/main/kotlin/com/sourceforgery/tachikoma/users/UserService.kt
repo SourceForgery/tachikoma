@@ -65,7 +65,7 @@ private constructor(
             when (userRole) {
                 FrontendUserRole.FRONTEND -> AuthenticationRole.FRONTEND
                 FrontendUserRole.FRONTEND_ADMIN -> AuthenticationRole.FRONTEND_ADMIN
-                else -> throw IllegalArgumentException("${userRole} is not implemented")
+                else -> throw IllegalArgumentException("$userRole is not implemented")
             }
 
     fun modifyFrontendUser(request: ModifyUserRequest, auth: AuthenticationDBO): ModifyUserResponse? {
