@@ -58,7 +58,7 @@ class MTAEmailQueueServiceSpec : Spek({
                 login = domain,
                 encryptedPassword = UUID.randomUUID().toString(),
                 apiToken = UUID.randomUUID().toString(),
-                role = AuthenticationRole.FRONTEND_ADMIN,
+                role = AuthenticationRole.BACKEND,
                 account = accountDBO
         )
         ebeanServer.save(authenticationDBO)
@@ -75,7 +75,7 @@ class MTAEmailQueueServiceSpec : Spek({
         lateinit var email: EmailDBO
 
         beforeEachTest {
-            createAuthentication("example.com")
+            createAuthentication("example.net")
             mqSequenceFactoryMock = serviceLocator.get()
             clock = serviceLocator.get()
             mqSenderMock = serviceLocator.get()
