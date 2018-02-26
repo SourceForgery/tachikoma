@@ -71,7 +71,7 @@ class MailDeliveryServiceSpec : Spek({
             val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
                 it.readBytes().toString(StandardCharsets.UTF_8)
             }
-            assertEquals(modifiedBody, expected)
+            assertEquals(expected, modifiedBody)
         })
     })
 }) {
