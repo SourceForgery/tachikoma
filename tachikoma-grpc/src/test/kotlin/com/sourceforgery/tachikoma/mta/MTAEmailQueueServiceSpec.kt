@@ -9,12 +9,14 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
+import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.mq.MQSenderMock
 import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
@@ -39,24 +41,42 @@ class MTAEmailQueueServiceSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
     lateinit var mtaEmailQueueService: MTAEmailQueueService
     lateinit var authentication: AuthenticationMock
+    lateinit var ebeanServer: EbeanServer
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
         mtaEmailQueueService = serviceLocator.get()
         authentication = serviceLocator.get()
+        ebeanServer = serviceLocator.get()
     }
     afterEachTest { serviceLocator.shutdown() }
+
+    fun createAuthentication(domain: String): AuthenticationDBO {
+        val accountDBO = AccountDBO(MailDomain(domain))
+        ebeanServer.save(accountDBO)
+
+        val authenticationDBO = AuthenticationDBO(
+                login = domain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.FRONTEND_ADMIN,
+                account = accountDBO
+        )
+        ebeanServer.save(authenticationDBO)
+
+        return authenticationDBO
+    }
+
 
     describe("MTA queue service test", {
         lateinit var mqSequenceFactoryMock: MQSequenceFactoryMock
         lateinit var mqSenderMock: MQSenderMock
-        lateinit var ebeanServer: EbeanServer
         lateinit var clock: Clock
 
         lateinit var authenticationDBO: AuthenticationDBO
         lateinit var email: EmailDBO
 
         beforeEachTest {
-            ebeanServer = serviceLocator.get()
+            createAuthentication("example.com")
             mqSequenceFactoryMock = serviceLocator.get()
             clock = serviceLocator.get()
             mqSenderMock = serviceLocator.get()

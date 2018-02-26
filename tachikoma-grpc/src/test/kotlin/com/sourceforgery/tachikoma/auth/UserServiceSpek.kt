@@ -60,7 +60,6 @@ class UserServiceSpec : Spek({
         return authenticationDBO
     }
 
-
     fun createUser(): AuthenticationDBO {
         val auth = createAuthentication("example.com")
         val b4 = AddUserRequest.newBuilder()
