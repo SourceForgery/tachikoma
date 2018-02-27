@@ -76,7 +76,7 @@ message PasswordAuth {
     // The login of the user
     string login = 102;
     // The password to log in with
-    string password = 10;
+    string password = 103;
 }
 
 message AddUserRequest {

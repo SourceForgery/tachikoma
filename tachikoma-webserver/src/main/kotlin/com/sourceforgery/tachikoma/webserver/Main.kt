@@ -17,6 +17,7 @@ import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
+import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobWorker
@@ -118,11 +119,14 @@ class WebServerStarter(
     }
 
     private fun startDatabase() {
+        val hk2RequestScope: HK2RequestContext = serviceLocator.get()
         serviceLocator
                 .getServiceHandle(CreateUsers::class.java)
-                .also {
-                    it.service.createUsers()
-                    it.destroy()
+                .also { serviceHandle ->
+                    hk2RequestScope.runInScope {
+                        serviceHandle.service.createUsers()
+                        serviceHandle.destroy()
+                    }
                 }
     }
 
