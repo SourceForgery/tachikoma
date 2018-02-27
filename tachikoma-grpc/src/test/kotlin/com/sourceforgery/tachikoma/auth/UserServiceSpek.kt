@@ -125,6 +125,5 @@ class UserServiceSpec : Spek({
 
             assertNotEquals(oldApiToken, actual.apiToken)
         })
-
     })
 })
