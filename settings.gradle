@@ -26,4 +26,5 @@ include 'tachikoma-webserver-docker'
 include 'tachikoma-postfix-utils'
 include 'tachikoma-postfix-docker'
 include 'tachikoma-test-client'
+include 'tachikoma-it'
 

@@ -18,6 +18,6 @@ private constructor(
         serverConfig.databasePlatform = PostgresPlatform()
         serverConfig.isDdlGenerate = false
         serverConfig.isDdlRun = false
-        serverConfig.setDataSource(pg.getPostgresDatabase())
+        serverConfig.dataSource = pg.getPostgresDatabase()
     }
 }

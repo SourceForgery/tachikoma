@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.tracking
 
-import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
@@ -14,7 +14,7 @@ import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
 internal class TrackingDecoderSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+    val serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
     val trackingDecoder = serviceLocator.getService(TrackingDecoder::class.java)
 
     describe("TrackingDecoderSpec") {

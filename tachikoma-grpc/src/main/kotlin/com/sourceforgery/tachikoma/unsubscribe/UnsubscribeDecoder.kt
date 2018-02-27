@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 import javax.inject.Inject
 
-internal class UnsubscribeDecoderImpl
+class UnsubscribeDecoderImpl
 @Inject
 private constructor(
         // TODO Rename to EncryptionConfig ?

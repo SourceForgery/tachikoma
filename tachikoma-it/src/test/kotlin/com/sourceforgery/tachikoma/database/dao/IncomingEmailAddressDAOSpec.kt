@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.database.dao
 
-import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.DatabaseBinder
+import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
@@ -29,7 +30,7 @@ internal class IncomingEmailAddressDAOSpec : Spek({
     lateinit var incomingEmailAddressDAO: IncomingEmailAddressDAO
     lateinit var ebeanServer: EbeanServer
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder())
         incomingEmailAddressDAO = serviceLocator.get()
         ebeanServer = serviceLocator.get()
     }

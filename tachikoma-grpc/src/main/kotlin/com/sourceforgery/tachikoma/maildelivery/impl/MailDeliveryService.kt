@@ -72,7 +72,7 @@ import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
 
-internal class MailDeliveryService
+class MailDeliveryService
 @Inject
 private constructor(
         private val trackingConfig: TrackingConfig,

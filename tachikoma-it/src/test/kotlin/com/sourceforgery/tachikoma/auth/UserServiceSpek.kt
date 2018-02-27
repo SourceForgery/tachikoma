@@ -1,7 +1,8 @@
 package com.sourceforgery.tachikoma.auth
 
 import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.TestBinder
+import com.sourceforgery.tachikoma.MinimalBinder
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
@@ -40,7 +41,7 @@ class UserServiceSpec : Spek({
     val ebeanServer: () -> EbeanServer = located { serviceLocator }
 
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
+        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder(), MinimalBinder(UserService::class.java))!!
     }
 
     afterEachTest {
