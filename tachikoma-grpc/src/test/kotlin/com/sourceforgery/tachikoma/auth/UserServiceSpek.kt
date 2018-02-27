@@ -21,6 +21,7 @@ import io.ebean.EbeanServer
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
+import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
@@ -96,31 +97,34 @@ class UserServiceSpec : Spek({
         return actual
     }
 
-    it("create & modify user", {
-        val newUser = createUser()
-        val before = ModifyUserRequest.newBuilder()
-                .setActive(false)
-                .setApiToken(ApiToken.RESET_API_TOKEN)
-                .build()
-        val oldApiToken = newUser.apiToken
-        val oldMailDomain = newUser.account.mailDomain
-        val resp = userService.modifyFrontendUser(before, newUser)
+    describe("UserServiceSpec", {
+        it("create & modify user", {
+            val newUser = createUser()
+            val before = ModifyUserRequest.newBuilder()
+                    .setActive(false)
+                    .setApiToken(ApiToken.RESET_API_TOKEN)
+                    .build()
+            val oldApiToken = newUser.apiToken
+            val oldMailDomain = newUser.account.mailDomain
+            val resp = userService.modifyFrontendUser(before, newUser)
 
-        val user = resp.user
-        val actual = authenticationDAO.getById(user.authId.toAuthenticationId())!!
-        assertEquals(before.active, user.active)
-        assertEquals(before.active, actual.active)
+            val user = resp.user
+            val actual = authenticationDAO.getById(user.authId.toAuthenticationId())!!
+            assertEquals(before.active, user.active)
+            assertEquals(before.active, actual.active)
 
-        assertEquals(before.authenticationRole, user.authenticationRole)
-        assertEquals(before.authenticationRole, actual.role.toFrontendRole())
+            assertEquals(before.authenticationRole, user.authenticationRole)
+            assertEquals(before.authenticationRole, actual.role.toFrontendRole())
 
-        assertEquals(actual.apiToken, resp.apiToken)
+            assertEquals(actual.apiToken, resp.apiToken)
 
-        assertNull(actual.recipientOverride)
-        assertFalse(user.hasRecipientOverride())
+            assertNull(actual.recipientOverride)
+            assertFalse(user.hasRecipientOverride())
 
-        assertEquals(oldMailDomain, actual.account.mailDomain)
+            assertEquals(oldMailDomain, actual.account.mailDomain)
 
-        assertNotEquals(oldApiToken, actual.apiToken)
+            assertNotEquals(oldApiToken, actual.apiToken)
+        })
+
     })
 })
