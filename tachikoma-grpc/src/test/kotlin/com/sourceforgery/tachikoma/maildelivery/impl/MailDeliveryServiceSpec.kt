@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.Hk2TestBinder
 import com.sourceforgery.tachikoma.common.AuthenticationRole
+import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
@@ -38,6 +39,7 @@ class MailDeliveryServiceSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
     val mailDeliveryService: () -> MailDeliveryService = located { serviceLocator }
     val ebeanServer: () -> EbeanServer = located { serviceLocator }
+    val databaseConfig: () -> DatabaseConfig = located { serviceLocator }
 
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
@@ -64,6 +66,7 @@ class MailDeliveryServiceSpec : Spek({
 
     describe("Send emails", {
         it("with attachment", {
+            System.err.println("Database ${databaseConfig().sqlUrl}")
             val authentication = createAuthentication(fromEmail.toNamedEmail().address.domain)
             val email = OutgoingEmail.newBuilder()
                     .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
