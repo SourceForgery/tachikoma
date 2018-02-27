@@ -57,6 +57,7 @@ class Hk2TestBinder(
                 .`in`(Singleton::class.java)
         bindAsContract(DatabaseTestConfig::class.java)
                 .to(DatabaseConfig::class.java)
+                .`in`(Singleton::class.java)
         bindAsContract(TestConsumerFactoryImpl::class.java)
                 .to(MQManager::class.java)
                 .`in`(Singleton::class.java)
