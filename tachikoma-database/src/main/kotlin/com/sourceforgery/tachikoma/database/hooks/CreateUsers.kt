@@ -2,12 +2,11 @@ package com.sourceforgery.tachikoma.database.hooks
 
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
+import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
-import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
-import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.logging.logger
-import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
 import net.bytebuddy.utility.RandomString
 import javax.inject.Inject
@@ -15,28 +14,30 @@ import javax.inject.Inject
 class CreateUsers
 @Inject
 private constructor(
-        private val mqManager: MQManager,
-        databaseConfig: DatabaseConfig
-) : EbeanHook() {
+        databaseConfig: DatabaseConfig,
+        private val accountDAO: AccountDAO,
+        private val ebeanServer: EbeanServer,
+        private val internalCreateUserService: InternalCreateUserService
+) {
     private val randomString = RandomString(40)
     private val mailDomain = databaseConfig.mailDomain
 
-    override fun postStart(ebeanServer: EbeanServer) {
+    fun createUsers() {
         ebeanServer
                 .beginTransaction()
                 .use {
-                    ebeanServer
-                            .find(AccountDBO::class.java)
-                            .where()
-                            .eq("mailDomain", mailDomain)
-                            .findOne()
+                    accountDAO.getByMailDomain(mailDomain)
                             ?: also {
-                                val account = AccountDBO(mailDomain)
+                                val account = internalCreateUserService.createAccount(mailDomain)
                                 LOGGER.error { "Creating new account and authentications for $mailDomain" }
-                                ebeanServer.save(account)
-                                mqManager.setupAccount(mailDomain)
-                                createBackendAuthentication(ebeanServer, account)
-                                createFrontendAuthentication(ebeanServer, account)
+                                val backendAuth = internalCreateUserService.createBackendAuthentication(account)
+                                LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuth.apiToken}'" }
+                                val frontendAuth = internalCreateUserService.createFrontendAuthentication(
+                                        account = account,
+                                        role = AuthenticationRole.FRONTEND_ADMIN,
+                                        addApiToken = true
+                                )
+                                LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuth.apiToken}'" }
                                 createIncomingEmail(ebeanServer, account)
                             }
                     it.commit()
@@ -49,31 +50,6 @@ private constructor(
                 account = account
         )
         ebeanServer.save(incomingAddress)
-    }
-
-    private fun createFrontendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
-        val frontendAuthentication = AuthenticationDBO(
-                account = account,
-                apiToken = randomString.nextString(),
-                role = AuthenticationRole.FRONTEND_ADMIN
-        )
-        ebeanServer.save(frontendAuthentication)
-        LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuthentication.apiToken}'" }
-        mqManager.setupAuthentication(
-                mailDomain = account.mailDomain,
-                authenticationId = frontendAuthentication.id,
-                accountId = account.id
-        )
-    }
-
-    private fun createBackendAuthentication(ebeanServer: EbeanServer, account: AccountDBO) {
-        val backendAuthentication = AuthenticationDBO(
-                apiToken = randomString.nextString(),
-                role = AuthenticationRole.BACKEND,
-                account = account
-        )
-        LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuthentication.apiToken}'" }
-        ebeanServer.save(backendAuthentication)
     }
 
     companion object {

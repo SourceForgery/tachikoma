@@ -22,6 +22,7 @@ import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
+import com.sourceforgery.tachikoma.users.UserService
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import java.net.URI
 import java.time.Clock
@@ -56,6 +57,7 @@ class Hk2TestBinder(
                 .`in`(Singleton::class.java)
         bindAsContract(DatabaseTestConfig::class.java)
                 .to(DatabaseConfig::class.java)
+                .`in`(Singleton::class.java)
         bindAsContract(TestConsumerFactoryImpl::class.java)
                 .to(MQManager::class.java)
                 .`in`(Singleton::class.java)
@@ -68,6 +70,8 @@ class Hk2TestBinder(
                 .`in`(Singleton::class.java)
 
         bindAsContract(MailDeliveryService::class.java)
+                .`in`(Singleton::class.java)
+        bindAsContract(UserService::class.java)
                 .`in`(Singleton::class.java)
         bindAsContract(DAOHelper::class.java)
                 .`in`(Singleton::class.java)

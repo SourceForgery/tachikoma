@@ -375,7 +375,7 @@ private constructor(
         // TODO Abuse-email should be system-wide config parameter
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
         // TODO Add this url (abuse)
-        message.addHeader("X-Report-Abuse", "You can also report abuse here: http://${trackingConfig.baseUrl}/abuse/$messageId")
+        message.addHeader("X-Report-Abuse", "You can also report abuse here: ${trackingConfig.baseUrl}/abuse/$messageId")
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
 

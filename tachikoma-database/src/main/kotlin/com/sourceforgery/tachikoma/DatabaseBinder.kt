@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma
 
+import com.sourceforgery.tachikoma.auth.InternalCreateUserServiceImpl
+import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.dao.AccountDAOImpl
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
@@ -16,7 +18,6 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
-import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
@@ -56,6 +57,9 @@ class DatabaseBinder : AbstractBinder() {
                 .to(DataSourceProvider::class.java)
                 .`in`(Singleton::class.java)
                 .ranked(-1)
+        bindAsContract(InternalCreateUserServiceImpl::class.java)
+                .to(InternalCreateUserService::class.java)
+                .`in`(Singleton::class.java)
         bindEbeanHooks()
         bindDatabaseUpgrades()
     }
@@ -88,8 +92,7 @@ class DatabaseBinder : AbstractBinder() {
     }
 
     private fun bindEbeanHooks() {
-        val ebeanHooks = listOf(
-                CreateUsers::class.java
+        val ebeanHooks = listOf<Class<EbeanHook>>(
         )
         for (ebeanHook in ebeanHooks) {
             bindAsContract(ebeanHook)

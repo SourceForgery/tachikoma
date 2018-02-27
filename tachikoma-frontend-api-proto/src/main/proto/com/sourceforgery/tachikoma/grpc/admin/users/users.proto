@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+import "google/protobuf/timestamp.proto";
+
+package com.sourceforgery.tachikoma.grpc.frontend.blockedemail;
+
+service UserService {
+
+    // Removes the blocked email based on specified from and recipient addresses
+    rpc removeUser (RemoveUserRequest) returns (RemoveUserResponse);
+
+    // Returns all blocked email addresses
+    rpc getFrontendUsers (GetUsersRequest) returns (stream FrontendUser);
+
+    // Add user
+    rpc addFrontendUser (AddUserRequest) returns (ModifyUserResponse);
+
+    // Add user
+    rpc modifyFrontendUser (ModifyUserRequest) returns (ModifyUserResponse);
+}
+
+
+message GetUsersRequest {
+    string mailDomain = 101;
+}
+
+// Represents a user's id
+message UserId {
+    sint64 id = 1;
+}
+
+message FrontendUser {
+    // The id of the user
+    UserId authId = 101;
+    // If the user is active
+    bool active = 102;
+    // login of the user (optional, only set if hasPassword)
+    string login = 103;
+    // If the user has a password set
+    bool hasPassword = 104;
+    // If the user has an apiToken set
+    bool hasApiToken = 105;
+    // What role the user has
+    FrontendUserRole authenticationRole = 106;
+    // Which mail domain the user has
+    string mailDomain = 107;
+    // Which address _all_ emails will go to (optional)
+    EmailAddress recipient_override = 108;
+    // The creation date of the user
+    google.protobuf.Timestamp dateCreated = 109;
+    // The date that the user was last updated
+    google.protobuf.Timestamp lastUpdated = 110;
+}
+
+// The response from the requested user
+message ModifyUserResponse {
+    // The newly created user
+    FrontendUser user = 101;
+    // ApiToken (optional, only available when requested )
+    string apiToken = 102;
+}
+
+// Request for removing a user
+message RemoveUserRequest {
+    UserId userToRemove = 101;
+}
+
+// Future-proof response
+message RemoveUserResponse {
+}
+
+message PasswordAuth {
+    // The login of the user
+    string login = 102;
+    // The password to log in with
+    string password = 10;
+}
+
+message AddUserRequest {
+    // If the user is active
+    bool active = 101;
+    // The login+password of the user (optional)
+    PasswordAuth passwordAuth = 102;
+    // If the user should get an apiToken
+    bool addApiToken = 103;
+    // What role the user has
+    FrontendUserRole authenticationRole = 106;
+    // Which mail domain the user has
+    string mailDomain = 107;
+    // Which address _all_ emails will go to (optional)
+    EmailAddress recipient_override = 108;
+}
+
+message ModifyUserRequest {
+    // The id of the user
+    UserId authId = 101;
+    // If the user is active
+    bool active = 102;
+    // The new password of the user
+    // (optional and requires previous login credentials)
+    string newPassword = 103;
+    // Set or keep
+    ApiToken apiToken = 104;
+    // What role the user has
+    FrontendUserRole authenticationRole = 105;
+    // Which address _all_ emails will go to (optional)
+    EmailAddress recipientOverride = 107;
+}
+
+enum ApiToken {
+    NO_ACTION = 0;
+    RESET_API_TOKEN = 1;
+    REMOVE_API_TOKEN = 2;
+}
+
+enum FrontendUserRole {
+    FRONTEND = 0;
+    FRONTEND_ADMIN = 1;
+}

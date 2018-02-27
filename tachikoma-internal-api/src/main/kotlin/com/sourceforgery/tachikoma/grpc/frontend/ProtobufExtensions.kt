@@ -4,6 +4,8 @@ import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.grpc.frontend.auth.AuthRole
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
+import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.FrontendUserRole
+import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.UserId
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.identifiers.AccountId
@@ -53,14 +55,20 @@ fun WebTokenAuthData.toAuthenticationId(): AuthenticationId? {
     }
 }
 
+fun AuthenticationId.toUserId() =
+        UserId.newBuilder().setId(authenticationId).build()
+
+fun UserId.toAuthenticationId() =
+        AuthenticationId(id)
+
 fun EmailRecipient.toNamedEmail() =
         com.sourceforgery.tachikoma.common.NamedEmail(
                 address = namedEmail.email,
                 name = namedEmail.name
         )
 
-fun String.emptyToNull() =
-        if (this.isEmpty()) {
+fun String?.emptyToNull() =
+        if (this == null || this.isEmpty()) {
             null
         } else {
             this
@@ -93,4 +101,11 @@ fun AuthenticationRole.toRole() =
             AuthenticationRole.BACKEND -> AuthRole.BACKEND
             AuthenticationRole.FRONTEND -> AuthRole.FRONTEND
             AuthenticationRole.FRONTEND_ADMIN -> AuthRole.FRONTEND_ADMIN
+        }
+
+fun AuthenticationRole.toFrontendRole() =
+        when (this) {
+            AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
+            AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
+            else -> throw IllegalArgumentException("$this is not implemented as frontend role")
         }

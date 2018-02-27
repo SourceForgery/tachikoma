@@ -18,7 +18,7 @@ private constructor(
 
     override fun addIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) {
         try {
-            authentication.requireFrontendAdmin()
+            authentication.requireFrontendAdmin(authentication.mailDomain)
             incomingEmailAddressService.addIncomingEmailAddress(request, authentication.authenticationId)
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
@@ -29,7 +29,7 @@ private constructor(
 
     override fun getIncomingEmailAddresses(request: Empty, responseObserver: StreamObserver<IncomingEmailAddress>) {
         try {
-            authentication.requireFrontendAdmin()
+            authentication.requireFrontendAdmin(authentication.mailDomain)
             incomingEmailAddressService.getIncomingEmailAddresses(responseObserver, authentication.authenticationId)
             responseObserver.onCompleted()
         } catch (e: Exception) {
@@ -39,7 +39,7 @@ private constructor(
 
     override fun deleteIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) {
         try {
-            authentication.requireFrontendAdmin()
+            authentication.requireFrontendAdmin(authentication.mailDomain)
             incomingEmailAddressService.deleteIncomingEmailAddress(request, authentication.authenticationId)
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()

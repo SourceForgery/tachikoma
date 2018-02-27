@@ -147,8 +147,11 @@ internal class AuthenticationImpl(
         return accountId
     }
 
-    override fun requireFrontendAdmin(): AccountId {
+    override fun requireFrontendAdmin(mailDomain: MailDomain): AccountId {
         requireValid()
+        if (!isAdmin() && this.mailDomain != mailDomain) {
+            throw InvalidOrInsufficientCredentialsException("auth domain (${this.mailDomain}) is not the same as the request one ($mailDomain")
+        }
         if (role != AuthenticationRole.FRONTEND_ADMIN) {
             throw InvalidOrInsufficientCredentialsException()
         }
@@ -166,6 +169,8 @@ internal class AuthenticationImpl(
     override fun requireAdmin(): AccountId {
         TODO("No superadmin yet")
     }
+
+    private fun isAdmin() = false
 
     private fun requireValid() {
         if (!valid) {
@@ -189,7 +194,7 @@ private class ThrowingAuthentication(private val t: () -> RuntimeException) : Au
 
     override fun requireBackend(): AccountId = throw t()
 
-    override fun requireFrontendAdmin(): AccountId = throw t()
+    override fun requireFrontendAdmin(mailDomain: MailDomain): AccountId = throw t()
 
     override fun requireAdmin(): AccountId = throw t()
 

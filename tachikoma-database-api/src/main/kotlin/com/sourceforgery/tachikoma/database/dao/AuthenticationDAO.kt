@@ -9,4 +9,5 @@ interface AuthenticationDAO {
     fun getActiveById(authenticationId: AuthenticationId): AuthenticationDBO?
     fun getByUsername(username: String): AuthenticationDBO?
     fun save(authenticationDBO: AuthenticationDBO)
+    fun deleteById(authenticationId: AuthenticationId)
 }
