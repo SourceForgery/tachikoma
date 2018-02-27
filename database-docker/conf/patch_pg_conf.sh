@@ -1,6 +1,6 @@
 #!/bin/bash -xe
 
-for A in /etc/postgresql/*/*/postgresql.conf /usr/share/postgresql/*/postgresql.conf.sample; do
+for A in /etc/postgresql/*/*/postgresql.conf; do
 	tee -a "$A" <<EOF
 
 listen_addresses = '*'
@@ -10,7 +10,7 @@ EOF
 done
 
 
-for A in /etc/postgresql/*/*/pg_hba.conf /usr/share/postgresql/*/pg_hba.conf.sample; do
+for A in /etc/postgresql/*/*/pg_hba.conf; do
 	tee -a "$A" <<EOF
 
 host    all             all             0.0.0.0/0               md5
