@@ -1,10 +1,12 @@
 package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.google.protobuf.ByteString
-import com.sourceforgery.tachikoma.DAOHelper
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
+import com.sourceforgery.tachikoma.database.objects.AccountDBO
+import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.grpc.frontend.Attachment
@@ -17,6 +19,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.hk2.located
+import com.sourceforgery.tachikoma.identifiers.MailDomain
+import io.ebean.EbeanServer
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -27,12 +31,13 @@ import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.util.UUID
 
 @RunWith(JUnitPlatform::class)
 class MailDeliveryServiceSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
     val mailDeliveryService: () -> MailDeliveryService = located { serviceLocator }
-    val daoHelper: () -> DAOHelper = located { serviceLocator }
+    val ebeanServer: () -> EbeanServer = located { serviceLocator }
 
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
@@ -41,9 +46,25 @@ class MailDeliveryServiceSpec : Spek({
         serviceLocator.shutdown()
     }
 
+    fun createAuthentication(domain: MailDomain): AuthenticationDBO {
+        val accountDBO = AccountDBO(domain)
+        ebeanServer().save(accountDBO)
+
+        val authenticationDBO = AuthenticationDBO(
+                login = domain.mailDomain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.BACKEND,
+                account = accountDBO
+        )
+        ebeanServer().save(authenticationDBO)
+
+        return authenticationDBO
+    }
+
     describe("Send emails", {
         it("with attachment", {
-            val authentication = daoHelper().createAuthentication(fromEmail.toNamedEmail().address.domain)
+            val authentication = createAuthentication(fromEmail.toNamedEmail().address.domain)
             val email = OutgoingEmail.newBuilder()
                     .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
                     .addAttachments(Attachment.newBuilder()
