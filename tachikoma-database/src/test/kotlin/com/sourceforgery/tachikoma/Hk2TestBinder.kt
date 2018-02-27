@@ -23,11 +23,13 @@ import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
 import com.sourceforgery.tachikoma.database.server.InvokeCounter
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
+import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
 import io.ebean.EbeanServer
 import org.glassfish.hk2.api.Context
 import org.glassfish.hk2.api.PerThread
+import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.internal.PerThreadContext
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -115,6 +117,12 @@ class Hk2TestBinder(
 
 enum class TestAttribute {
     POSTGRESQL
+}
+
+inline fun <reified T> located(crossinline serviceLocator: () -> ServiceLocator): () -> T {
+    return {
+        serviceLocator().getService(T::class.java)
+    }
 }
 
 private class DatabaseTestConfig : DatabaseConfig {

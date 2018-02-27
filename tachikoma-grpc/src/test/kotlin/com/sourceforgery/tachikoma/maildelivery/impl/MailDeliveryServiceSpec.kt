@@ -16,6 +16,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.StaticBody
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.hk2.located
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -30,13 +31,11 @@ import java.util.Base64
 @RunWith(JUnitPlatform::class)
 class MailDeliveryServiceSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
-    lateinit var mailDeliveryService: MailDeliveryService
-    lateinit var daoHelper: DAOHelper
+    val mailDeliveryService: () -> MailDeliveryService = located { serviceLocator }
+    val daoHelper: () -> DAOHelper = located { serviceLocator }
 
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
-        mailDeliveryService = serviceLocator.get()
-        daoHelper = serviceLocator.get()
     }
     afterEachTest {
         serviceLocator.shutdown()
@@ -44,7 +43,7 @@ class MailDeliveryServiceSpec : Spek({
 
     describe("Send emails", {
         it("with attachment", {
-            val authentication = daoHelper.createAuthentication(fromEmail.toNamedEmail().address.domain)
+            val authentication = daoHelper().createAuthentication(fromEmail.toNamedEmail().address.domain)
             val email = OutgoingEmail.newBuilder()
                     .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
                     .addAttachments(Attachment.newBuilder()
@@ -55,7 +54,7 @@ class MailDeliveryServiceSpec : Spek({
                     .setStatic(StaticBody.newBuilder().setPlaintextBody("This is a test").setSubject("Test mail subject"))
                     .build()
             val responseObserver = QueueStreamObserver<EmailQueueStatus>()
-            mailDeliveryService.sendEmail(
+            mailDeliveryService().sendEmail(
                     request = email,
                     sender = authentication.account.id,
                     responseObserver = responseObserver,

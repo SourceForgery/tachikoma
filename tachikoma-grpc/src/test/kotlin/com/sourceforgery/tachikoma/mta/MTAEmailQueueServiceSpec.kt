@@ -16,6 +16,7 @@ import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.hk2.located
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.mq.MQSenderMock
@@ -39,20 +40,17 @@ import kotlin.test.assertNotNull
 @RunWith(JUnitPlatform::class)
 class MTAEmailQueueServiceSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
-    lateinit var mtaEmailQueueService: MTAEmailQueueService
-    lateinit var authentication: AuthenticationMock
-    lateinit var ebeanServer: EbeanServer
+    val mtaEmailQueueService: () -> MTAEmailQueueService = located { serviceLocator }
+    val authentication: () -> AuthenticationMock = located { serviceLocator }
+    val ebeanServer: () -> EbeanServer = located { serviceLocator }
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
-        mtaEmailQueueService = serviceLocator.get()
-        authentication = serviceLocator.get()
-        ebeanServer = serviceLocator.get()
     }
     afterEachTest { serviceLocator.shutdown() }
 
     fun createAuthentication(domain: String): AuthenticationDBO {
         val accountDBO = AccountDBO(MailDomain(domain))
-        ebeanServer.save(accountDBO)
+        ebeanServer().save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
                 login = domain,
@@ -61,24 +59,21 @@ class MTAEmailQueueServiceSpec : Spek({
                 role = AuthenticationRole.BACKEND,
                 account = accountDBO
         )
-        ebeanServer.save(authenticationDBO)
+        ebeanServer().save(authenticationDBO)
 
         return authenticationDBO
     }
 
     describe("MTA queue service test", {
-        lateinit var mqSequenceFactoryMock: MQSequenceFactoryMock
-        lateinit var mqSenderMock: MQSenderMock
-        lateinit var clock: Clock
+        val mqSequenceFactoryMock: () -> MQSequenceFactoryMock = located { serviceLocator }
+        val mqSenderMock: () -> MQSenderMock = located { serviceLocator }
+        val clock: () -> Clock = located { serviceLocator }
 
         lateinit var authenticationDBO: AuthenticationDBO
         lateinit var email: EmailDBO
 
         beforeEachTest {
             createAuthentication("example.net")
-            mqSequenceFactoryMock = serviceLocator.get()
-            clock = serviceLocator.get()
-            mqSenderMock = serviceLocator.get()
             val databaseConfig: DatabaseConfig = serviceLocator.get()
             val accountDAO: AccountDAO = serviceLocator.get()
 
@@ -87,7 +82,7 @@ class MTAEmailQueueServiceSpec : Spek({
             authenticationDBO =
                     account.authentications
                             .first { it.role == AuthenticationRole.BACKEND }
-            authentication.from(authenticationDBO)
+            authentication().from(authenticationDBO)
 
             email = EmailDBO(
                     recipient = Email("foo@example.net"),
@@ -103,22 +98,22 @@ class MTAEmailQueueServiceSpec : Spek({
                     )
             )
             email.body = "${UUID.randomUUID()}"
-            ebeanServer.save(email)
+            ebeanServer().save(email)
         }
 
         it("Create email test", {
             val responseObserver = QueueStreamObserver<EmailMessage>()
 
-            mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
+            mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
 
-            mqSequenceFactoryMock.outgoingEmails.add(QueueMessageWrap(OutgoingEmailMessage.newBuilder()
-                    .setCreationTimestamp(clock.instant().toTimestamp())
+            mqSequenceFactoryMock().outgoingEmails.add(QueueMessageWrap(OutgoingEmailMessage.newBuilder()
+                    .setCreationTimestamp(clock().instant().toTimestamp())
                     .setEmailId(email.id.emailId)
                     .build()
             ))
 
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+            mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+            mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
 
             assertEquals(1, responseObserver.queue.size)
             val emailMessage = responseObserver.queue.take().get()
@@ -132,7 +127,7 @@ class MTAEmailQueueServiceSpec : Spek({
         it("Receive queue message", {
 
             val responseObserver = QueueStreamObserver<EmailMessage>()
-            val requestStreamObserver = mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
+            val requestStreamObserver = mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
 
             requestStreamObserver.onNext(MTAQueuedNotification.newBuilder()
                     .setEmailId(email.id.emailId)
@@ -141,14 +136,14 @@ class MTAEmailQueueServiceSpec : Spek({
                     .setSuccess(true)
                     .build()
             )
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+            mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+            mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
 
-            assertEquals(1, mqSenderMock.deliveryNotifications.size)
-            ebeanServer.refresh(email)
+            assertEquals(1, mqSenderMock().deliveryNotifications.size)
+            ebeanServer().refresh(email)
             assertEquals("foobarQueueId", email.mtaQueueId)
-            assertEquals(1, mqSenderMock.deliveryNotifications.size)
-            val notification = mqSenderMock.deliveryNotifications.take()
+            assertEquals(1, mqSenderMock().deliveryNotifications.size)
+            val notification = mqSenderMock().deliveryNotifications.take()
             assertEquals(email.id.emailId, notification.emailMessageId)
         })
     })
