@@ -61,7 +61,7 @@ class UserServiceSpec : Spek({
     }
 
     fun createUser(): AuthenticationDBO {
-        val auth = createAuthentication("example.com")
+        createAuthentication("example.com")
         val b4 = AddUserRequest.newBuilder()
                 .setActive(true)
                 .setAddApiToken(false)
