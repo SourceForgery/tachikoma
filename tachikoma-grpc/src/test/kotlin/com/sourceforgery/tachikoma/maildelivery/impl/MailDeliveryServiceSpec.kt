@@ -50,7 +50,6 @@ class MailDeliveryServiceSpec : Spek({
 
     fun createAuthentication(domain: MailDomain): AuthenticationDBO {
         val accountDBO = AccountDBO(domain)
-        ebeanServer().save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
                 login = domain.mailDomain,
