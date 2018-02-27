@@ -10,11 +10,10 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
-private val BACKEND_API_TOKEN = "example.net:oodua5yai9Pah5ook3wah4hahqu4IeK0iung8ou5Cho4Doonee"
 
 fun main(args: Array<String>) {
     val metadataAuth = Metadata()
-    metadataAuth.put(APITOKEN_HEADER, BACKEND_API_TOKEN)
+    metadataAuth.put(APITOKEN_HEADER, System.getenv("BACKEND_API_TOKEN")!!)
 
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
             .usePlaintext(true)
