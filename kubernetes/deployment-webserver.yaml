@@ -60,6 +60,7 @@ spec:
   selector:
     app: tachikoma-webserver
   type: LoadBalancer
+  externalTrafficPolicy: Local
   ports:
   - name: http
     protocol: TCP
