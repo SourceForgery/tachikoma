@@ -33,6 +33,7 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
     defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
 
     runCommand("sed -r '/(KLogPermitNonKernelFacility|imklog)/d' -i /etc/rsyslog.conf")
+    runCommand("sed -r 's/xconsole\$/console/' -i /etc/rsyslog.d/*.conf")
 
     addFile(file('src/assets/'))
 
