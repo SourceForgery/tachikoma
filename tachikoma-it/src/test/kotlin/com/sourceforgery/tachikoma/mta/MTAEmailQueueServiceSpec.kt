@@ -2,7 +2,7 @@ package com.sourceforgery.tachikoma.mta
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.auth.AuthenticationMock
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
@@ -44,7 +44,7 @@ class MTAEmailQueueServiceSpec : Spek({
     val authentication: () -> AuthenticationMock = located { serviceLocator }
     val ebeanServer: () -> EbeanServer = located { serviceLocator }
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
+        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder())!!
     }
     afterEachTest { serviceLocator.shutdown() }
 

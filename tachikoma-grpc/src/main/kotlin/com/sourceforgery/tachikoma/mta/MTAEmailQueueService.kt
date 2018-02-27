@@ -34,7 +34,7 @@ import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
-internal class MTAEmailQueueService
+class MTAEmailQueueService
 @Inject
 private constructor(
         private val clock: Clock,

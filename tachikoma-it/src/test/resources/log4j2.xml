@@ -12,5 +12,7 @@
 	<Logger name="com.sourceforgery.tachikoma.database.hooks.CreateUsers" level="off"/>
 	<Logger name="io.ebeaninternal.server.core.DefaultContainer" level="off"/>
 	<Logger name="com.opentable.db.postgres.embedded" level="off"/>
+	<Logger name="org.postgresql" level="off"/>
+	<Logger name="io.ebean.internal.DefaultContainer" level="error"/>
     </Loggers>
 </Configuration>

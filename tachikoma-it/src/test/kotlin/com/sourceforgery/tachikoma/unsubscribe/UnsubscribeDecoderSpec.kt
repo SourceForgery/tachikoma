@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.unsubscribe
 
-import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
@@ -14,7 +14,7 @@ import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
 internal class UnsubscribeDecoderSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder())
+    val serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
     val unsubscribeDecoder = serviceLocator.getService(UnsubscribeDecoder::class.java)
 
     describe("UnsubscribeDecoderSpec") {

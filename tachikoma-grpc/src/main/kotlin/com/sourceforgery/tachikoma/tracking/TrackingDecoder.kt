@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 import javax.inject.Inject
 
-internal class TrackingDecoderImpl
+class TrackingDecoderImpl
 @Inject
 private constructor(
         trackingConfig: TrackingConfig

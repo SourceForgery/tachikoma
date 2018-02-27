@@ -10,8 +10,8 @@ inline fun <reified T> located(crossinline serviceLocator: () -> ServiceLocator)
     }
 }
 
-inline fun <reified T> located(clazz: Class<T>, crossinline serviceLocator: () -> ServiceLocator): () -> T {
+fun <T> located(clazz: Class<T>, serviceLocator: () -> ServiceLocator): () -> T {
     return {
-        serviceLocator().getService(T::class.java)
+        serviceLocator().getService(clazz)
     }
 }

@@ -1,9 +1,10 @@
-package com.sourceforgery.tachikoma.maildelivery.impl
+package com.sourceforgery.tachikoma.maildelivery
 
 import com.google.protobuf.ByteString
 import com.sourceforgery.tachikoma.DAOHelper
 import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.Hk2TestBinder
+import com.sourceforgery.tachikoma.MinimalBinder
+import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
@@ -17,6 +18,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.hk2.located
+import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -35,7 +37,7 @@ class MailDeliveryServiceSpec : Spek({
     val daoHelper: () -> DAOHelper = located { serviceLocator }
 
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(Hk2TestBinder(), DatabaseBinder())!!
+        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder(), MinimalBinder(MailDeliveryService::class.java))!!
     }
     afterEachTest {
         serviceLocator.shutdown()
