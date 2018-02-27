@@ -5,6 +5,7 @@ import com.sourceforgery.tachikoma.common.BlockedReason
 import com.sourceforgery.tachikoma.grpc.frontend.auth.AuthRole
 import com.sourceforgery.tachikoma.grpc.frontend.auth.WebTokenAuthData
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.FrontendUserRole
+import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.UserId
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.identifiers.AccountId
@@ -54,10 +55,10 @@ fun WebTokenAuthData.toAuthenticationId(): AuthenticationId? {
     }
 }
 
-fun AuthenticationId.toAuthenticationId() =
-        com.sourceforgery.tachikoma.grpc.frontend.AuthenticationId.newBuilder().setId(authenticationId).build()
+fun AuthenticationId.toUserId() =
+        UserId.newBuilder().setId(authenticationId).build()
 
-fun com.sourceforgery.tachikoma.grpc.frontend.AuthenticationId.toAuthenticationId() =
+fun UserId.toAuthenticationId() =
         AuthenticationId(id)
 
 fun EmailRecipient.toNamedEmail() =

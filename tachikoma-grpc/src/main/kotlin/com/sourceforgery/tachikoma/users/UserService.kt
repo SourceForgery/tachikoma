@@ -19,6 +19,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveUserResponse
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
+import com.sourceforgery.tachikoma.grpc.frontend.toUserId
 import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
@@ -125,7 +126,7 @@ private constructor(
         return FrontendUser.newBuilder()
                 .apply {
                     active = auth.active
-                    authId = auth.id.toAuthenticationId()
+                    authId = auth.id.toUserId()
                     authenticationRole = auth.role.toFrontendRole()
                     dateCreated = auth.dateCreated!!.toTimestamp()
                     lastUpdated = auth.lastUpdated!!.toTimestamp()

@@ -33,11 +33,6 @@ message IncomingEmailId {
     sint64 id = 1;
 }
 
-// Represents a users id
-message AuthenticationId {
-    sint64 id = 1;
-}
-
 // Represents an e-mail notification, e.g. used for delivery status and in historic status events
 message EmailNotification {
     EmailId emailId = 101;

@@ -27,9 +27,14 @@ message GetUsersRequest {
     string mailDomain = 101;
 }
 
+// Represents a user's id
+message UserId {
+    sint64 id = 1;
+}
+
 message FrontendUser {
     // The id of the user
-    AuthenticationId authId = 101;
+    UserId authId = 101;
     // If the user is active
     bool active = 102;
     // login of the user (optional, only set if hasPassword)
@@ -60,7 +65,7 @@ message ModifyUserResponse {
 
 // Request for removing a user
 message RemoveUserRequest {
-    AuthenticationId userToRemove = 101;
+    UserId userToRemove = 101;
 }
 
 // Future-proof response
@@ -91,7 +96,7 @@ message AddUserRequest {
 
 message ModifyUserRequest {
     // The id of the user
-    AuthenticationId authId = 101;
+    UserId authId = 101;
     // If the user is active
     bool active = 102;
     // The new password of the user
