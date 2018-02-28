@@ -1,4 +1,4 @@
-package com.sourceforgery.rest.catchers
+package com.sourceforgery.tachikoma.rest.catchers
 
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.HttpResponse

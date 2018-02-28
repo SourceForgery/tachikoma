@@ -1,4 +1,4 @@
-package com.sourceforgery.rest.tracking
+package com.sourceforgery.tachikoma.rest.tracking
 
 import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.HttpResponse
@@ -7,7 +7,7 @@ import com.linecorp.armeria.common.MediaType
 import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.ProduceType
-import com.sourceforgery.rest.RestService
+import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO

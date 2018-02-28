@@ -3,7 +3,7 @@ package com.sourceforgery.tachikoma.webserver.hk2
 import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.RequestContext
-import com.sourceforgery.rest.catchers.RestExceptionCatcher
+import com.sourceforgery.tachikoma.rest.catchers.RestExceptionCatcher
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionCatcher
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext

@@ -1,4 +1,4 @@
-package com.sourceforgery.rest.unsubscribe
+package com.sourceforgery.tachikoma.rest.unsubscribe
 
 import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.HttpResponse
@@ -9,8 +9,8 @@ import com.linecorp.armeria.server.annotation.ConsumeTypes
 import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
-import com.sourceforgery.rest.RestService
-import com.sourceforgery.rest.tracking.TrackingRest
+import com.sourceforgery.tachikoma.rest.RestService
+import com.sourceforgery.tachikoma.rest.tracking.TrackingRest
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO

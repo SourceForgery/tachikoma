@@ -10,8 +10,8 @@ import com.linecorp.armeria.server.Service
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
 import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
-import com.sourceforgery.rest.RestBinder
-import com.sourceforgery.rest.RestService
+import com.sourceforgery.tachikoma.rest.RestBinder
+import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder

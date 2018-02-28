@@ -1,8 +1,8 @@
-package com.sourceforgery.rest
+package com.sourceforgery.tachikoma.rest
 
-import com.sourceforgery.rest.catchers.RestExceptionMap
-import com.sourceforgery.rest.tracking.TrackingRest
-import com.sourceforgery.rest.unsubscribe.UnsubscribeRest
+import com.sourceforgery.tachikoma.rest.catchers.RestExceptionMap
+import com.sourceforgery.tachikoma.rest.tracking.TrackingRest
+import com.sourceforgery.tachikoma.rest.unsubscribe.UnsubscribeRest
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
 
