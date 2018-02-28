@@ -356,7 +356,11 @@ private constructor(
 
         val result = ByteArrayOutputStream()
         message.writeTo(result)
-        return result.toString(StandardCharsets.UTF_8.name())
+        return Regex("^.$", RegexOption.MULTILINE)
+                .replace(
+                        input = result.toString(StandardCharsets.UTF_8.name()),
+                        transform = { "=2E" }
+                )
     }
 
     private fun addListAndAbuseHeaders(message: MimeMessage, emailId: EmailId, messageId: MessageId, fromEmail: Email, accountId: AccountId) {
