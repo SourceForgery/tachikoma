@@ -16,13 +16,20 @@ Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 This is a test
+                                      .
+=2E
+.                =20
+
 --XXXXXX
 Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-<html><head></head><body>This is a test<img src=3D"http://localhost/t/qgYGq=
-gYDCMIFsgYUblbKS4149I7QwD6BgOV1GWss10U" height=3D"1" width=3D"1"></body></h=
-tml>
+<html><head></head><body>This is a test
+                                      .
+=2E
+.                =20
+<img src=3D"http://localhost/t/qgYGqgYDCMIFsgYUblbKS4149I7QwD6BgOV1GWss10U"=
+ height=3D"1" width=3D"1"></body></html>
 --XXXXXX
 Content-Type: application/pdf; name=NotReally.pdf
 Content-Transfer-Encoding: base64

@@ -53,7 +53,14 @@ class MailDeliveryServiceSpec : Spek({
                             .setData(ByteString.copyFrom(data))
                             .setFileName("NotReally.pdf"))
                     .setFrom(fromEmail)
-                    .setStatic(StaticBody.newBuilder().setPlaintextBody("This is a test").setSubject("Test mail subject"))
+                    .setStatic(StaticBody.newBuilder().setPlaintextBody(
+                            """This is a test
+                            |                                      .
+                            |.
+                            |.                 ${""}
+                            |"""
+                                    .trimMargin()
+                    ).setSubject("Test mail subject"))
                     .build()
             val responseObserver = QueueStreamObserver<EmailQueueStatus>()
             mailDeliveryService().sendEmail(
