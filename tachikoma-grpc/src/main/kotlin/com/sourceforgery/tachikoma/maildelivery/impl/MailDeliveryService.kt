@@ -363,7 +363,7 @@ private constructor(
         // TODO Headers to set:
         // List-Help (IMPORTANT): <https://support.google.com/a/example.com/bin/topic.py?topic=25838>, <mailto:debug+help@example.com>
 
-        val unsubscribeUri = createUnsubscribeLink(emailId)
+        val unsubscribeUri = createUnsubscribeOneClickPostLink(emailId)
 
         val unsubscribeEmail = Email("unsub-$messageId")
         val bounceReturnPathEmail = Email("bounce-$messageId")
@@ -379,7 +379,18 @@ private constructor(
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
 
-    private fun createUnsubscribeLink(emailId: EmailId, redirectUri: String = ""): URI {
+    private fun createUnsubscribeOneClickPostLink(emailId: EmailId): URI {
+        val unsubscribeData = UnsubscribeData.newBuilder()
+                .setEmailId(emailId.toGrpcInternal())
+                .build()
+        val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
+
+        return URIBuilderTiny(trackingConfig.baseUrl)
+                .appendPaths("unsubscribe", unsubscribeUrl)
+                .build()
+    }
+
+    private fun createUnsubscribeClickLink(emailId: EmailId, redirectUri: String = ""): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
                 .setEmailId(emailId.toGrpcInternal())
                 .setRedirectUrl(redirectUri)
@@ -410,7 +421,7 @@ private constructor(
             val newUri = UNSUB_REGEX.matchEntire(originalUri)
                     ?.let {
                         // Convert into unsubscribe link
-                        createUnsubscribeLink(emailId, it.groupValues[1])
+                        createUnsubscribeClickLink(emailId, it.groupValues[1])
                     }
                     ?: let {
                         // Track link click
