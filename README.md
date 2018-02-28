@@ -51,14 +51,24 @@ That will start the webpack-dev-server at port 8080 (liable to change) and
 the webserver (for e.g. gRPC) at port 8070.
 
 
-To start the docker (with the Postfix email server), run
+To start the docker (with the Postfix email server), first create a file with the format
+```properties
+TACHIKOMA_URL=http://example.com:xxxxxxxxxxxxxxxxxxxx@172.17.0.1:8070/
+MAIL_DOMAIN_MX=false
 ```
-docker run -it -e MAIL_DOMAIN_MX=<true/false> -e TACHIKOMA_URL=<webserver url> tachikoma/tachikoma-postfix:<version>
+
+run
+```
+docker run --name postfix -it --rm -h tachikoma-postfix \
+  -e TACHIKOMA_CONFIG=/etc/tachikoma.config -v $HOME/.tachikoma-postfix.config:/etc/tachikoma.config \
+  sourceforgery/tachikoma-postfix:<version>
 ```
 
 E.g.
 ```
-docker run -it -e MAIL_DOMAIN_MX=true -e "TACHIKOMA_URL=http://example.com:password@172.17.0.1:8070/" tachikoma/tachikoma-postfix:0.0.1-SNAPSHOT
+docker run --name postfix -it --rm -h tachikoma-postfix \
+  -e TACHIKOMA_CONFIG=/etc/tachikoma.config -v $HOME/.tachikoma-postfix.config:/etc/tachikoma.config \
+  sourceforgery/tachikoma-postfix:0.0.54
 ```
 
 **Recommendations**
