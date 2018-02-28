@@ -1,13 +1,11 @@
 package com.sourceforgery.tachikoma.rest.tracking
 
-import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.common.MediaType
 import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.ProduceType
-import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -21,10 +19,10 @@ import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageClicked
 import com.sourceforgery.tachikoma.mq.MessageOpened
+import com.sourceforgery.tachikoma.rest.RestService
+import com.sourceforgery.tachikoma.rest.RestUtil
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
-import io.netty.util.AsciiString
-import java.text.MessageFormat
 import java.util.Base64
 import javax.inject.Inject
 
@@ -90,12 +88,7 @@ private constructor(
                     )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
 
-            return HttpResponse.of(
-                    HttpStatus.TEMPORARY_REDIRECT,
-                    MediaType.HTML_UTF_8,
-                    HTML_PAGE_WITH_JAVASCRIPT_AND_HTTP_EQUIV_REDIRECT.format(arrayOf(trackingData.redirectUrl)),
-                    HttpHeaders.of(LOCATION, trackingData.redirectUrl)
-            )
+            return RestUtil.httpRedirect(trackingData.redirectUrl)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
@@ -108,21 +101,8 @@ private constructor(
     }
 
     companion object {
-        val LOCATION = AsciiString.of("Location")!!
         val SMALL_TRANSPARENT_GIF = Base64.getDecoder().decode("R0lGODlhAQABAIABAP///wAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==")!!
-        val HTML_PAGE_WITH_JAVASCRIPT_AND_HTTP_EQUIV_REDIRECT = MessageFormat("""
-            <html>
-              <head>
-                <meta http-equiv="refresh" content="0;URL=''{0}''" />
-              </head>
-              <body>
-                <script type="text/javascript">document.location.href=''{0}'';</script>
-                <a href="{0}">redirect</a>
-              </body>
-            </html>
-            """.trimMargin())
         val STATIC_HTML_PAGE_THAT_SAYS_BROKEN_LINK = "<html><body>Broken link</body></html>"
-
         val LOGGER = logger()
     }
 }
