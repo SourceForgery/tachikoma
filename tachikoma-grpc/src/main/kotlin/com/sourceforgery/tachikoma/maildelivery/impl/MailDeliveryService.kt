@@ -380,11 +380,6 @@ private constructor(
     }
 
     private fun createUnsubscribeLink(emailId: EmailId, redirectUri: String = ""): URI {
-        val path = if (redirectUri.isNotBlank()) {
-            "unsubscribeClick"
-        } else {
-            "unsubscribe"
-        }
         val unsubscribeData = UnsubscribeData.newBuilder()
                 .setEmailId(emailId.toGrpcInternal())
                 .setRedirectUrl(redirectUri)
@@ -392,7 +387,7 @@ private constructor(
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return URIBuilderTiny(trackingConfig.baseUrl)
-                .appendPaths(path, unsubscribeUrl)
+                .appendPaths("unsubscribeClick", unsubscribeUrl)
                 .build()
     }
 

@@ -59,7 +59,7 @@ private constructor(
         return HttpResponse.of(HttpStatus.OK)
     }
 
-    @Get("regex:^/clickunsubscribe/(?<unsubscribeData>.*)")
+    @Get("regex:^/unsubscribeClick/(?<unsubscribeData>.*)")
     fun unsubscribe(
             @Param("unsubscribeData") unsubscribeDataString: String
     ): HttpResponse {
