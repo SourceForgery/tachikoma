@@ -31,7 +31,7 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     runCommand("mkfifo /opt/maillog_pipe && chown syslog:postfix /opt/maillog_pipe")
 
     runCommand("sed -r '/(KLogPermitNonKernelFacility|imklog)/d' -i /etc/rsyslog.conf")
-    runCommand("sed -r 's/\\|(.*)xconsole\$/\\1console/' -i /etc/rsyslog.d/*.conf")
+    runCommand("sed -r 's/\\|(.*)xconsole\$/\\1console/' -i /etc/rsyslog.d/50-default.conf")
 
     runCommand('adduser syslog postfix')
 
