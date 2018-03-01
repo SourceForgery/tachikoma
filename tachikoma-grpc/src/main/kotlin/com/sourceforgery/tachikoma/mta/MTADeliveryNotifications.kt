@@ -11,6 +11,7 @@ import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageDelivered
+import com.sourceforgery.tachikoma.mq.MessageHardBounced
 import com.sourceforgery.tachikoma.mq.MessageSoftBounced
 import java.time.Clock
 import javax.inject.Inject
@@ -33,16 +34,32 @@ private constructor(
                     .setCreationTimestamp(creationTimestamp.toTimestamp())
                     .setEmailMessageId(email.id.emailId)
 
-            val status = when (request.status) {
-                "4.4.1" -> {
-                    notificationMessageBuilder.messageSoftBounced = MessageSoftBounced.getDefaultInstance()
-                    EmailStatus.SOFT_BOUNCED
-                }
-                "2.0.0" -> {
+            val status = when (request.status.substring(0, 2)) {
+                "2." -> {
+                    if (!arrayOf("2.2.0", "2.6.0").contains(request.status)) {
+                        LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it DELIVERED anyway" }
+                    }
                     notificationMessageBuilder.messageDelivered = MessageDelivered.getDefaultInstance()
                     EmailStatus.DELIVERED
                 }
-                else -> null
+                "4." -> {
+                    if (!arrayOf("4.0.0", "4.4.1").contains(request.status)) {
+                        LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it SOFT_BOUNCED anyway" }
+                    }
+                    notificationMessageBuilder.messageSoftBounced = MessageSoftBounced.getDefaultInstance()
+                    EmailStatus.SOFT_BOUNCED
+                }
+                "5." -> {
+                    if (!arrayOf("5.0.0").contains(request.status)) {
+                        LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it HARD_BOUNCED anyway" }
+                    }
+                    notificationMessageBuilder.messageHardBounced = MessageHardBounced.getDefaultInstance()
+                    EmailStatus.HARD_BOUNCED
+                }
+                else -> {
+                    LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, not sending event" }
+                    null
+                }
             }
 
             if (status != null) {
@@ -57,8 +74,6 @@ private constructor(
                 emailStatusEventDAO.save(statusEventDBO)
 
                 mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
-            } else {
-                LOGGER.error { "Don't know status code ${request.status}" }
             }
         }
     }
