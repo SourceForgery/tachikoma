@@ -139,6 +139,7 @@ private constructor(
         }, closeExecutor)
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
+                LOGGER.debug({ "Processing message, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" })
                 var handledResult = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
