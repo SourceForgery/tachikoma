@@ -38,4 +38,10 @@ object HmacUtil {
 
         return String.format("%032x", BigInteger(1, md5.digest()))
     }
+
+    fun calculateMd5(bytes: ByteArray): String {
+        val md5 = MessageDigest.getInstance("MD5")
+        md5.update(bytes)
+        return String.format("%032x", BigInteger(1, md5.digest()))
+    }
 }
