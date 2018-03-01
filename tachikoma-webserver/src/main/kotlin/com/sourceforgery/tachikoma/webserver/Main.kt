@@ -10,8 +10,6 @@ import com.linecorp.armeria.server.Service
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
 import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
-import com.sourceforgery.tachikoma.rest.RestBinder
-import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
@@ -23,6 +21,8 @@ import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MessageQueue
 import com.sourceforgery.tachikoma.mq.MqBinder
+import com.sourceforgery.tachikoma.rest.RestBinder
+import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.startup.StartupBinder
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
@@ -33,6 +33,8 @@ import io.grpc.BindableService
 import io.grpc.ServerInterceptors
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import java.io.File
@@ -138,6 +140,8 @@ class WebServerStarter(
 @Suppress("unused")
 fun main(vararg args: String) {
     InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
+    System.setOut(IoBuilder.forLogger("System.sout").setLevel(Level.WARN).buildPrintStream())
+    System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())
 
     val serviceLocator = ServiceLocatorUtilities.bind(
             CommonBinder(),

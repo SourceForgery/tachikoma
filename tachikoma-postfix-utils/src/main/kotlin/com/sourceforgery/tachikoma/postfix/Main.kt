@@ -12,6 +12,8 @@ import io.grpc.stub.MetadataUtils
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
@@ -84,6 +86,8 @@ internal constructor(
 
 fun main(args: Array<String>) {
     InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
+    System.setOut(IoBuilder.forLogger("System.sout").setLevel(Level.WARN).buildPrintStream())
+    System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())
 
     val configuration = Configuration()
     Main(configuration)

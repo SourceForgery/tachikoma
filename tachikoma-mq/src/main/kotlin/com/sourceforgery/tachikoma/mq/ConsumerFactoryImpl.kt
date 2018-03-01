@@ -132,7 +132,10 @@ private constructor(
                 .createChannel()!!
 
         val future = SettableFuture.create<Void>()
-        future.addListener(Runnable { channel.close() }, closeExecutor)
+        future.addListener(Runnable {
+            LOGGER.info("Closing channel")
+            channel.close()
+        }, closeExecutor)
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
                 var handledResult = false
@@ -142,7 +145,7 @@ private constructor(
                     channel.basicAck(envelope.deliveryTag, false)
                     handledResult = true
                 } catch (e: Exception) {
-                    LOGGER.error("", e)
+                    LOGGER.error("Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag", e)
                     future.setException(e)
                     handledResult = true
                 } finally {
