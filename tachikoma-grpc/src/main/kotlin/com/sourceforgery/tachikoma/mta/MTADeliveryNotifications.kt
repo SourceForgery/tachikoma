@@ -36,7 +36,7 @@ private constructor(
 
             val status = when (request.status.substring(0, 2)) {
                 "2." -> {
-                    if (!arrayOf("2.2.0", "2.6.0").contains(request.status)) {
+                    if (!arrayOf("2.0.0", "2.6.0").contains(request.status)) {
                         LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it DELIVERED anyway" }
                     }
                     notificationMessageBuilder.messageDelivered = MessageDelivered.getDefaultInstance()
