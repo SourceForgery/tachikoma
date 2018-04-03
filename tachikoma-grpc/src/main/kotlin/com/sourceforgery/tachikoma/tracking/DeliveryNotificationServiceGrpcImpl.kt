@@ -23,7 +23,9 @@ private constructor(
             deliveryNotificationService.notificationStream(
                     responseObserver = responseObserver,
                     request = request,
-                    authenticationId = authentication.authenticationId
+                    authenticationId = authentication.authenticationId,
+                    mailDomain = authentication.mailDomain,
+                    accountId = authentication.accountId
             )
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))

@@ -163,16 +163,27 @@ private constructor(
         return future
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
         val queue = DeliveryNotificationMessageQueue(authenticationId)
+        setupAuthentication(
+                authenticationId = authenticationId,
+                mailDomain = mailDomain,
+                accountId = accountId
+        )
         return listenOnQueue(queue, callback)
     }
 
     override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+        setupAccount(mailDomain)
         return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+        setupAuthentication(
+                authenticationId = authenticationId,
+                mailDomain = mailDomain,
+                accountId = accountId
+        )
         return listenOnQueue(IncomingEmailNotificationMessageQueue(authenticationId), callback)
     }
 
