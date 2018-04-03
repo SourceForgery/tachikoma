@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
-import com.sourceforgery.tachikoma.assertGrpcOpen
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
@@ -469,7 +468,6 @@ private constructor(
                                 .setTo(NamedEmail(email.receiverEmail, email.receiverName).toGrpc())
                                 .setFrom(NamedEmail(email.fromEmail, email.fromName).toGrpc())
                                 .build()
-                        assertGrpcOpen(responseObserver)
                         responseObserver.onNext(incomingEmail)
                     } else {
                         LOGGER.warn { "Could not find email with id $incomingEmailId" }

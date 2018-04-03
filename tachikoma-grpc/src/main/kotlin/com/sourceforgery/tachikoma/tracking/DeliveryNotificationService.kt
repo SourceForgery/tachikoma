@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.tracking
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.protobuf.Empty
-import com.sourceforgery.tachikoma.assertGrpcOpen
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
@@ -53,7 +52,6 @@ private constructor(
                 LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
             } else {
                 val emailNotification = deliveryNotificationMessage.toEmailNotification(emailData, request)
-                assertGrpcOpen(responseObserver)
                 responseObserver.onNext(emailNotification)
             }
         }
