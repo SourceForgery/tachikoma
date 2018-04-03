@@ -22,7 +22,12 @@ private constructor(
         try {
             authentication.requireFrontend()
             LOGGER.info { "Connected, user ${authentication.authenticationId} getting incoming mails from ${authentication.mailDomain}" }
-            mailDeliveryService.getIncomingEmails(responseObserver, authentication.authenticationId)
+            mailDeliveryService.getIncomingEmails(
+                    responseObserver = responseObserver,
+                    authenticationId = authentication.authenticationId,
+                    mailDomain = authentication.mailDomain,
+                    accountId = authentication.accountId
+            )
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }

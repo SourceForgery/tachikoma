@@ -19,8 +19,10 @@ import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
+import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
@@ -40,7 +42,9 @@ private constructor(
     fun notificationStream(
             responseObserver: StreamObserver<EmailNotification>,
             request: NotificationStreamParameters,
-            authenticationId: AuthenticationId
+            authenticationId: AuthenticationId,
+            accountId: AccountId,
+            mailDomain: MailDomain
     ) {
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
         val deliveryNotificationCallback = { deliveryNotificationMessage: DeliveryNotificationMessage ->
@@ -55,6 +59,8 @@ private constructor(
         }
         val future = mqSequenceFactory.listenForDeliveryNotifications(
                 authenticationId = authenticationId,
+                mailDomain = mailDomain,
+                accountId = accountId,
                 callback = deliveryNotificationCallback
         )
         serverCallStreamObserver

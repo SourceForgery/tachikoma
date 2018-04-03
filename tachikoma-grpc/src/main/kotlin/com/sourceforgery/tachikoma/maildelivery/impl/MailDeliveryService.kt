@@ -37,6 +37,7 @@ import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.logging.logger
@@ -453,23 +454,28 @@ private constructor(
         doc.body().appendChild(trackingPixel)
     }
 
-    fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>, authenticationId: AuthenticationId) {
-        val future = mqSequenceFactory.listenForIncomingEmails(authenticationId, {
-            val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
-            val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId)
-            if (email != null) {
-                val incomingEmail = IncomingEmail.newBuilder()
-                        .setIncomingEmailId(incomingEmailId.toGrpc())
-                        .setSubject(email.subject)
-                        .setTo(NamedEmail(email.receiverEmail, email.receiverName).toGrpc())
-                        .setFrom(NamedEmail(email.fromEmail, email.fromName).toGrpc())
-                        .build()
-                assertGrpcOpen(responseObserver)
-                responseObserver.onNext(incomingEmail)
-            } else {
-                LOGGER.warn { "Could not find email with id $incomingEmailId" }
-            }
-        })
+    fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>, authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId) {
+        val future = mqSequenceFactory.listenForIncomingEmails(
+                authenticationId = authenticationId,
+                mailDomain = mailDomain,
+                accountId = accountId,
+                callback = {
+                    val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
+                    val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId)
+                    if (email != null) {
+                        val incomingEmail = IncomingEmail.newBuilder()
+                                .setIncomingEmailId(incomingEmailId.toGrpc())
+                                .setSubject(email.subject)
+                                .setTo(NamedEmail(email.receiverEmail, email.receiverName).toGrpc())
+                                .setFrom(NamedEmail(email.fromEmail, email.fromName).toGrpc())
+                                .build()
+                        assertGrpcOpen(responseObserver)
+                        responseObserver.onNext(incomingEmail)
+                    } else {
+                        LOGGER.warn { "Could not find email with id $incomingEmailId" }
+                    }
+                }
+        )
         future.addListener(Runnable {
             responseObserver.onCompleted()
         }, responseCloser)

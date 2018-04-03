@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.mq
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.util.concurrent.BlockingQueue
@@ -20,7 +21,8 @@ private constructor() : MQSequenceFactory {
     val incomingEmails = LinkedBlockingQueue<QueueMessageWrap<IncomingEmailNotificationMessage>>(1)
 
     private val executorService: ExecutorService = Executors.newCachedThreadPool()
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(deliveryNotifications, callback)
     }
 
@@ -49,7 +51,7 @@ private constructor() : MQSequenceFactory {
         return listenOnQueue(outgoingEmails, callback)
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(incomingEmails, callback)
     }
 
