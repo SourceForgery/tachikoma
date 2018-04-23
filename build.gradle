@@ -2,14 +2,14 @@ buildscript {
     dependencies {
         classpath "co.riiid:gradle-github-plugin:0.4.2"
         classpath "com.google.gradle:osdetector-gradle-plugin:1.4.0"
-        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.4"
+        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.5"
         classpath ("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0") {
             exclude group: 'nekohtml', module: 'xercesMinimal'
         }
-        classpath "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:3.0.0"
+        classpath "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:3.2.0"
         classpath "com.netflix.nebula:gradle-lint-plugin:8.3.1"
-        classpath "gradle.plugin.org.jmailen.gradle:kotlinter-gradle:1.7.0"
-        classpath "io.ebean:ebean-gradle-plugin:11.5.1"
+        classpath "gradle.plugin.org.jmailen.gradle:kotlinter-gradle:1.11.2"
+        classpath "io.ebean:ebean-gradle-plugin:11.10.1"
         classpath "net.researchgate:gradle-release:2.6.0"
         classpath "org.ajoberstar:gradle-git:1.7.2"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
