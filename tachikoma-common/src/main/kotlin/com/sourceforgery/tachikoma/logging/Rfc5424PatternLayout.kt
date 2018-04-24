@@ -46,26 +46,26 @@ import java.util.regex.Matcher
 @Plugin(name = "Rfc5424PatternLayout", category = Node.CATEGORY, elementType = Layout.ELEMENT_TYPE, printObject = true)
 class Rfc5424PatternLayout
 private constructor(
-        config: Configuration?,
-        val facility: Facility,
-        id: String?,
-        private val enterpriseNumber: Int,
-        private val includeMdc: Boolean,
-        private val includeNewLine: Boolean,
-        escapeNL: String?,
-        mdcId: String,
-        private val mdcPrefix: String?,
-        private val eventPrefix: String?,
-        private val appName: String?,
-        private val messageId: String?,
-        excludes: String?,
-        includes: String?,
-        required: String?,
-        charset: Charset,
-        exceptionPattern: String?,
-        private val useTlsMessageFormat: Boolean,
-        loggerFields: Array<LoggerFields>?,
-        pattern: String
+    config: Configuration?,
+    val facility: Facility,
+    id: String?,
+    private val enterpriseNumber: Int,
+    private val includeMdc: Boolean,
+    private val includeNewLine: Boolean,
+    escapeNL: String?,
+    mdcId: String,
+    private val mdcPrefix: String?,
+    private val eventPrefix: String?,
+    private val appName: String?,
+    private val messageId: String?,
+    excludes: String?,
+    includes: String?,
+    required: String?,
+    charset: Charset,
+    exceptionPattern: String?,
+    private val useTlsMessageFormat: Boolean,
+    loggerFields: Array<LoggerFields>?,
+    pattern: String
 ) : AbstractStringLayout(charset) {
     private val defaultId: String?
     private val mdcId: String?
@@ -92,41 +92,41 @@ private constructor(
     init {
         val exceptionParser = createPatternParser(config, ThrowablePatternConverter::class.java)
         exceptionFormatters = exceptionPattern
-                ?.let {
-                    exceptionParser.parse(exceptionPattern)
-                }
+            ?.let {
+                exceptionParser.parse(exceptionPattern)
+            }
         this.defaultId = id ?: DEFAULT_ID
         this.escapeNewLine = escapeNL
-                ?.let {
-                    Matcher.quoteReplacement(escapeNL)
-                }
+            ?.let {
+                Matcher.quoteReplacement(escapeNL)
+            }
         this.mdcId = id ?: DEFAULT_MDCID
         this.mdcSdId = StructuredDataId(mdcId, enterpriseNumber, null, null)
         this.localHostName = NetUtils.getLocalHostname()
         var c: ListChecker? = null
         mdcExcludes = toTrimmedArray(excludes)
-                ?.also {
-                    c = ExcludeChecker()
-                }
+            ?.also {
+                c = ExcludeChecker()
+            }
         mdcIncludes = toTrimmedArray(includes)
-                ?.also {
-                    c = IncludeChecker()
-                }
+            ?.also {
+                c = IncludeChecker()
+            }
         mdcRequired = toTrimmedArray(required)
         this.listChecker = c ?: noopChecker
         configName = config
-                ?.name
-                ?.let {
-                    if (it.isNotEmpty()) {
-                        it
-                    } else {
-                        null
-                    }
+            ?.name
+            ?.let {
+                if (it.isNotEmpty()) {
+                    it
+                } else {
+                    null
                 }
+            }
         this.fieldFormatters = createFieldFormatters(loggerFields, config)
         this.procId = ProcessIdUtil.getProcessId()
         this.pattern = createPatternParser(config, null)
-                .parse(pattern)
+            .parse(pattern)
     }
 
     private fun toTrimmedArray(str: String?): List<String>? {
@@ -155,7 +155,7 @@ private constructor(
                         sdParams[key1] = formatters
                     }
                     val fieldFormatter = FieldFormatter(sdParams,
-                            loggerField.discardIfAllFieldsAreEmpty)
+                        loggerField.discardIfAllFieldsAreEmpty)
                     sdIdMap[key.toString()] = fieldFormatter
                 }
             }
@@ -388,17 +388,17 @@ private constructor(
 
     private fun computeTimeStampString(now: Long): String? {
         val last: Long =
-                synchronized(syncObj) {
-                    if (now == lastTimestamp) {
-                        return timestampStr
-                    }
-                    lastTimestamp
+            synchronized(syncObj) {
+                if (now == lastTimestamp) {
+                    return timestampStr
                 }
+                lastTimestamp
+            }
         val dt = ZonedDateTime
-                .ofInstant(
-                        Instant.ofEpochMilli(now),
-                        ZoneId.systemDefault()
-                )!!
+            .ofInstant(
+                Instant.ofEpochMilli(now),
+                ZoneId.systemDefault()
+            )!!
 
         val dateString = "${dt.toLocalDateTime()}${dt.offset}"
         synchronized(syncObj) {
@@ -532,9 +532,9 @@ private constructor(
     }
 
     private class StructuredDataElement(
-            internal val fields: MutableMap<String, String>,
-            internal val prefix: String?,
-            private val discardIfEmpty: Boolean
+        internal val fields: MutableMap<String, String>,
+        internal val prefix: String?,
+        private val discardIfEmpty: Boolean
     ) {
 
         fun discard(): Boolean {
@@ -580,58 +580,58 @@ private constructor(
         @PluginFactory
         @JvmStatic
         fun createLayout(
-                // @formatter:off
-                @PluginAttribute(value = "facility", defaultString = "LOCAL0") facility: Facility,
-                @PluginAttribute("id") id: String?,
-                @PluginAttribute(value = "enterpriseNumber", defaultInt = DEFAULT_ENTERPRISE_NUMBER)
-                enterpriseNumber: Int,
-                @PluginAttribute(value = "includeMDC", defaultBoolean = true) includeMDC: Boolean,
-                @PluginAttribute(value = "mdcId", defaultString = DEFAULT_MDCID) mdcId: String,
-                @PluginAttribute("mdcPrefix") mdcPrefix: String?,
-                @PluginAttribute("eventPrefix") eventPrefix: String?,
-                @PluginAttribute(value = "newLine", defaultBoolean = true) newLine: Boolean,
-                @PluginAttribute("newLineEscape") escapeNL: String?,
-                @PluginAttribute("appName") appName: String,
-                @PluginAttribute("messageId") msgId: String?,
-                @PluginAttribute("mdcExcludes") excludes: String?,
-                @PluginAttribute("mdcIncludes") includes: String?,
-                @PluginAttribute("mdcRequired") required: String?,
-                @PluginAttribute("exceptionPattern", defaultString = "%ex") exceptionPattern: String,
-                // RFC 5425
-                @PluginAttribute(value = "useTlsMessageFormat") useTlsMessageFormat: Boolean?,
-                @PluginElement("LoggerFields") loggerFields: Array<LoggerFields>?,
-                @PluginConfiguration config: Configuration,
-                @PluginAttribute(value = "pattern", defaultString = "%m") pattern: String): Rfc5424PatternLayout {
+            // @formatter:off
+            @PluginAttribute(value = "facility", defaultString = "LOCAL0") facility: Facility,
+            @PluginAttribute("id") id: String?,
+            @PluginAttribute(value = "enterpriseNumber", defaultInt = DEFAULT_ENTERPRISE_NUMBER)
+            enterpriseNumber: Int,
+            @PluginAttribute(value = "includeMDC", defaultBoolean = true) includeMDC: Boolean,
+            @PluginAttribute(value = "mdcId", defaultString = DEFAULT_MDCID) mdcId: String,
+            @PluginAttribute("mdcPrefix") mdcPrefix: String?,
+            @PluginAttribute("eventPrefix") eventPrefix: String?,
+            @PluginAttribute(value = "newLine", defaultBoolean = true) newLine: Boolean,
+            @PluginAttribute("newLineEscape") escapeNL: String?,
+            @PluginAttribute("appName") appName: String,
+            @PluginAttribute("messageId") msgId: String?,
+            @PluginAttribute("mdcExcludes") excludes: String?,
+            @PluginAttribute("mdcIncludes") includes: String?,
+            @PluginAttribute("mdcRequired") required: String?,
+            @PluginAttribute("exceptionPattern", defaultString = "%ex") exceptionPattern: String,
+            // RFC 5425
+            @PluginAttribute(value = "useTlsMessageFormat") useTlsMessageFormat: Boolean?,
+            @PluginElement("LoggerFields") loggerFields: Array<LoggerFields>?,
+            @PluginConfiguration config: Configuration,
+            @PluginAttribute(value = "pattern", defaultString = "%m") pattern: String): Rfc5424PatternLayout {
             val fixedIncludes = includes
-                    ?.let {
-                        if (excludes != null) {
-                            AbstractLayout.LOGGER.error("mdcIncludes and mdcExcludes are mutually exclusive. Includes wil be ignored")
-                            null
-                        } else {
-                            it
-                        }
+                ?.let {
+                    if (excludes != null) {
+                        AbstractLayout.LOGGER.error("mdcIncludes and mdcExcludes are mutually exclusive. Includes wil be ignored")
+                        null
+                    } else {
+                        it
                     }
+                }
             return Rfc5424PatternLayout(
-                    config = config,
-                    facility = facility,
-                    id = id,
-                    enterpriseNumber = enterpriseNumber,
-                    includeMdc = includeMDC,
-                    includeNewLine = newLine,
-                    escapeNL = escapeNL,
-                    mdcId = mdcId,
-                    mdcPrefix = mdcPrefix,
-                    eventPrefix = eventPrefix,
-                    appName = appName,
-                    messageId = msgId,
-                    excludes = excludes,
-                    includes = fixedIncludes,
-                    required = required,
-                    charset = StandardCharsets.UTF_8,
-                    exceptionPattern = exceptionPattern,
-                    useTlsMessageFormat = useTlsMessageFormat ?: false,
-                    loggerFields = loggerFields,
-                    pattern = pattern
+                config = config,
+                facility = facility,
+                id = id,
+                enterpriseNumber = enterpriseNumber,
+                includeMdc = includeMDC,
+                includeNewLine = newLine,
+                escapeNL = escapeNL,
+                mdcId = mdcId,
+                mdcPrefix = mdcPrefix,
+                eventPrefix = eventPrefix,
+                appName = appName,
+                messageId = msgId,
+                excludes = excludes,
+                includes = fixedIncludes,
+                required = required,
+                charset = StandardCharsets.UTF_8,
+                exceptionPattern = exceptionPattern,
+                useTlsMessageFormat = useTlsMessageFormat ?: false,
+                loggerFields = loggerFields,
+                pattern = pattern
             )
         }
 
