@@ -6,18 +6,18 @@
     </Properties>
     <Appenders>
         <Syslog name="syslog" host="localhost" port="514" protocol="TCP">
-            <Rfc5424PatternLayout appName="tachikoma/postfix" mdcId="tachikoma" pattern="${pattern}" />
+            <Rfc5424PatternLayout appName="tachikoma/postfix" mdcId="tachikoma" pattern="${pattern}"/>
         </Syslog>
-	<Console name="StdOut" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{ISO8601} ${pattern}\n" />
+        <Console name="StdOut" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} ${pattern}\n"/>
         </Console>
     </Appenders>
     <Loggers>
         <Root level="info">
-            <AppenderRef ref="syslog" />
-            <AppenderRef ref="StdOut" />
+            <AppenderRef ref="syslog"/>
+            <AppenderRef ref="StdOut"/>
         </Root>
-	<Logger name="com.sourceforgery.tachikoma" level="trace" />
+        <Logger name="com.sourceforgery.tachikoma" level="trace"/>
         <!-- <Logger name="smtp.incoming.debug" level="trace" />-->
     </Loggers>
 </Configuration>

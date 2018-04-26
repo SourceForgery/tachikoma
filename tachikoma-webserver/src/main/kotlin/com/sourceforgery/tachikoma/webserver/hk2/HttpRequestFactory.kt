@@ -8,7 +8,7 @@ import javax.inject.Inject
 class HttpRequestFactory
 @Inject
 private constructor(
-        private val httpRequest: SettableReference<HttpRequest>
+    private val httpRequest: SettableReference<HttpRequest>
 ) : Factory<HttpRequest> {
 
     override fun provide(): HttpRequest = httpRequest.value!!

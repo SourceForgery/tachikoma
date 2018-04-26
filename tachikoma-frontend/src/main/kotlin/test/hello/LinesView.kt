@@ -26,7 +26,9 @@ class LinesView(val linesHolder: Element, val formRoot: Element) {
 
     var inputText: String
         get() = input.value
-        set(newValue) { input.value = newValue }
+        set(newValue) {
+            input.value = newValue
+        }
 
     fun focusInput() {
         input.focus()

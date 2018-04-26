@@ -19,10 +19,10 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveUserResponse
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
-import com.sourceforgery.tachikoma.grpc.frontend.toUserId
 import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
+import com.sourceforgery.tachikoma.grpc.frontend.toUserId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
@@ -30,9 +30,9 @@ import javax.inject.Inject
 class UserService
 @Inject
 private constructor(
-        private val accountDAO: AccountDAO,
-        private val authenticationDAO: AuthenticationDAO,
-        private val internalCreateUsers: InternalCreateUserService
+    private val accountDAO: AccountDAO,
+    private val authenticationDAO: AuthenticationDAO,
+    private val internalCreateUsers: InternalCreateUserService
 ) {
     fun addFrontendUser(request: AddUserRequest): ModifyUserResponse {
         val role = frontendRole(request.authenticationRole)
@@ -46,28 +46,28 @@ private constructor(
         val account = accountDAO.getByMailDomain(MailDomain(request.mailDomain))!!
 
         val newAuth = internalCreateUsers.createFrontendAuthentication(
-                role = role,
-                addApiToken = request.addApiToken,
-                login = login,
-                password = password,
-                active = request.active,
-                account = account,
-                recipientOverride = recipientOverride
+            role = role,
+            addApiToken = request.addApiToken,
+            login = login,
+            password = password,
+            active = request.active,
+            account = account,
+            recipientOverride = recipientOverride
         )
         return ModifyUserResponse.newBuilder()
-                .apply {
-                    user = toUser(newAuth)
-                    apiToken = newAuth.apiToken.orEmpty()
-                }
-                .build()
+            .apply {
+                user = toUser(newAuth)
+                apiToken = newAuth.apiToken.orEmpty()
+            }
+            .build()
     }
 
     private fun frontendRole(userRole: FrontendUserRole) =
-            when (userRole) {
-                FrontendUserRole.FRONTEND -> AuthenticationRole.FRONTEND
-                FrontendUserRole.FRONTEND_ADMIN -> AuthenticationRole.FRONTEND_ADMIN
-                else -> throw IllegalArgumentException("$userRole is not implemented")
-            }
+        when (userRole) {
+            FrontendUserRole.FRONTEND -> AuthenticationRole.FRONTEND
+            FrontendUserRole.FRONTEND_ADMIN -> AuthenticationRole.FRONTEND_ADMIN
+            else -> throw IllegalArgumentException("$userRole is not implemented")
+        }
 
     fun modifyFrontendUser(request: ModifyUserRequest, auth: AuthenticationDBO): ModifyUserResponse {
         val addApiToken = request.apiToken == ApiToken.RESET_API_TOKEN
@@ -76,10 +76,10 @@ private constructor(
         }
         if (request.hasRecipientOverride()) {
             auth.recipientOverride = request.recipientOverride.email
-                    .emptyToNull()
-                    ?.let {
-                        Email(request.recipientOverride.email)
-                    }
+                .emptyToNull()
+                ?.let {
+                    Email(request.recipientOverride.email)
+                }
         }
         auth.role = frontendRole(request.authenticationRole)
         auth.active = request.active
@@ -88,33 +88,33 @@ private constructor(
         }
 
         request.newPassword
-                .emptyToNull()
-                ?.let {
-                    if (auth.login != null) {
-                        auth.encryptedPassword = PasswordStorage.createHash(it)
-                    } else {
-                        throw IllegalArgumentException("Trying to set password when there's no login")
-                    }
+            .emptyToNull()
+            ?.let {
+                if (auth.login != null) {
+                    auth.encryptedPassword = PasswordStorage.createHash(it)
+                } else {
+                    throw IllegalArgumentException("Trying to set password when there's no login")
                 }
+            }
 
         authenticationDAO.save(auth)
         return ModifyUserResponse.newBuilder()
-                .apply {
-                    user = toUser(auth)
-                    if (addApiToken) {
-                        apiToken = auth.apiToken
-                    }
+            .apply {
+                user = toUser(auth)
+                if (addApiToken) {
+                    apiToken = auth.apiToken
                 }
-                .build()
+            }
+            .build()
     }
 
     fun getFrontendUsers(mailDomain: MailDomain, responseObserver: StreamObserver<FrontendUser>) {
         accountDAO.getByMailDomain(mailDomain = mailDomain)!!
-                .authentications
-                .asSequence()
-                .filter { it.role == AuthenticationRole.FRONTEND_ADMIN || it.role == AuthenticationRole.FRONTEND }
-                .map { toUser(it) }
-                .forEach { responseObserver.onNext(it) }
+            .authentications
+            .asSequence()
+            .filter { it.role == AuthenticationRole.FRONTEND_ADMIN || it.role == AuthenticationRole.FRONTEND }
+            .map { toUser(it) }
+            .forEach { responseObserver.onNext(it) }
     }
 
     fun removeUser(request: RemoveUserRequest): RemoveUserResponse {
@@ -124,20 +124,20 @@ private constructor(
 
     private fun toUser(auth: AuthenticationDBO): FrontendUser {
         return FrontendUser.newBuilder()
-                .apply {
-                    active = auth.active
-                    authId = auth.id.toUserId()
-                    authenticationRole = auth.role.toFrontendRole()
-                    dateCreated = auth.dateCreated!!.toTimestamp()
-                    lastUpdated = auth.lastUpdated!!.toTimestamp()
-                    hasPassword = auth.encryptedPassword != null
-                    login = auth.login.orEmpty()
-                    mailDomain = auth.account.mailDomain.mailDomain
-                    auth.recipientOverride?.also {
-                        recipientOverride = it.toGrpcInternal()
-                    }
-                    hasApiToken = auth.apiToken != null
+            .apply {
+                active = auth.active
+                authId = auth.id.toUserId()
+                authenticationRole = auth.role.toFrontendRole()
+                dateCreated = auth.dateCreated!!.toTimestamp()
+                lastUpdated = auth.lastUpdated!!.toTimestamp()
+                hasPassword = auth.encryptedPassword != null
+                login = auth.login.orEmpty()
+                mailDomain = auth.account.mailDomain.mailDomain
+                auth.recipientOverride?.also {
+                    recipientOverride = it.toGrpcInternal()
                 }
-                .build()
+                hasApiToken = auth.apiToken != null
+            }
+            .build()
     }
 }

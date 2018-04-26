@@ -21,16 +21,16 @@ class QueueStreamObserver<V : Any> : StreamObserver<V> {
 
     fun take(milliseconds: Long): V {
         val wrap = queue.poll(milliseconds, TimeUnit.MILLISECONDS)
-                ?: throw AssertionError("Did not get any result in $milliseconds milliseconds")
+            ?: throw AssertionError("Did not get any result in $milliseconds milliseconds")
         return wrap.get()
-                ?: throw AssertionError("Didn't expect end of data")
+            ?: throw AssertionError("Didn't expect end of data")
     }
 }
 
 class Wrap<V : Any>
 private constructor(
-        private val value: V?,
-        private val exception: Throwable?
+    private val value: V?,
+    private val exception: Throwable?
 ) {
     constructor(value: V) : this(value, null)
     constructor(exception: Throwable) : this(null, exception)

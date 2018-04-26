@@ -10,8 +10,8 @@ import java.io.StringWriter
 import java.util.Locale
 
 abstract class GrpcExceptionCatcher<in T : Throwable>(
-        private val debugConfig: DebugConfig,
-        clazz: Class<T>
+    private val debugConfig: DebugConfig,
+    clazz: Class<T>
 ) {
     protected val logger = logger("grpc.exceptions.${clazz.simpleName.toLowerCase(Locale.US)}")
 

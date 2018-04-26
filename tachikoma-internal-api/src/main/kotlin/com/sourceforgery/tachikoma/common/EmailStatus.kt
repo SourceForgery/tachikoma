@@ -3,9 +3,9 @@ package com.sourceforgery.tachikoma.common
 import io.ebean.annotation.DbEnumValue
 
 enum class EmailStatus(
-        @Suppress("unused")
-        @get:DbEnumValue
-        val dbValue: Int
+    @Suppress("unused")
+    @get:DbEnumValue
+    val dbValue: Int
 ) {
     HARD_BOUNCED(0),
     QUEUED(1),

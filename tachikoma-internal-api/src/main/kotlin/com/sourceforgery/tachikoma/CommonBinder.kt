@@ -9,8 +9,8 @@ import javax.inject.Singleton
 class CommonBinder : AbstractBinder() {
     override fun configure() {
         bind(Clocker())
-                .to(Clock::class.java)
+            .to(Clock::class.java)
         bindAsContract(JobMessageFactory::class.java)
-                .`in`(Singleton::class.java)
+            .`in`(Singleton::class.java)
     }
 }

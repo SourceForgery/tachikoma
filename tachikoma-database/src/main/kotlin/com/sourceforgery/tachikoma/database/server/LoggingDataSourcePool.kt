@@ -5,11 +5,11 @@ import org.avaje.datasource.PoolStatistics
 import org.avaje.datasource.PoolStatus
 
 internal class LoggingDataSourcePool(
-        private val originalDataSourcePool: DataSourcePool,
-        counter: InvokeCounter
+    private val originalDataSourcePool: DataSourcePool,
+    counter: InvokeCounter
 ) : LoggingDataSource(
-        originalDataSource = originalDataSourcePool,
-        counter = counter
+    originalDataSource = originalDataSourcePool,
+    counter = counter
 ), DataSourcePool {
 
     override fun getName(): String {

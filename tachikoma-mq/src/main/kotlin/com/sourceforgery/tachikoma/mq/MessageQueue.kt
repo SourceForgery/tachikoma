@@ -5,9 +5,9 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Duration
 
 enum class JobMessageQueue(
-        override val delay: Duration = Duration.ZERO,
-        override val maxLength: Int? = null,
-        override val nextDestination: MessageQueue<JobMessage>? = null
+    override val delay: Duration = Duration.ZERO,
+    override val maxLength: Int? = null,
+    override val nextDestination: MessageQueue<JobMessage>? = null
 ) : MessageQueue<JobMessage> {
     JOBS,
     JOBS_30_SEC(delay = Duration.ofSeconds(30), nextDestination = JOBS),
@@ -33,7 +33,7 @@ enum class JobMessageQueue(
 }
 
 class OutgoingEmailsMessageQueue(
-        mailDomain: MailDomain
+    mailDomain: MailDomain
 ) : MessageQueue<OutgoingEmailMessage> {
     override val name = "outgoing.$mailDomain"
     override val maxLength: Int? = null
@@ -47,8 +47,8 @@ class OutgoingEmailsMessageQueue(
 }
 
 class DeliveryNotificationMessageQueue(
-        authenticationId: AuthenticationId,
-        override val maxLength: Int? = null
+    authenticationId: AuthenticationId,
+    override val maxLength: Int? = null
 ) : MessageQueue<DeliveryNotificationMessage> {
     override val name = "deliverynotifications.$authenticationId"
     override val delay: Duration = Duration.ZERO
@@ -61,8 +61,8 @@ class DeliveryNotificationMessageQueue(
 }
 
 class IncomingEmailNotificationMessageQueue(
-        authenticationId: AuthenticationId,
-        override val maxLength: Int? = null
+    authenticationId: AuthenticationId,
+    override val maxLength: Int? = null
 ) : MessageQueue<IncomingEmailNotificationMessage> {
     override val name = "incomingemail.$authenticationId"
     override val delay: Duration = Duration.ZERO

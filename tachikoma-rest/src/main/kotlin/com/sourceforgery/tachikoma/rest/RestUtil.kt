@@ -26,13 +26,13 @@ object RestUtil {
 
     fun httpRedirect(redirectUrl: String): HttpResponse {
         return HttpResponse.of(
-                HttpStatus.TEMPORARY_REDIRECT,
-                MediaType.HTML_UTF_8,
-                HttpData.of(
-                        StandardCharsets.UTF_8,
-                        HTML_PAGE_WITH_JAVASCRIPT_AND_HTTP_EQUIV_REDIRECT.format(arrayOf(redirectUrl))
-                ),
-                HttpHeaders.of(LOCATION, redirectUrl)
+            HttpStatus.TEMPORARY_REDIRECT,
+            MediaType.HTML_UTF_8,
+            HttpData.of(
+                StandardCharsets.UTF_8,
+                HTML_PAGE_WITH_JAVASCRIPT_AND_HTTP_EQUIV_REDIRECT.format(arrayOf(redirectUrl))
+            ),
+            HttpHeaders.of(LOCATION, redirectUrl)
         )
     }
 }

@@ -18,20 +18,20 @@ import javax.persistence.Table
 // Represents one call to MailDelivery.sendEmail()
 class EmailSendTransactionDBO
 (
-        // Jsonified version of the gRPC coming in through the front end
-        // for logging (in JSON because of readability and searching)
-        @DbJsonB
-        val jsonRequest: ObjectNode,
-        @Column
-        val fromEmail: Email,
-        @ManyToOne
-        val authentication: AuthenticationDBO,
-        @DbArray
-        val bcc: List<String> = emptyList(),
-        @DbJsonB
-        val metaData: Map<String, String>,
-        @DbArray
-        val tags: List<String>
+    // Jsonified version of the gRPC coming in through the front end
+    // for logging (in JSON because of readability and searching)
+    @DbJsonB
+    val jsonRequest: ObjectNode,
+    @Column
+    val fromEmail: Email,
+    @ManyToOne
+    val authentication: AuthenticationDBO,
+    @DbArray
+    val bcc: List<String> = emptyList(),
+    @DbJsonB
+    val metaData: Map<String, String>,
+    @DbArray
+    val tags: List<String>
 
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])

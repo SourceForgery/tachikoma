@@ -3,7 +3,7 @@ buildscript {
         classpath "co.riiid:gradle-github-plugin:0.4.2"
         classpath "com.google.gradle:osdetector-gradle-plugin:1.4.0"
         classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.5"
-        classpath ("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0") {
+        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0") {
             exclude group: 'nekohtml', module: 'xercesMinimal'
         }
         classpath "gradle.plugin.org.jlleitschuh.gradle:ktlint-gradle:3.2.0"

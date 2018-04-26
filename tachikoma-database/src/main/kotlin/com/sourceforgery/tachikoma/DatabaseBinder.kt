@@ -45,53 +45,53 @@ import javax.inject.Singleton
 class DatabaseBinder : AbstractBinder() {
     override fun configure() {
         bindFactory(EbeanServerFactory::class.java)
-                .to(EbeanServer::class.java)
-                .`in`(Singleton::class.java)
+            .to(EbeanServer::class.java)
+            .`in`(Singleton::class.java)
         bindDAO()
         bindAsContract(LogEverything::class.java)
-                .to(InvokeCounter::class.java)
-                .`in`(RequestScoped::class.java)
+            .to(InvokeCounter::class.java)
+            .`in`(RequestScoped::class.java)
         bindAsContract(DBObjectMapperImpl::class.java)
-                .to(DBObjectMapper::class.java)
-                .`in`(Singleton::class.java)
+            .to(DBObjectMapper::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(PostgresqlDataSourceProvider::class.java)
-                .to(DataSourceProvider::class.java)
-                .`in`(Singleton::class.java)
-                .ranked(-1)
+            .to(DataSourceProvider::class.java)
+            .`in`(Singleton::class.java)
+            .ranked(-1)
         bindAsContract(InternalCreateUserServiceImpl::class.java)
-                .to(InternalCreateUserService::class.java)
-                .`in`(Singleton::class.java)
+            .to(InternalCreateUserService::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(CreateUsers::class.java)
-                .`in`(Singleton::class.java)
+            .`in`(Singleton::class.java)
         bindEbeanHooks()
         bindDatabaseUpgrades()
     }
 
     private fun bindDAO() {
         bindAsContract(AccountDAOImpl::class.java)
-                .to(AccountDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(AccountDAO::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(AuthenticationDAOImpl::class.java)
-                .to(AuthenticationDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(AuthenticationDAO::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(BlockedEmailDAOImpl::class.java)
-                .to(BlockedEmailDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(BlockedEmailDAO::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(EmailDAOImpl::class.java)
-                .to(EmailDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(EmailDAO::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(EmailSendTransactionDAOImpl::class.java)
-                .to(EmailSendTransactionDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(EmailSendTransactionDAO::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(EmailStatusEventDAOImpl::class.java)
-                .to(EmailStatusEventDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(EmailStatusEventDAO::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(IncomingEmailAddressDAOImpl::class.java)
-                .to(IncomingEmailAddressDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(IncomingEmailAddressDAO::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(IncomingEmailDAOImpl::class.java)
-                .to(IncomingEmailDAO::class.java)
-                .`in`(Singleton::class.java)
+            .to(IncomingEmailDAO::class.java)
+            .`in`(Singleton::class.java)
     }
 
     private fun bindEbeanHooks() {
@@ -99,8 +99,8 @@ class DatabaseBinder : AbstractBinder() {
         )
         for (ebeanHook in ebeanHooks) {
             bindAsContract(ebeanHook)
-                    .to(EbeanHook::class.java)
-                    .`in`(Singleton::class.java)
+                .to(EbeanHook::class.java)
+                .`in`(Singleton::class.java)
         }
     }
 
@@ -108,21 +108,21 @@ class DatabaseBinder : AbstractBinder() {
         // NEVER EVER change order or insert elements anywhere but at the end of this list!!
         // These classes will be run in order before ebean starts
         val databaseUpgrades = listOf(
-                Version1::class.java,
-                Version2::class.java,
-                Version3::class.java,
-                Version4::class.java,
-                Version5::class.java,
-                Version6::class.java,
-                Version7::class.java,
-                Version8::class.java,
-                Version9::class.java
+            Version1::class.java,
+            Version2::class.java,
+            Version3::class.java,
+            Version4::class.java,
+            Version5::class.java,
+            Version6::class.java,
+            Version7::class.java,
+            Version8::class.java,
+            Version9::class.java
         )
         var idx = 0
         for (databaseUpgrade in databaseUpgrades) {
             bindAsContract(databaseUpgrade)
-                    .to(DatabaseUpgrade::class.java)
-                    .ranked(--idx)
+                .to(DatabaseUpgrade::class.java)
+                .ranked(--idx)
         }
     }
 }

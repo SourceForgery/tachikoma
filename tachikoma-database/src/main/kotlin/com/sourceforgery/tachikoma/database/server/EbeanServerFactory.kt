@@ -21,13 +21,13 @@ import javax.sql.DataSource
 class EbeanServerFactory
 @Inject
 private constructor(
-        private val databaseConfig: DatabaseConfig,
-        private val counter: InvokeCounter,
-        private val dbObjectMapper: DBObjectMapper,
-        private val ebeanHooks: IterableProvider<EbeanHook>,
-        private val databaseUpgrades: IterableProvider<DatabaseUpgrade>,
-        private val hK2RequestContext: HK2RequestContext,
-        private val dataSourceProvider: DataSourceProvider
+    private val databaseConfig: DatabaseConfig,
+    private val counter: InvokeCounter,
+    private val dbObjectMapper: DBObjectMapper,
+    private val ebeanHooks: IterableProvider<EbeanHook>,
+    private val databaseUpgrades: IterableProvider<DatabaseUpgrade>,
+    private val hK2RequestContext: HK2RequestContext,
+    private val dataSourceProvider: DataSourceProvider
 ) : Factory<EbeanServer> {
 
     private inner class WrappedServerConfig : ServerConfig() {
@@ -35,22 +35,22 @@ private constructor(
             if (this.databasePlatform is PostgresPlatform) {
                 // Only do database upgrade on postgresql
                 originalDataSource
-                        ?.also { upgradeDatabase(it) }
+                    ?.also { upgradeDatabase(it) }
             }
 
             if (databaseConfig.timeDatabaseQueries) {
                 val loggingDataSource =
-                        when (originalDataSource) {
-                            null -> null
-                            is DataSourcePool -> LoggingDataSourcePool(
-                                    originalDataSourcePool = originalDataSource,
-                                    counter = counter
-                            )
-                            else -> LoggingDataSource(
-                                    originalDataSource = originalDataSource,
-                                    counter = counter
-                            )
-                        }
+                    when (originalDataSource) {
+                        null -> null
+                        is DataSourcePool -> LoggingDataSourcePool(
+                            originalDataSourcePool = originalDataSource,
+                            counter = counter
+                        )
+                        else -> LoggingDataSource(
+                            originalDataSource = originalDataSource,
+                            counter = counter
+                        )
+                    }
                 super.setDataSource(loggingDataSource)
             } else {
                 super.setDataSource(originalDataSource)
@@ -70,10 +70,10 @@ private constructor(
                     it.autoCommit = false
                     currentVersion = serviceHandle.service.run(it)
                     it.prepareStatement("UPDATE database_version SET version = ?")
-                            .use {
-                                it.setInt(1, currentVersion)
-                                it.execute()
-                            }
+                        .use {
+                            it.setInt(1, currentVersion)
+                            it.execute()
+                        }
                     it.commit()
                 }
             }
@@ -97,11 +97,11 @@ private constructor(
         return hK2RequestContext.runInScope {
             val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
             ebeanHooks
-                    .handleIterator()
-                    .forEach {
-                        it.service.postStart(ebeanServer)
-                        it.destroy()
-                    }
+                .handleIterator()
+                .forEach {
+                    it.service.postStart(ebeanServer)
+                    it.destroy()
+                }
             ebeanServer
         }
     }

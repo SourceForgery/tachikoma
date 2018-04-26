@@ -8,7 +8,7 @@ import javax.inject.Inject
 class TestHK2RequestContext
 @Inject
 private constructor(
-        private val serviceLocator: ServiceLocator
+    private val serviceLocator: ServiceLocator
 ) : HK2RequestContext {
     override fun <T> runInScope(ctx: ReqCtxInstance, task: (ServiceLocator) -> T) = runInScope(task)
 

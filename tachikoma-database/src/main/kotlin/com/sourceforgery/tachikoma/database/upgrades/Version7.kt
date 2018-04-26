@@ -5,10 +5,10 @@ import java.sql.Connection
 class Version7 : DatabaseUpgrade {
     override fun run(connection: Connection): Int {
         connection
-                .createStatement()
-                .use {
-                    it.execute("ALTER TABLE e_email ADD COLUMN subject TEXT")
-                }
+            .createStatement()
+            .use {
+                it.execute("ALTER TABLE e_email ADD COLUMN subject TEXT")
+            }
         return -7
     }
 }

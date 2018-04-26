@@ -7,13 +7,13 @@ import javax.inject.Singleton
 class MqBinder : AbstractBinder() {
     override fun configure() {
         bindAsContract(ConsumerFactoryImpl::class.java)
-                .to(MQSequenceFactory::class.java)
-                .to(MQSender::class.java)
-                .to(MQManager::class.java)
-                .`in`(Singleton::class.java)
+            .to(MQSequenceFactory::class.java)
+            .to(MQSender::class.java)
+            .to(MQManager::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(JobFactory::class.java)
-                .`in`(Singleton::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(JobWorker::class.java)
-                .`in`(Singleton::class.java)
+            .`in`(Singleton::class.java)
     }
 }

@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.database.dao
 
 import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.TestAttribute
+import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.hk2.get
 import io.ebean.EbeanServer

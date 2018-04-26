@@ -14,19 +14,19 @@ import javax.inject.Inject
 internal class MailDeliveryServiceGrpcImpl
 @Inject
 private constructor(
-        private val mailDeliveryService: MailDeliveryService,
-        private val authentication: Authentication,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val mailDeliveryService: MailDeliveryService,
+    private val authentication: Authentication,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
     override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) {
         try {
             authentication.requireFrontend()
             LOGGER.info { "Connected, user ${authentication.authenticationId} getting incoming mails from ${authentication.mailDomain}" }
             mailDeliveryService.getIncomingEmails(
-                    responseObserver = responseObserver,
-                    authenticationId = authentication.authenticationId,
-                    mailDomain = authentication.mailDomain,
-                    accountId = authentication.accountId
+                responseObserver = responseObserver,
+                authenticationId = authentication.authenticationId,
+                mailDomain = authentication.mailDomain,
+                accountId = authentication.accountId
             )
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
@@ -37,10 +37,10 @@ private constructor(
         try {
             authentication.requireFrontend()
             mailDeliveryService.sendEmail(
-                    request = request,
-                    responseObserver = responseObserver,
-                    authenticationId = authentication.authenticationId,
-                    sender = authentication.accountId
+                request = request,
+                responseObserver = responseObserver,
+                authenticationId = authentication.authenticationId,
+                sender = authentication.accountId
             )
             responseObserver.onCompleted()
         } catch (e: Exception) {

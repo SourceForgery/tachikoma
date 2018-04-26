@@ -11,36 +11,36 @@ import javax.inject.Inject
 class EmailStatusEventDAOImpl
 @Inject
 private constructor(
-        private val ebeanServer: EbeanServer
+    private val ebeanServer: EbeanServer
 ) : EmailStatusEventDAO {
 
     override fun save(emailStatusEventDBO: EmailStatusEventDBO) = ebeanServer.save(emailStatusEventDBO)
 
     override fun getEvents(
-            accountId: AccountId,
-            instant: Instant?,
-            recipientEmail: Email?,
-            fromEmail: Email?,
-            events: List<EmailStatus>
+        accountId: AccountId,
+        instant: Instant?,
+        recipientEmail: Email?,
+        fromEmail: Email?,
+        events: List<EmailStatus>
     ): List<EmailStatusEventDBO> {
         return ebeanServer
-                .find(EmailStatusEventDBO::class.java)
-                .where()
-                .eq("email.transaction.authentication.account.dbId", accountId.accountId)
-                .apply {
-                    if (instant != null) {
-                        gt("dateCreated", instant)
-                    }
-                    if (recipientEmail != null) {
-                        eq("email.recipient", recipientEmail)
-                    }
-                    if (fromEmail != null) {
-                        eq("email.transaction.fromEmail", fromEmail)
-                    }
-                    if (events.isNotEmpty()) {
-                        `in`("emailStatus", events)
-                    }
+            .find(EmailStatusEventDBO::class.java)
+            .where()
+            .eq("email.transaction.authentication.account.dbId", accountId.accountId)
+            .apply {
+                if (instant != null) {
+                    gt("dateCreated", instant)
                 }
-                .findList()
+                if (recipientEmail != null) {
+                    eq("email.recipient", recipientEmail)
+                }
+                if (fromEmail != null) {
+                    eq("email.transaction.fromEmail", fromEmail)
+                }
+                if (events.isNotEmpty()) {
+                    `in`("emailStatus", events)
+                }
+            }
+            .findList()
     }
 }

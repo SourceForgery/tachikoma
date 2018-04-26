@@ -22,14 +22,14 @@ internal class UnsubscribeDecoderSpec : Spek({
         it("should create an unsubscribe url") {
 
             val emailId = EmailId
-                    .newBuilder()
-                    .setId(999)
-                    .build()
+                .newBuilder()
+                .setId(999)
+                .build()
 
             val unsubscribeData = UnsubscribeData
-                    .newBuilder()
-                    .setEmailId(emailId)
-                    .build()
+                .newBuilder()
+                .setEmailId(emailId)
+                .build()
 
             val url = unsubscribeDecoder.createUrl(unsubscribeData)
 

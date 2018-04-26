@@ -9,9 +9,9 @@ import javax.inject.Inject
 class JobWorker
 @Inject
 private constructor(
-        private val mqSequenceFactory: MQSequenceFactory,
-        private val jobFactory: JobFactory,
-        private val hK2RequestContext: HK2RequestContext
+    private val mqSequenceFactory: MQSequenceFactory,
+    private val jobFactory: JobFactory,
+    private val hK2RequestContext: HK2RequestContext
 ) {
     private var future: ListenableFuture<Void>? = null
 

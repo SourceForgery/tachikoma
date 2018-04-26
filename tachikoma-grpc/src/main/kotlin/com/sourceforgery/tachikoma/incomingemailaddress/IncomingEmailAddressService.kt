@@ -11,16 +11,16 @@ import javax.inject.Inject
 internal class IncomingEmailAddressService
 @Inject
 private constructor(
-        private val authenticationDAO: AuthenticationDAO,
-        private val incomingEmailAddressDAO: IncomingEmailAddressDAO
+    private val authenticationDAO: AuthenticationDAO,
+    private val incomingEmailAddressDAO: IncomingEmailAddressDAO
 ) {
 
     fun addIncomingEmailAddress(request: IncomingEmailAddress, authenticationId: AuthenticationId) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
         val incomingEmailAddressDBO = IncomingEmailAddressDBO(
-                localPart = request.localPart,
-                account = authenticationDBO.account
+            localPart = request.localPart,
+            account = authenticationDBO.account
         )
 
         incomingEmailAddressDAO.save(incomingEmailAddressDBO)
@@ -30,21 +30,21 @@ private constructor(
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
         incomingEmailAddressDAO.getAll(accountDBO = authenticationDBO.account)
-                .forEach {
-                    val incomingEmailAddress = IncomingEmailAddress
-                            .newBuilder()
-                            .setLocalPart(it.localPart)
-                            .build()
-                    responseObserver.onNext(incomingEmailAddress)
-                }
+            .forEach {
+                val incomingEmailAddress = IncomingEmailAddress
+                    .newBuilder()
+                    .setLocalPart(it.localPart)
+                    .build()
+                responseObserver.onNext(incomingEmailAddress)
+            }
     }
 
     fun deleteIncomingEmailAddress(request: IncomingEmailAddress, authenticationId: AuthenticationId) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
         incomingEmailAddressDAO.delete(
-                accountDBO = authenticationDBO.account,
-                localPart = request.localPart
+            accountDBO = authenticationDBO.account,
+            localPart = request.localPart
         )
     }
 }

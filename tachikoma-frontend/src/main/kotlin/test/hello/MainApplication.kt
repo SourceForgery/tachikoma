@@ -19,6 +19,6 @@ class MainApplication : ApplicationBase() {
     }
 
     override fun dispose() = mapOf(
-            "lines" to presenter.dispose()
+        "lines" to presenter.dispose()
     )
 }

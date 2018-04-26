@@ -10,18 +10,18 @@ import javax.inject.Inject
 class RemoteIPImpl
 @Inject
 private constructor(
-        private val httpRequest: HttpRequest,
-        private val requestContext: RequestContext
+    private val httpRequest: HttpRequest,
+    private val requestContext: RequestContext
 ) : RemoteIP {
     override val remoteAddress: String
         get() {
             return httpRequest.headers().get(X_FORWARDED_FOR, null)
-                    ?.substringBefore(',')
-                    ?: let {
-                        requestContext.remoteAddress<InetSocketAddress>()!!
-                                .address
-                                .hostAddress
-                    }
+                ?.substringBefore(',')
+                ?: let {
+                    requestContext.remoteAddress<InetSocketAddress>()!!
+                        .address
+                        .hostAddress
+                }
         }
 
     companion object {

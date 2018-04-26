@@ -26,8 +26,8 @@ internal class EmailStatusEventDAOSpec : Spek({
     val clock: () -> Clock = located { serviceLocator }
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(
-                TestBinder(),
-                MinimalBinder(EmailStatusEventDAO::class.java)
+            TestBinder(),
+            MinimalBinder(EmailStatusEventDAO::class.java)
         )
     }
 
@@ -41,48 +41,48 @@ internal class EmailStatusEventDAOSpec : Spek({
 
             val authentication1 = daoHelper().createAuthentication("example.org")
             daoHelper().createEmailStatusEvent(
-                    authentication = authentication1,
-                    from = Email("from@example.org"),
-                    recipient = Email("recipient1@example.org"),
-                    emailStatus = EmailStatus.DELIVERED
+                authentication = authentication1,
+                from = Email("from@example.org"),
+                recipient = Email("recipient1@example.org"),
+                emailStatus = EmailStatus.DELIVERED
             )
             daoHelper().createEmailStatusEvent(
-                    authentication = authentication1,
-                    from = Email("from@example.org"),
-                    recipient = Email("recipient2@example.org"),
-                    emailStatus = EmailStatus.DELIVERED
+                authentication = authentication1,
+                from = Email("from@example.org"),
+                recipient = Email("recipient2@example.org"),
+                emailStatus = EmailStatus.DELIVERED
             )
             val event1 = daoHelper().createEmailStatusEvent(
-                    authentication = authentication1,
-                    from = Email("from@example.org"),
-                    recipient = Email("recipient3@example.org"),
-                    emailStatus = EmailStatus.DELIVERED,
-                    dateCreated = clock().instant().minus(3, ChronoUnit.DAYS)
+                authentication = authentication1,
+                from = Email("from@example.org"),
+                recipient = Email("recipient3@example.org"),
+                emailStatus = EmailStatus.DELIVERED,
+                dateCreated = clock().instant().minus(3, ChronoUnit.DAYS)
             )
             val event2 = daoHelper().createEmailStatusEvent(
-                    authentication = authentication1,
-                    from = Email("from@example.org"),
-                    recipient = Email("recipient3@example.org"),
-                    emailStatus = EmailStatus.UNSUBSCRIBE,
-                    dateCreated = clock().instant().minus(2, ChronoUnit.DAYS)
+                authentication = authentication1,
+                from = Email("from@example.org"),
+                recipient = Email("recipient3@example.org"),
+                emailStatus = EmailStatus.UNSUBSCRIBE,
+                dateCreated = clock().instant().minus(2, ChronoUnit.DAYS)
             )
 
             val authentication2 = daoHelper().createAuthentication("example.com")
             daoHelper().createEmailStatusEvent(
-                    authentication = authentication2,
-                    from = Email("from@example.com"),
-                    recipient = Email("recipient@example.com"),
-                    emailStatus = EmailStatus.DELIVERED
+                authentication = authentication2,
+                from = Email("from@example.com"),
+                recipient = Email("recipient@example.com"),
+                emailStatus = EmailStatus.DELIVERED
             )
 
             val eventsTimeLimit = clock().instant().minus(4, ChronoUnit.DAYS)
 
             val emailStatusEvents = emailStatusEventDAO().getEvents(
-                    accountId = authentication1.account.id,
-                    instant = eventsTimeLimit,
-                    recipientEmail = Email("recipient3@example.org"),
-                    fromEmail = Email("from@example.org"),
-                    events = listOf(EmailStatus.DELIVERED, EmailStatus.UNSUBSCRIBE)
+                accountId = authentication1.account.id,
+                instant = eventsTimeLimit,
+                recipientEmail = Email("recipient3@example.org"),
+                fromEmail = Email("from@example.org"),
+                events = listOf(EmailStatus.DELIVERED, EmailStatus.UNSUBSCRIBE)
             )
 
             assertEquals(2, emailStatusEvents.size)
@@ -94,27 +94,27 @@ internal class EmailStatusEventDAOSpec : Spek({
 
             val authentication1 = daoHelper().createAuthentication("example.org")
             daoHelper().createEmailStatusEvent(
-                    authentication = authentication1,
-                    from = Email("from@example.org"),
-                    recipient = Email("recipient1@example.org"),
-                    emailStatus = EmailStatus.DELIVERED,
-                    dateCreated = clock().instant().minus(3, ChronoUnit.DAYS)
+                authentication = authentication1,
+                from = Email("from@example.org"),
+                recipient = Email("recipient1@example.org"),
+                emailStatus = EmailStatus.DELIVERED,
+                dateCreated = clock().instant().minus(3, ChronoUnit.DAYS)
 
             )
             daoHelper().createEmailStatusEvent(
-                    authentication = authentication1,
-                    from = Email("from@example.org"),
-                    recipient = Email("recipient1@example.org"),
-                    emailStatus = EmailStatus.DELIVERED,
-                    dateCreated = clock().instant().minus(4, ChronoUnit.DAYS)
+                authentication = authentication1,
+                from = Email("from@example.org"),
+                recipient = Email("recipient1@example.org"),
+                emailStatus = EmailStatus.DELIVERED,
+                dateCreated = clock().instant().minus(4, ChronoUnit.DAYS)
 
             )
 
             val eventsTimeLimit = clock().instant().minus(2, ChronoUnit.DAYS)
 
             val emailStatusEvents = emailStatusEventDAO().getEvents(
-                    accountId = authentication1.account.id,
-                    instant = eventsTimeLimit
+                accountId = authentication1.account.id,
+                instant = eventsTimeLimit
             )
 
             assertEquals(0, emailStatusEvents.size)

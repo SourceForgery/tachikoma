@@ -13,12 +13,12 @@ import javax.inject.Singleton
 class StartupBinder : AbstractBinder() {
     override fun configure() {
         bindAsContract(Configuration::class.java)
-                .to(DatabaseConfig::class.java)
-                .to(TrackingConfig::class.java)
-                .to(MqConfig::class.java)
-                .to(WebServerConfig::class.java)
-                .to(DebugConfig::class.java)
-                .to(WebtokenAuthConfig::class.java)
-                .`in`(Singleton::class.java)
+            .to(DatabaseConfig::class.java)
+            .to(TrackingConfig::class.java)
+            .to(MqConfig::class.java)
+            .to(WebServerConfig::class.java)
+            .to(DebugConfig::class.java)
+            .to(WebtokenAuthConfig::class.java)
+            .`in`(Singleton::class.java)
     }
 }

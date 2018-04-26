@@ -12,20 +12,20 @@ import javax.inject.Inject
 internal class DeliveryNotificationServiceGrpcImpl
 @Inject
 private constructor(
-        private val deliveryNotificationService: DeliveryNotificationService,
-        private val grpcExceptionMap: GrpcExceptionMap,
-        private val authentication: Authentication
+    private val deliveryNotificationService: DeliveryNotificationService,
+    private val grpcExceptionMap: GrpcExceptionMap,
+    private val authentication: Authentication
 ) : DeliveryNotificationServiceGrpc.DeliveryNotificationServiceImplBase() {
     override fun notificationStream(request: NotificationStreamParameters, responseObserver: StreamObserver<EmailNotification>) {
         try {
             authentication.requireFrontend()
             LOGGER.info { "Connected, user ${authentication.authenticationId} getting delivery notifications from ${authentication.mailDomain}" }
             deliveryNotificationService.notificationStream(
-                    responseObserver = responseObserver,
-                    request = request,
-                    authenticationId = authentication.authenticationId,
-                    mailDomain = authentication.mailDomain,
-                    accountId = authentication.accountId
+                responseObserver = responseObserver,
+                request = request,
+                authenticationId = authentication.authenticationId,
+                mailDomain = authentication.mailDomain,
+                accountId = authentication.accountId
             )
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))

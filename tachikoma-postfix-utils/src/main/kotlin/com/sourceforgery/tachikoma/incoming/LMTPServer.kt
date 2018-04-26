@@ -12,8 +12,8 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 
 class LMTPServer(
-        private val socket: Socket,
-        private val param: (String, String, String) -> MailAcceptanceResult
+    private val socket: Socket,
+    private val param: (String, String, String) -> MailAcceptanceResult
 ) : Runnable {
 
     override fun run() {
@@ -35,24 +35,24 @@ class LMTPServer(
                 output.sendLine("250 8BITMIME")
 
                 val from = input
-                        .assertRegex("MAIL FROM: *(.*)")
-                        .groupValues[1]
-                        .substringBeforeLast(' ')
+                    .assertRegex("MAIL FROM: *(.*)")
+                    .groupValues[1]
+                    .substringBeforeLast(' ')
                 output.sendLine("250 OK")
 
                 val to = input
-                        .assertRegex("RCPT TO: *(.*)")
-                        .groupValues[1]
+                    .assertRegex("RCPT TO: *(.*)")
+                    .groupValues[1]
                 output.sendLine("250 OK")
 
                 input.assertRegex("DATA")
                 output.sendLine("354 End data with <CR><LF>.<CR><LF>")
                 val data = input
-                        .lineSequence()
-                        .takeWhile {
-                            it != "."
-                        }
-                        .joinToString(separator = "\r\n")
+                    .lineSequence()
+                    .takeWhile {
+                        it != "."
+                    }
+                    .joinToString(separator = "\r\n")
                 val acceptanceResult = param(from, data, to)
                 if (acceptanceResult.acceptanceStatus == MailAcceptanceResult.AcceptanceStatus.REJECTED) {
                     output.sendLine("550 nobody here with that email")
@@ -78,7 +78,7 @@ class LMTPServer(
 private fun BufferedReader.assertRegex(regex: String): MatchResult {
     val line = readLine()
     return Regex(regex).matchEntire(line)
-            ?: throw RuntimeException("$line didn't match $regex")
+        ?: throw RuntimeException("$line didn't match $regex")
 }
 
 private fun Writer.sendLine(line: String) {

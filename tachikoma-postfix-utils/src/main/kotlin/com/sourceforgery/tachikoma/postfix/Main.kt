@@ -21,7 +21,7 @@ private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRIN
 
 class Main
 internal constructor(
-        private val configuration: Configuration
+    private val configuration: Configuration
 ) {
 
     private val tachikomaUrl = addPort(configuration.tachikomaUrl)
@@ -34,15 +34,15 @@ internal constructor(
     private fun addPort(uri: URI): URI {
         val query = uri.rawQuery?.let { "?$it" } ?: ""
         val port: Int =
-                if (uri.port == -1) {
-                    when (uri.scheme) {
-                        "http" -> 80
-                        "https" -> 443
-                        else -> throw IllegalArgumentException("Unknown proto's default port is unknown")
-                    }
-                } else {
-                    uri.port
+            if (uri.port == -1) {
+                when (uri.scheme) {
+                    "http" -> 80
+                    "https" -> 443
+                    else -> throw IllegalArgumentException("Unknown proto's default port is unknown")
                 }
+            } else {
+                uri.port
+            }
         return URI.create("${uri.scheme}://${uri.userInfo}@${uri.host}:$port${uri.path ?: "/"}$query")
     }
 
@@ -55,25 +55,25 @@ internal constructor(
         metadataAuth.put(APITOKEN_HEADER, tachikomaUrl.userInfo)
 
         val channel = NettyChannelBuilder.forAddress(tachikomaUrl.host, tachikomaUrl.port)
-                .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-                .apply {
-                    if (plaintext) {
-                        usePlaintext(true)
-                    } else {
-                        useTransportSecurity()
-                        sslContext(
-                                GrpcSslContexts.forClient()
-                                        .also { ctx ->
-                                            if (configuration.insecure) {
-                                                ctx.trustManager(InsecureTrustManagerFactory.INSTANCE)
-                                            }
-                                        }
-                                        .build()
-                        )
-                    }
+            .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
+            .apply {
+                if (plaintext) {
+                    usePlaintext(true)
+                } else {
+                    useTransportSecurity()
+                    sslContext(
+                        GrpcSslContexts.forClient()
+                            .also { ctx ->
+                                if (configuration.insecure) {
+                                    ctx.trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                }
+                            }
+                            .build()
+                    )
                 }
-                .idleTimeout(365, TimeUnit.DAYS)
-                .build()
+            }
+            .idleTimeout(365, TimeUnit.DAYS)
+            .build()
         MailSender(channel).start()
         IncomingEmail(channel).start()
         Syslogger(channel).blockingSniffer()
@@ -91,5 +91,5 @@ fun main(args: Array<String>) {
 
     val configuration = Configuration()
     Main(configuration)
-            .run()
+        .run()
 }

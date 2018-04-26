@@ -43,22 +43,22 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Function
 
 class WebServerStarter(
-        private val serviceLocator: ServiceLocator
+    private val serviceLocator: ServiceLocator
 ) {
 
     private fun startServerInBackground(): CompletableFuture<Void> {
         val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
 
         val healthService = CorsServiceBuilder
-                .forAnyOrigin()
-                .allowNullOrigin()
-                .allowCredentials()
-                .allowRequestMethods(HttpMethod.GET)
-                .build(object : HttpHealthCheckService() {})
+            .forAnyOrigin()
+            .allowNullOrigin()
+            .allowCredentials()
+            .allowRequestMethods(HttpMethod.GET)
+            .build(object : HttpHealthCheckService() {})
 
         // Order matters!
         val serverBuilder = ServerBuilder()
-                .serviceUnder("/health", healthService)
+            .serviceUnder("/health", healthService)
         val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
 
         val restDecoratorFunction = Function<Service<HttpRequest, HttpResponse>, Service<HttpRequest, HttpResponse>> { it.decorate(requestScoped) }
@@ -76,20 +76,20 @@ class WebServerStarter(
         val grpcService = grpcServiceBuilder.build()
 
         return serverBuilder
-                // Grpc must be last
-                .decorator(Function { it.decorate(requestScoped) })
-                .serviceUnder("/", grpcService)
-                .apply {
-                    if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
-                        sslContext(SessionProtocol.HTTPS, File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
-                        port(8443, SessionProtocol.HTTPS)
-                    } else {
-                        port(8070, SessionProtocol.HTTP)
-                    }
+            // Grpc must be last
+            .decorator(Function { it.decorate(requestScoped) })
+            .serviceUnder("/", grpcService)
+            .apply {
+                if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
+                    sslContext(SessionProtocol.HTTPS, File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
+                    port(8443, SessionProtocol.HTTPS)
+                } else {
+                    port(8070, SessionProtocol.HTTP)
                 }
-                .defaultRequestTimeout(Duration.ofDays(365))
-                .build()
-                .start()
+            }
+            .defaultRequestTimeout(Duration.ofDays(365))
+            .build()
+            .start()
     }
 
     private fun startBackgroundWorkers() {
@@ -98,12 +98,12 @@ class WebServerStarter(
 
     private fun initClientsInBackground() {
         listOf(
-                MessageQueue::class.java,
-                EbeanServer::class.java
+            MessageQueue::class.java,
+            EbeanServer::class.java
         )
-                // Yes, parallel stream is broken by design, but here it should work
-                .parallelStream()
-                .forEach({ serviceLocator.getService(it) })
+            // Yes, parallel stream is broken by design, but here it should work
+            .parallelStream()
+            .forEach({ serviceLocator.getService(it) })
     }
 
     fun start() {
@@ -123,13 +123,13 @@ class WebServerStarter(
     private fun startDatabase() {
         val hk2RequestScope: HK2RequestContext = serviceLocator.get()
         serviceLocator
-                .getServiceHandle(CreateUsers::class.java)
-                .also { serviceHandle ->
-                    hk2RequestScope.runInScope {
-                        serviceHandle.service.createUsers()
-                        serviceHandle.destroy()
-                    }
+            .getServiceHandle(CreateUsers::class.java)
+            .also { serviceHandle ->
+                hk2RequestScope.runInScope {
+                    serviceHandle.service.createUsers()
+                    serviceHandle.destroy()
                 }
+            }
     }
 
     companion object {
@@ -144,13 +144,13 @@ fun main(vararg args: String) {
     System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())
 
     val serviceLocator = ServiceLocatorUtilities.bind(
-            CommonBinder(),
-            StartupBinder(),
-            RestBinder(),
-            MqBinder(),
-            GrpcBinder(),
-            DatabaseBinder(),
-            WebBinder()
+        CommonBinder(),
+        StartupBinder(),
+        RestBinder(),
+        MqBinder(),
+        GrpcBinder(),
+        DatabaseBinder(),
+        WebBinder()
     )!!
     WebServerStarter(serviceLocator).start()
 }

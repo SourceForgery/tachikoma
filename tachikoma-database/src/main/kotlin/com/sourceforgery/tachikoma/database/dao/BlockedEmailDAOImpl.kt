@@ -12,16 +12,16 @@ import javax.inject.Inject
 class BlockedEmailDAOImpl
 @Inject
 private constructor(
-        private val ebeanServer: EbeanServer
+    private val ebeanServer: EbeanServer
 ) : BlockedEmailDAO {
     override fun getBlockedReason(accountDBO: AccountDBO, from: Email, recipient: Email): BlockedReason? {
         return ebeanServer.find(BlockedEmailDBO::class.java)
-                .where()
-                .eq("account", accountDBO)
-                .eq("fromEmail", from)
-                .eq("recipientEmail", recipient)
-                .findOne()
-                ?.blockedReason
+            .where()
+            .eq("account", accountDBO)
+            .eq("fromEmail", from)
+            .eq("recipientEmail", recipient)
+            .findOne()
+            ?.blockedReason
     }
 
     override fun block(statusEvent: EmailStatusEventDBO) {
@@ -30,10 +30,10 @@ private constructor(
         val account = statusEvent.email.transaction.authentication.account
         if (getBlockedReason(account, from, recipient) == null) {
             val blockedEmail = BlockedEmailDBO(
-                    recipientEmail = recipient,
-                    fromEmail = from,
-                    blockedReason = toBlockedReason(statusEvent.emailStatus),
-                    account = account
+                recipientEmail = recipient,
+                fromEmail = from,
+                blockedReason = toBlockedReason(statusEvent.emailStatus),
+                account = account
             )
             ebeanServer.save(blockedEmail)
         }
@@ -41,30 +41,30 @@ private constructor(
 
     override fun unblock(statusEventDBO: EmailStatusEventDBO) {
         ebeanServer
-                .find(BlockedEmailDBO::class.java)
-                .where()
-                .eq("account", statusEventDBO.email.transaction.authentication.account)
-                .eq("fromEmail", statusEventDBO.email.transaction.fromEmail)
-                .eq("recipientEmail", statusEventDBO.email.recipient)
-                .delete()
+            .find(BlockedEmailDBO::class.java)
+            .where()
+            .eq("account", statusEventDBO.email.transaction.authentication.account)
+            .eq("fromEmail", statusEventDBO.email.transaction.fromEmail)
+            .eq("recipientEmail", statusEventDBO.email.recipient)
+            .delete()
     }
 
     override fun unblock(accountDBO: AccountDBO, from: Email?, recipient: Email) {
         ebeanServer
-                .find(BlockedEmailDBO::class.java)
-                .where()
-                .raw("fromEmail = ? IS NOT FALSE", from)
-                .eq("account", accountDBO)
-                .eq("recipientEmail", recipient)
-                .delete()
+            .find(BlockedEmailDBO::class.java)
+            .where()
+            .raw("fromEmail = ? IS NOT FALSE", from)
+            .eq("account", accountDBO)
+            .eq("recipientEmail", recipient)
+            .delete()
     }
 
     override fun getBlockedEmails(accountDBO: AccountDBO): List<BlockedEmailDBO> =
-            ebeanServer
-                    .find(BlockedEmailDBO::class.java)
-                    .where()
-                    .eq("account", accountDBO)
-                    .findList()
+        ebeanServer
+            .find(BlockedEmailDBO::class.java)
+            .where()
+            .eq("account", accountDBO)
+            .findList()
 
     private fun toBlockedReason(emailStatus: EmailStatus): BlockedReason {
         return when (emailStatus) {

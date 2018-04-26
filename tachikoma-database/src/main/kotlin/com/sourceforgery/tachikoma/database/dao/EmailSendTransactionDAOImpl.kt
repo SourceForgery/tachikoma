@@ -7,8 +7,8 @@ import javax.inject.Inject
 class EmailSendTransactionDAOImpl
 @Inject
 private constructor(
-        private val ebeanServer: EbeanServer
+    private val ebeanServer: EbeanServer
 ) : EmailSendTransactionDAO {
     override fun save(emailSendTransactionDBO: EmailSendTransactionDBO) =
-            ebeanServer.save(emailSendTransactionDBO)
+        ebeanServer.save(emailSendTransactionDBO)
 }

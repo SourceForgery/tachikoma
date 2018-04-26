@@ -7,15 +7,15 @@ import net.sf.expectit.matcher.Matchers.regexp
 import java.util.regex.Pattern
 
 fun Expect.expectNoSmtpError(pattern: String) =
-        interact().`when`(regexpLine("^([45][0-9][0-9] .*)")).then({ r -> throw ExpectIOException("Error", r.input) })
-                .`until`(regexpLine(pattern))
+    interact().`when`(regexpLine("^([45][0-9][0-9] .*)")).then({ r -> throw ExpectIOException("Error", r.input) })
+        .`until`(regexpLine(pattern))
 
 fun Expect.expectNoQuit(pattern: String) =
-        interact().`when`(regexp(Pattern.compile("^QUIT$", Pattern.CASE_INSENSITIVE)))
-                .then({ r -> throw ExpectIOException("Error", r.input) })
-                .`until`(regexpLine(pattern))
+    interact().`when`(regexp(Pattern.compile("^QUIT$", Pattern.CASE_INSENSITIVE)))
+        .then({ r -> throw ExpectIOException("Error", r.input) })
+        .`until`(regexpLine(pattern))
 
 fun Expect.emptyBuffer() =
-        expect(Matchers.regexp(Pattern.compile(".*", Pattern.DOTALL)))!!
+    expect(Matchers.regexp(Pattern.compile(".*", Pattern.DOTALL)))!!
 
 fun regexpLine(regex: String) = Matchers.regexp(Pattern.compile(regex, Pattern.MULTILINE))

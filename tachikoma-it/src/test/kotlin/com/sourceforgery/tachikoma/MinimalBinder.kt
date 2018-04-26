@@ -4,12 +4,12 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
 
 class MinimalBinder(
-        private vararg val singletons: Class<*> = emptyArray()
+    private vararg val singletons: Class<*> = emptyArray()
 ) : AbstractBinder() {
     override fun configure() {
         for (singleton in singletons) {
             bindAsContract(singleton)
-                    .`in`(Singleton::class.java)
+                .`in`(Singleton::class.java)
         }
     }
 }

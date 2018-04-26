@@ -43,30 +43,30 @@ internal class EmailDAOSpec : Spek({
     fun getEmailDBO(from: Email, recipient: Email): EmailDBO {
         val account = AccountDBO(MailDomain("example.com"))
         val authentication = AuthenticationDBO(
-                encryptedPassword = null,
-                apiToken = null,
-                role = AuthenticationRole.BACKEND,
-                account = account
+            encryptedPassword = null,
+            apiToken = null,
+            role = AuthenticationRole.BACKEND,
+            account = account
         )
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
         val jsonRequest = dbObjectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
         val emailSendTransaction = EmailSendTransactionDBO(
-                jsonRequest = jsonRequest,
-                fromEmail = from,
-                authentication = authentication,
-                metaData = emptyMap(),
-                tags = emptyList()
+            jsonRequest = jsonRequest,
+            fromEmail = from,
+            authentication = authentication,
+            metaData = emptyMap(),
+            tags = emptyList()
         )
 
         return EmailDBO(
-                recipient = recipient,
-                recipientName = "Mr. Recipient",
-                transaction = emailSendTransaction,
-                messageId = MessageId("1023"),
-                mtaQueueId = null,
-                metaData = emptyMap()
+            recipient = recipient,
+            recipientName = "Mr. Recipient",
+            transaction = emailSendTransaction,
+            messageId = MessageId("1023"),
+            mtaQueueId = null,
+            metaData = emptyMap()
         )
     }
 

@@ -23,23 +23,23 @@ import javax.inject.Inject
 class DAOHelper
 @Inject
 private constructor(
-        private val ebeanServer: EbeanServer,
-        private val dbObjectMapper: DBObjectMapper
+    private val ebeanServer: EbeanServer,
+    private val dbObjectMapper: DBObjectMapper
 ) {
 
     fun createAuthentication(domain: String) =
-            createAuthentication(MailDomain(domain))
+        createAuthentication(MailDomain(domain))
 
     fun createAuthentication(domain: MailDomain): AuthenticationDBO {
         val accountDBO = AccountDBO(domain)
         ebeanServer.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                login = domain.mailDomain,
-                encryptedPassword = UUID.randomUUID().toString(),
-                apiToken = UUID.randomUUID().toString(),
-                role = AuthenticationRole.BACKEND,
-                account = accountDBO
+            login = domain.mailDomain,
+            encryptedPassword = UUID.randomUUID().toString(),
+            apiToken = UUID.randomUUID().toString(),
+            role = AuthenticationRole.BACKEND,
+            account = accountDBO
         )
         ebeanServer.save(authenticationDBO)
 
@@ -47,36 +47,36 @@ private constructor(
     }
 
     fun createEmailStatusEvent(
-            authentication: AuthenticationDBO,
-            from: Email,
-            recipient: Email,
-            emailStatus: EmailStatus,
-            dateCreated: Instant? = null
+        authentication: AuthenticationDBO,
+        from: Email,
+        recipient: Email,
+        emailStatus: EmailStatus,
+        dateCreated: Instant? = null
     ): EmailStatusEventDBO {
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
         val jsonRequest = dbObjectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
         val email = EmailDBO(
-                recipient = recipient,
-                recipientName = "Mr. Recipient",
-                transaction = EmailSendTransactionDBO(
-                        jsonRequest = jsonRequest,
-                        fromEmail = from,
-                        authentication = authentication,
-                        metaData = emptyMap(),
-                        tags = emptyList()
-                ),
-                messageId = MessageId(UUID.randomUUID().toString()),
-                mtaQueueId = null,
-                metaData = emptyMap()
+            recipient = recipient,
+            recipientName = "Mr. Recipient",
+            transaction = EmailSendTransactionDBO(
+                jsonRequest = jsonRequest,
+                fromEmail = from,
+                authentication = authentication,
+                metaData = emptyMap(),
+                tags = emptyList()
+            ),
+            messageId = MessageId(UUID.randomUUID().toString()),
+            mtaQueueId = null,
+            metaData = emptyMap()
         )
         ebeanServer.save(email)
 
         val emailStatusEventDBO = EmailStatusEventDBO(
-                emailStatus = emailStatus,
-                email = email,
-                metaData = StatusEventMetaData()
+            emailStatus = emailStatus,
+            email = email,
+            metaData = StatusEventMetaData()
         )
         ebeanServer.save(emailStatusEventDBO)
         dateCreated?.also {

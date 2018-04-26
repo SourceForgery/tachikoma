@@ -10,20 +10,20 @@ import javax.persistence.Table
 @Table(name = "e_incoming_email")
 @Entity
 class IncomingEmailDBO(
-        @Column
-        val fromEmail: Email,
-        @Column
-        val fromName: String,
-        @Column
-        val receiverEmail: Email,
-        @Column
-        val receiverName: String,
-        @Column
-        val body: ByteArray,
-        @ManyToOne
-        val account: AccountDBO,
-        @Column
-        val subject: String
+    @Column
+    val fromEmail: Email,
+    @Column
+    val fromName: String,
+    @Column
+    val receiverEmail: Email,
+    @Column
+    val receiverName: String,
+    @Column
+    val body: ByteArray,
+    @ManyToOne
+    val account: AccountDBO,
+    @Column
+    val subject: String
 ) : GenericDBO()
 
 val IncomingEmailDBO.id: IncomingEmailId

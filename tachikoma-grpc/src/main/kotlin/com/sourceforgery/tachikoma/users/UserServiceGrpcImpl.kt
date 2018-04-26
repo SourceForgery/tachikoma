@@ -21,10 +21,10 @@ import javax.inject.Inject
 class UserServiceGrpcImpl
 @Inject
 private constructor(
-        private val userService: UserService,
-        private val authentication: Authentication,
-        private val grpcExceptionMap: GrpcExceptionMap,
-        private val authenticationDAO: AuthenticationDAO
+    private val userService: UserService,
+    private val authentication: Authentication,
+    private val grpcExceptionMap: GrpcExceptionMap,
+    private val authenticationDAO: AuthenticationDAO
 ) : UserServiceGrpc.UserServiceImplBase() {
     override fun addFrontendUser(request: AddUserRequest, responseObserver: StreamObserver<ModifyUserResponse>) {
         try {
@@ -50,7 +50,7 @@ private constructor(
     override fun modifyFrontendUser(request: ModifyUserRequest, responseObserver: StreamObserver<ModifyUserResponse>) {
         try {
             val auth = authenticationDAO.getById(AuthenticationId(request.authId.id))
-                    ?: throw NotFoundException()
+                ?: throw NotFoundException()
             if (auth.id.authenticationId == request.authId.id) {
                 throw IllegalArgumentException("Cannot modify the same account")
             }
@@ -66,7 +66,7 @@ private constructor(
     override fun removeUser(request: RemoveUserRequest, responseObserver: StreamObserver<RemoveUserResponse>) {
         try {
             val auth = authenticationDAO.getById(AuthenticationId(request.userToRemove.id))
-                    ?: throw NotFoundException()
+                ?: throw NotFoundException()
             authentication.requireFrontendAdmin(auth.account.mailDomain)
             val user = userService.removeUser(request)
             responseObserver.onNext(user)

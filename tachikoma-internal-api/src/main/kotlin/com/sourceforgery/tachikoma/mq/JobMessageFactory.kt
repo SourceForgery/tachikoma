@@ -10,21 +10,21 @@ import javax.inject.Inject
 class JobMessageFactory
 @Inject
 private constructor(
-        private val clock: Clock
+    private val clock: Clock
 ) {
 
     // Factory to get all the properties set in new jobs
     fun createSendEmailJob(
-            requestedSendTime: Instant = Instant.EPOCH,
-            emailId: EmailId,
-            mailDomain: MailDomain
+        requestedSendTime: Instant = Instant.EPOCH,
+        emailId: EmailId,
+        mailDomain: MailDomain
     ) = JobMessage.newBuilder()
-            .setCreationTimestamp(clock.instant().toTimestamp())
-            .setRequestedExecutionTime(requestedSendTime.toTimestamp())
-            .setSendEmailJob(SendEmailJob.newBuilder()
-                    .setMailDomain(mailDomain.mailDomain)
-                    .setEmailId(emailId.emailId)
-                    .build()
-            )
+        .setCreationTimestamp(clock.instant().toTimestamp())
+        .setRequestedExecutionTime(requestedSendTime.toTimestamp())
+        .setSendEmailJob(SendEmailJob.newBuilder()
+            .setMailDomain(mailDomain.mailDomain)
+            .setEmailId(emailId.emailId)
             .build()
+        )
+        .build()
 }

@@ -139,8 +139,10 @@ private constructor(
         }
     }
 
-    private fun createFieldFormatters(loggerFields: Array<LoggerFields>?,
-                                      config: Configuration?): Map<String, FieldFormatter>? {
+    private fun createFieldFormatters(
+        loggerFields: Array<LoggerFields>?,
+        config: Configuration?
+    ): Map<String, FieldFormatter>? {
         val sdIdMap = HashMap<String, FieldFormatter>(loggerFields?.size ?: 0)
         if (loggerFields != null) {
             for (loggerField in loggerFields) {
@@ -170,8 +172,10 @@ private constructor(
      * @param filterClass Filter the returned plugins after calling the plugin manager.
      * @return The PatternParser.
      */
-    private fun createPatternParser(config: Configuration?,
-                                    filterClass: Class<out PatternConverter>?): PatternParser {
+    private fun createPatternParser(
+        config: Configuration?,
+        filterClass: Class<out PatternConverter>?
+    ): PatternParser {
         if (config == null) {
             return PatternParser(config, PatternLayout.KEY, LogEventPatternConverter::class.java, filterClass)
         }
@@ -410,8 +414,12 @@ private constructor(
         return dateString
     }
 
-    private fun formatStructuredElement(id: String?, data: StructuredDataElement,
-                                        sb: StringBuilder, checker: ListChecker?) {
+    private fun formatStructuredElement(
+        id: String?,
+        data: StructuredDataElement,
+        sb: StringBuilder,
+        checker: ListChecker?
+    ) {
         if (id == null && defaultId == null || data.discard()) {
             return
         }
@@ -449,8 +457,12 @@ private constructor(
         }
     }
 
-    private fun appendMap(prefix: String?, map: Map<String, String>, sb: StringBuilder,
-                          checker: ListChecker?) {
+    private fun appendMap(
+        prefix: String?,
+        map: Map<String, String>,
+        sb: StringBuilder,
+        checker: ListChecker?
+    ) {
         val sorted = TreeMap(map)
         for ((key, value) in sorted) {
             if (checker!!.check(key) && value != null) {
@@ -601,7 +613,8 @@ private constructor(
             @PluginAttribute(value = "useTlsMessageFormat") useTlsMessageFormat: Boolean?,
             @PluginElement("LoggerFields") loggerFields: Array<LoggerFields>?,
             @PluginConfiguration config: Configuration,
-            @PluginAttribute(value = "pattern", defaultString = "%m") pattern: String): Rfc5424PatternLayout {
+            @PluginAttribute(value = "pattern", defaultString = "%m") pattern: String
+        ): Rfc5424PatternLayout {
             val fixedIncludes = includes
                 ?.let {
                     if (excludes != null) {

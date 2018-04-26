@@ -19,8 +19,8 @@ import javax.inject.Inject
 class HttpRequestScopedDecorator
 @Inject
 private constructor(
-        private val hK2RequestContext: HK2RequestContextImpl,
-        private val serviceLocator: ServiceLocator
+    private val hK2RequestContext: HK2RequestContextImpl,
+    private val serviceLocator: ServiceLocator
 ) : DecoratingServiceFunction<HttpRequest, HttpResponse> {
     override fun serve(delegate: Service<HttpRequest, HttpResponse>, ctx: ServiceRequestContext, req: HttpRequest): HttpResponse {
         val oldHk2Ctx = hK2RequestContext.retrieveCurrent()
@@ -35,15 +35,15 @@ private constructor(
         })
         ctx.log().addListener({ hK2RequestContext.release(hk2Ctx) }, RequestLogAvailability.COMPLETE)
         return hK2RequestContext.runInScope(hk2Ctx,
-                {
-                    serviceLocator
-                            .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
-                            .value = req
-                    serviceLocator
-                            .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
-                            .value = ctx
-                    delegate.serve(ctx, req)
-                }
+            {
+                serviceLocator
+                    .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
+                    .value = req
+                serviceLocator
+                    .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
+                    .value = ctx
+                delegate.serve(ctx, req)
+            }
         )
     }
 

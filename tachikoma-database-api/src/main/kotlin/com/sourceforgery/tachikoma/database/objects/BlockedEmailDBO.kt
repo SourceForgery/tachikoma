@@ -14,14 +14,14 @@ import javax.persistence.UniqueConstraint
 @UniqueConstraint(columnNames = ["from_email", "recipient_email"])
 class BlockedEmailDBO
 constructor(
-        @Column
-        val fromEmail: Email,
-        @Column
-        val recipientEmail: Email,
-        @Column
-        val blockedReason: BlockedReason,
-        @ManyToOne
-        val account: AccountDBO
+    @Column
+    val fromEmail: Email,
+    @Column
+    val recipientEmail: Email,
+    @Column
+    val blockedReason: BlockedReason,
+    @ManyToOne
+    val account: AccountDBO
 ) : GenericDBO()
 
 val BlockedEmailDBO.id: BlockedEmailId

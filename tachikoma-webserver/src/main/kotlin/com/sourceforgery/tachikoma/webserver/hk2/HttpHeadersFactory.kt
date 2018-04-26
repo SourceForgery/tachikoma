@@ -8,10 +8,10 @@ import javax.inject.Inject
 class HttpHeadersFactory
 @Inject
 private constructor(
-        private val httpRequest: HttpRequest
+    private val httpRequest: HttpRequest
 ) : Factory<HttpHeaders> {
     override fun provide() =
-            httpRequest.headers()
+        httpRequest.headers()
 
     override fun dispose(instance: HttpHeaders?) {
     }
