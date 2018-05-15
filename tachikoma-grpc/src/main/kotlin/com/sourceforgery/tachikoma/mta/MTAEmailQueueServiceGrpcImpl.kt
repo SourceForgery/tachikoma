@@ -9,9 +9,9 @@ import javax.inject.Inject
 internal class MTAEmailQueueServiceGrpcImpl
 @Inject
 private constructor(
-        private val authentication: Authentication,
-        private val mtaEmailQueueService: MTAEmailQueueService,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val authentication: Authentication,
+    private val mtaEmailQueueService: MTAEmailQueueService,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) : MTAEmailQueueGrpc.MTAEmailQueueImplBase() {
     override fun getEmails(responseObserver: StreamObserver<EmailMessage>): StreamObserver<MTAQueuedNotification> {
         return try {

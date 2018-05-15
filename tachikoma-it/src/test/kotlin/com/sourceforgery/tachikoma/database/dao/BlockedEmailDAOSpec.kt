@@ -48,36 +48,36 @@ internal class BlockedEmailDAOSpec : Spek({
 
     fun getEmailStatusEvent(accountDBO: AccountDBO, from: Email, recipient: Email, emailStatus: EmailStatus): EmailStatusEventDBO {
         val authentication = AuthenticationDBO(
-                encryptedPassword = null,
-                apiToken = null,
-                role = AuthenticationRole.BACKEND,
-                account = accountDBO
+            encryptedPassword = null,
+            apiToken = null,
+            role = AuthenticationRole.BACKEND,
+            account = accountDBO
         )
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
         val jsonRequest = dbObjectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
         val emailSendTransaction = EmailSendTransactionDBO(
-                jsonRequest = jsonRequest,
-                fromEmail = from,
-                authentication = authentication,
-                metaData = emptyMap(),
-                tags = emptyList()
+            jsonRequest = jsonRequest,
+            fromEmail = from,
+            authentication = authentication,
+            metaData = emptyMap(),
+            tags = emptyList()
         )
 
         val fromEmail = EmailDBO(
-                recipient = recipient,
-                recipientName = "Mr. Recipient",
-                transaction = emailSendTransaction,
-                messageId = MessageId("1023"),
-                mtaQueueId = null,
-                metaData = emptyMap()
+            recipient = recipient,
+            recipientName = "Mr. Recipient",
+            transaction = emailSendTransaction,
+            messageId = MessageId("1023"),
+            mtaQueueId = null,
+            metaData = emptyMap()
         )
 
         return EmailStatusEventDBO(
-                emailStatus = emailStatus,
-                email = fromEmail,
-                metaData = StatusEventMetaData()
+            emailStatus = emailStatus,
+            email = fromEmail,
+            metaData = StatusEventMetaData()
         )
     }
 
@@ -96,28 +96,28 @@ internal class BlockedEmailDAOSpec : Spek({
 
         fun blockEmails(recipient: Email) {
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from1@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.HARD_BOUNCED
+                accountDBO = getAccount(),
+                from = Email("from1@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.HARD_BOUNCED
             ))
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from2@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.UNSUBSCRIBE
+                accountDBO = getAccount(),
+                from = Email("from2@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.UNSUBSCRIBE
             ))
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from3@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.UNSUBSCRIBE
+                accountDBO = getAccount(),
+                from = Email("from3@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.UNSUBSCRIBE
             ))
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from4@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.UNSUBSCRIBE
+                accountDBO = getAccount(),
+                from = Email("from4@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.UNSUBSCRIBE
             ))
         }
         it("should return null if e-mail is not blocked") {

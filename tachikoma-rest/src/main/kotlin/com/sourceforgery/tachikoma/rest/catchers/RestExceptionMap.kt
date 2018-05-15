@@ -18,8 +18,8 @@ import javax.inject.Inject
 class RestExceptionMap
 @Inject
 private constructor(
-        private val catchers: IterableProvider<RestExceptionCatcher<Throwable>>,
-        private val debugConfig: DebugConfig
+    private val catchers: IterableProvider<RestExceptionCatcher<Throwable>>,
+    private val debugConfig: DebugConfig
 ) {
     private val map = ConcurrentHashMap<Class<Throwable>, RestExceptionCatcher<Throwable>>()
 
@@ -52,18 +52,18 @@ private constructor(
         @Suppress("UNCHECKED_CAST")
 
         return catcher.javaClass.genericInterfaces
-                .filterIsInstance(ParameterizedTypeImpl::class.java)
-                .firstOrNull { it.rawType == RestExceptionCatcher::class.java }!!
-                .actualTypeArguments[0]
+            .filterIsInstance(ParameterizedTypeImpl::class.java)
+            .firstOrNull { it.rawType == RestExceptionCatcher::class.java }!!
+            .actualTypeArguments[0]
     }
 
     private fun findClass(key: Class<Throwable>): RestExceptionCatcher<Throwable> {
         var clazz: Class<*> = key
         while (clazz != Object::class.java) {
             catchers.firstOrNull { getGenerics(it) == clazz }
-                    ?.let {
-                        return it
-                    }
+                ?.let {
+                    return it
+                }
             clazz = clazz.superclass
         }
         return defaultCatcher

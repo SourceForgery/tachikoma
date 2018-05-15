@@ -12,8 +12,8 @@ import javax.inject.Inject
 class GrpcExceptionMap
 @Inject
 private constructor(
-        private val catchers: IterableProvider<GrpcExceptionCatcher<Throwable>>,
-        private val debugConfig: DebugConfig
+    private val catchers: IterableProvider<GrpcExceptionCatcher<Throwable>>,
+    private val debugConfig: DebugConfig
 ) {
     private val map = ConcurrentHashMap<Class<Throwable>, GrpcExceptionCatcher<Throwable>>()
 
@@ -43,9 +43,9 @@ private constructor(
         var clazz: Class<*> = key
         while (clazz != Object::class.java) {
             catchers.firstOrNull { getGenerics(it) == clazz }
-                    ?.let {
-                        return it
-                    }
+                ?.let {
+                    return it
+                }
             clazz = clazz.superclass
         }
         return defaultCatcher

@@ -47,27 +47,27 @@ class MailDeliveryServiceSpec : Spek({
         it("with attachment", {
             val authentication = daoHelper().createAuthentication(fromEmail.toNamedEmail().address.domain)
             val email = OutgoingEmail.newBuilder()
-                    .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
-                    .addAttachments(Attachment.newBuilder()
-                            .setContentType("application/pdf")
-                            .setData(ByteString.copyFrom(data))
-                            .setFileName("NotReally.pdf"))
-                    .setFrom(fromEmail)
-                    .setStatic(StaticBody.newBuilder().setPlaintextBody(
-                            """This is a test
+                .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
+                .addAttachments(Attachment.newBuilder()
+                    .setContentType("application/pdf")
+                    .setData(ByteString.copyFrom(data))
+                    .setFileName("NotReally.pdf"))
+                .setFrom(fromEmail)
+                .setStatic(StaticBody.newBuilder().setPlaintextBody(
+                    """This is a test
                             |                                      .
                             |.
                             |.                 ${""}
                             |"""
-                                    .trimMargin()
-                    ).setSubject("Test mail subject"))
-                    .build()
+                        .trimMargin()
+                ).setSubject("Test mail subject"))
+                .build()
             val responseObserver = QueueStreamObserver<EmailQueueStatus>()
             mailDeliveryService().sendEmail(
-                    request = email,
-                    sender = authentication.account.id,
-                    responseObserver = responseObserver,
-                    authenticationId = authentication.id
+                request = email,
+                sender = authentication.account.id,
+                responseObserver = responseObserver,
+                authenticationId = authentication.id
             )
             val emailDAO: EmailDAO = serviceLocator.get()
             val queued = responseObserver.take(500)

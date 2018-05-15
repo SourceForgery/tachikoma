@@ -9,33 +9,33 @@ import javax.inject.Inject
 class EmailDAOImpl
 @Inject
 private constructor(
-        private val ebeanServer: EbeanServer
+    private val ebeanServer: EbeanServer
 ) : EmailDAO {
     override fun fetchEmailData(emailMessageId: EmailId) =
-            ebeanServer.find(EmailDBO::class.java, emailMessageId.emailId)
+        ebeanServer.find(EmailDBO::class.java, emailMessageId.emailId)
 
     override fun fetchEmailData(emailMessageIds: List<EmailId>): List<EmailDBO> {
         return ebeanServer.find(EmailDBO::class.java)
-                .where()
-                .`in`("dbId", emailMessageIds.map { it.emailId })
-                .findList()
+            .where()
+            .`in`("dbId", emailMessageIds.map { it.emailId })
+            .findList()
     }
 
     override fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
 
     override fun getByEmailId(emailId: EmailId) =
-            ebeanServer.find(EmailDBO::class.java, emailId.emailId)
+        ebeanServer.find(EmailDBO::class.java, emailId.emailId)
 
     override fun getByMessageId(messageId: MessageId): EmailDBO? {
         return ebeanServer.find(EmailDBO::class.java)
-                .where()
-                .eq("messageId", messageId.messageId)
-                .findOne()
+            .where()
+            .eq("messageId", messageId.messageId)
+            .findOne()
     }
 
     override fun getByQueueId(queueId: String) =
-            ebeanServer.find(EmailDBO::class.java)
-                    .where()
-                    .eq("mtaQueueId", queueId)
-                    .findOne()
+        ebeanServer.find(EmailDBO::class.java)
+            .where()
+            .eq("mtaQueueId", queueId)
+            .findOne()
 }

@@ -26,13 +26,13 @@ object PasswordStorage {
     val PBKDF2_INDEX = 4
 
     class InvalidHashException : Exception {
-        constructor(message: String) : super(message) {}
-        constructor(message: String, source: Throwable) : super(message, source) {}
+        constructor(message: String) : super(message)
+        constructor(message: String, source: Throwable) : super(message, source)
     }
 
     class CannotPerformOperationException : Exception {
-        constructor(message: String) : super(message) {}
-        constructor(message: String, source: Throwable) : super(message, source) {}
+        constructor(message: String) : super(message)
+        constructor(message: String, source: Throwable) : super(message, source)
     }
 
     @Throws(CannotPerformOperationException::class)
@@ -53,12 +53,12 @@ object PasswordStorage {
 
         // format: algorithm:iterations:hashSize:salt:hash
         return "sha1:" +
-                PBKDF2_ITERATIONS +
-                ":" + hashSize +
-                ":" +
-                toBase64(salt) +
-                ":" +
-                toBase64(hash)
+            PBKDF2_ITERATIONS +
+            ":" + hashSize +
+            ":" +
+            toBase64(salt) +
+            ":" +
+            toBase64(hash)
     }
 
     @Throws(CannotPerformOperationException::class, InvalidHashException::class)
@@ -72,66 +72,66 @@ object PasswordStorage {
         val params = correctHash.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (params.size != HASH_SECTIONS) {
             throw InvalidHashException(
-                    "Fields are missing from the password hash."
+                "Fields are missing from the password hash."
             )
         }
 
         // Currently, Java only supports SHA1.
         if (params[HASH_ALGORITHM_INDEX] != "sha1") {
             throw CannotPerformOperationException(
-                    "Unsupported hash type."
+                "Unsupported hash type."
             )
         }
 
         val iterations =
-                try {
-                    Integer.parseInt(params[ITERATION_INDEX])
-                } catch (ex: NumberFormatException) {
-                    throw InvalidHashException(
-                            "Could not parse the iteration count as an integer.",
-                            ex
-                    )
-                }
+            try {
+                Integer.parseInt(params[ITERATION_INDEX])
+            } catch (ex: NumberFormatException) {
+                throw InvalidHashException(
+                    "Could not parse the iteration count as an integer.",
+                    ex
+                )
+            }
 
         if (iterations < 1) {
             throw InvalidHashException(
-                    "Invalid number of iterations. Must be >= 1."
+                "Invalid number of iterations. Must be >= 1."
             )
         }
 
         val salt =
-                try {
-                    fromBase64(params[SALT_INDEX])
-                } catch (ex: IllegalArgumentException) {
-                    throw InvalidHashException(
-                            "Base64 decoding of salt failed.",
-                            ex
-                    )
-                }
+            try {
+                fromBase64(params[SALT_INDEX])
+            } catch (ex: IllegalArgumentException) {
+                throw InvalidHashException(
+                    "Base64 decoding of salt failed.",
+                    ex
+                )
+            }
 
         val hash =
-                try {
-                    fromBase64(params[PBKDF2_INDEX])
-                } catch (ex: IllegalArgumentException) {
-                    throw InvalidHashException(
-                            "Base64 decoding of pbkdf2 output failed.",
-                            ex
-                    )
-                }
+            try {
+                fromBase64(params[PBKDF2_INDEX])
+            } catch (ex: IllegalArgumentException) {
+                throw InvalidHashException(
+                    "Base64 decoding of pbkdf2 output failed.",
+                    ex
+                )
+            }
 
         val storedHashSize =
-                try {
-                    Integer.parseInt(params[HASH_SIZE_INDEX])
-                } catch (ex: NumberFormatException) {
-                    throw InvalidHashException(
-                            "Could not parse the hash size as an integer.",
-                            ex
-                    )
-                }
+            try {
+                Integer.parseInt(params[HASH_SIZE_INDEX])
+            } catch (ex: NumberFormatException) {
+                throw InvalidHashException(
+                    "Could not parse the hash size as an integer.",
+                    ex
+                )
+            }
 
         if (storedHashSize != hash.size) {
             throw InvalidHashException(
-                    "Hash length doesn't match stored hash length."
+                "Hash length doesn't match stored hash length."
             )
         }
 
@@ -161,13 +161,13 @@ object PasswordStorage {
             return skf.generateSecret(spec).encoded
         } catch (ex: NoSuchAlgorithmException) {
             throw CannotPerformOperationException(
-                    "Hash algorithm not supported.",
-                    ex
+                "Hash algorithm not supported.",
+                ex
             )
         } catch (ex: InvalidKeySpecException) {
             throw CannotPerformOperationException(
-                    "Invalid key spec.",
-                    ex
+                "Invalid key spec.",
+                ex
             )
         }
     }

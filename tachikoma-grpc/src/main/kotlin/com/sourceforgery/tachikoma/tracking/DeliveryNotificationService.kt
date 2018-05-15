@@ -34,16 +34,16 @@ import javax.inject.Inject
 internal class DeliveryNotificationService
 @Inject
 private constructor(
-        private val mqSequenceFactory: MQSequenceFactory,
-        private val emailDAO: EmailDAO,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val mqSequenceFactory: MQSequenceFactory,
+    private val emailDAO: EmailDAO,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) {
     fun notificationStream(
-            responseObserver: StreamObserver<EmailNotification>,
-            request: NotificationStreamParameters,
-            authenticationId: AuthenticationId,
-            accountId: AccountId,
-            mailDomain: MailDomain
+        responseObserver: StreamObserver<EmailNotification>,
+        request: NotificationStreamParameters,
+        authenticationId: AuthenticationId,
+        accountId: AccountId,
+        mailDomain: MailDomain
     ) {
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
         val deliveryNotificationCallback = { deliveryNotificationMessage: DeliveryNotificationMessage ->
@@ -56,18 +56,18 @@ private constructor(
             }
         }
         val future = mqSequenceFactory.listenForDeliveryNotifications(
-                authenticationId = authenticationId,
-                mailDomain = mailDomain,
-                accountId = accountId,
-                callback = deliveryNotificationCallback
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId,
+            callback = deliveryNotificationCallback
         )
         serverCallStreamObserver
-                ?.setOnCancelHandler {
-                    future.cancel(true)
-                }
+            ?.setOnCancelHandler {
+                future.cancel(true)
+            }
         future.addListener(
-                runnable(serverCallStreamObserver, future, responseObserver),
-                responseCloser
+            runnable(serverCallStreamObserver, future, responseObserver),
+            responseCloser
         )
     }
 
@@ -101,11 +101,11 @@ private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO,
 
         if (request.includeTrackingData) {
             emailTrackingData =
-                    SentEmailTrackingData.newBuilder()
-                            .addAllTags(emailData.transaction.tags)
-                            .putAllMetadata(emailData.transaction.metaData)
-                            .putAllMetadata(emailData.metaData)
-                            .build()
+                SentEmailTrackingData.newBuilder()
+                    .addAllTags(emailData.transaction.tags)
+                    .putAllMetadata(emailData.transaction.metaData)
+                    .putAllMetadata(emailData.metaData)
+                    .build()
         } else {
             noTrackingData = Empty.getDefaultInstance()
         }
@@ -123,9 +123,9 @@ private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: 
     return when (deliveryNotificationMessage.notificationDataCase) {
         DeliveryNotificationMessage.NotificationDataCase.MESSAGECLICKED -> {
             clickedEvent = ClickedEvent.newBuilder()
-                    .setIpAddress(deliveryNotificationMessage.messageClicked.ipAddress)
-                    .setClickedUrl(deliveryNotificationMessage.messageClicked.clickedUrl)
-                    .build()
+                .setIpAddress(deliveryNotificationMessage.messageClicked.ipAddress)
+                .setClickedUrl(deliveryNotificationMessage.messageClicked.clickedUrl)
+                .build()
         }
         DeliveryNotificationMessage.NotificationDataCase.MESSAGEHARDBOUNCED -> {
             hardBouncedEvent = HardBouncedEvent.getDefaultInstance()

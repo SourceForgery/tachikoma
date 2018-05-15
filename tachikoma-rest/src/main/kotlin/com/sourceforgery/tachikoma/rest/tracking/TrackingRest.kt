@@ -29,11 +29,11 @@ import javax.inject.Inject
 internal class TrackingRest
 @Inject
 private constructor(
-        private val trackingDecoder: TrackingDecoder,
-        private val emailDAO: EmailDAO,
-        private val emailStatusEventDAO: EmailStatusEventDAO,
-        private val remoteIP: RemoteIP,
-        private val mqSender: MQSender
+    private val trackingDecoder: TrackingDecoder,
+    private val emailDAO: EmailDAO,
+    private val emailStatusEventDAO: EmailStatusEventDAO,
+    private val remoteIP: RemoteIP,
+    private val mqSender: MQSender
 ) : RestService {
     @Get("regex:^/t/(?<trackingData>.*)")
     @ProduceType("image/gif")
@@ -43,18 +43,18 @@ private constructor(
 
             val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
             val emailStatusEvent = EmailStatusEventDBO(
-                    emailStatus = EmailStatus.OPENED,
-                    email = email,
-                    metaData = StatusEventMetaData(
-                            ipAddress = remoteIP.remoteAddress
-                    )
+                emailStatus = EmailStatus.OPENED,
+                email = email,
+                metaData = StatusEventMetaData(
+                    ipAddress = remoteIP.remoteAddress
+                )
             )
             emailStatusEventDAO.save(emailStatusEvent)
 
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
-                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
-                    .setEmailMessageId(email.id.emailId)
-                    .setMessageOpened(MessageOpened.newBuilder().setIpAddress(remoteIP.remoteAddress))
+                .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
+                .setEmailMessageId(email.id.emailId)
+                .setMessageOpened(MessageOpened.newBuilder().setIpAddress(remoteIP.remoteAddress))
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
@@ -71,21 +71,21 @@ private constructor(
 
             val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
             val emailStatusEvent = EmailStatusEventDBO(
-                    emailStatus = EmailStatus.CLICKED,
-                    email = email,
-                    metaData = StatusEventMetaData(
-                            ipAddress = remoteIP.remoteAddress,
-                            trackingLink = trackingData.redirectUrl
-                    ))
+                emailStatus = EmailStatus.CLICKED,
+                email = email,
+                metaData = StatusEventMetaData(
+                    ipAddress = remoteIP.remoteAddress,
+                    trackingLink = trackingData.redirectUrl
+                ))
             emailStatusEventDAO.save(emailStatusEvent)
 
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
-                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
-                    .setEmailMessageId(email.id.emailId)
-                    .setMessageClicked(MessageClicked.newBuilder()
-                            .setIpAddress(remoteIP.remoteAddress)
-                            .setClickedUrl(trackingData.redirectUrl)
-                    )
+                .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
+                .setEmailMessageId(email.id.emailId)
+                .setMessageClicked(MessageClicked.newBuilder()
+                    .setIpAddress(remoteIP.remoteAddress)
+                    .setClickedUrl(trackingData.redirectUrl)
+                )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
 
             return RestUtil.httpRedirect(trackingData.redirectUrl)
@@ -93,9 +93,9 @@ private constructor(
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e, { "Failed to track invalid link $trackingDataString" })
             return HttpResponse.of(
-                    HttpStatus.NOT_FOUND,
-                    MediaType.HTML_UTF_8,
-                    STATIC_HTML_PAGE_THAT_SAYS_BROKEN_LINK
+                HttpStatus.NOT_FOUND,
+                MediaType.HTML_UTF_8,
+                STATIC_HTML_PAGE_THAT_SAYS_BROKEN_LINK
             )
         }
     }

@@ -20,12 +20,12 @@ import javax.persistence.Transient
 @Table(name = "e_email_status")
 @Entity
 class EmailStatusEventDBO(
-        @Column
-        val emailStatus: EmailStatus,
-        @ManyToOne(cascade = [CascadeType.ALL])
-        val email: EmailDBO,
-        @field:DbJson
-        val metaData: StatusEventMetaData
+    @Column
+    val emailStatus: EmailStatus,
+    @ManyToOne(cascade = [CascadeType.ALL])
+    val email: EmailDBO,
+    @field:DbJson
+    val metaData: StatusEventMetaData
 ) {
     @Id
     @Column(columnDefinition = "DECIMAL(20)", name = "id")

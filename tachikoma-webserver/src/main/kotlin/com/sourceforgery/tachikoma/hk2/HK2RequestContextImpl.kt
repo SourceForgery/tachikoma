@@ -15,19 +15,20 @@ import javax.inject.Inject
 class HK2RequestContextImpl
 @Inject
 private constructor(
-        private val serviceLocator: ServiceLocator
+    private val serviceLocator: ServiceLocator
 ) : Context<RequestScoped>, HK2RequestContext {
 
     private val currentScopeInstance = ThreadLocal<Instance>()
-    @Volatile private var isActive = true
+    @Volatile
+    private var isActive = true
 
     override fun getScope(): Class<out Annotation> {
         return RequestScoped::class.java
     }
 
     override fun <U : Any> findOrCreate(
-            activeDescriptor: ActiveDescriptor<U>,
-            root: ServiceHandle<*>?
+        activeDescriptor: ActiveDescriptor<U>,
+        root: ServiceHandle<*>?
     ): U? {
 
         val instance = current()
@@ -133,17 +134,17 @@ private constructor(
 
         internal fun <T : Any> put(descriptor: ActiveDescriptor<T>, value: T): T? {
             checkState(!store.containsKey(descriptor),
-                    "An instance for the descriptor %s was already seeded in this scope. Old instance: %s New instance: %s",
-                    descriptor,
-                    store[descriptor],
-                    value)
+                "An instance for the descriptor %s was already seeded in this scope. Old instance: %s New instance: %s",
+                descriptor,
+                store[descriptor],
+                value)
 
             return store.put(descriptor, value) as T?
         }
 
         internal fun <T> remove(descriptor: ActiveDescriptor<T>) {
             store.remove(descriptor)
-                    ?.let { descriptor.dispose(it as T) }
+                ?.let { descriptor.dispose(it as T) }
         }
 
         fun <T> contains(provider: ActiveDescriptor<T>): Boolean {
@@ -162,9 +163,9 @@ private constructor(
 
         override fun toString(): String {
             return MoreObjects
-                    .toStringHelper(this)
-                    .add("id", id)
-                    .add("store size", store.size).toString()
+                .toStringHelper(this)
+                .add("id", id)
+                .add("store size", store.size).toString()
         }
     }
 

@@ -1,5 +1,5 @@
 apply from: "${project.rootDir}/kotlin.gradle"
-apply plugin: 'ebean'
+apply plugin: 'io.ebean'
 
 repositories {
     mavenLocal()

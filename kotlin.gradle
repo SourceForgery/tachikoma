@@ -12,7 +12,6 @@ dependencies {
     testCompile "org.glassfish.hk2:hk2-locator:$hk2_version"
     testCompile "org.glassfish.hk2:hk2-utils:$hk2_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
 }
 
 kapt {

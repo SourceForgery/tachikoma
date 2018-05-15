@@ -15,39 +15,39 @@ import javax.inject.Inject
 class LoginService
 @Inject
 private constructor(
-        private val authenticationDAO: AuthenticationDAO,
-        private val webtokenAuthConfig: WebtokenAuthConfig
+    private val authenticationDAO: AuthenticationDAO,
+    private val webtokenAuthConfig: WebtokenAuthConfig
 ) {
     fun login(loginRequest: LoginRequest): LoginResponse {
         val auth = authenticationDAO.validateApiToken(loginRequest.username)
         val correct = auth
-                ?.encryptedPassword
-                ?.let {
-                    PasswordStorage.verifyPassword(
-                            password = loginRequest.password,
-                            correctHash = it
-                    )
-                }
+            ?.encryptedPassword
+            ?.let {
+                PasswordStorage.verifyPassword(
+                    password = loginRequest.password,
+                    correctHash = it
+                )
+            }
         if (correct != true) {
             throw throw StatusRuntimeException(Status.PERMISSION_DENIED)
         }
         return LoginResponse.newBuilder()
-                .setAuthHeader(createWebtoken(auth))
-                .build()
+            .setAuthHeader(createWebtoken(auth))
+            .build()
     }
 
     private fun createWebtoken(auth: AuthenticationDBO): String =
-            WebTokenAuthData.newBuilder()
-                    .setAccountId(auth.account.id.accountId)
-                    .setAuthenticationRole(auth.role.toRole())
-                    .setUserId(auth.id.authenticationId)
-                    .build()
-                    .let {
-                        val byteArray = it.toByteArray()
-                        val data = BASE64_ENCODER.encodeToString(byteArray)!!
-                        val signature = BASE64_ENCODER.encodeToString(HmacUtil.hmacSha1(byteArray, webtokenAuthConfig.webtokenSignKey))!!
-                        "$signature.$data"
-                    }
+        WebTokenAuthData.newBuilder()
+            .setAccountId(auth.account.id.accountId)
+            .setAuthenticationRole(auth.role.toRole())
+            .setUserId(auth.id.authenticationId)
+            .build()
+            .let {
+                val byteArray = it.toByteArray()
+                val data = BASE64_ENCODER.encodeToString(byteArray)!!
+                val signature = BASE64_ENCODER.encodeToString(HmacUtil.hmacSha1(byteArray, webtokenAuthConfig.webtokenSignKey))!!
+                "$signature.$data"
+            }
 
     companion object {
         private val BASE64_ENCODER = Base64.getEncoder()!!

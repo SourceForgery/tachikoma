@@ -216,11 +216,11 @@ class FunctionalLogger(val log: ExtendedLogger) : ExtendedLogger by log {
  */
 @Suppress("unused")
 inline fun <reified T : Any> T.logger() =
-        FunctionalLogger(LogManager.getContext(T::class.java.classLoader, false).getLogger(unwrapCompanionClass(T::class.java).name))
+    FunctionalLogger(LogManager.getContext(T::class.java.classLoader, false).getLogger(unwrapCompanionClass(T::class.java).name))
 
 @Suppress("unused")
 inline fun <reified T : Any> T.logger(loggerName: String) =
-        FunctionalLogger(LogManager.getContext(T::class.java.classLoader, false).getLogger(loggerName))
+    FunctionalLogger(LogManager.getContext(T::class.java.classLoader, false).getLogger(loggerName))
 
 // unwrap companion class to enclosing class given a Java Class
 fun <T : Any> unwrapCompanionClass(ofClass: Class<T>): Class<*> {

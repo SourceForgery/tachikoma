@@ -9,13 +9,13 @@ import javax.inject.Singleton
 class RestBinder : AbstractBinder() {
     override fun configure() {
         bindAsContract(TrackingRest::class.java)
-                .to(RestService::class.java)
-                .`in`(Singleton::class.java)
+            .to(RestService::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(UnsubscribeRest::class.java)
-                .to(RestService::class.java)
-                .`in`(Singleton::class.java)
+            .to(RestService::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(RestExceptionMap::class.java)
-                .`in`(Singleton::class.java
-                )
+            .`in`(Singleton::class.java
+            )
     }
 }

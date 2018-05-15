@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.auth
 
 import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.MinimalBinder
+import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
@@ -53,11 +53,11 @@ class UserServiceSpec : Spek({
         ebeanServer().save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                login = domain,
-                encryptedPassword = UUID.randomUUID().toString(),
-                apiToken = UUID.randomUUID().toString(),
-                role = AuthenticationRole.FRONTEND_ADMIN,
-                account = accountDBO
+            login = domain,
+            encryptedPassword = UUID.randomUUID().toString(),
+            apiToken = UUID.randomUUID().toString(),
+            role = AuthenticationRole.FRONTEND_ADMIN,
+            account = accountDBO
         )
         ebeanServer().save(authenticationDBO)
 
@@ -67,15 +67,15 @@ class UserServiceSpec : Spek({
     fun createUser(): AuthenticationDBO {
         createAuthentication("example.com")
         val b4 = AddUserRequest.newBuilder()
-                .setActive(true)
-                .setAddApiToken(false)
-                .setAuthenticationRole(FrontendUserRole.FRONTEND)
-                .setMailDomain("example.com")
-                .setPasswordAuth(PasswordAuth.newBuilder()
-                        .setLogin("foobar")
-                        .setPassword("123")
-                )
-                .build()
+            .setActive(true)
+            .setAddApiToken(false)
+            .setAuthenticationRole(FrontendUserRole.FRONTEND)
+            .setMailDomain("example.com")
+            .setPasswordAuth(PasswordAuth.newBuilder()
+                .setLogin("foobar")
+                .setPassword("123")
+            )
+            .build()
         val req = AddUserRequest.parseFrom(b4.toByteArray())
 
         val resp = userService().addFrontendUser(req)
@@ -104,9 +104,9 @@ class UserServiceSpec : Spek({
         it("create & modify user", {
             val newUser = createUser()
             val before = ModifyUserRequest.newBuilder()
-                    .setActive(false)
-                    .setApiToken(ApiToken.RESET_API_TOKEN)
-                    .build()
+                .setActive(false)
+                .setApiToken(ApiToken.RESET_API_TOKEN)
+                .build()
             val oldApiToken = newUser.apiToken
             val oldMailDomain = newUser.account.mailDomain
             val resp = userService().modifyFrontendUser(before, newUser)

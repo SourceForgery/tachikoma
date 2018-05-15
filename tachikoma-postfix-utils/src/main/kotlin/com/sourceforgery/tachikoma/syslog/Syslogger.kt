@@ -29,12 +29,12 @@ class Syslogger(grpcChannel: Channel) {
                             map["to"]?.let { originalRecipient ->
                                 map["status"]?.let { status ->
                                     val notification = DeliveryNotification.newBuilder()
-                                            .setDiagnoseText(status)
-                                            .setReason(status.substringBefore(' '))
-                                            .setQueueId(queueId)
-                                            .setStatus(dsn)
-                                            .setOriginalRecipient(originalRecipient)
-                                            .build()
+                                        .setDiagnoseText(status)
+                                        .setReason(status.substringBefore(' '))
+                                        .setQueueId(queueId)
+                                        .setStatus(dsn)
+                                        .setOriginalRecipient(originalRecipient)
+                                        .build()
                                     stub.setDeliveryStatus(notification)
                                     ""
                                 }
@@ -43,7 +43,7 @@ class Syslogger(grpcChannel: Channel) {
                     } else {
                         null
                     }
-                            ?: LOGGER.warn { ">>>>$line<<<<" }
+                        ?: LOGGER.warn { ">>>>$line<<<<" }
                     // >>>>Jan 18 22:55:46 1c7326acd8e5 postfix/smtp[249]: 2D61E2A03: to=<test@example.com>, relay=none, delay=30, delays=0.01/0/30/0, dsn=4.4.1, status=deferred (connect to example.com[93.184.216.34]:25: Connection timed out)<<<<
                 }
             }
@@ -54,14 +54,14 @@ class Syslogger(grpcChannel: Channel) {
 
     private fun parseLine(rest: String): Map<String, String> {
         val map = rest.split(", ")
-                .asSequence()
-                .map {
-                    it.substringBefore("=", "") to it.substringAfter("=", "")
-                }
-                .filter {
-                    it.first.isNotBlank()
-                }
-                .toMap()
+            .asSequence()
+            .map {
+                it.substringBefore("=", "") to it.substringAfter("=", "")
+            }
+            .filter {
+                it.first.isNotBlank()
+            }
+            .toMap()
         return map
     }
 

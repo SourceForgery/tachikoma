@@ -7,7 +7,7 @@ dependencies {
     compile project(':tachikoma-mq')
     compile project(':tachikoma-common')
     compile "org.postgresql:postgresql:$postgresql_driver_version"
-    compile ("org.glassfish.hk2:hk2-locator:$hk2_version")
+    compile("org.glassfish.hk2:hk2-locator:$hk2_version")
     compile "org.glassfish.hk2:hk2-utils:$hk2_version"
 }
 

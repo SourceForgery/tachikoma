@@ -6,7 +6,7 @@
     </Properties>
     <Appenders>
         <Syslog name="syslog" host="localhost" port="514" protocol="TCP">
-            <Rfc5424PatternLayout appName="tachikoma/webserver" mdcId="tachikoma" pattern="${pattern}" />
+            <Rfc5424PatternLayout appName="tachikoma/webserver" mdcId="tachikoma" pattern="${pattern}"/>
         </Syslog>
 
         <Console name="StdOut" target="SYSTEM_OUT">
@@ -15,15 +15,15 @@
     </Appenders>
     <Loggers>
         <Root level="info">
-            <AppenderRef ref="syslog" />
-            <AppenderRef ref="StdOut" />
+            <AppenderRef ref="syslog"/>
+            <AppenderRef ref="StdOut"/>
         </Root>
-	<Logger name="com.sourceforgery.tachikoma" level="debug" />
-	<Logger name="com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl" level="info" />
-	<Logger name="io.netty.handler.ssl.ApplicationProtocolNegotiationHandler" level="error" />
+        <Logger name="com.sourceforgery.tachikoma" level="debug"/>
+        <Logger name="com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl" level="info"/>
+        <Logger name="io.netty.handler.ssl.ApplicationProtocolNegotiationHandler" level="error"/>
         <Logger name="io.netty.channel.DefaultChannelPipeline" level="error"/>
-	<Logger name="io.ebean" level="warn" />
-	<!--<Logger name="sql.log_everything" level="trace" />-->
+        <Logger name="io.ebean" level="warn"/>
+        <!--<Logger name="sql.log_everything" level="trace" />-->
         <Logger name="com.linecorp.armeria.common.Flags" level="warn"/>
     </Loggers>
 </Configuration>

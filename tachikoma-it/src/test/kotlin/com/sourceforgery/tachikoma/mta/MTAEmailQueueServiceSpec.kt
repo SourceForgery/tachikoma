@@ -53,11 +53,11 @@ class MTAEmailQueueServiceSpec : Spek({
         ebeanServer().save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                login = domain,
-                encryptedPassword = UUID.randomUUID().toString(),
-                apiToken = UUID.randomUUID().toString(),
-                role = AuthenticationRole.BACKEND,
-                account = accountDBO
+            login = domain,
+            encryptedPassword = UUID.randomUUID().toString(),
+            apiToken = UUID.randomUUID().toString(),
+            role = AuthenticationRole.BACKEND,
+            account = accountDBO
         )
         ebeanServer().save(authenticationDBO)
 
@@ -80,22 +80,22 @@ class MTAEmailQueueServiceSpec : Spek({
             // Setup auth
             val account = accountDAO.getByMailDomain(databaseConfig.mailDomain)!!
             authenticationDBO =
-                    account.authentications
-                            .first { it.role == AuthenticationRole.BACKEND }
+                account.authentications
+                    .first { it.role == AuthenticationRole.BACKEND }
             authentication().from(authenticationDBO)
 
             email = EmailDBO(
-                    recipient = Email("foo@example.net"),
-                    recipientName = "Nobody",
-                    messageId = MessageId("sdjklfjklsdfkl@example.net"),
+                recipient = Email("foo@example.net"),
+                recipientName = "Nobody",
+                messageId = MessageId("sdjklfjklsdfkl@example.net"),
+                metaData = emptyMap(),
+                transaction = EmailSendTransactionDBO(
+                    jsonRequest = JsonNodeFactory.instance.objectNode(),
+                    fromEmail = Email("foodsjklff@example.net"),
+                    authentication = authenticationDBO,
                     metaData = emptyMap(),
-                    transaction = EmailSendTransactionDBO(
-                            jsonRequest = JsonNodeFactory.instance.objectNode(),
-                            fromEmail = Email("foodsjklff@example.net"),
-                            authentication = authenticationDBO,
-                            metaData = emptyMap(),
-                            tags = emptyList()
-                    )
+                    tags = emptyList()
+                )
             )
             email.body = "${UUID.randomUUID()}"
             ebeanServer().save(email)
@@ -107,9 +107,9 @@ class MTAEmailQueueServiceSpec : Spek({
             mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
 
             mqSequenceFactoryMock().outgoingEmails.add(QueueMessageWrap(OutgoingEmailMessage.newBuilder()
-                    .setCreationTimestamp(clock().instant().toTimestamp())
-                    .setEmailId(email.id.emailId)
-                    .build()
+                .setCreationTimestamp(clock().instant().toTimestamp())
+                .setEmailId(email.id.emailId)
+                .build()
             ))
 
             mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
@@ -117,7 +117,7 @@ class MTAEmailQueueServiceSpec : Spek({
 
             assertEquals(1, responseObserver.queue.size)
             val emailMessage = responseObserver.queue.take().get()
-                    ?: throw NullPointerException("Should not be a onComplete event")
+                ?: throw NullPointerException("Should not be a onComplete event")
             assertNotNull(responseObserver)
             assertEquals(emailMessage.body, email.body)
             assertEquals(emailMessage.emailAddress, email.recipient.address)
@@ -130,11 +130,11 @@ class MTAEmailQueueServiceSpec : Spek({
             val requestStreamObserver = mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
 
             requestStreamObserver.onNext(MTAQueuedNotification.newBuilder()
-                    .setEmailId(email.id.emailId)
-                    .setQueueId("foobarQueueId")
-                    .setRecipientEmailAddress(email.body!!)
-                    .setSuccess(true)
-                    .build()
+                .setEmailId(email.id.emailId)
+                .setQueueId("foobarQueueId")
+                .setRecipientEmailAddress(email.body!!)
+                .setSuccess(true)
+                .build()
             )
             mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
             mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)

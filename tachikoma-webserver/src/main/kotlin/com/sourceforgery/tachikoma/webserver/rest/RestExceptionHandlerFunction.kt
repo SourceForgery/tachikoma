@@ -10,7 +10,7 @@ import javax.inject.Inject
 class RestExceptionHandlerFunction
 @Inject
 private constructor(
-        private val restExceptionMap: RestExceptionMap
+    private val restExceptionMap: RestExceptionMap
 ) : ExceptionHandlerFunction {
     override fun handleException(ctx: RequestContext, req: HttpRequest, cause: Throwable): HttpResponse {
         @Suppress("UNCHECKED_CAST")

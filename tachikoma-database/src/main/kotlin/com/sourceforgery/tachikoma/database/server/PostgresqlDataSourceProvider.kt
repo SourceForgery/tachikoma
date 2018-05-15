@@ -12,7 +12,7 @@ import javax.inject.Inject
 class PostgresqlDataSourceProvider
 @Inject
 private constructor(
-        private val databaseConfig: DatabaseConfig
+    private val databaseConfig: DatabaseConfig
 ) : DataSourceProvider {
     override fun provide(serverConfig: ServerConfig) {
         if (databaseConfig.sqlUrl.scheme != "postgres") {

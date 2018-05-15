@@ -7,9 +7,9 @@ import java.sql.SQLException
 import java.sql.Statement
 
 internal class LoggingPreparedStatement(
-        private val preparedStatement: PreparedStatement,
-        private val sql: String,
-        private val counter: InvokeCounter
+    private val preparedStatement: PreparedStatement,
+    private val sql: String,
+    private val counter: InvokeCounter
 ) : PreparedStatement by preparedStatement {
 
     @Throws(SQLException::class)

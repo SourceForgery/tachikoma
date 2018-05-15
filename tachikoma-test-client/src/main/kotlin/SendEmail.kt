@@ -17,9 +17,9 @@ fun main(args: Array<String>) {
     metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
 
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-            .usePlaintext(true)
-            .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-            .build()
+        .usePlaintext(true)
+        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
+        .build()
 
     val stub = MailDeliveryServiceGrpc.newBlockingStub(channel)
 
@@ -61,23 +61,23 @@ fun main(args: Array<String>) {
     """.trimMargin()
 
     val outgoingEmail = OutgoingEmail.newBuilder()
-            .setStatic(
-                    StaticBody.newBuilder()
-                            .setHtmlBody(mailBody)
-                            .setSubject("Test email öåäöäåöäåöåäöäå 日本." + Instant.now())
-            )
-            .addRecipients(EmailRecipient.newBuilder()
-                    .setNamedEmail(
-                            NamedEmailAddress.newBuilder()
-                                    .setEmail("kjdsfljkhsdf@example.net")
-                                    .setName("This won't work")
-                    )
-            )
-            .setFrom(NamedEmailAddress.newBuilder()
-                    .setEmail("test@example.net")
+        .setStatic(
+            StaticBody.newBuilder()
+                .setHtmlBody(mailBody)
+                .setSubject("Test email öåäöäåöäåöåäöäå 日本." + Instant.now())
+        )
+        .addRecipients(EmailRecipient.newBuilder()
+            .setNamedEmail(
+                NamedEmailAddress.newBuilder()
+                    .setEmail("kjdsfljkhsdf@example.net")
                     .setName("This won't work")
             )
-            .build()
+        )
+        .setFrom(NamedEmailAddress.newBuilder()
+            .setEmail("test@example.net")
+            .setName("This won't work")
+        )
+        .build()
 
     try {
         stub.sendEmail(outgoingEmail).forEach {

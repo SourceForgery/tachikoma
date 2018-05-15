@@ -7,8 +7,8 @@ import javax.inject.Inject
 class MessageIdFactoryImpl
 @Inject
 private constructor(
-        private val trackingConfig: TrackingConfig
+    private val trackingConfig: TrackingConfig
 ) : MessageIdFactory {
     override fun createMessageId() =
-            MessageId("${UUID.randomUUID()}@${trackingConfig.baseUrl.host}")
+        MessageId("${UUID.randomUUID()}@${trackingConfig.baseUrl.host}")
 }

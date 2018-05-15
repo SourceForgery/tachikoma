@@ -22,15 +22,15 @@ internal class TrackingDecoderSpec : Spek({
         it("should create a tracking url") {
 
             val emailId = EmailId
-                    .newBuilder()
-                    .setId(1001)
-                    .build()
+                .newBuilder()
+                .setId(1001)
+                .build()
 
             val trackingData = UrlTrackingData
-                    .newBuilder()
-                    .setEmailId(emailId)
-                    .setRedirectUrl("http://www.example.com/redirectPath")
-                    .build()
+                .newBuilder()
+                .setEmailId(emailId)
+                .setRedirectUrl("http://www.example.com/redirectPath")
+                .build()
 
             val url = trackingDecoder.createUrl(trackingData)
 

@@ -9,34 +9,34 @@ import javax.inject.Inject
 class IncomingEmailAddressDAOImpl
 @Inject
 private constructor(
-        private val ebeanServer: EbeanServer
+    private val ebeanServer: EbeanServer
 ) : IncomingEmailAddressDAO {
 
     override fun save(incomingEmailAddressDBO: IncomingEmailAddressDBO) =
-            ebeanServer.save(incomingEmailAddressDBO)
+        ebeanServer.save(incomingEmailAddressDBO)
 
     override fun getByEmail(email: Email) =
-            ebeanServer.find(IncomingEmailAddressDBO::class.java)
-                    .where()
-                    .eq("account.mailDomain", email.domain)
-                    .or()
-                    .eq("localPart", email.localPart)
-                    .eq("localPart", "")
-                    .endOr()
-                    .orderBy("localPart DESC")
-                    .setMaxRows(1)
-                    .findOne()
+        ebeanServer.find(IncomingEmailAddressDBO::class.java)
+            .where()
+            .eq("account.mailDomain", email.domain)
+            .or()
+            .eq("localPart", email.localPart)
+            .eq("localPart", "")
+            .endOr()
+            .orderBy("localPart DESC")
+            .setMaxRows(1)
+            .findOne()
 
     override fun getAll(accountDBO: AccountDBO): List<IncomingEmailAddressDBO> =
-            ebeanServer.find(IncomingEmailAddressDBO::class.java)
-                    .where()
-                    .eq("account", accountDBO)
-                    .findList()
+        ebeanServer.find(IncomingEmailAddressDBO::class.java)
+            .where()
+            .eq("account", accountDBO)
+            .findList()
 
     override fun delete(accountDBO: AccountDBO, localPart: String): Int =
-            ebeanServer.find(IncomingEmailAddressDBO::class.java)
-                    .where()
-                    .eq("account", accountDBO)
-                    .eq("localPart", localPart)
-                    .delete()
+        ebeanServer.find(IncomingEmailAddressDBO::class.java)
+            .where()
+            .eq("account", accountDBO)
+            .eq("localPart", localPart)
+            .delete()
 }

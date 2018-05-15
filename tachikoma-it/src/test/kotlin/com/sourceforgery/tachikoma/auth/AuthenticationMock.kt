@@ -8,8 +8,7 @@ import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 
-class AuthenticationMock(
-) : Authentication {
+class AuthenticationMock : Authentication {
     override var valid: Boolean = false
     override val authenticationId: AuthenticationId
         get() = _authenticationId!!
@@ -33,8 +32,8 @@ class AuthenticationMock(
     }
 
     fun from(
-            role: AuthenticationRole,
-            mailDomain: MailDomain
+        role: AuthenticationRole,
+        mailDomain: MailDomain
     ) {
         this.role = role
         this._mailDomain = mailDomain

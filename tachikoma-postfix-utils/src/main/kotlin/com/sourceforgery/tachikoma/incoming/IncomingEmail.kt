@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 class IncomingEmail(
-        grpcChannel: Channel
+    grpcChannel: Channel
 ) {
     private val stub = MTAEmailQueueGrpc.newBlockingStub(grpcChannel)
 
@@ -40,10 +40,10 @@ class IncomingEmail(
 
     private fun acceptIncomingEmail(fromEmailAddress: String, emailBody: String, toEmailAddress: String): MailAcceptanceResult {
         val incomingEmailMessage = IncomingEmailMessage.newBuilder()
-                .setBody(ByteString.copyFrom(emailBody, StandardCharsets.US_ASCII))
-                .setFrom(fromEmailAddress)
-                .setEmailAddress(toEmailAddress)
-                .build()
+            .setBody(ByteString.copyFrom(emailBody, StandardCharsets.US_ASCII))
+            .setFrom(fromEmailAddress)
+            .setEmailAddress(toEmailAddress)
+            .build()
         return stub.incomingEmail(incomingEmailMessage)
     }
 

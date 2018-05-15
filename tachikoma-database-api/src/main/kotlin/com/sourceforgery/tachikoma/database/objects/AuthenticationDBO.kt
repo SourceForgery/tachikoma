@@ -14,24 +14,24 @@ import javax.persistence.Table
 @Entity
 // One user with credentials. Never delete, but do deactivate
 class AuthenticationDBO(
-        @Column
-        var encryptedPassword: String? = null,
+    @Column
+    var encryptedPassword: String? = null,
 
-        @Column(unique = true, name = "username")
-        val login: String? = null,
+    @Column(unique = true, name = "username")
+    val login: String? = null,
 
-        @Column(unique = true)
-        @Encrypted
-        var apiToken: String? = null,
+    @Column(unique = true)
+    @Encrypted
+    var apiToken: String? = null,
 
-        @Column
-        var role: AuthenticationRole,
+    @Column
+    var role: AuthenticationRole,
 
-        @ManyToOne
-        val account: AccountDBO,
+    @ManyToOne
+    val account: AccountDBO,
 
-        @Column
-        var recipientOverride: Email? = null
+    @Column
+    var recipientOverride: Email? = null
 ) : GenericDBO() {
     val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
 

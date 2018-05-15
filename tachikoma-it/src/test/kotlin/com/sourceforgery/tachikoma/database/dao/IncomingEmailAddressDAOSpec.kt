@@ -44,11 +44,11 @@ internal class IncomingEmailAddressDAOSpec : Spek({
         ebeanServer.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                login = domain,
-                encryptedPassword = UUID.randomUUID().toString(),
-                apiToken = UUID.randomUUID().toString(),
-                role = AuthenticationRole.BACKEND,
-                account = accountDBO
+            login = domain,
+            encryptedPassword = UUID.randomUUID().toString(),
+            apiToken = UUID.randomUUID().toString(),
+            role = AuthenticationRole.BACKEND,
+            account = accountDBO
         )
         ebeanServer.save(authenticationDBO)
 
@@ -57,8 +57,8 @@ internal class IncomingEmailAddressDAOSpec : Spek({
 
     fun saveIncomingEmailAddress(authenticationDBO: AuthenticationDBO, localPart: String) {
         val incomingEmailAddressDBO = IncomingEmailAddressDBO(
-                account = authenticationDBO.account,
-                localPart = localPart
+            account = authenticationDBO.account,
+            localPart = localPart
         )
         incomingEmailAddressDAO.save(incomingEmailAddressDBO)
     }

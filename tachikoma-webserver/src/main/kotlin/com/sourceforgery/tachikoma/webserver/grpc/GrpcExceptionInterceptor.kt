@@ -12,7 +12,7 @@ import javax.inject.Inject
 internal class GrpcExceptionInterceptor
 @Inject
 private constructor(
-        private val grpcExceptionCatchers: GrpcExceptionMap
+    private val grpcExceptionCatchers: GrpcExceptionMap
 ) : ServerInterceptor {
 
     private fun <T> runCaught(method: () -> T): T {
@@ -27,7 +27,7 @@ private constructor(
 
     private fun rethrowAsStatusException(e: Throwable): Nothing {
         grpcExceptionCatchers.findCatcher(e)
-                .throwIt(e)
+            .throwIt(e)
     }
 
     override fun <ReqT, RespT> interceptCall(call: ServerCall<ReqT, RespT>, headers: Metadata, next: ServerCallHandler<ReqT, RespT>): ServerCall.Listener<ReqT> {

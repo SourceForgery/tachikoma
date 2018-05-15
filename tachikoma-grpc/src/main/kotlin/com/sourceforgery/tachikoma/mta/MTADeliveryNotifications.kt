@@ -19,10 +19,10 @@ import javax.inject.Inject
 internal class MTADeliveryNotifications
 @Inject
 private constructor(
-        private val emailDAO: EmailDAO,
-        private val emailStatusEventDAO: EmailStatusEventDAO,
-        private val mqSender: MQSender,
-        private val clock: Clock
+    private val emailDAO: EmailDAO,
+    private val emailStatusEventDAO: EmailStatusEventDAO,
+    private val mqSender: MQSender,
+    private val clock: Clock
 ) {
     fun setDeliveryStatus(request: DeliveryNotification) {
         val queueId = request.queueId
@@ -30,9 +30,9 @@ private constructor(
         if (email != null) {
             val creationTimestamp = clock.instant()!!
             val notificationMessageBuilder = DeliveryNotificationMessage
-                    .newBuilder()
-                    .setCreationTimestamp(creationTimestamp.toTimestamp())
-                    .setEmailMessageId(email.id.emailId)
+                .newBuilder()
+                .setCreationTimestamp(creationTimestamp.toTimestamp())
+                .setEmailMessageId(email.id.emailId)
 
             val status = when (request.status.substring(0, 2)) {
                 "2." -> {
@@ -64,11 +64,11 @@ private constructor(
 
             if (status != null) {
                 val statusEventDBO = EmailStatusEventDBO(
-                        emailStatus = status,
-                        email = email,
-                        metaData = StatusEventMetaData(
-                                mtaStatusCode = request.status
-                        )
+                    emailStatus = status,
+                    email = email,
+                    metaData = StatusEventMetaData(
+                        mtaStatusCode = request.status
+                    )
                 )
                 statusEventDBO.dateCreated = creationTimestamp
                 emailStatusEventDAO.save(statusEventDBO)

@@ -8,7 +8,7 @@ import javax.inject.Inject
 class ServiceRequestContextFactory
 @Inject
 private constructor(
-        private val serviceRequestContext: SettableReference<RequestContext>
+    private val serviceRequestContext: SettableReference<RequestContext>
 ) : Factory<RequestContext> {
 
     override fun provide(): RequestContext = serviceRequestContext.value!!

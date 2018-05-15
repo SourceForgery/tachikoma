@@ -11,9 +11,9 @@ import javax.inject.Inject
 internal class IncomingEmailAddressServiceGrpcImpl
 @Inject
 private constructor(
-        private val incomingEmailAddressService: IncomingEmailAddressService,
-        private val grpcExceptionMap: GrpcExceptionMap,
-        private val authentication: Authentication
+    private val incomingEmailAddressService: IncomingEmailAddressService,
+    private val grpcExceptionMap: GrpcExceptionMap,
+    private val authentication: Authentication
 ) : IncomingEmailAddressServiceGrpc.IncomingEmailAddressServiceImplBase() {
 
     override fun addIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) {

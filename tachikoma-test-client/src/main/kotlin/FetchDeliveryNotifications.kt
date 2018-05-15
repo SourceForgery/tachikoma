@@ -15,10 +15,10 @@ fun main(args: Array<String>) {
     metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
 
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-            .usePlaintext(true)
-            .idleTimeout(365, TimeUnit.DAYS)
-            .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-            .build()
+        .usePlaintext(true)
+        .idleTimeout(365, TimeUnit.DAYS)
+        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
+        .build()
 
     val stub = DeliveryNotificationServiceGrpc.newStub(channel)
 
