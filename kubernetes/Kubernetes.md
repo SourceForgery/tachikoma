@@ -14,7 +14,7 @@ $ kubectl create secret generic tachikoma-webserver-config \
 
 ## 2. Set up encryption
 
-Use either letsencrypt or other signed cert 
+Use either letsencrypt or other signed cert.
 
 ### 2a. Use letsencrypt to provide certs
 Set the hostname to use for connecting to the certificate server. 
@@ -32,6 +32,11 @@ $ kubectl create secret generic tachikoma-webserver-config \
 
 ### 2b. Use other certificate
 
+The key MUST be in pkcs8 format. If it isn't use the following command to convert it:
+```
+openssl pkcs8 -topk8 -in <server key in other format> -out server.key -nocrypt
+```
+
 The files need to be called _exactly_ what they are called here
 
 ```
@@ -40,10 +45,15 @@ $ kubectl create secret generic tachikoma-webserver-cert \
  --from-file=./server.key
 ```
 
+### Upgrading the certificate
+
+When upgrading the cert, the old secret must be deleted first, e.g.
+```
+kubectl delete secret tachikoma-webserver-cert
+```
 
 
-
-### Upgrading
+## Upgrading
 
 ``
 $ kubectl replace -f deployment-webserver.yaml
