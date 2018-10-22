@@ -55,6 +55,6 @@ kubectl delete secret tachikoma-webserver-cert
 
 ## Upgrading
 
-``
+```
 $ kubectl replace -f deployment-webserver.yaml
 ```
