@@ -9,6 +9,7 @@ dependencies {
     compile "io.grpc:grpc-netty:$grpc_version"
     compile "io.netty:netty-tcnative-boringssl-static:2.0.7.Final:$tcnative_classifier"
     compile "com.github.jnr:jnr-unixsocket:0.18"
+    compile "com.google.protobuf:protobuf-java-util:$protoc_version"
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
 
