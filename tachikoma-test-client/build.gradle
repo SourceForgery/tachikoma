@@ -7,7 +7,7 @@ def tcnative_classifier = osdetector.classifier
 dependencies {
     compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
     compile "io.grpc:grpc-netty:$grpc_version"
-    compile "io.netty:netty-tcnative-boringssl-static:2.0.7.Final:$tcnative_classifier"
+    compile "io.netty:netty-tcnative-boringssl-static:$netty_version_ssl:$tcnative_classifier"
     compile "com.github.jnr:jnr-unixsocket:0.18"
     compile "com.google.protobuf:protobuf-java-util:$protoc_version"
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
