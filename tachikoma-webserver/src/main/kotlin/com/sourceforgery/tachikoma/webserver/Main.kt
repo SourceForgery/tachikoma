@@ -33,14 +33,14 @@ import io.grpc.BindableService
 import io.grpc.ServerInterceptors
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.io.IoBuilder
-import org.glassfish.hk2.api.ServiceLocator
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.function.Function
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
+import org.glassfish.hk2.api.ServiceLocator
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 
 class WebServerStarter(
     private val serviceLocator: ServiceLocator

@@ -6,8 +6,7 @@ import javax.inject.Inject
 
 class DBObjectMapperImpl
 @Inject
-private constructor(
-) : DBObjectMapper() {
+private constructor() : DBObjectMapper() {
     init {
         registerModule(JavaTimeModule())
         registerKotlinModule()

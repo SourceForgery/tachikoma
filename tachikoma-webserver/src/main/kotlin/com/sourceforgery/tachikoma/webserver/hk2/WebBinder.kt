@@ -19,10 +19,10 @@ import com.sourceforgery.tachikoma.webserver.catchers.NotFoundCatcher
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
+import javax.inject.Singleton
 import org.glassfish.hk2.api.Context
 import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.utilities.binding.AbstractBinder
-import javax.inject.Singleton
 
 class WebBinder : AbstractBinder() {
     override fun configure() {

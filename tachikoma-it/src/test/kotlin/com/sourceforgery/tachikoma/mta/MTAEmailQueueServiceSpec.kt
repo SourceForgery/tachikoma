@@ -24,6 +24,11 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import com.sourceforgery.tachikoma.mq.OutgoingEmailMessage
 import com.sourceforgery.tachikoma.mq.QueueMessageWrap
 import io.ebean.EbeanServer
+import java.time.Clock
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -31,11 +36,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.time.Clock
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 @RunWith(JUnitPlatform::class)
 class MTAEmailQueueServiceSpec : Spek({

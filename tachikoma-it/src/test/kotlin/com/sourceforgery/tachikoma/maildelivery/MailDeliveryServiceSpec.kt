@@ -19,6 +19,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.hk2.located
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -27,8 +29,6 @@ import org.jetbrains.spek.api.dsl.it
 import org.junit.Assert.assertEquals
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.nio.charset.StandardCharsets
-import java.util.Base64
 
 @RunWith(JUnitPlatform::class)
 class MailDeliveryServiceSpec : Spek({

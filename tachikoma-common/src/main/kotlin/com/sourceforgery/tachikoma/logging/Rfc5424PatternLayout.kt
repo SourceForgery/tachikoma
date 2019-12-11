@@ -1,5 +1,13 @@
 package com.sourceforgery.tachikoma.logging
 
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.HashMap
+import java.util.TreeMap
+import java.util.regex.Matcher
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LoggingException
 import org.apache.logging.log4j.core.Layout
@@ -33,14 +41,6 @@ import org.apache.logging.log4j.message.StructuredDataMessage
 import org.apache.logging.log4j.util.ProcessIdUtil
 import org.apache.logging.log4j.util.StringBuilders
 import org.apache.logging.log4j.util.Strings
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.util.HashMap
-import java.util.TreeMap
-import java.util.regex.Matcher
 
 @Suppress("unused")
 @Plugin(name = "Rfc5424PatternLayout", category = Node.CATEGORY, elementType = Layout.ELEMENT_TYPE, printObject = true)

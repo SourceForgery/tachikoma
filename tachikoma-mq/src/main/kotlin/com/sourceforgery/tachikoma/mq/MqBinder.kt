@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.mq
 
 import com.sourceforgery.tachikoma.mq.jobs.JobFactory
-import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
+import org.glassfish.hk2.utilities.binding.AbstractBinder
 
 class MqBinder : AbstractBinder() {
     override fun configure() {

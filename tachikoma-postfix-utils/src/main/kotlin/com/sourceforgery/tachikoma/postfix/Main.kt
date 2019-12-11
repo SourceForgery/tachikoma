@@ -12,10 +12,10 @@ import io.grpc.stub.MetadataUtils
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.io.IoBuilder
 import java.net.URI
 import java.util.concurrent.TimeUnit
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
 
 private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
 

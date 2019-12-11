@@ -2,14 +2,14 @@ package com.sourceforgery.tachikoma.incoming
 
 import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.MailAcceptanceResult
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.io.IoBuilder
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.io.Writer
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
 
 class LMTPServer(
     private val socket: Socket,

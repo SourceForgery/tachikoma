@@ -8,8 +8,7 @@ import javax.inject.Inject
 
 class LogEverything
 @Inject
-private constructor(
-) : InvokeCounter {
+private constructor() : InvokeCounter {
 
     var slowThreshold = Duration.ofSeconds(1)!!
     val mapper by lazy(LazyThreadSafetyMode.NONE) {

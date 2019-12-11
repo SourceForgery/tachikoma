@@ -8,8 +8,7 @@ import javax.inject.Inject
 
 class PostgresqlEmbeddedDataSourceProvider
 @Inject
-private constructor(
-) : DataSourceProvider {
+private constructor() : DataSourceProvider {
     override fun provide(serverConfig: ServerConfig) {
         val pg = EmbeddedPostgres.builder()
             .setServerConfig("listen_addresses", "127.0.0.1")

@@ -24,16 +24,16 @@ import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
+import java.net.URI
+import java.time.Clock
+import java.util.UUID
+import javax.inject.Singleton
 import org.glassfish.hk2.api.Context
 import org.glassfish.hk2.api.DynamicConfiguration
 import org.glassfish.hk2.api.PerThread
 import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.internal.PerThreadContext
 import org.glassfish.hk2.utilities.binding.AbstractBinder
-import java.net.URI
-import java.time.Clock
-import java.util.UUID
-import javax.inject.Singleton
 
 class TestBinder(
     private vararg val attributes: TestAttribute

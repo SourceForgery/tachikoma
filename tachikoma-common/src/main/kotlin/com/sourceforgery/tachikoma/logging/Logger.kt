@@ -16,12 +16,12 @@
  */
 package com.sourceforgery.tachikoma.logging
 
+import kotlin.reflect.full.companionObject
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Marker
 import org.apache.logging.log4j.spi.ExtendedLogger
 import org.apache.logging.log4j.util.MessageSupplier
 import org.apache.logging.log4j.util.Supplier
-import kotlin.reflect.full.companionObject
 
 /**
  * An adapter supporting cleaner syntax when calling a logger with a Kotlin lambda. A Kotlin lambda can

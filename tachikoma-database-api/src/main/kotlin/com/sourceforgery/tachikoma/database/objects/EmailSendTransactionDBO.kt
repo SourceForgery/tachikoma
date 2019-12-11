@@ -16,8 +16,7 @@ import javax.persistence.Table
 @Table(name = "e_email_send_transaction")
 @Entity
 // Represents one call to MailDelivery.sendEmail()
-class EmailSendTransactionDBO
-(
+class EmailSendTransactionDBO(
     // Jsonified version of the gRPC coming in through the front end
     // for logging (in JSON because of readability and searching)
     @DbJsonB

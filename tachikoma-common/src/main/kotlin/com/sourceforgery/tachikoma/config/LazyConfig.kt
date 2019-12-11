@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.config
 
 import com.sun.xml.internal.ws.spi.db.BindingContextFactory.LOGGER
-import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -10,6 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.Properties
 import java.util.UUID
+import org.apache.logging.log4j.LogManager
 
 fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
     val stringValue = ConfigData.getProperty(configKey, default)

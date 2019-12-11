@@ -8,13 +8,13 @@ import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import io.grpc.Channel
 import io.grpc.stub.StreamObserver
+import java.net.Socket
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 import net.sf.expectit.ExpectBuilder
 import net.sf.expectit.matcher.Matchers.regexp
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
-import java.net.Socket
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
 
 class MailSender(
     channel: Channel
@@ -86,7 +86,7 @@ class MailSender(
         // MAIL FROM: foobar@domain
         // RCPT TO: receiver@domain
         // DATA
-        //... data
+        // ... data
         // .
         // quit
     }

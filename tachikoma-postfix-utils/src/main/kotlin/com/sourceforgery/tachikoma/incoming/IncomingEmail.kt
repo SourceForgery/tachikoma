@@ -6,10 +6,10 @@ import com.sourceforgery.tachikoma.mta.IncomingEmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MailAcceptanceResult
 import io.grpc.Channel
-import jnr.unixsocket.UnixServerSocketChannel
-import jnr.unixsocket.UnixSocketAddress
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
+import jnr.unixsocket.UnixServerSocketChannel
+import jnr.unixsocket.UnixSocketAddress
 
 class IncomingEmail(
     grpcChannel: Channel

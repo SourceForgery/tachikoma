@@ -9,14 +9,14 @@ import io.ebean.config.EncryptKey
 import io.ebean.config.EncryptKeyManager
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
+import java.sql.DriverManager
+import javax.inject.Inject
+import javax.sql.DataSource
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.avaje.datasource.DataSourcePool
 import org.glassfish.hk2.api.Factory
 import org.glassfish.hk2.api.IterableProvider
-import java.sql.DriverManager
-import javax.inject.Inject
-import javax.sql.DataSource
 
 class EbeanServerFactory
 @Inject

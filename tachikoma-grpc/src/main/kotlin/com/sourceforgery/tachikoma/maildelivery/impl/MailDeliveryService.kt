@@ -51,10 +51,6 @@ import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import net.moznion.uribuildertiny.URIBuilderTiny
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
@@ -71,6 +67,10 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
+import net.moznion.uribuildertiny.URIBuilderTiny
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 
 class MailDeliveryService
 @Inject

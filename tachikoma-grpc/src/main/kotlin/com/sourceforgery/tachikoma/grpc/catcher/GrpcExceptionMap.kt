@@ -3,11 +3,11 @@ package com.sourceforgery.tachikoma.grpc.catcher
 import com.sourceforgery.tachikoma.config.DebugConfig
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import org.glassfish.hk2.api.IterableProvider
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import org.glassfish.hk2.api.IterableProvider
 
 class GrpcExceptionMap
 @Inject

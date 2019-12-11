@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.hk2
 
-import org.glassfish.hk2.api.Proxiable
 import javax.inject.Scope
+import org.glassfish.hk2.api.Proxiable
 
 @Scope
 @Proxiable

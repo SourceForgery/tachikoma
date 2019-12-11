@@ -11,6 +11,11 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.ebean.EbeanServer
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -18,11 +23,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertFails
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 @RunWith(JUnitPlatform::class)
 internal class IncomingEmailAddressDAOSpec : Spek({

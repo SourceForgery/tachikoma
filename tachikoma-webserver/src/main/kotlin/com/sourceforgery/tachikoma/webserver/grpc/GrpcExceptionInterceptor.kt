@@ -6,8 +6,8 @@ import io.grpc.Metadata
 import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
-import org.glassfish.hk2.api.MultiException
 import javax.inject.Inject
+import org.glassfish.hk2.api.MultiException
 
 internal class GrpcExceptionInterceptor
 @Inject

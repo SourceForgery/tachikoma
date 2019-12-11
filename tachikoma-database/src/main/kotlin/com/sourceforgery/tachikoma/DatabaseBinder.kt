@@ -39,8 +39,8 @@ import com.sourceforgery.tachikoma.database.upgrades.Version8
 import com.sourceforgery.tachikoma.database.upgrades.Version9
 import com.sourceforgery.tachikoma.hk2.RequestScoped
 import io.ebean.EbeanServer
-import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
+import org.glassfish.hk2.utilities.binding.AbstractBinder
 
 class DatabaseBinder : AbstractBinder() {
     override fun configure() {
@@ -95,8 +95,7 @@ class DatabaseBinder : AbstractBinder() {
     }
 
     private fun bindEbeanHooks() {
-        val ebeanHooks = listOf<Class<EbeanHook>>(
-        )
+        val ebeanHooks = listOf<Class<EbeanHook>>()
         for (ebeanHook in ebeanHooks) {
             bindAsContract(ebeanHook)
                 .to(EbeanHook::class.java)

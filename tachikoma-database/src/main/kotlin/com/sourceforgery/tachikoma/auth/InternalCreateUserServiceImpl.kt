@@ -12,8 +12,8 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
-import net.bytebuddy.utility.RandomString
 import javax.inject.Inject
+import net.bytebuddy.utility.RandomString
 
 class InternalCreateUserServiceImpl
 @Inject
