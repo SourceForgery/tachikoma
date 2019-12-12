@@ -9,12 +9,12 @@ import io.ebean.config.EncryptKey
 import io.ebean.config.EncryptKeyManager
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
+import io.ebean.datasource.DataSourcePool
 import java.sql.DriverManager
 import javax.inject.Inject
 import javax.sql.DataSource
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
-import org.avaje.datasource.DataSourcePool
 import org.glassfish.hk2.api.Factory
 import org.glassfish.hk2.api.IterableProvider
 
@@ -90,7 +90,7 @@ private constructor(
         serverConfig.isDefaultServer = false
         serverConfig.isRegister = false
         serverConfig.encryptKeyManager = EncryptKeyManager { _, _ -> EncryptKey { databaseConfig.databaseEncryptionKey } }
-        serverConfig.objectMapper = dbObjectMapper
+        serverConfig.objectMapper = dbObjectMapper.objectMapper
         serverConfig.databaseSequenceBatchSize = 100
         dataSourceProvider.provide(serverConfig)
 

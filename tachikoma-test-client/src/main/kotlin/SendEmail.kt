@@ -16,6 +16,7 @@ fun main(args: Array<String>) {
     val metadataAuth = Metadata()
     metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
 
+    @Suppress("DEPRECATION")
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
         .usePlaintext(true)
         .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))

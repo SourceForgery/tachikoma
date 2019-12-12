@@ -12,7 +12,7 @@ dependencies {
     compile "com.google.protobuf:protobuf-java-util:$protoc_version"
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
-
+    compile "io.grpc:grpc-stub:$grpc_version"
 }
 
 mainClassName = "TracerKt"
@@ -20,11 +20,11 @@ mainClassName = "TracerKt"
 task fatJar(type: Jar) {
     manifest {
         attributes 'Implementation-Title': 'Tachikoma ESP Webserver',
-                'Implementation-Version': version,
+                'Implementation-Version': archiveVersion.get(),
                 'Main-Class': mainClassName
     }
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    archiveBaseName.set(project.name + '-all')
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 

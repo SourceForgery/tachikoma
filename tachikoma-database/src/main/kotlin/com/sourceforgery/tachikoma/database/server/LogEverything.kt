@@ -1,10 +1,10 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.sourceforgery.tachikoma.logging.logger
 import java.time.Duration
 import javax.annotation.PreDestroy
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 class LogEverything
 @Inject

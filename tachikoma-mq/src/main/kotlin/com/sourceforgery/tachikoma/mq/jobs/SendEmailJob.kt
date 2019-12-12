@@ -1,11 +1,11 @@
 package com.sourceforgery.tachikoma.mq.jobs
 
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.OutgoingEmailMessage
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 class SendEmailJob
 @Inject

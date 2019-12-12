@@ -22,7 +22,6 @@ import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import io.grpc.stub.ServerCallStreamObserver
@@ -30,6 +29,7 @@ import io.grpc.stub.StreamObserver
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class DeliveryNotificationService
 @Inject

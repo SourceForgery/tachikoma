@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.mailer
 
 import com.sourceforgery.tachikoma.expectit.emptyBuffer
 import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
@@ -15,6 +14,7 @@ import net.sf.expectit.ExpectBuilder
 import net.sf.expectit.matcher.Matchers.regexp
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
+import org.apache.logging.log4j.kotlin.logger
 
 class MailSender(
     channel: Channel

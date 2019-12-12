@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.incoming
 
 import com.google.protobuf.ByteString
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.IncomingEmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MailAcceptanceResult
@@ -10,6 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 import jnr.unixsocket.UnixServerSocketChannel
 import jnr.unixsocket.UnixSocketAddress
+import org.apache.logging.log4j.kotlin.logger
 
 class IncomingEmail(
     grpcChannel: Channel

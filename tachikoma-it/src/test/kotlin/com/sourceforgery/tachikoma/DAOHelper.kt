@@ -55,7 +55,7 @@ private constructor(
     ): EmailStatusEventDBO {
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
-        val jsonRequest = dbObjectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
+        val jsonRequest = dbObjectMapper.objectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
         val email = EmailDBO(
             recipient = recipient,

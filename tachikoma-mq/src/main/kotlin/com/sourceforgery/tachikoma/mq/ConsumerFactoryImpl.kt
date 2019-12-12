@@ -17,12 +17,12 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.logging.logger
 import java.time.Clock
 import java.time.Duration
 import java.util.concurrent.Executors
 import javax.annotation.PreDestroy
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class ConsumerFactoryImpl
 @Inject

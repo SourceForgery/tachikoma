@@ -12,7 +12,7 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     applicationName = 'tachikoma-webserver'
 
-    baseImage 'ubuntu:xenial'
+    baseImage 'ubuntu:18.04'
 
     maintainer 'tachikoma@sourceforgery.com'
 

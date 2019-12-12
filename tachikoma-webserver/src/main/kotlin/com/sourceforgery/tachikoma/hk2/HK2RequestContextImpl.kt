@@ -3,10 +3,10 @@ package com.sourceforgery.tachikoma.hk2
 import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.Sets
-import com.sourceforgery.tachikoma.logging.logger
 import java.util.HashMap
 import java.util.UUID
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 import org.glassfish.hk2.api.ActiveDescriptor
 import org.glassfish.hk2.api.Context
 import org.glassfish.hk2.api.ServiceHandle

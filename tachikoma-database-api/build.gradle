@@ -8,11 +8,12 @@ repositories {
 
 dependencies {
     compile project(":tachikoma-internal-api")
+
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+
     compile "io.ebean:ebean:$ebean_version"
     compile "io.ebean:ebean-querybean:$querybean_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-
-    compile("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
 }
 
 ebean {

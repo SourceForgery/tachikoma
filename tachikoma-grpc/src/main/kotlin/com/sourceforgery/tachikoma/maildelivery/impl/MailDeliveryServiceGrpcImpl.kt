@@ -7,9 +7,9 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
-import com.sourceforgery.tachikoma.logging.logger
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class MailDeliveryServiceGrpcImpl
 @Inject

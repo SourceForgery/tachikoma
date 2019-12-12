@@ -1,11 +1,11 @@
 package com.sourceforgery.tachikoma.common
 
+import com.google.common.io.BaseEncoding
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
 import java.security.spec.InvalidKeySpecException
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
-import javax.xml.bind.DatatypeConverter
 import kotlin.experimental.xor
 
 object PasswordStorage {
@@ -35,12 +35,10 @@ object PasswordStorage {
         constructor(message: String, source: Throwable) : super(message, source)
     }
 
-    @Throws(CannotPerformOperationException::class)
     fun createHash(password: String): String {
         return createHash(password.toCharArray())
     }
 
-    @Throws(CannotPerformOperationException::class)
     fun createHash(password: CharArray): String {
         // Generate a random salt
         val random = SecureRandom()
@@ -61,12 +59,10 @@ object PasswordStorage {
             toBase64(hash)
     }
 
-    @Throws(CannotPerformOperationException::class, InvalidHashException::class)
     fun verifyPassword(password: String, correctHash: String): Boolean {
         return verifyPassword(password.toCharArray(), correctHash)
     }
 
-    @Throws(CannotPerformOperationException::class, InvalidHashException::class)
     fun verifyPassword(password: CharArray, correctHash: String): Boolean {
         // Decode the hash into its parameters
         val params = correctHash.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -153,7 +149,6 @@ object PasswordStorage {
         return diff == 0
     }
 
-    @Throws(CannotPerformOperationException::class)
     private fun pbkdf2(password: CharArray, salt: ByteArray, iterations: Int, bytes: Int): ByteArray {
         try {
             val spec = PBEKeySpec(password, salt, iterations, bytes * 8)
@@ -172,12 +167,11 @@ object PasswordStorage {
         }
     }
 
-    @Throws(IllegalArgumentException::class)
     private fun fromBase64(hex: String): ByteArray {
-        return DatatypeConverter.parseBase64Binary(hex)
+        return BaseEncoding.base16().decode(hex)
     }
 
     private fun toBase64(array: ByteArray): String {
-        return DatatypeConverter.printBase64Binary(array)
+        return BaseEncoding.base16().encode(array)
     }
 }

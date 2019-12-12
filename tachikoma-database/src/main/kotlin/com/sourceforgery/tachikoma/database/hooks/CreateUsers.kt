@@ -6,10 +6,10 @@ import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
-import com.sourceforgery.tachikoma.logging.logger
 import io.ebean.EbeanServer
 import javax.inject.Inject
 import net.bytebuddy.utility.RandomString
+import org.apache.logging.log4j.kotlin.logger
 
 class CreateUsers
 @Inject

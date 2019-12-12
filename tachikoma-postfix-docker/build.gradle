@@ -12,7 +12,7 @@ dependencies {
 task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     applicationName = 'tachikoma-postfix'
 
-    baseImage 'ubuntu:xenial'
+    baseImage 'ubuntu:18.04'
 
     maintainer 'tachikoma@sourceforgery.com'
 

@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.config
 
-import com.sun.xml.internal.ws.spi.db.BindingContextFactory.LOGGER
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -10,6 +9,7 @@ import java.util.Locale
 import java.util.Properties
 import java.util.UUID
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.kotlin.logger
 
 fun <T> readConfig(configKey: String, default: String, clazz: Class<T>): T {
     val stringValue = ConfigData.getProperty(configKey, default)
@@ -86,6 +86,7 @@ fun lazyConfig(configKey: String, default: Long) =
 
 private object ConfigData {
     val properties = Properties()
+    private val LOGGER = logger()
 
     init {
         val configFile = System.getenv("TACHIKOMA_CONFIG")

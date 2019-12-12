@@ -5,6 +5,8 @@ dependencies {
     compile "io.ebean:ebean-annotation:$ebean_annotation_version"
     compile "org.glassfish.hk2:hk2-api:$hk2_version"
     compile "com.google.guava:guava:$guava_version"
+    compile "com.google.protobuf:protobuf-java:$protoc_version"
+    compile "io.grpc:grpc-stub:$grpc_version"
 
     compile project(':tachikoma-backend-api-proto:tachikoma-backend-api-jvm')
     compile project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')

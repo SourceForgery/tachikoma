@@ -39,7 +39,6 @@ import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.maildelivery.HtmlToPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
@@ -68,6 +67,7 @@ import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
 import net.moznion.uribuildertiny.URIBuilderTiny
+import org.apache.logging.log4j.kotlin.logger
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -263,7 +263,7 @@ private constructor(
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
-        return dbObjectMapper.readValue<HashMap<String, Any>>(
+        return dbObjectMapper.objectMapper.readValue<HashMap<String, Any>>(
             JsonFormat.printer().print(struct),
             object : TypeReference<HashMap<String, Any>>() {}
         )
@@ -271,7 +271,7 @@ private constructor(
 
     // Store the request for later debugging
     private fun getRequestData(request: OutgoingEmail) =
-        dbObjectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
+        dbObjectMapper.objectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
 
     private fun mergeTemplate(
         template: String?,

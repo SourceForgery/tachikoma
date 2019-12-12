@@ -17,7 +17,6 @@ import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.get
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MessageQueue
 import com.sourceforgery.tachikoma.mq.MqBinder
@@ -39,6 +38,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Function
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
+import org.apache.logging.log4j.kotlin.logger
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 
