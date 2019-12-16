@@ -35,9 +35,6 @@ class AuthenticationDBO(
     var recipientOverride: Email? = null
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
-    val incomingEmailAddresses: List<IncomingEmailAddressDBO> = ArrayList()
-
-    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     val emailSendTransactionDBO: List<EmailSendTransactionDBO> = ArrayList()
     @Column
     var active = true

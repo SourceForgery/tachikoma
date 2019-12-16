@@ -9,19 +9,23 @@ import javax.persistence.Table
 
 @Table(name = "e_account")
 @Entity
-// This is one account (sender) with it's multiple users
-// Every user = one account
+/**
+ * This is one account (sender) with it's multiple users
+ * Could be called "company" or "organization" responsible for one email domain
+  */
 class AccountDBO(
     // This is the domain allowed in the from field
     @Column(unique = true)
     val mailDomain: MailDomain
 ) : GenericDBO() {
-    @OneToMany(orphanRemoval = true)
+    @OneToMany(mappedBy = "account", orphanRemoval = true)
     val authentications: List<AuthenticationDBO> = ArrayList()
-    @OneToMany(orphanRemoval = true)
+    @OneToMany(mappedBy = "account", orphanRemoval = true)
     val incomingEmailAddresses: List<IncomingEmailAddressDBO> = ArrayList()
-    @OneToMany(orphanRemoval = true)
+    @OneToMany(mappedBy = "account", orphanRemoval = true)
     val incomingEmails: List<IncomingEmailDBO> = ArrayList()
+    @OneToMany(mappedBy = "account", orphanRemoval = true)
+    val blockedEmails: List<BlockedEmailDBO> = ArrayList()
 }
 
 val AccountDBO.id: AccountId
