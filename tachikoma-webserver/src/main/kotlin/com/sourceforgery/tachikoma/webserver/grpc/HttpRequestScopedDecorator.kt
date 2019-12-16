@@ -4,8 +4,8 @@ import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.RequestContext
 import com.linecorp.armeria.common.logging.RequestLogAvailability
-import com.linecorp.armeria.server.DecoratingServiceFunction
-import com.linecorp.armeria.server.Service
+import com.linecorp.armeria.server.DecoratingHttpServiceFunction
+import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.ServiceRequestContext
 import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl
 import com.sourceforgery.tachikoma.hk2.SettableReference
@@ -21,8 +21,8 @@ class HttpRequestScopedDecorator
 private constructor(
     private val hK2RequestContext: HK2RequestContextImpl,
     private val serviceLocator: ServiceLocator
-) : DecoratingServiceFunction<HttpRequest, HttpResponse> {
-    override fun serve(delegate: Service<HttpRequest, HttpResponse>, ctx: ServiceRequestContext, req: HttpRequest): HttpResponse {
+) : DecoratingHttpServiceFunction {
+    override fun serve(delegate: HttpService, ctx: ServiceRequestContext, req: HttpRequest): HttpResponse {
         val oldHk2Ctx = hK2RequestContext.retrieveCurrent()
         ctx.attr(OLD_HK2_CONTEXT_KEY).set(oldHk2Ctx)
         val hk2Ctx = hK2RequestContext.createInstance()
@@ -34,17 +34,16 @@ private constructor(
             hK2RequestContext.resumeCurrent(oldHk2Ctx)
         })
         ctx.log().addListener({ hK2RequestContext.release(hk2Ctx) }, RequestLogAvailability.COMPLETE)
-        return hK2RequestContext.runInScope(hk2Ctx,
-            {
-                serviceLocator
-                    .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
-                    .value = req
-                serviceLocator
-                    .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
-                    .value = ctx
-                delegate.serve(ctx, req)
-            }
-        )
+        return hK2RequestContext.runInScope(hk2Ctx
+        ) {
+            serviceLocator
+                .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
+                .value = req
+            serviceLocator
+                .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
+                .value = ctx
+            delegate.serve(ctx, req)
+        }
     }
 
     companion object {

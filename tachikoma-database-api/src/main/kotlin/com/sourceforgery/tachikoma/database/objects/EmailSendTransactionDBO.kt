@@ -5,7 +5,6 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 import io.ebean.annotation.DbArray
 import io.ebean.annotation.DbJsonB
-import io.ebean.common.BeanList
 import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -23,7 +22,7 @@ class EmailSendTransactionDBO(
     val jsonRequest: ObjectNode,
     @Column
     val fromEmail: Email,
-    @ManyToOne
+    @ManyToOne(cascade = [CascadeType.ALL])
     val authentication: AuthenticationDBO,
     @DbArray
     val bcc: List<String> = emptyList(),
@@ -34,7 +33,7 @@ class EmailSendTransactionDBO(
 
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])
-    val emails: List<EmailDBO> = BeanList()
+    val emails: List<EmailDBO> = ArrayList()
 }
 
 val EmailSendTransactionDBO.id: EmailTransactionId

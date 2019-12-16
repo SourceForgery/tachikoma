@@ -3,11 +3,11 @@ package com.sourceforgery.tachikoma.database.server
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
+import io.ebean.datasource.DataSourceConfig
 import java.lang.IllegalArgumentException
 import java.sql.Connection
 import java.util.HashMap
 import javax.inject.Inject
-import org.avaje.datasource.DataSourceConfig
 
 class PostgresqlDataSourceProvider
 @Inject

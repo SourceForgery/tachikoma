@@ -1,15 +1,13 @@
 package com.sourceforgery.tachikoma.webserver
 
 import com.linecorp.armeria.common.HttpMethod
-import com.linecorp.armeria.common.HttpRequest
-import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
+import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.ServerBuilder
-import com.linecorp.armeria.server.Service
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
-import com.linecorp.armeria.server.grpc.GrpcServiceBuilder
-import com.linecorp.armeria.server.healthcheck.HttpHealthCheckService
+import com.linecorp.armeria.server.grpc.GrpcService
+import com.linecorp.armeria.server.healthcheck.HealthCheckService
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
@@ -54,14 +52,14 @@ class WebServerStarter(
             .allowNullOrigin()
             .allowCredentials()
             .allowRequestMethods(HttpMethod.GET)
-            .build(object : HttpHealthCheckService() {})
+            .build(HealthCheckService.of())
 
         // Order matters!
         val serverBuilder = ServerBuilder()
             .serviceUnder("/health", healthService)
         val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
 
-        val restDecoratorFunction = Function<Service<HttpRequest, HttpResponse>, Service<HttpRequest, HttpResponse>> { it.decorate(requestScoped) }
+        val restDecoratorFunction = Function<HttpService, HttpService> { it.decorate(requestScoped) }
         for (restService in serviceLocator.getAllServices(RestService::class.java)) {
             serverBuilder.annotatedService("/", restService, restDecoratorFunction, exceptionHandler)
         }
@@ -69,7 +67,7 @@ class WebServerStarter(
         val exceptionInterceptor: GrpcExceptionInterceptor = serviceLocator.get()
         val webServerConfig: WebServerConfig = serviceLocator.get()
 
-        val grpcServiceBuilder = GrpcServiceBuilder().supportedSerializationFormats(GrpcSerializationFormats.values())
+        val grpcServiceBuilder = GrpcService.builder().supportedSerializationFormats(GrpcSerializationFormats.values())
         for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
             grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, exceptionInterceptor))
         }
@@ -77,17 +75,17 @@ class WebServerStarter(
 
         return serverBuilder
             // Grpc must be last
-            .decorator(Function { it.decorate(requestScoped) })
+            .decorator(requestScoped)
             .serviceUnder("/", grpcService)
             .apply {
                 if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
-                    sslContext(SessionProtocol.HTTPS, File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
+                    tls(File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
                     port(8443, SessionProtocol.HTTPS)
                 } else {
                     port(8070, SessionProtocol.HTTP)
                 }
             }
-            .defaultRequestTimeout(Duration.ofDays(365))
+            .requestTimeout(Duration.ofDays(365))
             .build()
             .start()
     }
@@ -103,7 +101,7 @@ class WebServerStarter(
         )
             // Yes, parallel stream is broken by design, but here it should work
             .parallelStream()
-            .forEach({ serviceLocator.getService(it) })
+            .forEach { serviceLocator.getService(it) }
     }
 
     fun start() {
@@ -114,7 +112,7 @@ class WebServerStarter(
             initClientsInBackground()
             server.join()
         } catch (e: Exception) {
-            LOGGER.fatal(e, { "Failed to start server" })
+            LOGGER.fatal(e) { "Failed to start server" }
             serviceLocator.shutdown()
             throw e
         }

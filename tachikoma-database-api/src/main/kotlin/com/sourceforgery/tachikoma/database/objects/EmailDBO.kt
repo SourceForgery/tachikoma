@@ -5,7 +5,6 @@ import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.annotation.DbJsonB
-import io.ebean.common.BeanList
 import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -39,7 +38,7 @@ constructor(
     var subject: String? = null
 
     @OneToMany
-    val emailStatusEvents: List<EmailStatusEventDBO> = BeanList()
+    val emailStatusEvents: List<EmailStatusEventDBO> = ArrayList()
 
     constructor(
         recipient: NamedEmail,

@@ -26,11 +26,11 @@ class StartupSpec : Spek({
     afterEachTest {
         serviceLocator.shutdown()
     }
-    describe("Test", {
-        it("Test upgrade scripts", {
+    describe("Test") {
+        it("Test upgrade scripts") {
             val ebeanServer: EbeanServer = serviceLocator.get()
             assertTrue((ebeanServer as DefaultServer).databasePlatform is PostgresPlatform)
             ebeanServer.find(EmailDBO::class.java).findList()
-        })
-    })
+        }
+    }
 })

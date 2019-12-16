@@ -29,9 +29,9 @@ private constructor() : MQSequenceFactory {
     private fun <X : Any> listenOnQueue(queue: BlockingQueue<QueueMessageWrap<X>>, callback: (X) -> Unit): SettableFuture<Void> {
         val future = SettableFuture.create<Void>()
         executorService.execute {
-            generateSequence({
+            generateSequence {
                 queue.take().value
-            }).forEach {
+            }.forEach {
                 callback(it)
             }
             future.set(null)

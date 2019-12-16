@@ -3,6 +3,8 @@ apply from: "${project.rootDir}/kotlin.gradle"
 dependencies {
     compile 'com.github.spullara.mustache.java:compiler:0.9.6'
     compile 'javax.mail:javax.mail-api:1.6.2'
+    compile 'com.sun.mail:javax.mail:1.6.2'
+    compile 'javax.activation:javax.activation-api:1.2.0'
     compile 'net.moznion:uribuilder-tiny:2.7.1'
     compile 'org.jsoup:jsoup:1.12.1'
     compile "com.linecorp.armeria:armeria:$armeria_version"

@@ -11,14 +11,14 @@ import org.junit.runner.RunWith
 @RunWith(JUnitPlatform::class)
 class HtmlToPlainTextSpec : Spek({
 
-    describe("Convert simple html to plain text", {
-        it("simple", {
+    describe("Convert simple html to plain text") {
+        it("simple") {
 
-            val plainText = HtmlToPlainText.getPlainText(simpleHtmlDoc)
+            val plainText = getPlainText(simpleHtmlDoc)
 
             assertEquals(simpleHtmlText, plainText)
-        })
-    })
+        }
+    }
 }) {
     companion object {
         val simpleHtmlDoc = Jsoup.parse("""

@@ -2,8 +2,8 @@ package com.sourceforgery.tachikoma.rest.unsubscribe
 
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
-import com.linecorp.armeria.server.annotation.ConsumeType
-import com.linecorp.armeria.server.annotation.ConsumeTypes
+import com.linecorp.armeria.server.annotation.Consumes
+import com.linecorp.armeria.server.annotation.ConsumesGroup
 import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
@@ -41,7 +41,7 @@ private constructor(
 ) : RestService {
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
-    @ConsumeTypes(ConsumeType("multipart/form-data"), ConsumeType("application/x-www-form-urlencoded"))
+    @ConsumesGroup(Consumes("multipart/form-data"), Consumes("application/x-www-form-urlencoded"))
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String,
         @Param("List-Unsubscribe") listUnsubscribe: String
@@ -54,7 +54,7 @@ private constructor(
             createAndSendUnsubscribeEvent(unsubscribeDataString)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
-            LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })
+            LOGGER.debug(e) { "Failed to unsubscribe $unsubscribeDataString" }
         }
         return HttpResponse.of(HttpStatus.OK)
     }
@@ -73,7 +73,7 @@ private constructor(
             }
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
-            LOGGER.debug(e, { "Failed to unsubscribe $unsubscribeDataString" })
+            LOGGER.debug(e) { "Failed to unsubscribe $unsubscribeDataString" }
             return HttpResponse.of(HttpStatus.OK)
         }
     }

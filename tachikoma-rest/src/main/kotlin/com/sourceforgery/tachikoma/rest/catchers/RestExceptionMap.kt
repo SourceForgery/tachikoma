@@ -45,7 +45,7 @@ private constructor(
     }
 
     fun findCatcher(key: Class<Throwable>): RestExceptionCatcher<Throwable> {
-        return map.computeIfAbsent(key, { findClass(key) })
+        return map.computeIfAbsent(key) { findClass(key) }
     }
 
     private fun getGenerics(catcher: RestExceptionCatcher<*>): Type {

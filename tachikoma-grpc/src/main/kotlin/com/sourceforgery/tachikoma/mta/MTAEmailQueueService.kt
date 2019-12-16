@@ -49,7 +49,7 @@ private constructor(
     fun getEmails(responseObserver: StreamObserver<EmailMessage>, mailDomain: MailDomain): StreamObserver<MTAQueuedNotification> {
         LOGGER.info { "MTA connected with mail domain $mailDomain " }
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
-        val future = mqSequenceFactory.listenForOutgoingEmails(mailDomain, {
+        val future = mqSequenceFactory.listenForOutgoingEmails(mailDomain) {
             val email = emailDAO.fetchEmailData(EmailId(it.emailId))
             if (email == null) {
                 LOGGER.warn { "Nothing found when looking trying to send email with id: " + it.emailId }
@@ -64,7 +64,7 @@ private constructor(
                     .build()
                 responseObserver.onNext(response)
             }
-        })
+        }
         future.addListener(Runnable {
             val cancelled = serverCallStreamObserver?.isCancelled ?: true
             if (!cancelled) {
@@ -126,7 +126,7 @@ private constructor(
             }
 
             override fun onError(t: Throwable) {
-                LOGGER.error(t, { "Error in MTAEmailQueueService" })
+                LOGGER.error(t) { "Error in MTAEmailQueueService" }
                 future.cancel(true)
             }
         }

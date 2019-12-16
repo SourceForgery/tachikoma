@@ -58,7 +58,7 @@ internal constructor(
             .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
             .apply {
                 if (plaintext) {
-                    usePlaintext(true)
+                    usePlaintext()
                 } else {
                     useTransportSecurity()
                     sslContext(

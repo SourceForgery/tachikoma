@@ -100,8 +100,8 @@ class UserServiceSpek : Spek({
         return actual
     }
 
-    describe("UserServiceSpec", {
-        it("create & modify user", {
+    describe("UserServiceSpec") {
+        it("create & modify user") {
             val newUser = createUser()
             val before = ModifyUserRequest.newBuilder()
                 .setActive(false)
@@ -127,6 +127,6 @@ class UserServiceSpek : Spek({
             assertEquals(oldMailDomain, actual.account.mailDomain)
 
             assertNotEquals(oldApiToken, actual.apiToken)
-        })
-    })
+        }
+    }
 })

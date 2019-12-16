@@ -31,7 +31,7 @@ private constructor(
     fun findCatcher(key: Throwable): GrpcExceptionCatcher<Throwable> {
         @Suppress("UNCHECKED_CAST")
         val clazz = key::class.java as Class<Throwable>
-        return map.computeIfAbsent(clazz, { findClass(clazz) })
+        return map.computeIfAbsent(clazz) { findClass(clazz) }
     }
 
     private fun getGenerics(catcher: GrpcExceptionCatcher<*>): Type {

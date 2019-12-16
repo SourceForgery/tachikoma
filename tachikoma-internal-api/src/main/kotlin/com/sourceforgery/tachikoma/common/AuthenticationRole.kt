@@ -4,7 +4,7 @@ import io.ebean.annotation.DbEnumValue
 
 enum class AuthenticationRole(
     @get:DbEnumValue
-    private val stableValue: Int
+    val stableValue: Int
 ) {
     BACKEND(0),
     FRONTEND(1),

@@ -15,7 +15,7 @@ private constructor(
 ) : RemoteIP {
     override val remoteAddress: String
         get() {
-            return httpRequest.headers().get(X_FORWARDED_FOR, null)
+            return httpRequest.headers().get(X_FORWARDED_FOR)
                 ?.substringBefore(',')
                 ?: let {
                     requestContext.remoteAddress<InetSocketAddress>()!!

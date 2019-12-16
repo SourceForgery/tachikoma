@@ -64,7 +64,7 @@ class MTAEmailQueueServiceSpec : Spek({
         return authenticationDBO
     }
 
-    describe("MTA queue service test", {
+    describe("MTA queue service test") {
         val mqSequenceFactoryMock: () -> MQSequenceFactoryMock = located { serviceLocator }
         val mqSenderMock: () -> MQSenderMock = located { serviceLocator }
         val clock: () -> Clock = located { serviceLocator }
@@ -101,7 +101,7 @@ class MTAEmailQueueServiceSpec : Spek({
             ebeanServer().save(email)
         }
 
-        it("Create email test", {
+        it("Create email test") {
             val responseObserver = QueueStreamObserver<EmailMessage>()
 
             mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
@@ -122,9 +122,9 @@ class MTAEmailQueueServiceSpec : Spek({
             assertEquals(emailMessage.body, email.body)
             assertEquals(emailMessage.emailAddress, email.recipient.address)
             assertEquals(emailMessage.emailId, email.id.emailId)
-        })
+        }
 
-        it("Receive queue message", {
+        it("Receive queue message") {
 
             val responseObserver = QueueStreamObserver<EmailMessage>()
             val requestStreamObserver = mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
@@ -145,6 +145,6 @@ class MTAEmailQueueServiceSpec : Spek({
             assertEquals(1, mqSenderMock().deliveryNotifications.size)
             val notification = mqSenderMock().deliveryNotifications.take()
             assertEquals(email.id.emailId, notification.emailMessageId)
-        })
-    })
+        }
+    }
 })

@@ -38,7 +38,7 @@ private constructor(
 
     private val apiKeyCache = CacheBuilder.newBuilder()
         .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build(CacheLoader.from<String, Authentication?>({ parseApiTokenHeader(it) }))
+        .build(CacheLoader.from<String, Authentication?> { parseApiTokenHeader(it) })
 
     override fun provide() =
         parseWebTokenHeader()
@@ -81,7 +81,7 @@ private constructor(
             ?: NO_AUTHENTICATION
 
     private fun wrapException(error: String): Authentication {
-        return ThrowingAuthentication({ InvalidOrInsufficientCredentialsException(error) })
+        return ThrowingAuthentication { InvalidOrInsufficientCredentialsException(error) }
     }
 
     private fun parseWebTokenHeader(): Authentication? {
@@ -121,7 +121,7 @@ private constructor(
         val LOGGER = logger()
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION: Authentication =
-            ThrowingAuthentication({ NoAuthorizationCredentialsException() })
+            ThrowingAuthentication { NoAuthorizationCredentialsException() }
 
         val WEBTOKEN_HEADER = AsciiString("x-webtoken")
         val APITOKEN_HEADER = AsciiString("x-apitoken")

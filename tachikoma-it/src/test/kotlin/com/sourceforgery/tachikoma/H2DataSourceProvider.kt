@@ -3,10 +3,10 @@ package com.sourceforgery.tachikoma
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.h2.H2Platform
+import io.ebean.datasource.DataSourceConfig
 import java.sql.Connection
 import java.util.UUID
 import javax.inject.Inject
-import org.avaje.datasource.DataSourceConfig
 
 class H2DataSourceProvider
 @Inject

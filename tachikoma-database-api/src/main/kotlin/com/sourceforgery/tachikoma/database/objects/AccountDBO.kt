@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.database.objects
 
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import io.ebean.common.BeanList
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.OneToMany
@@ -17,12 +16,12 @@ class AccountDBO(
     @Column(unique = true)
     val mailDomain: MailDomain
 ) : GenericDBO() {
-    @OneToMany(mappedBy = "account")
-    val authentications: List<AuthenticationDBO> = BeanList()
-    @OneToMany(mappedBy = "account")
-    val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
-    @OneToMany(mappedBy = "account")
-    val incomingEmails: List<IncomingEmailDBO> = BeanList()
+    @OneToMany(orphanRemoval = true)
+    val authentications: List<AuthenticationDBO> = ArrayList()
+    @OneToMany(orphanRemoval = true)
+    val incomingEmailAddresses: List<IncomingEmailAddressDBO> = ArrayList()
+    @OneToMany(orphanRemoval = true)
+    val incomingEmails: List<IncomingEmailDBO> = ArrayList()
 }
 
 val AccountDBO.id: AccountId
