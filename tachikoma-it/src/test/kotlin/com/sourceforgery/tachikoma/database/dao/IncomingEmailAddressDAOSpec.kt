@@ -29,12 +29,10 @@ internal class IncomingEmailAddressDAOSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
     lateinit var incomingEmailAddressDAO: IncomingEmailAddressDAO
     lateinit var ebeanServer: EbeanServer
-    lateinit var authenticationDAO: AuthenticationDAO
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder())
         incomingEmailAddressDAO = serviceLocator.get()
         ebeanServer = serviceLocator.get()
-        authenticationDAO = serviceLocator.get()
     }
 
     afterEachTest {
@@ -64,8 +62,6 @@ internal class IncomingEmailAddressDAOSpec : Spek({
             account = account,
             localPart = localPart
         )
-//        (authenticationDBO.incomingEmailAddresses as MutableList<IncomingEmailAddressDBO>).add(incomingEmailAddressDBO)
-//        authenticationDAO.save(authenticationDBO)
         incomingEmailAddressDAO.save(incomingEmailAddressDBO)
     }
 
