@@ -1,6 +1,8 @@
 package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.auth.InternalCreateUserServiceImpl
+import com.sourceforgery.tachikoma.database.TransactionManager
+import com.sourceforgery.tachikoma.database.TransactionManagerImpl
 import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.dao.AccountDAOImpl
@@ -38,6 +40,7 @@ import com.sourceforgery.tachikoma.database.upgrades.Version7
 import com.sourceforgery.tachikoma.database.upgrades.Version8
 import com.sourceforgery.tachikoma.database.upgrades.Version9
 import com.sourceforgery.tachikoma.hk2.RequestScoped
+import io.ebean.Database
 import io.ebean.EbeanServer
 import javax.inject.Singleton
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -46,6 +49,7 @@ class DatabaseBinder : AbstractBinder() {
     override fun configure() {
         bindFactory(EbeanServerFactory::class.java)
             .to(EbeanServer::class.java)
+            .to(Database::class.java)
             .`in`(Singleton::class.java)
         bindDAO()
         bindAsContract(LogEverything::class.java)
@@ -62,6 +66,9 @@ class DatabaseBinder : AbstractBinder() {
             .to(InternalCreateUserService::class.java)
             .`in`(Singleton::class.java)
         bindAsContract(CreateUsers::class.java)
+            .`in`(Singleton::class.java)
+        bindAsContract(TransactionManagerImpl::class.java)
+            .to(TransactionManager::class.java)
             .`in`(Singleton::class.java)
         bindEbeanHooks()
         bindDatabaseUpgrades()

@@ -1,13 +1,18 @@
 apply from: "${project.rootDir}/kotlin.gradle"
 
 dependencies {
-    compile project(':tachikoma-common')
-    compile project(":tachikoma-internal-api")
-    compile project(":tachikoma-database-api")
+    api project(":tachikoma-internal-api")
+    api project(":tachikoma-database-api")
 
-    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+    implementation "org.apache.logging.log4j:log4j-api-kotlin:1.0.0"
+    implementation "io.ebean:ebean:$ebean_version"
+    implementation "io.ebean:ebean-querybean:$querybean_version"
+    implementation "org.glassfish.hk2:hk2-api:$hk2_version"
+    implementation "org.glassfish.hk2.external:javax.inject:$hk2_version"
 
-    compile "org.apache.logging.log4j:log4j-iostreams:$log4j2_version"
-    compile "net.bytebuddy:byte-buddy:$bytebuddy_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+
+    implementation "org.apache.logging.log4j:log4j-iostreams:$log4j2_version"
+    implementation "net.bytebuddy:byte-buddy:$bytebuddy_version"
 }

@@ -4,7 +4,7 @@ import com.linecorp.armeria.common.HttpMethod
 import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.HttpService
-import com.linecorp.armeria.server.ServerBuilder
+import com.linecorp.armeria.server.Server
 import com.linecorp.armeria.server.cors.CorsServiceBuilder
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
@@ -16,7 +16,6 @@ import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.mq.JobWorker
-import com.sourceforgery.tachikoma.mq.MessageQueue
 import com.sourceforgery.tachikoma.mq.MqBinder
 import com.sourceforgery.tachikoma.rest.RestBinder
 import com.sourceforgery.tachikoma.rest.RestService
@@ -25,7 +24,6 @@ import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.hk2.WebBinder
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
-import io.ebean.EbeanServer
 import io.grpc.BindableService
 import io.grpc.ServerInterceptors
 import io.netty.util.internal.logging.InternalLoggerFactory
@@ -55,7 +53,7 @@ class WebServerStarter(
             .build(HealthCheckService.of())
 
         // Order matters!
-        val serverBuilder = ServerBuilder()
+        val serverBuilder = Server.builder()
             .serviceUnder("/health", healthService)
         val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
 
@@ -94,22 +92,11 @@ class WebServerStarter(
         serviceLocator.getService(JobWorker::class.java).work()
     }
 
-    private fun initClientsInBackground() {
-        listOf(
-            MessageQueue::class.java,
-            EbeanServer::class.java
-        )
-            // Yes, parallel stream is broken by design, but here it should work
-            .parallelStream()
-            .forEach { serviceLocator.getService(it) }
-    }
-
     fun start() {
         try {
             startDatabase()
             val server = startServerInBackground()
             startBackgroundWorkers()
-            initClientsInBackground()
             server.join()
         } catch (e: Exception) {
             LOGGER.fatal(e) { "Failed to start server" }

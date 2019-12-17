@@ -8,6 +8,7 @@ import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
+import com.sourceforgery.tachikoma.database.TransactionManager
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -46,7 +47,6 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
-import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
@@ -56,6 +56,7 @@ import java.io.StringWriter
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.HashMap
 import java.util.Properties
 import java.util.concurrent.Executors
 import javax.activation.DataHandler
@@ -83,7 +84,7 @@ private constructor(
     private val mqSender: MQSender,
     private val mqSequenceFactory: MQSequenceFactory,
     private val jobMessageFactory: JobMessageFactory,
-    private val ebeanServer: EbeanServer,
+    private val transactionManager: TransactionManager,
     private val trackingDecoderImpl: TrackingDecoderImpl,
     private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
     private val incomingEmailDAO: IncomingEmailDAO,
@@ -118,7 +119,7 @@ private constructor(
                 Instant.EPOCH
             }
 
-        ebeanServer.createTransaction().use {
+        transactionManager.runInTransaction {
             emailSendTransactionDAO.save(transaction)
 
             for (recipient in request.recipientsList) {

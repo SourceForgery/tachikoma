@@ -2,13 +2,22 @@ apply from: "${project.rootDir}/kotlin.gradle"
 apply plugin: 'application'
 
 dependencies {
-    compile project(':tachikoma-grpc')
-    compile project(':tachikoma-rest')
-    compile project(':tachikoma-startup')
-    compile "com.linecorp.armeria:armeria:$armeria_version"
-    compile "com.linecorp.armeria:armeria-grpc:$armeria_version"
-    compile "org.apache.logging.log4j:log4j-core:$log4j2_version"
-    compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4j2_version"
+    implementation project(":tachikoma-grpc")
+    implementation project(":tachikoma-rest")
+    implementation project(":tachikoma-common")
+    implementation project(":tachikoma-startup")
+    implementation project(":tachikoma-internal-api")
+    implementation project(":tachikoma-database")
+    implementation project(":tachikoma-mq")
+    implementation "com.linecorp.armeria:armeria:$armeria_version"
+    implementation "com.linecorp.armeria:armeria-grpc:$armeria_version"
+    implementation "org.apache.logging.log4j:log4j-core:$log4j2_version"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j2_version"
+    implementation "org.apache.logging.log4j:log4j-iostreams:$log4j2_version"
+    implementation "org.apache.logging.log4j:log4j-api-kotlin:1.0.0"
+    implementation "org.glassfish.hk2:hk2-api:$hk2_version"
+    implementation "org.glassfish.hk2.external:javax.inject:$hk2_version"
+
 }
 
 github.assets += "${buildDir}/distributions/tachikoma-webserver-${project.version}.tar"

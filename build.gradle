@@ -44,7 +44,7 @@ subprojects {
     apply plugin: 'idea'
 
     configurations {
-        api.exclude(group: 'org.glassfish.hk2.external', module: 'javax.inject')
+        api.exclude(group: 'javax.inject', module: 'javax.inject')
     }
 
     idea {
