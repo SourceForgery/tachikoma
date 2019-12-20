@@ -3,11 +3,11 @@ package com.sourceforgery.tachikoma.grpc.catcher
 import com.sourceforgery.tachikoma.config.DebugConfig
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import org.glassfish.hk2.api.IterableProvider
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import org.glassfish.hk2.api.IterableProvider
 
 class GrpcExceptionMap
 @Inject
@@ -31,7 +31,7 @@ private constructor(
     fun findCatcher(key: Throwable): GrpcExceptionCatcher<Throwable> {
         @Suppress("UNCHECKED_CAST")
         val clazz = key::class.java as Class<Throwable>
-        return map.computeIfAbsent(clazz, { findClass(clazz) })
+        return map.computeIfAbsent(clazz) { findClass(clazz) }
     }
 
     private fun getGenerics(catcher: GrpcExceptionCatcher<*>): Type {

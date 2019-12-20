@@ -1,18 +1,17 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.sourceforgery.tachikoma.logging.logger
 import java.time.Duration
 import javax.annotation.PreDestroy
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 class LogEverything
 @Inject
-private constructor(
-) : InvokeCounter {
+private constructor() : InvokeCounter {
 
     var slowThreshold = Duration.ofSeconds(1)!!
-    val mapper by lazy(LazyThreadSafetyMode.NONE) {
+    private val mapper by lazy(LazyThreadSafetyMode.NONE) {
         ObjectMapper()
     }
 
@@ -24,7 +23,7 @@ private constructor(
 
     @PreDestroy
     fun dump() {
-        if (LOGGER.isWarnEnabled) {
+        if (LOGGER.delegate.isWarnEnabled) {
             val totalMilliseconds = loggedQueries.asSequence().sumBy { it.value.toInt() }
             if (totalMilliseconds > slowThreshold.toMillis()) {
                 LOGGER.warn { "Slow req: ${mapper.writeValueAsString(loggedQueries)}" }
@@ -35,7 +34,7 @@ private constructor(
     override fun inc(sql: String?, millis: Long) {
         sql?.let {
             LOGGER.trace { "${millis}ms for $sql" }
-            loggedQueries.compute(it, { _, v -> (v ?: 0) + millis })
+            loggedQueries.compute(it) { _, v -> (v ?: 0) + millis }
         }
     }
 

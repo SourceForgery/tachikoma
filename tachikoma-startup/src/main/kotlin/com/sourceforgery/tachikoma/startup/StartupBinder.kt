@@ -7,8 +7,8 @@ import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.config.WebtokenAuthConfig
 import com.sourceforgery.tachikoma.mq.MqConfig
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
-import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
+import org.glassfish.hk2.utilities.binding.AbstractBinder
 
 class StartupBinder : AbstractBinder() {
     override fun configure() {

@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.postfix
 
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.incoming.IncomingEmail
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mailer.MailSender
 import com.sourceforgery.tachikoma.syslog.Syslogger
 import io.grpc.Metadata
@@ -12,10 +11,11 @@ import io.grpc.stub.MetadataUtils
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.io.IoBuilder
 import java.net.URI
 import java.util.concurrent.TimeUnit
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
+import org.apache.logging.log4j.kotlin.logger
 
 private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
 
@@ -58,7 +58,7 @@ internal constructor(
             .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
             .apply {
                 if (plaintext) {
-                    usePlaintext(true)
+                    usePlaintext()
                 } else {
                     useTransportSecurity()
                     sslContext(

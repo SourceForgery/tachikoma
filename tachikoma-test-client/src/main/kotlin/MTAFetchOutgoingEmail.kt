@@ -15,6 +15,7 @@ fun main(args: Array<String>) {
     val metadataAuth = Metadata()
     metadataAuth.put(APITOKEN_HEADER, System.getenv("BACKEND_API_TOKEN")!!)
 
+    @Suppress("DEPRECATION")
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
         .usePlaintext(true)
         .idleTimeout(365, TimeUnit.DAYS)
@@ -29,7 +30,7 @@ fun main(args: Array<String>) {
             override fun onError(t: Throwable) {
                 t.printStackTrace()
                 System.exit(1)
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
             }
 
             override fun onCompleted() {

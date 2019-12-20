@@ -5,9 +5,9 @@ import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
-import com.sourceforgery.tachikoma.logging.logger
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class DeliveryNotificationServiceGrpcImpl
 @Inject

@@ -7,7 +7,6 @@ import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageDelivered
@@ -15,6 +14,7 @@ import com.sourceforgery.tachikoma.mq.MessageHardBounced
 import com.sourceforgery.tachikoma.mq.MessageSoftBounced
 import java.time.Clock
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class MTADeliveryNotifications
 @Inject

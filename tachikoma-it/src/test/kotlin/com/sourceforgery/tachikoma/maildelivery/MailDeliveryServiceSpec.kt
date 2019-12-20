@@ -19,6 +19,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.hk2.located
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -27,8 +29,6 @@ import org.jetbrains.spek.api.dsl.it
 import org.junit.Assert.assertEquals
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.nio.charset.StandardCharsets
-import java.util.Base64
 
 @RunWith(JUnitPlatform::class)
 class MailDeliveryServiceSpec : Spek({
@@ -43,8 +43,8 @@ class MailDeliveryServiceSpec : Spek({
         serviceLocator.shutdown()
     }
 
-    describe("Send emails", {
-        it("with attachment", {
+    describe("Send emails") {
+        it("with attachment") {
             val authentication = daoHelper().createAuthentication(fromEmail.toNamedEmail().address.domain)
             val email = OutgoingEmail.newBuilder()
                 .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
@@ -75,13 +75,14 @@ class MailDeliveryServiceSpec : Spek({
             val boundary = Regex("\tboundary=\"(.*?)\"").find(byEmailId.body!!)!!.groupValues[1]
 
             val modifiedBody = byEmailId.body!!.replace(boundary, "XXXXXX")
+                .replace(Regex("Date: .*"), "Date: XXXXX")
 
             val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
                 it.readBytes().toString(StandardCharsets.UTF_8)
             }
             assertEquals(expected, modifiedBody)
-        })
-    })
+        }
+    }
 }) {
     companion object {
         val validEmail = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()

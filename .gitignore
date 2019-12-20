@@ -5,7 +5,6 @@
 /build/
 .gradle/
 /*/build/
-/gradlew.bat
 
 #Ebean
 tachikoma-create-all.sql

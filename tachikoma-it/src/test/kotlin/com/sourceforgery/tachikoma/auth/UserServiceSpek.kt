@@ -19,6 +19,12 @@ import com.sourceforgery.tachikoma.hk2.located
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.users.UserService
 import io.ebean.EbeanServer
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -26,15 +32,9 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @RunWith(JUnitPlatform::class)
-class UserServiceSpec : Spek({
+class UserServiceSpek : Spek({
     lateinit var serviceLocator: ServiceLocator
     val userService: () -> UserService = located { serviceLocator }
     val authenticationDAO: () -> AuthenticationDAO = located { serviceLocator }
@@ -100,8 +100,8 @@ class UserServiceSpec : Spek({
         return actual
     }
 
-    describe("UserServiceSpec", {
-        it("create & modify user", {
+    describe("UserServiceSpec") {
+        it("create & modify user") {
             val newUser = createUser()
             val before = ModifyUserRequest.newBuilder()
                 .setActive(false)
@@ -127,6 +127,6 @@ class UserServiceSpec : Spek({
             assertEquals(oldMailDomain, actual.account.mailDomain)
 
             assertNotEquals(oldApiToken, actual.apiToken)
-        })
-    })
+        }
+    }
 })

@@ -2,8 +2,8 @@ package com.sourceforgery.tachikoma.webserver.hk2
 
 import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.HttpRequest
-import org.glassfish.hk2.api.Factory
 import javax.inject.Inject
+import org.glassfish.hk2.api.Factory
 
 class HttpHeadersFactory
 @Inject

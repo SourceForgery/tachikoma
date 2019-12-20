@@ -29,9 +29,9 @@ private constructor() : MQSequenceFactory {
     private fun <X : Any> listenOnQueue(queue: BlockingQueue<QueueMessageWrap<X>>, callback: (X) -> Unit): SettableFuture<Void> {
         val future = SettableFuture.create<Void>()
         executorService.execute {
-            generateSequence({
+            generateSequence {
                 queue.take().value
-            }).forEach {
+            }.forEach {
                 callback(it)
             }
             future.set(null)
@@ -44,7 +44,7 @@ private constructor() : MQSequenceFactory {
     }
 
     override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {

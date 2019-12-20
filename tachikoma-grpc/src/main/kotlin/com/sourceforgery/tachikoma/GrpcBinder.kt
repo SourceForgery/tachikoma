@@ -26,8 +26,8 @@ import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
 import com.sourceforgery.tachikoma.users.UserService
 import com.sourceforgery.tachikoma.users.UserServiceGrpcImpl
 import io.grpc.BindableService
-import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
+import org.glassfish.hk2.utilities.binding.AbstractBinder
 
 class GrpcBinder : AbstractBinder() {
     override fun configure() {

@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder
 import javax.inject.Singleton
+import org.glassfish.hk2.utilities.binding.AbstractBinder
 
 class MinimalBinder(
     private vararg val singletons: Class<*> = emptyArray()

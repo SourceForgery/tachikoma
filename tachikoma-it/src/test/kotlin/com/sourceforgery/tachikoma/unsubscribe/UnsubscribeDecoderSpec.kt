@@ -3,14 +3,14 @@ package com.sourceforgery.tachikoma.unsubscribe
 import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
 internal class UnsubscribeDecoderSpec : Spek({

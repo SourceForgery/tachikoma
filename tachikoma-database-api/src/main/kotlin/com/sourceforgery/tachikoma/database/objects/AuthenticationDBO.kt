@@ -4,10 +4,11 @@ import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.ebean.annotation.Encrypted
-import io.ebean.common.BeanList
+import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Table(name = "e_user")
@@ -27,14 +28,14 @@ class AuthenticationDBO(
     @Column
     var role: AuthenticationRole,
 
-    @ManyToOne
+    @ManyToOne(cascade = [CascadeType.ALL])
     val account: AccountDBO,
 
     @Column
     var recipientOverride: Email? = null
 ) : GenericDBO() {
-    val incomingEmailAddresses: List<IncomingEmailAddressDBO> = BeanList()
-
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
+    val emailSendTransactionDBO: List<EmailSendTransactionDBO> = ArrayList()
     @Column
     var active = true
 }

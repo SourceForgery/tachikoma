@@ -19,13 +19,13 @@ import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.logging.logger
 import io.netty.util.AsciiString
-import org.glassfish.hk2.api.Factory
 import java.util.Base64
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
+import org.glassfish.hk2.api.Factory
 
 class AuthenticationFactory
 @Inject
@@ -38,7 +38,7 @@ private constructor(
 
     private val apiKeyCache = CacheBuilder.newBuilder()
         .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build(CacheLoader.from<String, Authentication?>({ parseApiTokenHeader(it) }))
+        .build(CacheLoader.from<String, Authentication?> { parseApiTokenHeader(it) })
 
     override fun provide() =
         parseWebTokenHeader()
@@ -81,7 +81,7 @@ private constructor(
             ?: NO_AUTHENTICATION
 
     private fun wrapException(error: String): Authentication {
-        return ThrowingAuthentication({ InvalidOrInsufficientCredentialsException(error) })
+        return ThrowingAuthentication { InvalidOrInsufficientCredentialsException(error) }
     }
 
     private fun parseWebTokenHeader(): Authentication? {
@@ -121,7 +121,7 @@ private constructor(
         val LOGGER = logger()
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION: Authentication =
-            ThrowingAuthentication({ NoAuthorizationCredentialsException() })
+            ThrowingAuthentication { NoAuthorizationCredentialsException() }
 
         val WEBTOKEN_HEADER = AsciiString("x-webtoken")
         val APITOKEN_HEADER = AsciiString("x-apitoken")

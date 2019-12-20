@@ -1,15 +1,15 @@
 package com.sourceforgery.tachikoma.incoming
 
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.MailAcceptanceResult
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.io.IoBuilder
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.io.Writer
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.io.IoBuilder
+import org.apache.logging.log4j.kotlin.logger
 
 class LMTPServer(
     private val socket: Socket,
@@ -23,8 +23,8 @@ class LMTPServer(
                 val xinput = InputStreamReader(lmtpSocket.getInputStream(), StandardCharsets.US_ASCII)
                 val xoutput = OutputStreamWriter(lmtpSocket.getOutputStream(), StandardCharsets.US_ASCII)
 
-                val input = BufferedReader(IoBuilder.forLogger(INCOMING_LOGGER).filter(xinput).setLevel(Level.TRACE).buildReader())
-                val output = IoBuilder.forLogger(OUTGOING_LOGGER).filter(xoutput).setLevel(Level.TRACE).buildWriter()!!
+                val input = BufferedReader(IoBuilder.forLogger(INCOMING_LOGGER.delegate).filter(xinput).setLevel(Level.TRACE).buildReader())
+                val output = IoBuilder.forLogger(OUTGOING_LOGGER.delegate).filter(xoutput).setLevel(Level.TRACE).buildWriter()!!
 
                 LOGGER.debug { "Welcoming incoming connection" }
                 output.sendLine("220 localhost LMTP Tachikoma")

@@ -8,6 +8,7 @@ import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
+import com.sourceforgery.tachikoma.database.TransactionManager
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -39,28 +40,23 @@ import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
-import com.sourceforgery.tachikoma.logging.logger
-import com.sourceforgery.tachikoma.maildelivery.HtmlToPlainText
+import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
-import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import net.moznion.uribuildertiny.URIBuilderTiny
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.HashMap
 import java.util.Properties
 import java.util.concurrent.Executors
 import javax.activation.DataHandler
@@ -71,6 +67,11 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
+import net.moznion.uribuildertiny.URIBuilderTiny
+import org.apache.logging.log4j.kotlin.logger
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 
 class MailDeliveryService
 @Inject
@@ -83,7 +84,7 @@ private constructor(
     private val mqSender: MQSender,
     private val mqSequenceFactory: MQSequenceFactory,
     private val jobMessageFactory: JobMessageFactory,
-    private val ebeanServer: EbeanServer,
+    private val transactionManager: TransactionManager,
     private val trackingDecoderImpl: TrackingDecoderImpl,
     private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
     private val incomingEmailDAO: IncomingEmailDAO,
@@ -118,7 +119,7 @@ private constructor(
                 Instant.EPOCH
             }
 
-        ebeanServer.createTransaction().use {
+        transactionManager.runInTransaction {
             emailSendTransactionDAO.save(transaction)
 
             for (recipient in request.recipientsList) {
@@ -263,7 +264,7 @@ private constructor(
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
-        return dbObjectMapper.readValue<HashMap<String, Any>>(
+        return dbObjectMapper.objectMapper.readValue<HashMap<String, Any>>(
             JsonFormat.printer().print(struct),
             object : TypeReference<HashMap<String, Any>>() {}
         )
@@ -271,10 +272,10 @@ private constructor(
 
     // Store the request for later debugging
     private fun getRequestData(request: OutgoingEmail) =
-        dbObjectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
+        dbObjectMapper.objectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
 
     private fun mergeTemplate(
-        template: String?,
+        template: String,
         vararg scopes: HashMap<String, Any>
     ) = StringWriter().use {
         DefaultMustacheFactory()
@@ -330,7 +331,7 @@ private constructor(
         injectTrackingPixel(htmlDoc, emailId)
 
         val plaintextPart = MimeBodyPart()
-        val plainText = HtmlToPlainText.getPlainText(htmlDoc)
+        val plainText = getPlainText(htmlDoc)
 
         plaintextPart.setContent(plaintextBody ?: plainText, "text/plain; charset=utf-8")
         plaintextPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
@@ -420,20 +421,18 @@ private constructor(
 
     private fun replaceLinks(doc: Document, emailId: EmailId) {
         val links = doc.select("a[href]")
-        links.forEach({
-            val originalUri = it.attr("href") ?: ""
+        links.forEach {
+            val originalUri = it.attr("href")
+                ?: ""
             val newUri = UNSUB_REGEX.matchEntire(originalUri)
                 ?.let {
                     // Convert into unsubscribe link
                     createUnsubscribeClickLink(emailId, it.groupValues[1])
                 }
-                ?: let {
-                    // Track link click
-                    createTrackingLink(emailId, originalUri)
-                }
+                ?: createTrackingLink(emailId, originalUri)
 
             it.attr("href", newUri.toString())
-        })
+        }
     }
 
     private fun injectTrackingPixel(doc: Document, emailId: EmailId) {

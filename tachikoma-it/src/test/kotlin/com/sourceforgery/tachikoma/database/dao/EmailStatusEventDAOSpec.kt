@@ -7,6 +7,9 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.hk2.located
+import java.time.Clock
+import java.time.temporal.ChronoUnit
+import kotlin.test.assertEquals
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -14,9 +17,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.time.Clock
-import java.time.temporal.ChronoUnit
-import kotlin.test.assertEquals
 
 @RunWith(JUnitPlatform::class)
 internal class EmailStatusEventDAOSpec : Spek({

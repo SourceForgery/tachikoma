@@ -17,12 +17,12 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.logging.logger
 import java.time.Clock
 import java.time.Duration
 import java.util.concurrent.Executors
 import javax.annotation.PreDestroy
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class ConsumerFactoryImpl
 @Inject
@@ -139,15 +139,15 @@ private constructor(
         }, closeExecutor)
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
-                LOGGER.debug({ "Processing message, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" })
+                LOGGER.debug { "Processing message, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
                 var handledResult = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
-                    hK2RequestContext.runInScope(ctx, { callback(parsedMessage) })
+                    hK2RequestContext.runInScope(ctx) { callback(parsedMessage) }
                     channel.basicAck(envelope.deliveryTag, false)
                     handledResult = true
                 } catch (e: Exception) {
-                    LOGGER.error(e, { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" })
+                    LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
                     future.setException(e)
                     handledResult = true
                 } finally {
@@ -159,7 +159,7 @@ private constructor(
             }
         }
         channel.basicConsume(messageQueue.name, false, consumer)
-        channel.addShutdownListener({ future.cancel(false) })
+        channel.addShutdownListener { future.cancel(false) }
         return future
     }
 
@@ -188,7 +188,7 @@ private constructor(
     }
 
     override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
-        return listenOnQueue(JobMessageQueue.JOBS, { it ->
+        return listenOnQueue(JobMessageQueue.JOBS) { it ->
             val messageQueue = getRequeueQueueByRequestedExecutionTime(it)
             if (messageQueue == null) {
                 // Message has waited long enough
@@ -196,7 +196,7 @@ private constructor(
             } else {
                 queueJob(it)
             }
-        })
+        }
     }
 
     private fun getRequeueQueueByRequestedExecutionTime(jobMessage: JobMessage): JobMessageQueue? {
