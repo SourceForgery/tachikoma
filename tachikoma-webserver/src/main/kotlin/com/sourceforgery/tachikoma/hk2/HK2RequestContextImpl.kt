@@ -3,6 +3,8 @@ package com.sourceforgery.tachikoma.hk2
 import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.Sets
+import com.linecorp.armeria.server.ServiceRequestContext
+import io.netty.util.AttributeKey
 import java.util.HashMap
 import java.util.UUID
 import javax.inject.Inject
@@ -18,7 +20,7 @@ private constructor(
     private val serviceLocator: ServiceLocator
 ) : Context<RequestScoped>, HK2RequestContext {
 
-    private val currentScopeInstance = ThreadLocal<Instance>()
+    private val threadLocalScopeInstance = ThreadLocal<Instance>()
     @Volatile
     private var isActive = true
 
@@ -63,25 +65,45 @@ private constructor(
 
     private fun current(): Instance {
         checkState(isActive, "Request scope has been already shut down.")
+        val armeriaCtx = ServiceRequestContext.currentOrNull()
+        val scopeInstance = if (armeriaCtx == null) {
+            threadLocalScopeInstance.get()
+        } else {
+            armeriaCtx.attr(HK2_CONTEXT_KEY).get()
+        }
 
-        val scopeInstance = currentScopeInstance.get()
         checkState(scopeInstance != null, "Not inside a request scope.")
 
         return scopeInstance!!
     }
 
-    internal fun retrieveCurrent(): Instance? {
+    private fun retrieveCurrent(): Instance? {
         checkState(isActive, "Request scope has been already shut down.")
-        return currentScopeInstance.get()
+        val armeriaCtx = ServiceRequestContext.currentOrNull()
+        return if (armeriaCtx == null) {
+            threadLocalScopeInstance.get()
+        } else {
+            armeriaCtx.attr(HK2_CONTEXT_KEY).get()
+        }
     }
 
-    internal fun setCurrent(instance: Instance) {
+    private fun setCurrent(instance: Instance) {
         checkState(isActive, "Request scope has been already shut down.")
-        currentScopeInstance.set(instance)
+        val armeriaCtx = ServiceRequestContext.currentOrNull()
+        if (armeriaCtx == null) {
+            threadLocalScopeInstance.set(instance)
+        } else {
+            armeriaCtx.attr(HK2_CONTEXT_KEY).set(instance)
+        }
     }
 
-    internal fun resumeCurrent(instance: Instance?) {
-        currentScopeInstance.set(instance)
+    private fun resumeCurrent(instance: Instance?) {
+        val armeriaCtx = ServiceRequestContext.currentOrNull()
+        if (armeriaCtx == null) {
+            threadLocalScopeInstance.set(instance)
+        } else {
+            armeriaCtx.attr(HK2_CONTEXT_KEY).set(instance)
+        }
     }
 
     internal fun createInstance(): Instance {
@@ -171,5 +193,6 @@ private constructor(
 
     companion object {
         val LOGGER = logger()
+        private val HK2_CONTEXT_KEY = AttributeKey.valueOf<HK2RequestContextImpl.Instance>("HK2_CONTEXT")
     }
 }
