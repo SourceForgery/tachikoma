@@ -18,14 +18,21 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     workingDir("/opt")
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')
+    setEnvironment('PYTHONIOENCODING', 'utf-8')
 
-    runCommand('apt-get update && apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls less nvi supervisor postfix sasl2-bin opendkim opendkim-tools openjdk-8-jdk-headless netcat && apt-get clean && rm -rf /var/lib/apt/lists/*')
+    runCommand('''apt-get update && \
+                  apt-get -y dist-upgrade && \
+                  apt-get -y --no-install-recommends install python-pip python-pkg-resources less nvi postfix sasl2-bin rsyslog opendkim opendkim-tools openjdk-11-jdk-headless netcat && \
+                  apt-get clean && \
+                  rm -rf /var/cache/apt/ /var/lib/apt/lists/*
+              ''')
+    runCommand('pip install --no-cache-dir "honcho==1.0.1"')
 
     exposePort(25)
 
     addFile(file('src/assets/'))
 
-    defaultCommand(['/usr/bin/supervisord', '-c', '/etc/supervisor/supervisord.conf'])
+    defaultCommand(['/usr/local/bin/honcho', 'start', '-f', 'Procfile'])
 
     runCommand("mkfifo /opt/maillog_pipe && chown syslog:postfix /opt/maillog_pipe")
 
@@ -33,6 +40,8 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     runCommand("sed -r 's/\\|(.*)xconsole\$/\\1console/' -i /etc/rsyslog.d/50-default.conf")
 
     runCommand('adduser syslog postfix')
+    runCommand('adduser postfix opendkim')
+    runCommand('useradd tachikoma -g postfix -d /opt')
 
     addFile {
         configurations.binaries.filter {

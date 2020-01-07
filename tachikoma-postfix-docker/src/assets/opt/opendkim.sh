@@ -1,11 +1,9 @@
 #!/bin/bash -eu
 
-adduser postfix opendkim
-
-if ! ls /etc/opendkim/domainkeys/*._domainkey.*.private | grep -q domain; then
+if ! ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q domain; then
     echo "No domain keys matching pattern /etc/opendkim/domainkeys/*._domainkey.*.private was found"
     echo "Skipping dkim configuration and startup"
-    exit 0
+    sleep infinity
 fi
 
 

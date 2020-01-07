@@ -9,8 +9,8 @@ readEnv() {
 
   cat ${TACHIKOMA_CONFIG:-${HOME}/.tachikoma.config} | \
     while read line; do
-      if [ ${line%%=*} = $key ]; then
-        echo ${line#*=}
+      if [ "${line%%=*}" = "$key" ]; then
+        echo "${line#*=}"
         return 0
       fi
     done
