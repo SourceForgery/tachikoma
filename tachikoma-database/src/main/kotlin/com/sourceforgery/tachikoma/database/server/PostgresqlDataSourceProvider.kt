@@ -4,7 +4,6 @@ import com.sourceforgery.tachikoma.config.DatabaseConfig
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourceConfig
-import java.lang.IllegalArgumentException
 import java.sql.Connection
 import java.util.HashMap
 import javax.inject.Inject
@@ -34,8 +33,7 @@ private constructor(
         dataSourceConfig.password = credentials[1]
 
         val customProperties = HashMap<String, String>()
-        customProperties.put("ssl", "true")
-        customProperties.put("sslfactory", "org.postgresql.ssl.NonValidatingFactory")
+        customProperties.put("ssl", "require")
         dataSourceConfig.customProperties = customProperties
         dataSourceConfig.driver = "org.postgresql.Driver"
 
