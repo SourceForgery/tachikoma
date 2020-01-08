@@ -47,7 +47,6 @@ class WebServerStarter(
 
         val healthService = CorsServiceBuilder
             .forAnyOrigin()
-            .allowNullOrigin()
             .allowCredentials()
             .allowRequestMethods(HttpMethod.GET)
             .build(HealthCheckService.of())
