@@ -12,8 +12,7 @@ task webserverDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     applicationName = 'tachikoma-webserver'
 
-    baseImage 'ubuntu:18.04'
-
+    baseImage 'ubuntu:19.10'
     maintainer 'tachikoma@sourceforgery.com'
 
     setEnvironment('DEBIAN_FRONTEND', 'noninteractive')

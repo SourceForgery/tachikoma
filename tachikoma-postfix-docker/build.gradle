@@ -11,7 +11,7 @@ dependencies {
 task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     applicationName = 'tachikoma-postfix'
 
-    baseImage 'ubuntu:18.04'
+    baseImage 'ubuntu:19.10'
 
     maintainer 'tachikoma@sourceforgery.com'
 
@@ -22,7 +22,7 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
 
     runCommand('''apt-get update && \
                   apt-get -y dist-upgrade && \
-                  apt-get -y --no-install-recommends install python-pip python-pkg-resources less nvi postfix sasl2-bin rsyslog opendkim opendkim-tools openjdk-11-jdk-headless netcat && \
+                  apt-get -y --no-install-recommends install python-pip python-pkg-resources less nvi postfix sasl2-bin rsyslog opendkim opendkim-tools openjdk-11-jdk-headless netcat-openbsd && \
                   apt-get clean && \
                   rm -rf /var/cache/apt/ /var/lib/apt/lists/*
               ''')
@@ -35,13 +35,16 @@ task postfixDocker([type: Docker, dependsOn: configurations.binaries]) {
     defaultCommand(['/usr/local/bin/honcho', 'start', '-f', 'Procfile'])
 
     runCommand("mkfifo /opt/maillog_pipe && chown syslog:postfix /opt/maillog_pipe")
+    runCommand("mkdir -p /var/spool/postfix/tachikoma/")
 
     runCommand("sed -r '/(KLogPermitNonKernelFacility|imklog)/d' -i /etc/rsyslog.conf")
     runCommand("sed -r 's/\\|(.*)xconsole\$/\\1console/' -i /etc/rsyslog.d/50-default.conf")
 
     runCommand('adduser syslog postfix')
     runCommand('adduser postfix opendkim')
-    runCommand('useradd tachikoma -g postfix -d /opt')
+    runCommand('useradd tachikoma -d /opt')
+
+    runCommand("chown postfix:tachikoma /var/spool/postfix/tachikoma/ && chmod 0770 /var/spool/postfix/tachikoma/")
 
     addFile {
         configurations.binaries.filter {

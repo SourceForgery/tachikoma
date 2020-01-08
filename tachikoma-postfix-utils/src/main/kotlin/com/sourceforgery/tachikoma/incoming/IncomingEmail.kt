@@ -48,7 +48,7 @@ class IncomingEmail(
     }
 
     companion object {
-        val SOCKET_PATH = java.io.File("/var/spool/postfix/private/incoming_tachikoma")
+        val SOCKET_PATH = java.io.File("/var/spool/postfix/tachikoma/incoming_tachikoma")
         private val LOGGER = logger()
     }
 }
