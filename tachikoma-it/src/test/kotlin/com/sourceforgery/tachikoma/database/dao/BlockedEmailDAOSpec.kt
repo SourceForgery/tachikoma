@@ -19,6 +19,7 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import java.util.Collections
 import kotlin.test.assertEquals
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -34,7 +35,7 @@ internal class BlockedEmailDAOSpec : Spek({
     lateinit var accountDAO: AccountDAO
     lateinit var dbObjectMapper: DBObjectMapper
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
         blockedEmailDAO = serviceLocator.getService(BlockedEmailDAO::class.java)
         accountDAO = serviceLocator.getService(AccountDAO::class.java)
         dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)

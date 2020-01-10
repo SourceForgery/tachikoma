@@ -5,6 +5,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -14,7 +15,7 @@ import org.junit.runner.RunWith
 
 @RunWith(JUnitPlatform::class)
 internal class UnsubscribeDecoderSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
+    val serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
     val unsubscribeDecoder = serviceLocator.getService(UnsubscribeDecoder::class.java)
 
     describe("UnsubscribeDecoderSpec") {

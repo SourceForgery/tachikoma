@@ -128,6 +128,7 @@ fun main(vararg args: String) {
     System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())
 
     val serviceLocator = ServiceLocatorUtilities.bind(
+        "Webserver",
         CommonBinder(),
         StartupBinder(),
         RestBinder(),
