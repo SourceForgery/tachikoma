@@ -73,7 +73,7 @@ docker run --name postfix -it --rm -h tachikoma-postfix \
 
 **Recommendations**
 * Add the function ```gw () { $(git rev-parse --show-toplevel)/gradlew "$@" }``` to avoid having to do ```../../../gradlew```
-* Only run ```gradlew build```, ```gradlew clean build``` should not be necessary and slows down development a *lot*.
+* Only run ```gradlew build```. ```gradlew clean build``` should not be necessary and slows down development a *lot*.
 * Because of my weak Gradle-fu, updated .proto-files does not trigger rebuild of
   the rest of the api-projects. ```gradle clean build``` is necessary,
   *but only in the api projects*.

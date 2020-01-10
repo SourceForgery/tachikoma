@@ -8,7 +8,6 @@ import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import io.ebean.EbeanServer
 import javax.inject.Inject
-import net.bytebuddy.utility.RandomString
 import org.apache.logging.log4j.kotlin.logger
 
 class CreateUsers
@@ -19,7 +18,6 @@ private constructor(
     private val ebeanServer: EbeanServer,
     private val internalCreateUserService: InternalCreateUserService
 ) {
-    private val randomString = RandomString(40)
     private val mailDomain = databaseConfig.mailDomain
 
     fun createUsers() {

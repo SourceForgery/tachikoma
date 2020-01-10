@@ -92,6 +92,7 @@ private constructor(
         serverConfig.encryptKeyManager = EncryptKeyManager { _, _ -> EncryptKey { databaseConfig.databaseEncryptionKey } }
         serverConfig.objectMapper = dbObjectMapper.objectMapper
         serverConfig.databaseSequenceBatchSize = 100
+        serverConfig.lazyLoadBatchSize = 100
         dataSourceProvider.provide(serverConfig)
 
         return hK2RequestContext.runInScope {

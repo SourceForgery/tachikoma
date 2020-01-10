@@ -9,6 +9,7 @@ import io.ebean.EbeanServer
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebeaninternal.server.core.DefaultServer
 import kotlin.test.assertTrue
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -21,7 +22,7 @@ import org.junit.runner.RunWith
 class StartupSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(TestAttribute.POSTGRESQL), DatabaseBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(TestAttribute.POSTGRESQL), DatabaseBinder())
     }
     afterEachTest {
         serviceLocator.shutdown()

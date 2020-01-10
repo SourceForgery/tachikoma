@@ -16,6 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -30,7 +31,7 @@ internal class IncomingEmailAddressDAOSpec : Spek({
     lateinit var incomingEmailAddressDAO: IncomingEmailAddressDAO
     lateinit var ebeanServer: EbeanServer
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder())
         incomingEmailAddressDAO = serviceLocator.get()
         ebeanServer = serviceLocator.get()
     }
