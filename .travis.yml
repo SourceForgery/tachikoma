@@ -38,6 +38,7 @@ deploy:
   script: travis_wait ./gradlew build --info
   on:
     branch: master
+    tags: true
 
 after_failure:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then artifacts upload $(find */build/reports); fi
