@@ -6,7 +6,6 @@ import com.sourceforgery.tachikoma.common.randomDelay
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.SignedUnsubscribeData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
-import java.nio.charset.StandardCharsets
 import java.util.Base64
 import javax.inject.Inject
 
@@ -17,7 +16,7 @@ private constructor(
     trackingConfig: TrackingConfig
 ) : UnsubscribeDecoder {
 
-    private val encryptionKey = trackingConfig.linkSignKey.toByteArray(StandardCharsets.UTF_8)
+    private val encryptionKey = trackingConfig.linkSignKey
 
     override fun decodeUnsubscribeData(unsubscribeData: String): UnsubscribeData {
         val decoded = Base64.getUrlDecoder().decode(unsubscribeData)!!
