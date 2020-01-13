@@ -8,10 +8,6 @@ cache:
 services:
 - docker
 
-stages:
-- name: deploy
-  if: branch = master
-
 notifications:
   irc:
     channels:
@@ -29,19 +25,13 @@ install:
 
 script:
 - ./gradlew -x dockerTask check --info
-
-before_deploy:
-- docker version
-- docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
-- export DOCKER_PUSH=true
-
-deploy:
-  provider: script
-  cleanup: false
-  skip_cleanup: true
-  script: ./gradlew build --info
-  on:
-   condition: (tag IS present OR branch = master)
+- |
+    if [ "${TRAVIS_BRANCH:-}" = "master" ] || [ "${TRAVIS_TAG:-}" != "" ]; then
+      docker version
+      docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      export DOCKER_PUSH=true
+      ./gradlew build --info
+    fi
 
 after_failure:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then artifacts upload $(find */build/reports); fi
