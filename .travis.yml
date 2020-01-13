@@ -36,12 +36,12 @@ before_deploy:
 deploy:
 - provider: script
   script: travis_wait ./gradlew build --info
-  cleanup: false
+  skip_cleanup: false
   on:
     branch: master
 - provider: script
   script: travis_wait ./gradlew build --info
-  cleanup: false
+  skip_cleanup: false
   on:
     tags: true
 
