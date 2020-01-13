@@ -19,6 +19,7 @@ notifications:
     skip_join: true
 
 before_install:
+- which travis_wait
 - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.8.1/install | bash
 - export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
 
@@ -34,15 +35,12 @@ before_deploy:
 - export DOCKER_PUSH=true
 
 deploy:
-  skip_cleanup: false
-- provider: script
+  provider: script
+  cleanup: false
+  skip_cleanup: true
   script: travis_wait ./gradlew build --info
   on:
-    branch: master
-- provider: script
-  script: travis_wait ./gradlew build --info
-  on:
-    tags: true
+   condition: tag is present OR branch = master
 
 after_failure:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then artifacts upload $(find */build/reports); fi
