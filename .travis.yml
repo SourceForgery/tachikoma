@@ -24,13 +24,13 @@ install:
 - travis_wait 20 ./gradlew assemble
 
 script:
-- ./gradlew -x dockerTask check --info
+- ./gradlew -x dockerTask check
 - |
     if [ "${TRAVIS_BRANCH:-}" = "master" ] || [ "${TRAVIS_TAG:-}" != "" ]; then
       docker version
       docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
       export DOCKER_PUSH=true
-      ./gradlew build --info
+      ./gradlew build
     fi
 
 after_failure:

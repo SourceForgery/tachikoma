@@ -11,8 +11,6 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl
 import com.sourceforgery.tachikoma.hk2.SettableReference
 import com.sourceforgery.tachikoma.webserver.hk2.HTTP_REQUEST_TYPE
 import com.sourceforgery.tachikoma.webserver.hk2.REQUEST_CONTEXT_TYPE
-import io.netty.util.AttributeKey
-import java.util.function.Consumer
 import javax.inject.Inject
 import org.glassfish.hk2.api.ServiceLocator
 
