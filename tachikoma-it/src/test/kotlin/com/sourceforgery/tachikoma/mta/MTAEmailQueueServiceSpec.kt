@@ -24,6 +24,12 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import com.sourceforgery.tachikoma.mq.OutgoingEmailMessage
 import com.sourceforgery.tachikoma.mq.QueueMessageWrap
 import io.ebean.EbeanServer
+import java.time.Clock
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -31,11 +37,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.time.Clock
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 @RunWith(JUnitPlatform::class)
 class MTAEmailQueueServiceSpec : Spek({
@@ -44,7 +45,7 @@ class MTAEmailQueueServiceSpec : Spek({
     val authentication: () -> AuthenticationMock = located { serviceLocator }
     val ebeanServer: () -> EbeanServer = located { serviceLocator }
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder())!!
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder())!!
     }
     afterEachTest { serviceLocator.shutdown() }
 
@@ -53,18 +54,18 @@ class MTAEmailQueueServiceSpec : Spek({
         ebeanServer().save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                login = domain,
-                encryptedPassword = UUID.randomUUID().toString(),
-                apiToken = UUID.randomUUID().toString(),
-                role = AuthenticationRole.BACKEND,
-                account = accountDBO
+            login = domain,
+            encryptedPassword = UUID.randomUUID().toString(),
+            apiToken = UUID.randomUUID().toString(),
+            role = AuthenticationRole.BACKEND,
+            account = accountDBO
         )
         ebeanServer().save(authenticationDBO)
 
         return authenticationDBO
     }
 
-    describe("MTA queue service test", {
+    describe("MTA queue service test") {
         val mqSequenceFactoryMock: () -> MQSequenceFactoryMock = located { serviceLocator }
         val mqSenderMock: () -> MQSenderMock = located { serviceLocator }
         val clock: () -> Clock = located { serviceLocator }
@@ -80,36 +81,36 @@ class MTAEmailQueueServiceSpec : Spek({
             // Setup auth
             val account = accountDAO.getByMailDomain(databaseConfig.mailDomain)!!
             authenticationDBO =
-                    account.authentications
-                            .first { it.role == AuthenticationRole.BACKEND }
+                account.authentications
+                    .first { it.role == AuthenticationRole.BACKEND }
             authentication().from(authenticationDBO)
 
             email = EmailDBO(
-                    recipient = Email("foo@example.net"),
-                    recipientName = "Nobody",
-                    messageId = MessageId("sdjklfjklsdfkl@example.net"),
+                recipient = Email("foo@example.net"),
+                recipientName = "Nobody",
+                messageId = MessageId("sdjklfjklsdfkl@example.net"),
+                metaData = emptyMap(),
+                transaction = EmailSendTransactionDBO(
+                    jsonRequest = JsonNodeFactory.instance.objectNode(),
+                    fromEmail = Email("foodsjklff@example.net"),
+                    authentication = authenticationDBO,
                     metaData = emptyMap(),
-                    transaction = EmailSendTransactionDBO(
-                            jsonRequest = JsonNodeFactory.instance.objectNode(),
-                            fromEmail = Email("foodsjklff@example.net"),
-                            authentication = authenticationDBO,
-                            metaData = emptyMap(),
-                            tags = emptyList()
-                    )
+                    tags = emptyList()
+                )
             )
             email.body = "${UUID.randomUUID()}"
             ebeanServer().save(email)
         }
 
-        it("Create email test", {
+        it("Create email test") {
             val responseObserver = QueueStreamObserver<EmailMessage>()
 
             mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
 
             mqSequenceFactoryMock().outgoingEmails.add(QueueMessageWrap(OutgoingEmailMessage.newBuilder()
-                    .setCreationTimestamp(clock().instant().toTimestamp())
-                    .setEmailId(email.id.emailId)
-                    .build()
+                .setCreationTimestamp(clock().instant().toTimestamp())
+                .setEmailId(email.id.emailId)
+                .build()
             ))
 
             mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
@@ -117,24 +118,24 @@ class MTAEmailQueueServiceSpec : Spek({
 
             assertEquals(1, responseObserver.queue.size)
             val emailMessage = responseObserver.queue.take().get()
-                    ?: throw NullPointerException("Should not be a onComplete event")
+                ?: throw NullPointerException("Should not be a onComplete event")
             assertNotNull(responseObserver)
             assertEquals(emailMessage.body, email.body)
             assertEquals(emailMessage.emailAddress, email.recipient.address)
             assertEquals(emailMessage.emailId, email.id.emailId)
-        })
+        }
 
-        it("Receive queue message", {
+        it("Receive queue message") {
 
             val responseObserver = QueueStreamObserver<EmailMessage>()
             val requestStreamObserver = mtaEmailQueueService().getEmails(responseObserver, authentication().mailDomain)
 
             requestStreamObserver.onNext(MTAQueuedNotification.newBuilder()
-                    .setEmailId(email.id.emailId)
-                    .setQueueId("foobarQueueId")
-                    .setRecipientEmailAddress(email.body!!)
-                    .setSuccess(true)
-                    .build()
+                .setEmailId(email.id.emailId)
+                .setQueueId("foobarQueueId")
+                .setRecipientEmailAddress(email.body!!)
+                .setSuccess(true)
+                .build()
             )
             mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
             mqSequenceFactoryMock().outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
@@ -145,6 +146,6 @@ class MTAEmailQueueServiceSpec : Spek({
             assertEquals(1, mqSenderMock().deliveryNotifications.size)
             val notification = mqSenderMock().deliveryNotifications.take()
             assertEquals(email.id.emailId, notification.emailMessageId)
-        })
-    })
+        }
+    }
 })

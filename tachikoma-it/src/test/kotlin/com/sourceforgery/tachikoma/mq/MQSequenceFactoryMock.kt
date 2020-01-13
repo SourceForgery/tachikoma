@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.mq
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.util.concurrent.BlockingQueue
@@ -20,16 +21,17 @@ private constructor() : MQSequenceFactory {
     val incomingEmails = LinkedBlockingQueue<QueueMessageWrap<IncomingEmailNotificationMessage>>(1)
 
     private val executorService: ExecutorService = Executors.newCachedThreadPool()
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(deliveryNotifications, callback)
     }
 
     private fun <X : Any> listenOnQueue(queue: BlockingQueue<QueueMessageWrap<X>>, callback: (X) -> Unit): SettableFuture<Void> {
         val future = SettableFuture.create<Void>()
         executorService.execute {
-            generateSequence({
+            generateSequence {
                 queue.take().value
-            }).forEach {
+            }.forEach {
                 callback(it)
             }
             future.set(null)
@@ -42,14 +44,14 @@ private constructor() : MQSequenceFactory {
     }
 
     override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(outgoingEmails, callback)
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(incomingEmails, callback)
     }
 

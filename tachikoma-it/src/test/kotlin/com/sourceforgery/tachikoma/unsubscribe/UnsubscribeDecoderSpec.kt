@@ -3,18 +3,19 @@ package com.sourceforgery.tachikoma.unsubscribe
 import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
 internal class UnsubscribeDecoderSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
+    val serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
     val unsubscribeDecoder = serviceLocator.getService(UnsubscribeDecoder::class.java)
 
     describe("UnsubscribeDecoderSpec") {
@@ -22,14 +23,14 @@ internal class UnsubscribeDecoderSpec : Spek({
         it("should create an unsubscribe url") {
 
             val emailId = EmailId
-                    .newBuilder()
-                    .setId(999)
-                    .build()
+                .newBuilder()
+                .setId(999)
+                .build()
 
             val unsubscribeData = UnsubscribeData
-                    .newBuilder()
-                    .setEmailId(emailId)
-                    .build()
+                .newBuilder()
+                .setEmailId(emailId)
+                .build()
 
             val url = unsubscribeDecoder.createUrl(unsubscribeData)
 

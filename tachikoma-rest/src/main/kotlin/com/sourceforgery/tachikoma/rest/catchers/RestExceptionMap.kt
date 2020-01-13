@@ -6,20 +6,20 @@ import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.common.MediaType
 import com.linecorp.armeria.common.RequestContext
 import com.sourceforgery.tachikoma.config.DebugConfig
-import com.sourceforgery.tachikoma.logging.logger
-import org.glassfish.hk2.api.IterableProvider
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
+import org.glassfish.hk2.api.IterableProvider
 
 class RestExceptionMap
 @Inject
 private constructor(
-        private val catchers: IterableProvider<RestExceptionCatcher<Throwable>>,
-        private val debugConfig: DebugConfig
+    private val catchers: IterableProvider<RestExceptionCatcher<Throwable>>,
+    private val debugConfig: DebugConfig
 ) {
     private val map = ConcurrentHashMap<Class<Throwable>, RestExceptionCatcher<Throwable>>()
 
@@ -45,25 +45,25 @@ private constructor(
     }
 
     fun findCatcher(key: Class<Throwable>): RestExceptionCatcher<Throwable> {
-        return map.computeIfAbsent(key, { findClass(key) })
+        return map.computeIfAbsent(key) { findClass(key) }
     }
 
     private fun getGenerics(catcher: RestExceptionCatcher<*>): Type {
         @Suppress("UNCHECKED_CAST")
 
         return catcher.javaClass.genericInterfaces
-                .filterIsInstance(ParameterizedTypeImpl::class.java)
-                .firstOrNull { it.rawType == RestExceptionCatcher::class.java }!!
-                .actualTypeArguments[0]
+            .filterIsInstance(ParameterizedType::class.java)
+            .firstOrNull { it.rawType == RestExceptionCatcher::class.java }!!
+            .actualTypeArguments[0]
     }
 
     private fun findClass(key: Class<Throwable>): RestExceptionCatcher<Throwable> {
         var clazz: Class<*> = key
         while (clazz != Object::class.java) {
             catchers.firstOrNull { getGenerics(it) == clazz }
-                    ?.let {
-                        return it
-                    }
+                ?.let {
+                    return it
+                }
             clazz = clazz.superclass
         }
         return defaultCatcher

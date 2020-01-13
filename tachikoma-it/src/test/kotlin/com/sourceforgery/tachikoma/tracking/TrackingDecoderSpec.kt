@@ -3,18 +3,19 @@ package com.sourceforgery.tachikoma.tracking
 import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 @RunWith(JUnitPlatform::class)
 internal class TrackingDecoderSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
+    val serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
     val trackingDecoder = serviceLocator.getService(TrackingDecoder::class.java)
 
     describe("TrackingDecoderSpec") {
@@ -22,15 +23,15 @@ internal class TrackingDecoderSpec : Spek({
         it("should create a tracking url") {
 
             val emailId = EmailId
-                    .newBuilder()
-                    .setId(1001)
-                    .build()
+                .newBuilder()
+                .setId(1001)
+                .build()
 
             val trackingData = UrlTrackingData
-                    .newBuilder()
-                    .setEmailId(emailId)
-                    .setRedirectUrl("http://www.example.com/redirectPath")
-                    .build()
+                .newBuilder()
+                .setEmailId(emailId)
+                .setRedirectUrl("http://www.example.com/redirectPath")
+                .build()
 
             val url = trackingDecoder.createUrl(trackingData)
 

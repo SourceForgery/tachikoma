@@ -1,17 +1,17 @@
 package com.sourceforgery.tachikoma.grpc.catcher
 
 import com.sourceforgery.tachikoma.config.DebugConfig
-import com.sourceforgery.tachikoma.logging.logger
 import io.grpc.Metadata
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.Locale
+import org.apache.logging.log4j.kotlin.logger
 
 abstract class GrpcExceptionCatcher<in T : Throwable>(
-        private val debugConfig: DebugConfig,
-        clazz: Class<T>
+    private val debugConfig: DebugConfig,
+    clazz: Class<T>
 ) {
     protected val logger = logger("grpc.exceptions.${clazz.simpleName.toLowerCase(Locale.US)}")
 

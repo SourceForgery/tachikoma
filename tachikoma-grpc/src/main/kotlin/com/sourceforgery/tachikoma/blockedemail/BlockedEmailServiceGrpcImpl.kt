@@ -12,9 +12,9 @@ import javax.inject.Inject
 internal class BlockedEmailServiceGrpcImpl
 @Inject
 private constructor(
-        private val authentication: Authentication,
-        private val blockedEmailService: BlockedEmailService,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val authentication: Authentication,
+    private val blockedEmailService: BlockedEmailService,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) : BlockedEmailServiceGrpc.BlockedEmailServiceImplBase() {
 
     override fun getBlockedEmails(request: Empty, responseObserver: StreamObserver<BlockedEmail>) {

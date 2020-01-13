@@ -7,8 +7,8 @@ import javax.inject.Inject
 class LoginServiceGrpcImpl
 @Inject
 private constructor(
-        private val loginService: LoginService,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val loginService: LoginService,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) : LoginServiceGrpc.LoginServiceImplBase() {
     override fun login(request: LoginRequest, responseObserver: StreamObserver<LoginResponse>) {
         try {

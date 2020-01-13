@@ -11,8 +11,8 @@ sourceSets {
 task zipProtoc([type: Zip]) {
     from 'src/main/proto'
     include '**/*'
-    archiveName "tachikoma-frontend-api-proto-${project.version}.zip"
-    destinationDir(file("$buildDir/libs/"))
+    archiveFileName.set("tachikoma-frontend-api-proto-${project.version}.zip")
+    destinationDirectory.set(file("$buildDir/libs/"))
 }
 
 github.assets += "${buildDir}/libs/tachikoma-frontend-api-proto-${project.version}.zip"

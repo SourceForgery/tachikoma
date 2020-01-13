@@ -12,15 +12,15 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
-import net.bytebuddy.utility.RandomString
 import javax.inject.Inject
+import net.bytebuddy.utility.RandomString
 
 class InternalCreateUserServiceImpl
 @Inject
 private constructor(
-        private val mqManager: MQManager,
-        private val authenticationDAO: AuthenticationDAO,
-        private val accountDAO: AccountDAO
+    private val mqManager: MQManager,
+    private val authenticationDAO: AuthenticationDAO,
+    private val accountDAO: AccountDAO
 ) : InternalCreateUserService {
 
     private val randomString = RandomString(40)
@@ -33,13 +33,13 @@ private constructor(
     }
 
     override fun createFrontendAuthentication(
-            account: AccountDBO,
-            login: String?,
-            password: String?,
-            role: AuthenticationRole,
-            addApiToken: Boolean,
-            active: Boolean,
-            recipientOverride: Email?
+        account: AccountDBO,
+        login: String?,
+        password: String?,
+        role: AuthenticationRole,
+        addApiToken: Boolean,
+        active: Boolean,
+        recipientOverride: Email?
     ): AuthenticationDBO {
         if (role != AuthenticationRole.FRONTEND_ADMIN && role != AuthenticationRole.FRONTEND) {
             throw IllegalArgumentException("Only frontend supported")
@@ -58,15 +58,15 @@ private constructor(
         }
 
         val encryptedPassword = password
-                ?.let {
-                    PasswordStorage.createHash(it)
-                }
+            ?.let {
+                PasswordStorage.createHash(it)
+            }
 
         val frontendAuthentication = AuthenticationDBO(
-                account = account,
-                role = role,
-                login = login,
-                encryptedPassword = encryptedPassword
+            account = account,
+            role = role,
+            login = login,
+            encryptedPassword = encryptedPassword
         )
         if (addApiToken) {
             setApiToken(frontendAuthentication)
@@ -74,9 +74,9 @@ private constructor(
 
         authenticationDAO.save(frontendAuthentication)
         mqManager.setupAuthentication(
-                mailDomain = account.mailDomain,
-                authenticationId = frontendAuthentication.id,
-                accountId = account.id
+            mailDomain = account.mailDomain,
+            authenticationId = frontendAuthentication.id,
+            accountId = account.id
         )
         return frontendAuthentication
     }
@@ -87,9 +87,9 @@ private constructor(
 
     override fun createBackendAuthentication(account: AccountDBO): AuthenticationDBO {
         val backendAuthentication = AuthenticationDBO(
-                apiToken = randomString.nextString(),
-                role = AuthenticationRole.BACKEND,
-                account = account
+            apiToken = randomString.nextString(),
+            role = AuthenticationRole.BACKEND,
+            account = account
         )
         authenticationDAO.save(backendAuthentication)
         return backendAuthentication

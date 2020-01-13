@@ -19,10 +19,11 @@ fun main(args: Array<String>) {
     val metadataAuth = Metadata()
     metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
 
+    @Suppress("DEPRECATION")
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-            .usePlaintext(true)
-            .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-            .build()
+        .usePlaintext(true)
+        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
+        .build()
 
     val stub = MailDeliveryServiceGrpc.newBlockingStub(channel)
 
@@ -45,8 +46,8 @@ fun main(args: Array<String>) {
     val mailTitle = Value.newBuilder().setStringValue("This is a magic title!").build()
     val mailBody = Value.newBuilder().setStringValue("This is a magic mail body!").build()
     val listItems = listOf<Value>(
-            Value.newBuilder().setStringValue("Babba").build(),
-            Value.newBuilder().setStringValue("Diddi").build()
+        Value.newBuilder().setStringValue("Babba").build(),
+        Value.newBuilder().setStringValue("Diddi").build()
     )
 
     val listItemValue = Value.newBuilder().setListValue(Value.newBuilder().listValueBuilder.addAllValues(listItems).build()).build()
@@ -56,25 +57,25 @@ fun main(args: Array<String>) {
     val globalVars = Struct.newBuilder().putAllFields(templateVariables).build()
 
     val outgoingEmail = OutgoingEmail.newBuilder()
-            .setTemplate(
-                    TemplateBody.newBuilder()
-                            .setTemplatingEngine(TemplateEngine.HANDLEBARS)
-                            .setHtmlTemplate(template)
-                            .setGlobalVars(globalVars)
-                            .setSubject("Test email " + Instant.now())
-            )
-            .addRecipients(EmailRecipient.newBuilder()
-                    .setNamedEmail(
-                            NamedEmailAddress.newBuilder()
-                                    .setEmail("test@example.com")
-                                    .setName("This won't work")
-                    )
-            )
-            .setFrom(NamedEmailAddress.newBuilder()
+        .setTemplate(
+            TemplateBody.newBuilder()
+                .setTemplatingEngine(TemplateEngine.HANDLEBARS)
+                .setHtmlTemplate(template)
+                .setGlobalVars(globalVars)
+                .setSubject("Test email " + Instant.now())
+        )
+        .addRecipients(EmailRecipient.newBuilder()
+            .setNamedEmail(
+                NamedEmailAddress.newBuilder()
                     .setEmail("test@example.com")
                     .setName("This won't work")
             )
-            .build()
+        )
+        .setFrom(NamedEmailAddress.newBuilder()
+            .setEmail("test@example.com")
+            .setName("This won't work")
+        )
+        .build()
 
     try {
         stub.sendEmail(outgoingEmail).forEach {
@@ -83,7 +84,7 @@ fun main(args: Array<String>) {
     } catch (e: Exception) {
         e.printStackTrace()
         (e as? StatusRuntimeException)
-                ?.let { System.err.println(e.message) }
+            ?.let { System.err.println(e.message) }
     }
     System.err.println("Send complete")
 }

@@ -11,9 +11,9 @@ import javax.inject.Inject
 internal class EmailStatusEventServiceGrpcImpl
 @Inject
 private constructor(
-        private val authentication: Authentication,
-        private val emailStatsEventService: EmailStatusEventService,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val authentication: Authentication,
+    private val emailStatsEventService: EmailStatusEventService,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) : EmailStatusEventServiceGrpc.EmailStatusEventServiceImplBase() {
 
     override fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>) {

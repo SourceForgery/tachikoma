@@ -9,9 +9,9 @@ import javax.inject.Inject
 internal class MTADeliveryServiceGrpcImpl
 @Inject
 private constructor(
-        private val authentication: Authentication,
-        private val mtaDeliveryNotifications: MTADeliveryNotifications,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val authentication: Authentication,
+    private val mtaDeliveryNotifications: MTADeliveryNotifications,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) : MTADeliveryNotificationsGrpc.MTADeliveryNotificationsImplBase() {
     override fun setDeliveryStatus(request: DeliveryNotification, responseObserver: StreamObserver<Empty>) {
         return try {

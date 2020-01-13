@@ -11,9 +11,9 @@ import javax.persistence.UniqueConstraint
 ])
 @Entity
 class IncomingEmailAddressDBO(
-        @Column
-        val localPart: String,
+    @Column
+    val localPart: String,
 
-        @ManyToOne
-        val account: AccountDBO
+    @ManyToOne
+    val account: AccountDBO
 ) : GenericDBO()

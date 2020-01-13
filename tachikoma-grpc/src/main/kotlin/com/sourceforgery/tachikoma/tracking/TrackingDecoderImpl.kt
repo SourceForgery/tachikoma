@@ -12,7 +12,7 @@ import javax.inject.Inject
 class TrackingDecoderImpl
 @Inject
 private constructor(
-        trackingConfig: TrackingConfig
+    trackingConfig: TrackingConfig
 ) : TrackingDecoder {
 
     private val encryptionKey = trackingConfig.linkSignKey.toByteArray(StandardCharsets.UTF_8)
@@ -33,9 +33,9 @@ private constructor(
         val parcelled = trackingData.toByteArray()!!
         val signature = HmacUtil.hmacSha1(parcelled, encryptionKey)
         val signedMessage = UrlSignedMessage.newBuilder()
-                .setMessage(ByteString.copyFrom(parcelled))
-                .setSignature(ByteString.copyFrom(signature))
-                .build()
+            .setMessage(ByteString.copyFrom(parcelled))
+            .setSignature(ByteString.copyFrom(signature))
+            .build()
         return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray()).trimEnd('=')
     }
 }

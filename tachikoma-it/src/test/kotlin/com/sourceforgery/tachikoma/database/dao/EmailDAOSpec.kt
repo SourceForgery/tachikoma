@@ -14,6 +14,8 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
+import kotlin.test.assertNotNull
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -21,7 +23,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import kotlin.test.assertNotNull
 
 @RunWith(JUnitPlatform::class)
 internal class EmailDAOSpec : Spek({
@@ -29,7 +30,7 @@ internal class EmailDAOSpec : Spek({
     lateinit var emailDAO: EmailDAO
     lateinit var dbObjectMapper: DBObjectMapper
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
         emailDAO = serviceLocator.getService(EmailDAO::class.java)
         dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
     }
@@ -43,30 +44,30 @@ internal class EmailDAOSpec : Spek({
     fun getEmailDBO(from: Email, recipient: Email): EmailDBO {
         val account = AccountDBO(MailDomain("example.com"))
         val authentication = AuthenticationDBO(
-                encryptedPassword = null,
-                apiToken = null,
-                role = AuthenticationRole.BACKEND,
-                account = account
+            encryptedPassword = null,
+            apiToken = null,
+            role = AuthenticationRole.BACKEND,
+            account = account
         )
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
-        val jsonRequest = dbObjectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
+        val jsonRequest = dbObjectMapper.objectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
         val emailSendTransaction = EmailSendTransactionDBO(
-                jsonRequest = jsonRequest,
-                fromEmail = from,
-                authentication = authentication,
-                metaData = emptyMap(),
-                tags = emptyList()
+            jsonRequest = jsonRequest,
+            fromEmail = from,
+            authentication = authentication,
+            metaData = emptyMap(),
+            tags = emptyList()
         )
 
         return EmailDBO(
-                recipient = recipient,
-                recipientName = "Mr. Recipient",
-                transaction = emailSendTransaction,
-                messageId = MessageId("1023"),
-                mtaQueueId = null,
-                metaData = emptyMap()
+            recipient = recipient,
+            recipientName = "Mr. Recipient",
+            transaction = emailSendTransaction,
+            messageId = MessageId("1023"),
+            mtaQueueId = null,
+            metaData = emptyMap()
         )
     }
 

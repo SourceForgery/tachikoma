@@ -2,7 +2,7 @@ apply plugin: 'java'
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
@@ -13,7 +13,7 @@ if (JavaVersion.current().isJava8Compatible()) {
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava
-    classifier = 'source'
+    archiveClassifier.set('source')
 }
 
 tasks.withType(JavaCompile).all {

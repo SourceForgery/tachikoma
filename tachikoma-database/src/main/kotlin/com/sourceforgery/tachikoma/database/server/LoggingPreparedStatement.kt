@@ -1,15 +1,15 @@
 package com.sourceforgery.tachikoma.database.server
 
-import org.intellij.lang.annotations.MagicConstant
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
+import org.intellij.lang.annotations.MagicConstant
 
 internal class LoggingPreparedStatement(
-        private val preparedStatement: PreparedStatement,
-        private val sql: String,
-        private val counter: InvokeCounter
+    private val preparedStatement: PreparedStatement,
+    private val sql: String,
+    private val counter: InvokeCounter
 ) : PreparedStatement by preparedStatement {
 
     @Throws(SQLException::class)

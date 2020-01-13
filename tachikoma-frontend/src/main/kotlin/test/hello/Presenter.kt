@@ -1,6 +1,6 @@
 package test.hello
 
-interface Presenter<out ViewType : Any, StateType: Any> {
+interface Presenter<out ViewType : Any, StateType : Any> {
     val view: ViewType
 
     fun dispose(): StateType

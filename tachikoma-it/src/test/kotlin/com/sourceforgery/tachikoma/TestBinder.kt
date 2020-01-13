@@ -24,19 +24,19 @@ import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
+import java.net.URI
+import java.time.Clock
+import java.util.UUID
+import javax.inject.Singleton
 import org.glassfish.hk2.api.Context
 import org.glassfish.hk2.api.DynamicConfiguration
 import org.glassfish.hk2.api.PerThread
 import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.internal.PerThreadContext
 import org.glassfish.hk2.utilities.binding.AbstractBinder
-import java.net.URI
-import java.time.Clock
-import java.util.UUID
-import javax.inject.Singleton
 
 class TestBinder(
-        private vararg val attributes: TestAttribute
+    private vararg val attributes: TestAttribute
 ) : AbstractBinder() {
     private val databaseBinder = DatabaseBinder()
 
@@ -50,58 +50,58 @@ class TestBinder(
             override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd"
             override val baseUrl: URI = URI.create("http://localhost/")
         })
-                .to(TrackingConfig::class.java)
+            .to(TrackingConfig::class.java)
 
         bindAsContract(PerThreadContext::class.java)
-                .to(PerThread::class.java)
-                .to(object : TypeLiteral<Context<PerThread>>() {}.type)
-                .`in`(Singleton::class.java)
+            .to(PerThread::class.java)
+            .to(object : TypeLiteral<Context<PerThread>>() {}.type)
+            .`in`(Singleton::class.java)
 
         bindAsContract(TrackingDecoderImpl::class.java)
-                .to(TrackingDecoder::class.java)
-                .`in`(Singleton::class.java)
+            .to(TrackingDecoder::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(UnsubscribeDecoderImpl::class.java)
-                .to(UnsubscribeDecoder::class.java)
-                .`in`(Singleton::class.java)
+            .to(UnsubscribeDecoder::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(MQSequenceFactoryMock::class.java)
-                .to(MQSequenceFactory::class.java)
-                .`in`(Singleton::class.java)
+            .to(MQSequenceFactory::class.java)
+            .`in`(Singleton::class.java)
 
         bindAsContract(MTAEmailQueueService::class.java)
-                .`in`(Singleton::class.java)
+            .`in`(Singleton::class.java)
         bind(Clock.systemUTC())
-                .to(Clock::class.java)
+            .to(Clock::class.java)
         bindAsContract(TestHK2RequestContext::class.java)
-                .to(HK2RequestContext::class.java)
-                .`in`(Singleton::class.java)
+            .to(HK2RequestContext::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(DatabaseTestConfig::class.java)
-                .to(DatabaseConfig::class.java)
-                .`in`(Singleton::class.java)
+            .to(DatabaseConfig::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(TestConsumerFactoryImpl::class.java)
-                .to(MQManager::class.java)
-                .`in`(Singleton::class.java)
+            .to(MQManager::class.java)
+            .`in`(Singleton::class.java)
 
         bindAsContract(AuthenticationMock::class.java)
-                .to(Authentication::class.java)
-                .`in`(Singleton::class.java)
+            .to(Authentication::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(MQSenderMock::class.java)
-                .to(MQSender::class.java)
-                .`in`(Singleton::class.java)
+            .to(MQSender::class.java)
+            .`in`(Singleton::class.java)
 
         bindAsContract(DAOHelper::class.java)
-                .`in`(Singleton::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(JobMessageFactory::class.java)
-                .`in`(Singleton::class.java)
+            .`in`(Singleton::class.java)
         bindAsContract(MessageIdFactoryMock::class.java)
-                .to(MessageIdFactory::class.java)
-                .`in`(Singleton::class.java)
+            .to(MessageIdFactory::class.java)
+            .`in`(Singleton::class.java)
 
         bind(object : InvokeCounter {
             override fun inc(sql: String?, millis: Long) {
                 // Do nothing
             }
         })
-                .to(InvokeCounter::class.java)
+            .to(InvokeCounter::class.java)
 
         val dataSourceProvider = if (attributes.contains(TestAttribute.POSTGRESQL)) {
             PostgresqlEmbeddedDataSourceProvider::class.java
@@ -109,13 +109,13 @@ class TestBinder(
             H2DataSourceProvider::class.java
         }
         bindAsContract(dataSourceProvider)
-                .to(DataSourceProvider::class.java)
-                .`in`(Singleton::class.java)
-                .ranked(1)
+            .to(DataSourceProvider::class.java)
+            .`in`(Singleton::class.java)
+            .ranked(1)
 
         bindAsContract(DBObjectMapperImpl::class.java)
-                .to(DBObjectMapper::class.java)
-                .`in`(Singleton::class.java)
+            .to(DBObjectMapper::class.java)
+            .`in`(Singleton::class.java)
     }
 }
 

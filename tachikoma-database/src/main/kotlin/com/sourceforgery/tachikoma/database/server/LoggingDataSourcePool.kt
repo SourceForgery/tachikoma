@@ -1,34 +1,27 @@
 package com.sourceforgery.tachikoma.database.server
 
-import org.avaje.datasource.DataSourcePool
-import org.avaje.datasource.PoolStatistics
-import org.avaje.datasource.PoolStatus
+import io.ebean.datasource.DataSourcePool
+import java.sql.Connection
+import java.sql.SQLException
 
 internal class LoggingDataSourcePool(
-        private val originalDataSourcePool: DataSourcePool,
-        counter: InvokeCounter
-) : LoggingDataSource(
-        originalDataSource = originalDataSourcePool,
-        counter = counter
-), DataSourcePool {
+    private val originalDataSourcePool: DataSourcePool,
+    private val counter: InvokeCounter
+) : DataSourcePool by originalDataSourcePool {
 
-    override fun getName(): String {
-        return originalDataSourcePool.name
+    @Throws(SQLException::class)
+    override fun getConnection(): Connection {
+        return LoggingConnection(
+            realConnection = originalDataSourcePool.connection,
+            counter = counter
+        )
     }
 
-    override fun isAutoCommit(): Boolean {
-        return originalDataSourcePool.isAutoCommit
-    }
-
-    override fun shutdown(deregisterDriver: Boolean) {
-        originalDataSourcePool.shutdown(deregisterDriver)
-    }
-
-    override fun getStatus(reset: Boolean): PoolStatus {
-        return originalDataSourcePool.getStatus(reset)
-    }
-
-    override fun getStatistics(reset: Boolean): PoolStatistics {
-        return originalDataSourcePool.getStatistics(reset)
+    @Throws(SQLException::class)
+    override fun getConnection(username: String, password: String): Connection {
+        return LoggingConnection(
+            realConnection = originalDataSourcePool.getConnection(username, password),
+            counter = counter
+        )
     }
 }

@@ -17,6 +17,9 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
+import java.util.Collections
+import kotlin.test.assertEquals
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -24,8 +27,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.util.Collections
-import kotlin.test.assertEquals
 
 @RunWith(JUnitPlatform::class)
 internal class BlockedEmailDAOSpec : Spek({
@@ -34,7 +35,7 @@ internal class BlockedEmailDAOSpec : Spek({
     lateinit var accountDAO: AccountDAO
     lateinit var dbObjectMapper: DBObjectMapper
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
         blockedEmailDAO = serviceLocator.getService(BlockedEmailDAO::class.java)
         accountDAO = serviceLocator.getService(AccountDAO::class.java)
         dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
@@ -48,36 +49,36 @@ internal class BlockedEmailDAOSpec : Spek({
 
     fun getEmailStatusEvent(accountDBO: AccountDBO, from: Email, recipient: Email, emailStatus: EmailStatus): EmailStatusEventDBO {
         val authentication = AuthenticationDBO(
-                encryptedPassword = null,
-                apiToken = null,
-                role = AuthenticationRole.BACKEND,
-                account = accountDBO
+            encryptedPassword = null,
+            apiToken = null,
+            role = AuthenticationRole.BACKEND,
+            account = accountDBO
         )
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
-        val jsonRequest = dbObjectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
+        val jsonRequest = dbObjectMapper.objectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
         val emailSendTransaction = EmailSendTransactionDBO(
-                jsonRequest = jsonRequest,
-                fromEmail = from,
-                authentication = authentication,
-                metaData = emptyMap(),
-                tags = emptyList()
+            jsonRequest = jsonRequest,
+            fromEmail = from,
+            authentication = authentication,
+            metaData = emptyMap(),
+            tags = emptyList()
         )
 
         val fromEmail = EmailDBO(
-                recipient = recipient,
-                recipientName = "Mr. Recipient",
-                transaction = emailSendTransaction,
-                messageId = MessageId("1023"),
-                mtaQueueId = null,
-                metaData = emptyMap()
+            recipient = recipient,
+            recipientName = "Mr. Recipient",
+            transaction = emailSendTransaction,
+            messageId = MessageId("1023"),
+            mtaQueueId = null,
+            metaData = emptyMap()
         )
 
         return EmailStatusEventDBO(
-                emailStatus = emailStatus,
-                email = fromEmail,
-                metaData = StatusEventMetaData()
+            emailStatus = emailStatus,
+            email = fromEmail,
+            metaData = StatusEventMetaData()
         )
     }
 
@@ -96,28 +97,28 @@ internal class BlockedEmailDAOSpec : Spek({
 
         fun blockEmails(recipient: Email) {
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from1@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.HARD_BOUNCED
+                accountDBO = getAccount(),
+                from = Email("from1@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.HARD_BOUNCED
             ))
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from2@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.UNSUBSCRIBE
+                accountDBO = getAccount(),
+                from = Email("from2@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.UNSUBSCRIBE
             ))
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from3@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.UNSUBSCRIBE
+                accountDBO = getAccount(),
+                from = Email("from3@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.UNSUBSCRIBE
             ))
             blockedEmailDAO.block(getEmailStatusEvent(
-                    accountDBO = getAccount(),
-                    from = Email("from4@example.com"),
-                    recipient = recipient,
-                    emailStatus = EmailStatus.UNSUBSCRIBE
+                accountDBO = getAccount(),
+                from = Email("from4@example.com"),
+                recipient = recipient,
+                emailStatus = EmailStatus.UNSUBSCRIBE
             ))
         }
         it("should return null if e-mail is not blocked") {

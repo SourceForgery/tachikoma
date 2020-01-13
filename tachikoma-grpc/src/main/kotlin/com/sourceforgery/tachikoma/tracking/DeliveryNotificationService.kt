@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.tracking
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.protobuf.Empty
-import com.sourceforgery.tachikoma.assertGrpcOpen
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
@@ -19,9 +18,10 @@ import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
+import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import com.sourceforgery.tachikoma.logging.logger
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import io.grpc.stub.ServerCallStreamObserver
@@ -29,18 +29,21 @@ import io.grpc.stub.StreamObserver
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class DeliveryNotificationService
 @Inject
 private constructor(
-        private val mqSequenceFactory: MQSequenceFactory,
-        private val emailDAO: EmailDAO,
-        private val grpcExceptionMap: GrpcExceptionMap
+    private val mqSequenceFactory: MQSequenceFactory,
+    private val emailDAO: EmailDAO,
+    private val grpcExceptionMap: GrpcExceptionMap
 ) {
     fun notificationStream(
-            responseObserver: StreamObserver<EmailNotification>,
-            request: NotificationStreamParameters,
-            authenticationId: AuthenticationId
+        responseObserver: StreamObserver<EmailNotification>,
+        request: NotificationStreamParameters,
+        authenticationId: AuthenticationId,
+        accountId: AccountId,
+        mailDomain: MailDomain
     ) {
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
         val deliveryNotificationCallback = { deliveryNotificationMessage: DeliveryNotificationMessage ->
@@ -49,21 +52,22 @@ private constructor(
                 LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
             } else {
                 val emailNotification = deliveryNotificationMessage.toEmailNotification(emailData, request)
-                assertGrpcOpen(responseObserver)
                 responseObserver.onNext(emailNotification)
             }
         }
         val future = mqSequenceFactory.listenForDeliveryNotifications(
-                authenticationId = authenticationId,
-                callback = deliveryNotificationCallback
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId,
+            callback = deliveryNotificationCallback
         )
         serverCallStreamObserver
-                ?.setOnCancelHandler {
-                    future.cancel(true)
-                }
+            ?.setOnCancelHandler {
+                future.cancel(true)
+            }
         future.addListener(
-                runnable(serverCallStreamObserver, future, responseObserver),
-                responseCloser
+            runnable(serverCallStreamObserver, future, responseObserver),
+            responseCloser
         )
     }
 
@@ -97,11 +101,11 @@ private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO,
 
         if (request.includeTrackingData) {
             emailTrackingData =
-                    SentEmailTrackingData.newBuilder()
-                            .addAllTags(emailData.transaction.tags)
-                            .putAllMetadata(emailData.transaction.metaData)
-                            .putAllMetadata(emailData.metaData)
-                            .build()
+                SentEmailTrackingData.newBuilder()
+                    .addAllTags(emailData.transaction.tags)
+                    .putAllMetadata(emailData.transaction.metaData)
+                    .putAllMetadata(emailData.metaData)
+                    .build()
         } else {
             noTrackingData = Empty.getDefaultInstance()
         }
@@ -119,9 +123,9 @@ private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: 
     return when (deliveryNotificationMessage.notificationDataCase) {
         DeliveryNotificationMessage.NotificationDataCase.MESSAGECLICKED -> {
             clickedEvent = ClickedEvent.newBuilder()
-                    .setIpAddress(deliveryNotificationMessage.messageClicked.ipAddress)
-                    .setClickedUrl(deliveryNotificationMessage.messageClicked.clickedUrl)
-                    .build()
+                .setIpAddress(deliveryNotificationMessage.messageClicked.ipAddress)
+                .setClickedUrl(deliveryNotificationMessage.messageClicked.clickedUrl)
+                .build()
         }
         DeliveryNotificationMessage.NotificationDataCase.MESSAGEHARDBOUNCED -> {
             hardBouncedEvent = HardBouncedEvent.getDefaultInstance()

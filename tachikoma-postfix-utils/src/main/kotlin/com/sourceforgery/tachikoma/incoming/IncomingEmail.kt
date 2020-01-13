@@ -1,18 +1,18 @@
 package com.sourceforgery.tachikoma.incoming
 
 import com.google.protobuf.ByteString
-import com.sourceforgery.tachikoma.logging.logger
 import com.sourceforgery.tachikoma.mta.IncomingEmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MailAcceptanceResult
 import io.grpc.Channel
-import jnr.unixsocket.UnixServerSocketChannel
-import jnr.unixsocket.UnixSocketAddress
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
+import jnr.unixsocket.UnixServerSocketChannel
+import jnr.unixsocket.UnixSocketAddress
+import org.apache.logging.log4j.kotlin.logger
 
 class IncomingEmail(
-        grpcChannel: Channel
+    grpcChannel: Channel
 ) {
     private val stub = MTAEmailQueueGrpc.newBlockingStub(grpcChannel)
 
@@ -40,15 +40,15 @@ class IncomingEmail(
 
     private fun acceptIncomingEmail(fromEmailAddress: String, emailBody: String, toEmailAddress: String): MailAcceptanceResult {
         val incomingEmailMessage = IncomingEmailMessage.newBuilder()
-                .setBody(ByteString.copyFrom(emailBody, StandardCharsets.US_ASCII))
-                .setFrom(fromEmailAddress)
-                .setEmailAddress(toEmailAddress)
-                .build()
+            .setBody(ByteString.copyFrom(emailBody, StandardCharsets.US_ASCII))
+            .setFrom(fromEmailAddress)
+            .setEmailAddress(toEmailAddress)
+            .build()
         return stub.incomingEmail(incomingEmailMessage)
     }
 
     companion object {
-        val SOCKET_PATH = java.io.File("/var/spool/postfix/private/incoming_tachikoma")
+        val SOCKET_PATH = java.io.File("/var/spool/postfix/tachikoma/incoming_tachikoma")
         private val LOGGER = logger()
     }
 }

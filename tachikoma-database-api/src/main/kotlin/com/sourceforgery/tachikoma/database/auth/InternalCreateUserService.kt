@@ -10,13 +10,13 @@ interface InternalCreateUserService {
     fun createAccount(mailDomain: MailDomain): AccountDBO
     fun createBackendAuthentication(account: AccountDBO): AuthenticationDBO
     fun createFrontendAuthentication(
-            account: AccountDBO,
-            login: String? = null,
-            password: String? = null,
-            role: AuthenticationRole,
-            addApiToken: Boolean,
-            active: Boolean = true,
-            recipientOverride: Email? = null
+        account: AccountDBO,
+        login: String? = null,
+        password: String? = null,
+        role: AuthenticationRole,
+        addApiToken: Boolean,
+        active: Boolean = true,
+        recipientOverride: Email? = null
     ): AuthenticationDBO
 
     fun setApiToken(authenticationDBO: AuthenticationDBO)

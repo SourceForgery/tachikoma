@@ -30,12 +30,18 @@ object HmacUtil {
     }
 
     fun calculateHmacSha256URLSafeNoPadding(data: ByteArray, key: ByteArray) =
-            hmac(data, key, "HmacSHA256")
+        hmac(data, key, "HmacSHA256")
 
     fun calculateMd5(sText: String): String {
         val md5 = MessageDigest.getInstance("MD5")
         md5.update(sText.toByteArray(StandardCharsets.UTF_8))
 
+        return String.format("%032x", BigInteger(1, md5.digest()))
+    }
+
+    fun calculateMd5(bytes: ByteArray): String {
+        val md5 = MessageDigest.getInstance("MD5")
+        md5.update(bytes)
         return String.format("%032x", BigInteger(1, md5.digest()))
     }
 }

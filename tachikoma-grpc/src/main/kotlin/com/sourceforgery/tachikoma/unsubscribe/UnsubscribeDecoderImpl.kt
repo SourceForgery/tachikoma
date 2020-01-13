@@ -13,8 +13,8 @@ import javax.inject.Inject
 class UnsubscribeDecoderImpl
 @Inject
 private constructor(
-        // TODO Rename to EncryptionConfig ?
-        trackingConfig: TrackingConfig
+    // TODO Rename to EncryptionConfig ?
+    trackingConfig: TrackingConfig
 ) : UnsubscribeDecoder {
 
     private val encryptionKey = trackingConfig.linkSignKey.toByteArray(StandardCharsets.UTF_8)
@@ -35,9 +35,9 @@ private constructor(
         val parcelled = unsubscribeData.toByteArray()!!
         val signature = HmacUtil.hmacSha1(parcelled, encryptionKey)
         val signedMessage = SignedUnsubscribeData.newBuilder()
-                .setMessage(ByteString.copyFrom(parcelled))
-                .setSignature(ByteString.copyFrom(signature))
-                .build()
+            .setMessage(ByteString.copyFrom(parcelled))
+            .setSignature(ByteString.copyFrom(signature))
+            .build()
         return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray()).trimEnd('=')
     }
 }

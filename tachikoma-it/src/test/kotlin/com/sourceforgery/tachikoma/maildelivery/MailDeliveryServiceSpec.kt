@@ -19,6 +19,9 @@ import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.hk2.located
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -27,8 +30,6 @@ import org.jetbrains.spek.api.dsl.it
 import org.junit.Assert.assertEquals
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.nio.charset.StandardCharsets
-import java.util.Base64
 
 @RunWith(JUnitPlatform::class)
 class MailDeliveryServiceSpec : Spek({
@@ -37,37 +38,37 @@ class MailDeliveryServiceSpec : Spek({
     val daoHelper: () -> DAOHelper = located { serviceLocator }
 
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder(), MinimalBinder(MailDeliveryService::class.java))!!
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder(), MinimalBinder(MailDeliveryService::class.java))!!
     }
     afterEachTest {
         serviceLocator.shutdown()
     }
 
-    describe("Send emails", {
-        it("with attachment", {
+    describe("Send emails") {
+        it("with attachment") {
             val authentication = daoHelper().createAuthentication(fromEmail.toNamedEmail().address.domain)
             val email = OutgoingEmail.newBuilder()
-                    .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
-                    .addAttachments(Attachment.newBuilder()
-                            .setContentType("application/pdf")
-                            .setData(ByteString.copyFrom(data))
-                            .setFileName("NotReally.pdf"))
-                    .setFrom(fromEmail)
-                    .setStatic(StaticBody.newBuilder().setPlaintextBody(
-                            """This is a test
+                .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
+                .addAttachments(Attachment.newBuilder()
+                    .setContentType("application/pdf")
+                    .setData(ByteString.copyFrom(data))
+                    .setFileName("NotReally.pdf"))
+                .setFrom(fromEmail)
+                .setStatic(StaticBody.newBuilder().setPlaintextBody(
+                    """This is a test
                             |                                      .
                             |.
                             |.                 ${""}
                             |"""
-                                    .trimMargin()
-                    ).setSubject("Test mail subject"))
-                    .build()
+                        .trimMargin()
+                ).setSubject("Test mail subject"))
+                .build()
             val responseObserver = QueueStreamObserver<EmailQueueStatus>()
             mailDeliveryService().sendEmail(
-                    request = email,
-                    sender = authentication.account.id,
-                    responseObserver = responseObserver,
-                    authenticationId = authentication.id
+                request = email,
+                sender = authentication.account.id,
+                responseObserver = responseObserver,
+                authenticationId = authentication.id
             )
             val emailDAO: EmailDAO = serviceLocator.get()
             val queued = responseObserver.take(500)
@@ -75,13 +76,14 @@ class MailDeliveryServiceSpec : Spek({
             val boundary = Regex("\tboundary=\"(.*?)\"").find(byEmailId.body!!)!!.groupValues[1]
 
             val modifiedBody = byEmailId.body!!.replace(boundary, "XXXXXX")
+                .replace(Regex("Date: .*"), "Date: XXXXX")
 
             val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
                 it.readBytes().toString(StandardCharsets.UTF_8)
             }
             assertEquals(expected, modifiedBody)
-        })
-    })
+        }
+    }
 }) {
     companion object {
         val validEmail = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()

@@ -9,6 +9,7 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.MessageProperties
+import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
@@ -16,19 +17,19 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.logging.logger
 import java.time.Clock
 import java.time.Duration
 import java.util.concurrent.Executors
 import javax.annotation.PreDestroy
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 internal class ConsumerFactoryImpl
 @Inject
 private constructor(
-        mqConfig: MqConfig,
-        private val clock: Clock,
-        private val hK2RequestContext: HK2RequestContext
+    mqConfig: MqConfig,
+    private val clock: Clock,
+    private val hK2RequestContext: HK2RequestContext
 ) : MQSequenceFactory, MQSender, MQManager {
     @Volatile
     private var thread = 0
@@ -60,8 +61,8 @@ private constructor(
 
     private inner class WorkerThread
     internal constructor(
-            runnable: Runnable,
-            private val threadName: String
+        runnable: Runnable,
+        private val threadName: String
     ) : Thread(runnable, threadName) {
 
         @Synchronized
@@ -99,17 +100,17 @@ private constructor(
     private fun createQueue(messageQueue: MessageQueue<*>) {
         val arguments = HashMap<String, Any>()
         messageQueue.maxLength
-                ?.let { arguments["x-max-length"] = it }
+            ?.let { arguments["x-max-length"] = it }
 
         if (messageQueue.delay > Duration.ZERO) {
             arguments["x-message-ttl"] = messageQueue.delay.toMillis()
         }
         messageQueue.nextDestination
-                ?.let {
-                    arguments["x-dead-letter-routing-key"] = it.name
-                    arguments["x-dead-letter-exchangeType"] = ""
-                    arguments["x-dead-letter-exchange"] = ""
-                }
+            ?.let {
+                arguments["x-dead-letter-routing-key"] = it.name
+                arguments["x-dead-letter-exchangeType"] = ""
+                arguments["x-dead-letter-exchange"] = ""
+            }
 
         sendChannel.queueDeclare(messageQueue.name, true, false, false, arguments)
     }
@@ -120,29 +121,33 @@ private constructor(
 
     private fun createExchange(messageExchange: MessageExchange) {
         connection
-                .createChannel()
-                .use { channel ->
-                    channel.exchangeDeclare(messageExchange.name, messageExchange.exchangeType, true)
-                }
+            .createChannel()
+            .use { channel ->
+                channel.exchangeDeclare(messageExchange.name, messageExchange.exchangeType, true)
+            }
     }
 
     override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
         val ctx = hK2RequestContext.getContextInstance()
         val channel = connection
-                .createChannel()!!
+            .createChannel()!!
 
         val future = SettableFuture.create<Void>()
-        future.addListener(Runnable { channel.close() }, closeExecutor)
+        future.addListener(Runnable {
+            LOGGER.info("Closing channel")
+            channel.close()
+        }, closeExecutor)
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
+                LOGGER.debug { "Processing message, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
                 var handledResult = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
-                    hK2RequestContext.runInScope(ctx, { callback(parsedMessage) })
+                    hK2RequestContext.runInScope(ctx) { callback(parsedMessage) }
                     channel.basicAck(envelope.deliveryTag, false)
                     handledResult = true
                 } catch (e: Exception) {
-                    LOGGER.error("", e)
+                    LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
                     future.setException(e)
                     handledResult = true
                 } finally {
@@ -154,25 +159,36 @@ private constructor(
             }
         }
         channel.basicConsume(messageQueue.name, false, consumer)
-        channel.addShutdownListener({ future.cancel(false) })
+        channel.addShutdownListener { future.cancel(false) }
         return future
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
         val queue = DeliveryNotificationMessageQueue(authenticationId)
+        setupAuthentication(
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId
+        )
         return listenOnQueue(queue, callback)
     }
 
     override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+        setupAccount(mailDomain)
         return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+        setupAuthentication(
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId
+        )
         return listenOnQueue(IncomingEmailNotificationMessageQueue(authenticationId), callback)
     }
 
     override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
-        return listenOnQueue(JobMessageQueue.JOBS, { it ->
+        return listenOnQueue(JobMessageQueue.JOBS) { it ->
             val messageQueue = getRequeueQueueByRequestedExecutionTime(it)
             if (messageQueue == null) {
                 // Message has waited long enough
@@ -180,36 +196,36 @@ private constructor(
             } else {
                 queueJob(it)
             }
-        })
+        }
     }
 
     private fun getRequeueQueueByRequestedExecutionTime(jobMessage: JobMessage): JobMessageQueue? {
         val expectedDelay = Duration.between(
-                clock.instant(),
-                jobMessage.requestedExecutionTime.toInstant()
+            clock.instant(),
+            jobMessage.requestedExecutionTime.toInstant()
         )!!
         return SORTED_DELAYED_JOB_QUEUE
-                .firstOrNull {
-                    it.delay <= expectedDelay
-                }
+            .firstOrNull {
+                it.delay <= expectedDelay
+            }
     }
 
     override fun queueJob(jobMessage: JobMessage) {
         val queue = getRequeueQueueByRequestedExecutionTime(jobMessage) ?: JobMessageQueue.JOBS
         val jobMessageClone = JobMessage.newBuilder(jobMessage)
-                .setCreationTimestamp(clock.timestamp())
-                .build()
+            .setCreationTimestamp(clock.timestamp())
+            .build()
         queueJob(jobMessageClone, queue)
     }
 
     override fun queueOutgoingEmail(mailDomain: MailDomain, outgoingEmailMessage: OutgoingEmailMessage) {
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
-                "",
-                OutgoingEmailsMessageQueue(mailDomain).name,
-                true,
-                basicProperties,
-                outgoingEmailMessage.toByteArray()
+            "",
+            OutgoingEmailsMessageQueue(mailDomain).name,
+            true,
+            basicProperties,
+            outgoingEmailMessage.toByteArray()
         )
     }
 
@@ -217,43 +233,43 @@ private constructor(
         var basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         if (jobMessageQueue.delay > Duration.ZERO) {
             basicProperties = basicProperties.builder()
-                    .expiration(jobMessageQueue.delay.toMillis().toString())
-                    .build()
+                .expiration(jobMessageQueue.delay.toMillis().toString())
+                .build()
         }
         sendChannel.basicPublish(
-                "",
-                jobMessageQueue.name,
-                true,
-                basicProperties,
-                jobMessage.toByteArray()
+            "",
+            jobMessageQueue.name,
+            true,
+            basicProperties,
+            jobMessage.toByteArray()
         )
     }
 
     override fun queueDeliveryNotification(accountId: AccountId, notificationMessage: DeliveryNotificationMessage) {
         val notificationMessageClone = DeliveryNotificationMessage.newBuilder(notificationMessage)
-                .setCreationTimestamp(clock.instant().toTimestamp())
-                .build()
+            .setCreationTimestamp(clock.instant().toTimestamp())
+            .build()
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
-                MessageExchange.DELIVERY_NOTIFICATIONS.name,
-                "/account/$accountId",
-                true,
-                basicProperties,
-                notificationMessageClone.toByteArray()
+            MessageExchange.DELIVERY_NOTIFICATIONS.name,
+            "/account/$accountId",
+            true,
+            basicProperties,
+            notificationMessageClone.toByteArray()
         )
     }
 
     override fun queueIncomingEmailNotification(accountId: AccountId, incomingEmailNotificationMessage: IncomingEmailNotificationMessage) {
         val notificationMessageClone = IncomingEmailNotificationMessage.newBuilder(incomingEmailNotificationMessage)
-                .setCreationTimestamp(clock.instant().toTimestamp())
-                .build()
+            .setCreationTimestamp(clock.instant().toTimestamp())
+            .build()
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
-                MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name,
-                "/account/$accountId",
-                true,
-                basicProperties,
-                notificationMessageClone.toByteArray()
+            MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name,
+            "/account/$accountId",
+            true,
+            basicProperties,
+            notificationMessageClone.toByteArray()
         )
     }
 
@@ -261,10 +277,10 @@ private constructor(
         val LOGGER = logger()
 
         val SORTED_DELAYED_JOB_QUEUE = JobMessageQueue
-                .values()
-                .asSequence()
-                .filterNot { it == JobMessageQueue.JOBS }
-                .sortedByDescending { it.delay }
-                .toList()
+            .values()
+            .asSequence()
+            .filterNot { it == JobMessageQueue.JOBS }
+            .sortedByDescending { it.delay }
+            .toList()
     }
 }

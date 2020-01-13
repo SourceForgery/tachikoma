@@ -29,41 +29,41 @@ import javax.inject.Inject
 internal class EmailStatusEventService
 @Inject
 private constructor(
-        private val authenticationDAO: AuthenticationDAO,
-        private val emailStatusEventDAO: EmailStatusEventDAO
+    private val authenticationDAO: AuthenticationDAO,
+    private val emailStatusEventDAO: EmailStatusEventDAO
 ) {
     fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>, authenticationId: AuthenticationId) {
 
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
         val events: List<EmailStatus> = request.eventsList
-                .map {
-                    when (it) {
-                        Event.CLICKED -> EmailStatus.CLICKED
-                        Event.DELIVERED -> EmailStatus.DELIVERED
-                        Event.UNSUBSCRIBED -> EmailStatus.UNSUBSCRIBE
-                        Event.HARD_BOUNCED -> EmailStatus.HARD_BOUNCED
-                        Event.SOFT_BOUNCED -> EmailStatus.SOFT_BOUNCED
-                        Event.QUEUED -> EmailStatus.QUEUED
-                        Event.SPAM -> EmailStatus.SPAM
-                        Event.OPENED -> EmailStatus.OPENED
-                        else -> throw IllegalArgumentException("$it is not valid for blocking")
-                    }
+            .map {
+                when (it) {
+                    Event.CLICKED -> EmailStatus.CLICKED
+                    Event.DELIVERED -> EmailStatus.DELIVERED
+                    Event.UNSUBSCRIBED -> EmailStatus.UNSUBSCRIBE
+                    Event.HARD_BOUNCED -> EmailStatus.HARD_BOUNCED
+                    Event.SOFT_BOUNCED -> EmailStatus.SOFT_BOUNCED
+                    Event.QUEUED -> EmailStatus.QUEUED
+                    Event.SPAM -> EmailStatus.SPAM
+                    Event.OPENED -> EmailStatus.OPENED
+                    else -> throw IllegalArgumentException("$it is not valid for blocking")
                 }
+            }
         val includeTrackingData = request.includeTrackingData
 
         emailStatusEventDAO.getEvents(
-                accountId = authenticationDBO.account.id,
-                instant = request.newerThan?.toInstant(),
-                recipientEmail = request.recipientEmail?.toEmail(),
-                fromEmail = request.fromEmail?.toEmail(),
-                events = events
+            accountId = authenticationDBO.account.id,
+            instant = request.newerThan?.toInstant(),
+            recipientEmail = request.recipientEmail?.toEmail(),
+            fromEmail = request.fromEmail?.toEmail(),
+            events = events
         )
-                .forEach {
-                    responseObserver.onNext(
-                            getEmailNotification(it, includeTrackingData)
-                    )
-                }
+            .forEach {
+                responseObserver.onNext(
+                    getEmailNotification(it, includeTrackingData)
+                )
+            }
     }
 
     private fun getEmailNotification(emailStatusEventDBO: EmailStatusEventDBO, includeTrackingData: Boolean): EmailNotification {
@@ -76,7 +76,7 @@ private constructor(
             builder.setEmailTrackingData(SentEmailTrackingData.newBuilder())
             // TODO Insert logic to retrieve tracking data include it
         } else {
-            builder.setNoTrackingData(Empty.getDefaultInstance())
+            builder.noTrackingData = Empty.getDefaultInstance()
         }
         return when (emailStatusEventDBO.emailStatus) {
             EmailStatus.OPENED -> {

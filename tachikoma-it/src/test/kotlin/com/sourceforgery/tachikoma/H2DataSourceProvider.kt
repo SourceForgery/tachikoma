@@ -3,15 +3,14 @@ package com.sourceforgery.tachikoma
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.h2.H2Platform
-import org.avaje.datasource.DataSourceConfig
+import io.ebean.datasource.DataSourceConfig
 import java.sql.Connection
 import java.util.UUID
 import javax.inject.Inject
 
 class H2DataSourceProvider
 @Inject
-private constructor(
-) : DataSourceProvider {
+private constructor() : DataSourceProvider {
     override fun provide(serverConfig: ServerConfig) {
         val dataSourceConfig = DataSourceConfig()
         dataSourceConfig.heartbeatSql = "select 1"

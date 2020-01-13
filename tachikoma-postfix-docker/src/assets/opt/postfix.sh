@@ -9,8 +9,8 @@ readEnv() {
 
   cat ${TACHIKOMA_CONFIG:-${HOME}/.tachikoma.config} | \
     while read line; do
-      if [ ${line%%=*} = $key ]; then
-        echo ${line#*=}
+      if [ "${line%%=*}" = "$key" ]; then
+        echo "${line#*=}"
         return 0
       fi
     done
@@ -42,7 +42,7 @@ else
   postconf -e virtual_mailbox_domains="$TACHIKOMA_HOSTNAME"
 fi
 
-postconf -e virtual_transport=lmtp:unix:private/incoming_tachikoma
+postconf -e virtual_transport=lmtp:unix:tachikoma/incoming_tachikoma
 postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
 
 postmap hash:/etc/postfix/vmailbox

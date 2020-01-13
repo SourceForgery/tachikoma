@@ -31,19 +31,19 @@ inline fun randomDelay(millis: LongRange, alwaysRun: () -> Unit) {
 }
 
 fun Instant.toTimestamp() =
-        Timestamp.newBuilder()
-                .setSeconds(this.epochSecond)
-                .setNanos(this.nano)
-                .build()
+    Timestamp.newBuilder()
+        .setSeconds(this.epochSecond)
+        .setNanos(this.nano)
+        .build()
 
 fun Timestamp.toInstant() =
-        Instant.ofEpochSecond(this.seconds, this.nanos.toLong())
+    Instant.ofEpochSecond(this.seconds, this.nanos.toLong())
 
 fun Clock.timestamp() = this.instant().toTimestamp()
 
 fun Timestamp.before(other: Timestamp) =
-        if (this.seconds == other.seconds) {
-            this.nanos < other.nanos
-        } else {
-            this.seconds < other.seconds
-        }
+    if (this.seconds == other.seconds) {
+        this.nanos < other.nanos
+    } else {
+        this.seconds < other.seconds
+    }

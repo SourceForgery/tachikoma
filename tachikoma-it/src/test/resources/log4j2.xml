@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorInterval="5">
     <Appenders>
-	<Console name="StdOut" target="SYSTEM_OUT">
-	    <PatternLayout pattern="%d{ISO8601} %-5p - [%t] %-26.26c{1} - %X{tag} - %m\n"/>
-	</Console>
+        <Console name="StdOut" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p - [%t] %-26.26c{1} - %X{tag} - %m\n"/>
+        </Console>
     </Appenders>
     <Loggers>
-	<Root level="warn">
-	    <AppenderRef ref="StdOut"/>
-	</Root>
-	<Logger name="com.sourceforgery.tachikoma.database.hooks.CreateUsers" level="off"/>
-	<Logger name="io.ebeaninternal.server.core.DefaultContainer" level="off"/>
-	<Logger name="com.opentable.db.postgres.embedded" level="off"/>
-	<Logger name="org.postgresql" level="off"/>
-	<Logger name="io.ebean.internal.DefaultContainer" level="error"/>
+        <Root level="warn">
+            <AppenderRef ref="StdOut"/>
+        </Root>
+        <Logger name="com.sourceforgery.tachikoma.database.hooks.CreateUsers" level="off"/>
+        <Logger name="io.ebeaninternal.server.core.DefaultContainer" level="off"/>
+        <Logger name="com.opentable.db.postgres.embedded" level="off"/>
+        <Logger name="org.postgresql" level="off"/>
+        <Logger name="io.ebean.internal.DefaultContainer" level="error"/>
     </Loggers>
 </Configuration>

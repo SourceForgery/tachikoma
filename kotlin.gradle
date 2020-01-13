@@ -1,22 +1,19 @@
 apply plugin: 'kotlin'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
-apply plugin: "org.jmailen.kotlinter"
-apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'org.jetbrains.dokka'
 
 dependencies {
-    testCompile "org.jetbrains.spek:spek-api:$spek_version"
-    testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
-    testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-    testCompile 'org.junit.platform:junit-platform-runner:1.1.0'
-    testCompile "org.glassfish.hk2:hk2-locator:$hk2_version"
-    testCompile "org.glassfish.hk2:hk2-utils:$hk2_version"
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-}
-
-kapt {
-    useBuildCache = true
+    testImplementation("org.jetbrains.spek:spek-api:$spek_version") {
+        exclude group: "org.jetbrains.kotlin", module: "kotlin-reflect"
+    }
+    testImplementation("org.jetbrains.spek:spek-junit-platform-engine:$spek_version") {
+        exclude group: "org.jetbrains.kotlin", module: "kotlin-reflect"
+    }
+    testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testImplementation 'org.junit.platform:junit-platform-runner:1.1.0'
+    testImplementation "org.glassfish.hk2:hk2-locator:$hk2_version"
+    testImplementation "org.glassfish.hk2:hk2-utils:$hk2_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
 compileKotlin {
@@ -43,13 +40,12 @@ ktlint {
     android = false
 //            reporter = "checkstyle"
     ignoreFailures = false
+    disabledRules = ["final-newline"]
 }
 
 dokka {
-    moduleName = ''
     outputFormat = 'html'
     outputDirectory = "$buildDir/javadoc"
-    reportUndocumented = false
 }
 
 task sourceJar(type: Jar) {

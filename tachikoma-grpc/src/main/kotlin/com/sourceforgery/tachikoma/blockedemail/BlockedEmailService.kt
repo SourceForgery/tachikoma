@@ -14,8 +14,8 @@ import javax.inject.Inject
 internal class BlockedEmailService
 @Inject
 private constructor(
-        private val authenticationDAO: AuthenticationDAO,
-        private val blockedEmailDAO: BlockedEmailDAO
+    private val authenticationDAO: AuthenticationDAO,
+    private val blockedEmailDAO: BlockedEmailDAO
 ) {
     fun getBlockedEmails(responseObserver: StreamObserver<BlockedEmail>, authenticationId: AuthenticationId) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
@@ -25,11 +25,11 @@ private constructor(
         blockedEmails.forEach {
 
             val blockedEmail = BlockedEmail
-                    .newBuilder()
-                    .setFromEmail(it.fromEmail.toGrpcInternal())
-                    .setRecipientEmail(it.recipientEmail.toGrpcInternal())
-                    .setBlockedReason(it.blockedReason.toGrpc())
-                    .build()
+                .newBuilder()
+                .setFromEmail(it.fromEmail.toGrpcInternal())
+                .setRecipientEmail(it.recipientEmail.toGrpcInternal())
+                .setBlockedReason(it.blockedReason.toGrpc())
+                .build()
 
             responseObserver.onNext(blockedEmail)
         }

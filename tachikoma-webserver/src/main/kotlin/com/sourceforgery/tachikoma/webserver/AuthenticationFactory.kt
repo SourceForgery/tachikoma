@@ -19,77 +19,77 @@ import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.logging.logger
 import io.netty.util.AsciiString
-import org.glassfish.hk2.api.Factory
 import java.util.Base64
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
+import org.glassfish.hk2.api.Factory
 
 class AuthenticationFactory
 @Inject
 private constructor(
-        private val httpHeaders: HttpHeaders,
-        private val webServerConfig: WebServerConfig,
-        private val authenticationDAO: AuthenticationDAO,
-        private val accountDAO: AccountDAO
+    private val httpHeaders: HttpHeaders,
+    private val webServerConfig: WebServerConfig,
+    private val authenticationDAO: AuthenticationDAO,
+    private val accountDAO: AccountDAO
 ) : Factory<Authentication> {
 
     private val apiKeyCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.MINUTES)
-            .build(CacheLoader.from<String, Authentication?>({ parseApiTokenHeader(it) }))
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(CacheLoader.from<String, Authentication?> { parseApiTokenHeader(it) })
 
     override fun provide() =
-            parseWebTokenHeader()
-                    ?: parseApiTokenHeader()
-                    ?: NO_AUTHENTICATION
+        parseWebTokenHeader()
+            ?: parseApiTokenHeader()
+            ?: NO_AUTHENTICATION
 
     private fun parseApiTokenHeader(): Authentication? =
-            httpHeaders[APITOKEN_HEADER]
-                    ?.let {
-                        try {
-                            apiKeyCache[it]
-                        } catch (e: ExecutionException) {
-                            throw e.cause!!
-                        }
-                    }
+        httpHeaders[APITOKEN_HEADER]
+            ?.let {
+                try {
+                    apiKeyCache[it]
+                } catch (e: ExecutionException) {
+                    throw e.cause!!
+                }
+            }
 
     private fun parseApiTokenHeader(header: String?): Authentication =
-            header
-                    ?.let {
-                        MailDomain(it.substringBefore(':')) to it.substringAfter(':')
+        header
+            ?.let {
+                MailDomain(it.substringBefore(':')) to it.substringAfter(':')
+            }
+            ?.let { splitAuthString ->
+                authenticationDAO.validateApiToken(splitAuthString.second)
+                    ?.let { auth ->
+                        if (auth.account.mailDomain == splitAuthString.first) {
+                            AuthenticationImpl(
+                                // No webtoken should allow backend
+                                role = auth.role,
+                                authenticationId = auth.id,
+                                accountId = auth.account.id,
+                                accountDAO = accountDAO
+                            )
+                        } else {
+                            LOGGER.warn { "Incorrect domain(${splitAuthString.first}) for account ${auth.account.id})" }
+                            wrapException("Incorrect domain(${splitAuthString.first}")
+                        }
                     }
-                    ?.let { splitAuthString ->
-                        authenticationDAO.validateApiToken(splitAuthString.second)
-                                ?.let { auth ->
-                                    if (auth.account.mailDomain == splitAuthString.first) {
-                                        AuthenticationImpl(
-                                                // No webtoken should allow backend
-                                                role = auth.role,
-                                                authenticationId = auth.id,
-                                                accountId = auth.account.id,
-                                                accountDAO = accountDAO
-                                        )
-                                    } else {
-                                        LOGGER.warn { "Incorrect domain(${splitAuthString.first}) for account ${auth.account.id})" }
-                                        wrapException("Incorrect domain(${splitAuthString.first}")
-                                    }
-                                }
-                                ?: wrapException("Nonexistant domain(${splitAuthString.first}")
-                    }
-                    ?: NO_AUTHENTICATION
+                    ?: wrapException("Nonexistant domain(${splitAuthString.first}")
+            }
+            ?: NO_AUTHENTICATION
 
     private fun wrapException(error: String): Authentication {
-        return ThrowingAuthentication({ InvalidOrInsufficientCredentialsException(error) })
+        return ThrowingAuthentication { InvalidOrInsufficientCredentialsException(error) }
     }
 
     private fun parseWebTokenHeader(): Authentication? {
         val webtokenHeader = httpHeaders[WEBTOKEN_HEADER]
-                ?: return null
+            ?: return null
         val splitToken = webtokenHeader.split(
-                delimiters = *charArrayOf('.'),
-                limit = 2
+            delimiters = *charArrayOf('.'),
+            limit = 2
         )
         if (splitToken.size != 2) {
             return null
@@ -101,16 +101,16 @@ private constructor(
         }
         val tokenAuthData = WebTokenAuthData.parseFrom(payload)
         val authenticationId = tokenAuthData.toAuthenticationId()
-                ?: throw InvalidOrInsufficientCredentialsException()
+            ?: throw InvalidOrInsufficientCredentialsException()
 
         val accountId = tokenAuthData.toAccountId()
-                ?: throw InvalidOrInsufficientCredentialsException()
+            ?: throw InvalidOrInsufficientCredentialsException()
         return AuthenticationImpl(
-                // No webtoken should allow backend
-                role = tokenAuthData.authenticationRole.toAuthenticationRole(),
-                authenticationId = authenticationId,
-                accountId = accountId,
-                accountDAO = accountDAO
+            // No webtoken should allow backend
+            role = tokenAuthData.authenticationRole.toAuthenticationRole(),
+            authenticationId = authenticationId,
+            accountId = accountId,
+            accountDAO = accountDAO
         )
     }
 
@@ -121,7 +121,7 @@ private constructor(
         val LOGGER = logger()
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION: Authentication =
-                ThrowingAuthentication({ NoAuthorizationCredentialsException() })
+            ThrowingAuthentication { NoAuthorizationCredentialsException() }
 
         val WEBTOKEN_HEADER = AsciiString("x-webtoken")
         val APITOKEN_HEADER = AsciiString("x-apitoken")
@@ -129,10 +129,10 @@ private constructor(
 }
 
 internal class AuthenticationImpl(
-        override var authenticationId: AuthenticationId,
-        override var accountId: AccountId,
-        private val accountDAO: AccountDAO,
-        private val role: AuthenticationRole
+    override var authenticationId: AuthenticationId,
+    override var accountId: AccountId,
+    private val accountDAO: AccountDAO,
+    private val role: AuthenticationRole
 ) : Authentication {
 
     override val mailDomain: MailDomain by lazy {
@@ -182,12 +182,12 @@ internal class AuthenticationImpl(
 }
 
 fun AuthRole.toAuthenticationRole() =
-        when (this) {
-            AuthRole.FRONTEND -> AuthenticationRole.FRONTEND
-            AuthRole.BACKEND -> AuthenticationRole.BACKEND
-            AuthRole.FRONTEND_ADMIN -> AuthenticationRole.FRONTEND_ADMIN
-            AuthRole.UNRECOGNIZED -> throw InvalidOrInsufficientCredentialsException("Webtoken is invalid")
-        }
+    when (this) {
+        AuthRole.FRONTEND -> AuthenticationRole.FRONTEND
+        AuthRole.BACKEND -> AuthenticationRole.BACKEND
+        AuthRole.FRONTEND_ADMIN -> AuthenticationRole.FRONTEND_ADMIN
+        AuthRole.UNRECOGNIZED -> throw InvalidOrInsufficientCredentialsException("Webtoken is invalid")
+    }
 
 private class ThrowingAuthentication(private val t: () -> RuntimeException) : Authentication {
     override fun requireFrontend(): AccountId = throw t()

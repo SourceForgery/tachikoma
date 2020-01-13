@@ -1,4 +1,5 @@
 Return-Path: bounce-not-really-random1@example.com
+Date: XXXXX
 From: Valid From Email <from@example.com>
 Message-ID: <not-really-random1@example.com>
 Subject: Test mail subject
@@ -6,10 +7,10 @@ MIME-Version: 1.0
 Content-Type: multipart/alternative; 
 	boundary="XXXXXX"
 List-Unsubscribe-Post: One-Click
-List-Unsubscribe: <http://localhost/unsubscribe/qgYGqgYDCMIFsgYUblbKS4149I7QwD6BgOV1GWss10U>, <mailto:unsub-not-really-random1@example.com?subject=unsub>
+List-Unsubscribe: <http://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>, <mailto:unsub-not-really-random1@example.com?subject=unsub>
 X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@example.com
 X-Report-Abuse: You can also report abuse here: http://localhost//abuse/not-really-random1@example.com
-X-Tachikoma-User: 97
+X-Tachikoma-User: 1
 
 --XXXXXX
 Content-Type: text/plain; charset=utf-8
@@ -28,7 +29,7 @@ Content-Transfer-Encoding: quoted-printable
                                       .
 =2E
 .                =20
-<img src=3D"http://localhost/t/qgYGqgYDCMIFsgYUblbKS4149I7QwD6BgOV1GWss10U"=
+<img src=3D"http://localhost/t/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo"=
  height=3D"1" width=3D"1"></body></html>
 --XXXXXX
 Content-Type: application/pdf; name=NotReally.pdf

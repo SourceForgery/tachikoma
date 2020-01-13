@@ -6,48 +6,46 @@ import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
-import com.sourceforgery.tachikoma.logging.logger
 import io.ebean.EbeanServer
-import net.bytebuddy.utility.RandomString
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 class CreateUsers
 @Inject
 private constructor(
-        databaseConfig: DatabaseConfig,
-        private val accountDAO: AccountDAO,
-        private val ebeanServer: EbeanServer,
-        private val internalCreateUserService: InternalCreateUserService
+    databaseConfig: DatabaseConfig,
+    private val accountDAO: AccountDAO,
+    private val ebeanServer: EbeanServer,
+    private val internalCreateUserService: InternalCreateUserService
 ) {
-    private val randomString = RandomString(40)
     private val mailDomain = databaseConfig.mailDomain
 
     fun createUsers() {
         ebeanServer
-                .beginTransaction()
-                .use {
-                    accountDAO.getByMailDomain(mailDomain)
-                            ?: also {
-                                val account = internalCreateUserService.createAccount(mailDomain)
-                                LOGGER.error { "Creating new account and authentications for $mailDomain" }
-                                val backendAuth = internalCreateUserService.createBackendAuthentication(account)
-                                LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuth.apiToken}'" }
-                                val frontendAuth = internalCreateUserService.createFrontendAuthentication(
-                                        account = account,
-                                        role = AuthenticationRole.FRONTEND_ADMIN,
-                                        addApiToken = true
-                                )
-                                LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuth.apiToken}'" }
-                                createIncomingEmail(ebeanServer, account)
-                            }
-                    it.commit()
-                }
+            .beginTransaction()
+            .use {
+                accountDAO.getByMailDomain(mailDomain)
+                    ?: also {
+                        val account = internalCreateUserService.createAccount(mailDomain)
+                        LOGGER.error { "Creating new account and authentications for $mailDomain" }
+                        val backendAuth = internalCreateUserService.createBackendAuthentication(account)
+                        LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuth.apiToken}'" }
+                        val frontendAuth = internalCreateUserService.createFrontendAuthentication(
+                            account = account,
+                            role = AuthenticationRole.FRONTEND_ADMIN,
+                            addApiToken = true
+                        )
+                        LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuth.apiToken}'" }
+                        createIncomingEmail(ebeanServer, account)
+                    }
+                it.commit()
+            }
     }
 
     private fun createIncomingEmail(ebeanServer: EbeanServer, account: AccountDBO) {
         val incomingAddress = IncomingEmailAddressDBO(
-                localPart = "",
-                account = account
+            localPart = "",
+            account = account
         )
         ebeanServer.save(incomingAddress)
     }

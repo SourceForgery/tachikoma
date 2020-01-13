@@ -14,11 +14,12 @@ fun main(args: Array<String>) {
     val metadataAuth = Metadata()
     metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
 
+    @Suppress("DEPRECATION")
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-            .usePlaintext(true)
-            .idleTimeout(365, TimeUnit.DAYS)
-            .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-            .build()
+        .usePlaintext(true)
+        .idleTimeout(365, TimeUnit.DAYS)
+        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
+        .build()
 
     val stub = DeliveryNotificationServiceGrpc.newStub(channel)
 
@@ -27,7 +28,7 @@ fun main(args: Array<String>) {
             override fun onError(t: Throwable) {
                 t.printStackTrace()
                 System.exit(1)
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
             }
 
             override fun onCompleted() {

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
-import com.sourceforgery.tachikoma.assertGrpcOpen
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
+import com.sourceforgery.tachikoma.database.TransactionManager
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -37,30 +37,26 @@ import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
+import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
-import com.sourceforgery.tachikoma.logging.logger
-import com.sourceforgery.tachikoma.maildelivery.HtmlToPlainText
+import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
-import io.ebean.EbeanServer
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import net.moznion.uribuildertiny.URIBuilderTiny
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.HashMap
 import java.util.Properties
 import java.util.concurrent.Executors
 import javax.activation.DataHandler
@@ -71,31 +67,36 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
+import net.moznion.uribuildertiny.URIBuilderTiny
+import org.apache.logging.log4j.kotlin.logger
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 
 class MailDeliveryService
 @Inject
 private constructor(
-        private val trackingConfig: TrackingConfig,
-        private val dbObjectMapper: DBObjectMapper,
-        private val emailDAO: EmailDAO,
-        private val emailSendTransactionDAO: EmailSendTransactionDAO,
-        private val blockedEmailDAO: BlockedEmailDAO,
-        private val mqSender: MQSender,
-        private val mqSequenceFactory: MQSequenceFactory,
-        private val jobMessageFactory: JobMessageFactory,
-        private val ebeanServer: EbeanServer,
-        private val trackingDecoderImpl: TrackingDecoderImpl,
-        private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
-        private val incomingEmailDAO: IncomingEmailDAO,
-        private val authenticationDAO: AuthenticationDAO,
-        private val messageIdFactory: MessageIdFactory
+    private val trackingConfig: TrackingConfig,
+    private val dbObjectMapper: DBObjectMapper,
+    private val emailDAO: EmailDAO,
+    private val emailSendTransactionDAO: EmailSendTransactionDAO,
+    private val blockedEmailDAO: BlockedEmailDAO,
+    private val mqSender: MQSender,
+    private val mqSequenceFactory: MQSequenceFactory,
+    private val jobMessageFactory: JobMessageFactory,
+    private val transactionManager: TransactionManager,
+    private val trackingDecoderImpl: TrackingDecoderImpl,
+    private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
+    private val incomingEmailDAO: IncomingEmailDAO,
+    private val authenticationDAO: AuthenticationDAO,
+    private val messageIdFactory: MessageIdFactory
 ) {
 
     fun sendEmail(
-            request: OutgoingEmail,
-            responseObserver: StreamObserver<EmailQueueStatus>,
-            authenticationId: AuthenticationId,
-            sender: AccountId
+        request: OutgoingEmail,
+        responseObserver: StreamObserver<EmailQueueStatus>,
+        authenticationId: AuthenticationId,
+        sender: AccountId
     ) {
         val auth = authenticationDAO.getActiveById(authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
@@ -104,47 +105,47 @@ private constructor(
         }
 
         val transaction = EmailSendTransactionDBO(
-                jsonRequest = getRequestData(request),
-                fromEmail = fromEmail,
-                authentication = auth,
-                bcc = request.bccList.map { it.toEmail().address },
-                metaData = request.trackingData.metadataMap,
-                tags = request.trackingData.tagsList
+            jsonRequest = getRequestData(request),
+            fromEmail = fromEmail,
+            authentication = auth,
+            bcc = request.bccList.map { it.toEmail().address },
+            metaData = request.trackingData.metadataMap,
+            tags = request.trackingData.tagsList
         )
         val requestedSendTime =
-                if (request.hasSendAt()) {
-                    request.sendAt.toInstant()
-                } else {
-                    Instant.EPOCH
-                }
+            if (request.hasSendAt()) {
+                request.sendAt.toInstant()
+            } else {
+                Instant.EPOCH
+            }
 
-        ebeanServer.createTransaction().use {
+        transactionManager.runInTransaction {
             emailSendTransactionDAO.save(transaction)
 
             for (recipient in request.recipientsList) {
 
                 val recipientEmail = auth.recipientOverride
-                        ?.let {
-                            NamedEmail(it, "Overridden email")
-                        }
-                        ?: recipient.toNamedEmail()
+                    ?.let {
+                        NamedEmail(it, "Overridden email")
+                    }
+                    ?: recipient.toNamedEmail()
 
                 val blockedReason = blockedEmailDAO.getBlockedReason(
-                        accountDBO = auth.account,
-                        recipient = recipientEmail.address,
-                        from = fromEmail
+                    accountDBO = auth.account,
+                    recipient = recipientEmail.address,
+                    from = fromEmail
                 )
 
                 if (blockedReason != null) {
                     responseObserver.onNext(
-                            EmailQueueStatus.newBuilder()
-                                    .setRejected(Rejected.newBuilder()
-                                            .setRejectReason(blockedReason.toGrpcRejectReason())
-                                            .build()
-                                    )
-                                    .setTransactionId(transaction.id.toGrpcInternal())
-                                    .setRecipient(recipientEmail.address.toGrpcInternal())
-                                    .build()
+                        EmailQueueStatus.newBuilder()
+                            .setRejected(Rejected.newBuilder()
+                                .setRejectReason(blockedReason.toGrpcRejectReason())
+                                .build()
+                            )
+                            .setTransactionId(transaction.id.toGrpcInternal())
+                            .setRecipient(recipientEmail.address.toGrpcInternal())
+                            .build()
                     )
                     LOGGER.debug { "Email to ${recipientEmail.address} had unsubscribed emails from $fromEmail, hence bounced" }
                     // Blocked
@@ -153,28 +154,28 @@ private constructor(
 
                 val messageId = messageIdFactory.createMessageId()
                 val emailDBO = EmailDBO(
-                        recipient = recipientEmail,
-                        transaction = transaction,
-                        messageId = messageId,
-                        metaData = recipient.metadataMap
+                    recipient = recipientEmail,
+                    transaction = transaction,
+                    messageId = messageId,
+                    metaData = recipient.metadataMap
                 )
                 emailDAO.save(emailDBO)
 
                 val pair = when (request.bodyCase) {
                     OutgoingEmail.BodyCase.STATIC -> getStaticBody(
-                            request = request,
-                            emailId = emailDBO.id,
-                            messageId = messageId,
-                            fromEmail = fromEmail,
-                            sender = sender
+                        request = request,
+                        emailId = emailDBO.id,
+                        messageId = messageId,
+                        fromEmail = fromEmail,
+                        sender = sender
                     )
                     OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
-                            request = request,
-                            recipient = recipient,
-                            emailId = emailDBO.id,
-                            messageId = messageId,
-                            fromEmail = fromEmail,
-                            sender = sender
+                        request = request,
+                        recipient = recipient,
+                        emailId = emailDBO.id,
+                        messageId = messageId,
+                        fromEmail = fromEmail,
+                        sender = sender
                     )
                     else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
                 }
@@ -183,30 +184,30 @@ private constructor(
                 emailDAO.save(emailDBO)
 
                 mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                        requestedSendTime = requestedSendTime,
-                        emailId = emailDBO.id,
-                        mailDomain = auth.account.mailDomain
+                    requestedSendTime = requestedSendTime,
+                    emailId = emailDBO.id,
+                    mailDomain = auth.account.mailDomain
                 ))
 
                 responseObserver.onNext(
-                        EmailQueueStatus.newBuilder()
-                                .setEmailId(emailDBO.id.toGrpcInternal())
-                                .setQueued(Queued.getDefaultInstance())
-                                .setTransactionId(transaction.id.toGrpcInternal())
-                                .setRecipient(emailDBO.recipient.toGrpcInternal())
-                                .build()
+                    EmailQueueStatus.newBuilder()
+                        .setEmailId(emailDBO.id.toGrpcInternal())
+                        .setQueued(Queued.getDefaultInstance())
+                        .setTransactionId(transaction.id.toGrpcInternal())
+                        .setRecipient(emailDBO.recipient.toGrpcInternal())
+                        .build()
                 )
             }
         }
     }
 
     private fun getTemplateBody(
-            request: OutgoingEmail,
-            recipient: EmailRecipient,
-            emailId: EmailId,
-            messageId: MessageId,
-            fromEmail: Email,
-            sender: AccountId
+        request: OutgoingEmail,
+        recipient: EmailRecipient,
+        emailId: EmailId,
+        messageId: MessageId,
+        fromEmail: Email,
+        sender: AccountId
     ): Pair<String, String> {
         val template = request.template
         if (template.htmlTemplate.isBlank() && template.plaintextTemplate.isBlank()) {
@@ -214,11 +215,11 @@ private constructor(
         }
 
         val globalVarsStruct =
-                if (template.hasGlobalVars()) {
-                    template.globalVars
-                } else {
-                    Struct.getDefaultInstance()
-                }
+            if (template.hasGlobalVars()) {
+                template.globalVars
+            } else {
+                Struct.getDefaultInstance()
+            }
         val globalVars = unwrapStruct(globalVarsStruct)
 
         val recipientVars = unwrapStruct(recipient.templateVars)
@@ -228,70 +229,70 @@ private constructor(
 
         val subject = mergeTemplate(template.subject, globalVars, recipientVars)
         return subject to wrapAndPackBody(
-                request = request,
-                htmlBody = htmlBody.emptyToNull(),
-                plaintextBody = plaintextBody.emptyToNull(),
-                subject = subject,
-                emailId = emailId,
-                messageId = messageId,
-                fromEmail = fromEmail,
-                sender = sender
+            request = request,
+            htmlBody = htmlBody.emptyToNull(),
+            plaintextBody = plaintextBody.emptyToNull(),
+            subject = subject,
+            emailId = emailId,
+            messageId = messageId,
+            fromEmail = fromEmail,
+            sender = sender
         )
     }
 
     private fun getStaticBody(
-            request: OutgoingEmail,
-            emailId: EmailId,
-            messageId: MessageId,
-            fromEmail: Email,
-            sender: AccountId
+        request: OutgoingEmail,
+        emailId: EmailId,
+        messageId: MessageId,
+        fromEmail: Email,
+        sender: AccountId
     ): Pair<String, String> {
         val static = request.static
         val htmlBody = static.htmlBody.emptyToNull()
         val plaintextBody = static.plaintextBody.emptyToNull()
 
         return static.subject to wrapAndPackBody(
-                request = request,
-                htmlBody = htmlBody,
-                plaintextBody = plaintextBody,
-                subject = static.subject,
-                emailId = emailId,
-                messageId = messageId,
-                fromEmail = fromEmail,
-                sender = sender
+            request = request,
+            htmlBody = htmlBody,
+            plaintextBody = plaintextBody,
+            subject = static.subject,
+            emailId = emailId,
+            messageId = messageId,
+            fromEmail = fromEmail,
+            sender = sender
         )
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
-        return dbObjectMapper.readValue<HashMap<String, Any>>(
-                JsonFormat.printer().print(struct),
-                object : TypeReference<HashMap<String, Any>>() {}
+        return dbObjectMapper.objectMapper.readValue<HashMap<String, Any>>(
+            JsonFormat.printer().print(struct),
+            object : TypeReference<HashMap<String, Any>>() {}
         )
     }
 
     // Store the request for later debugging
     private fun getRequestData(request: OutgoingEmail) =
-            dbObjectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
+        dbObjectMapper.objectMapper.readValue(PRINTER.print(request)!!, ObjectNode::class.java)!!
 
     private fun mergeTemplate(
-            template: String?,
-            vararg scopes: HashMap<String, Any>
+        template: String,
+        vararg scopes: HashMap<String, Any>
     ) = StringWriter().use {
         DefaultMustacheFactory()
-                .compile(StringReader(template), "html")
-                .execute(it, scopes)
+            .compile(StringReader(template), "html")
+            .execute(it, scopes)
         it.toString()
     }
 
     private fun wrapAndPackBody(
-            request: OutgoingEmail,
-            htmlBody: String?,
-            plaintextBody: String?,
-            subject: String,
-            emailId: EmailId,
-            messageId: MessageId,
-            fromEmail: Email,
-            sender: AccountId
+        request: OutgoingEmail,
+        htmlBody: String?,
+        plaintextBody: String?,
+        subject: String,
+        emailId: EmailId,
+        messageId: MessageId,
+        fromEmail: Email,
+        sender: AccountId
     ): String {
         if (htmlBody == null && plaintextBody == null) {
             throw IllegalArgumentException("Needs at least one of plaintext or html")
@@ -320,17 +321,17 @@ private constructor(
         val multipart = MimeMultipart("alternative")
 
         val htmlDoc = Jsoup.parse(htmlBody ?: "<html><body>$plaintextBody</body></html>")
-                .apply {
-                    outputSettings()
-                            .indentAmount(0)
-                            .prettyPrint(false)
-                }
+            .apply {
+                outputSettings()
+                    .indentAmount(0)
+                    .prettyPrint(false)
+            }
 
         replaceLinks(htmlDoc, emailId)
         injectTrackingPixel(htmlDoc, emailId)
 
         val plaintextPart = MimeBodyPart()
-        val plainText = HtmlToPlainText.getPlainText(htmlDoc)
+        val plainText = getPlainText(htmlDoc)
 
         plaintextPart.setContent(plaintextBody ?: plainText, "text/plain; charset=utf-8")
         plaintextPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
@@ -357,10 +358,10 @@ private constructor(
         val result = ByteArrayOutputStream()
         message.writeTo(result)
         return Regex("^.$", RegexOption.MULTILINE)
-                .replace(
-                        input = result.toString(StandardCharsets.UTF_8.name()),
-                        transform = { "=2E" }
-                )
+            .replace(
+                input = result.toString(StandardCharsets.UTF_8.name()),
+                transform = { "=2E" }
+            )
     }
 
     private fun addListAndAbuseHeaders(message: MimeMessage, emailId: EmailId, messageId: MessageId, fromEmail: Email, accountId: AccountId) {
@@ -385,66 +386,64 @@ private constructor(
 
     private fun createUnsubscribeOneClickPostLink(emailId: EmailId): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
-                .setEmailId(emailId.toGrpcInternal())
-                .build()
+            .setEmailId(emailId.toGrpcInternal())
+            .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return URIBuilderTiny(trackingConfig.baseUrl)
-                .appendPaths("unsubscribe", unsubscribeUrl)
-                .build()
+            .appendPaths("unsubscribe", unsubscribeUrl)
+            .build()
     }
 
     private fun createUnsubscribeClickLink(emailId: EmailId, redirectUri: String = ""): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
-                .setEmailId(emailId.toGrpcInternal())
-                .setRedirectUrl(redirectUri)
-                .build()
+            .setEmailId(emailId.toGrpcInternal())
+            .setRedirectUrl(redirectUri)
+            .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return URIBuilderTiny(trackingConfig.baseUrl)
-                .appendPaths("unsubscribeClick", unsubscribeUrl)
-                .build()
+            .appendPaths("unsubscribeClick", unsubscribeUrl)
+            .build()
     }
 
     private fun createTrackingLink(emailId: EmailId, originalUri: String): URI {
         val trackingData = UrlTrackingData.newBuilder()
-                .setEmailId(emailId.toGrpcInternal())
-                .setRedirectUrl(originalUri)
-                .build()
+            .setEmailId(emailId.toGrpcInternal())
+            .setRedirectUrl(originalUri)
+            .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
         return URIBuilderTiny(trackingConfig.baseUrl)
-                .appendPaths("c", trackingUrl)
-                .build()
+            .appendPaths("c", trackingUrl)
+            .build()
     }
 
     private fun replaceLinks(doc: Document, emailId: EmailId) {
         val links = doc.select("a[href]")
-        links.forEach({
-            val originalUri = it.attr("href") ?: ""
+        links.forEach {
+            val originalUri = it.attr("href")
+                ?: ""
             val newUri = UNSUB_REGEX.matchEntire(originalUri)
-                    ?.let {
-                        // Convert into unsubscribe link
-                        createUnsubscribeClickLink(emailId, it.groupValues[1])
-                    }
-                    ?: let {
-                        // Track link click
-                        createTrackingLink(emailId, originalUri)
-                    }
+                ?.let {
+                    // Convert into unsubscribe link
+                    createUnsubscribeClickLink(emailId, it.groupValues[1])
+                }
+                ?: createTrackingLink(emailId, originalUri)
 
             it.attr("href", newUri.toString())
-        })
+        }
     }
 
     private fun injectTrackingPixel(doc: Document, emailId: EmailId) {
         val trackingData = UrlTrackingData.newBuilder()
-                .setEmailId(emailId.toGrpcInternal())
-                .build()
+            .setEmailId(emailId.toGrpcInternal())
+            .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
         val trackingUri = URIBuilderTiny(trackingConfig.baseUrl)
-                .appendPaths("t", trackingUrl)
-                .build()
+            .appendPaths("t", trackingUrl)
+            .build()
 
         val trackingPixel = Element("img")
         trackingPixel.attr("src", trackingUri.toString())
@@ -453,23 +452,27 @@ private constructor(
         doc.body().appendChild(trackingPixel)
     }
 
-    fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>, authenticationId: AuthenticationId) {
-        val future = mqSequenceFactory.listenForIncomingEmails(authenticationId, {
-            val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
-            val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId)
-            if (email != null) {
-                val incomingEmail = IncomingEmail.newBuilder()
+    fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>, authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId) {
+        val future = mqSequenceFactory.listenForIncomingEmails(
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId,
+            callback = {
+                val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
+                val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId)
+                if (email != null) {
+                    val incomingEmail = IncomingEmail.newBuilder()
                         .setIncomingEmailId(incomingEmailId.toGrpc())
                         .setSubject(email.subject)
                         .setTo(NamedEmail(email.receiverEmail, email.receiverName).toGrpc())
                         .setFrom(NamedEmail(email.fromEmail, email.fromName).toGrpc())
                         .build()
-                assertGrpcOpen(responseObserver)
-                responseObserver.onNext(incomingEmail)
-            } else {
-                LOGGER.warn { "Could not find email with id $incomingEmailId" }
+                    responseObserver.onNext(incomingEmail)
+                } else {
+                    LOGGER.warn { "Could not find email with id $incomingEmailId" }
+                }
             }
-        })
+        )
         future.addListener(Runnable {
             responseObserver.onCompleted()
         }, responseCloser)

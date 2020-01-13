@@ -15,11 +15,12 @@ fun main(args: Array<String>) {
     val metadataAuth = Metadata()
     metadataAuth.put(APITOKEN_HEADER, System.getenv("BACKEND_API_TOKEN")!!)
 
+    @Suppress("DEPRECATION")
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-            .usePlaintext(true)
-            .idleTimeout(365, TimeUnit.DAYS)
-            .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-            .build()
+        .usePlaintext(true)
+        .idleTimeout(365, TimeUnit.DAYS)
+        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
+        .build()
 
     val stub = MTAEmailQueueGrpc.newStub(channel)
 
@@ -29,7 +30,7 @@ fun main(args: Array<String>) {
             override fun onError(t: Throwable) {
                 t.printStackTrace()
                 System.exit(1)
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
             }
 
             override fun onCompleted() {
@@ -40,10 +41,10 @@ fun main(args: Array<String>) {
                 System.err.println("Got email: " + JsonFormat.printer().print(value))
                 for (i in 1..4) {
                     responseHolder.get().onNext(
-                            MTAQueuedNotification.newBuilder()
-                                    .setQueueId("12345A" + i)
-                                    .setSuccess(true)
-                                    .build()
+                        MTAQueuedNotification.newBuilder()
+                            .setQueueId("12345A" + i)
+                            .setSuccess(true)
+                            .build()
                     )
                 }
             }

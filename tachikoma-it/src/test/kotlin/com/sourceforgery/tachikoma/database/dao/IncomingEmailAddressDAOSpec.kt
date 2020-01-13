@@ -11,6 +11,12 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.hk2.get
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.ebean.EbeanServer
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -18,11 +24,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertFails
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 @RunWith(JUnitPlatform::class)
 internal class IncomingEmailAddressDAOSpec : Spek({
@@ -30,7 +31,7 @@ internal class IncomingEmailAddressDAOSpec : Spek({
     lateinit var incomingEmailAddressDAO: IncomingEmailAddressDAO
     lateinit var ebeanServer: EbeanServer
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder())
         incomingEmailAddressDAO = serviceLocator.get()
         ebeanServer = serviceLocator.get()
     }
@@ -44,11 +45,11 @@ internal class IncomingEmailAddressDAOSpec : Spek({
         ebeanServer.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
-                login = domain,
-                encryptedPassword = UUID.randomUUID().toString(),
-                apiToken = UUID.randomUUID().toString(),
-                role = AuthenticationRole.BACKEND,
-                account = accountDBO
+            login = domain,
+            encryptedPassword = UUID.randomUUID().toString(),
+            apiToken = UUID.randomUUID().toString(),
+            role = AuthenticationRole.BACKEND,
+            account = accountDBO
         )
         ebeanServer.save(authenticationDBO)
 
@@ -56,9 +57,11 @@ internal class IncomingEmailAddressDAOSpec : Spek({
     }
 
     fun saveIncomingEmailAddress(authenticationDBO: AuthenticationDBO, localPart: String) {
+        ebeanServer.save(authenticationDBO)
+        val account = ebeanServer.find(AccountDBO::class.java, authenticationDBO.account.id)!!
         val incomingEmailAddressDBO = IncomingEmailAddressDBO(
-                account = authenticationDBO.account,
-                localPart = localPart
+            account = account,
+            localPart = localPart
         )
         incomingEmailAddressDAO.save(incomingEmailAddressDBO)
     }

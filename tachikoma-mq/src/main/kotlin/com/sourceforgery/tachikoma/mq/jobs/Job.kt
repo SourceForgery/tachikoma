@@ -5,8 +5,7 @@ import javax.inject.Inject
 
 class JobFactory
 @Inject
-private constructor(
-) {
+private constructor() {
     fun getJobClass(jobMessage: JobMessage): Class<out Job> {
         val jobDataCase = jobMessage.jobDataCase
         return when (jobDataCase) {

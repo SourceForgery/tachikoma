@@ -3,8 +3,7 @@ package com.sourceforgery.tachikoma.database.server
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
-import org.avaje.datasource.DataSourceConfig
-import java.lang.IllegalArgumentException
+import io.ebean.datasource.DataSourceConfig
 import java.sql.Connection
 import java.util.HashMap
 import javax.inject.Inject
@@ -12,7 +11,7 @@ import javax.inject.Inject
 class PostgresqlDataSourceProvider
 @Inject
 private constructor(
-        private val databaseConfig: DatabaseConfig
+    private val databaseConfig: DatabaseConfig
 ) : DataSourceProvider {
     override fun provide(serverConfig: ServerConfig) {
         if (databaseConfig.sqlUrl.scheme != "postgres") {
@@ -34,8 +33,7 @@ private constructor(
         dataSourceConfig.password = credentials[1]
 
         val customProperties = HashMap<String, String>()
-        customProperties.put("ssl", "true")
-        customProperties.put("sslfactory", "org.postgresql.ssl.NonValidatingFactory")
+        customProperties.put("ssl", "require")
         dataSourceConfig.customProperties = customProperties
         dataSourceConfig.driver = "org.postgresql.Driver"
 

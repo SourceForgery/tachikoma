@@ -1,4 +1,4 @@
-rootProject.name='com.sourceforgery.tachikoma'
+rootProject.name = 'com.sourceforgery.tachikoma'
 
 include 'tachikoma-protobuf-annotations'
 

@@ -13,31 +13,31 @@ import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 
 fun com.sourceforgery.tachikoma.common.Email.toGrpcInternal() =
-        EmailAddress.newBuilder().setEmail(address).build()
+    EmailAddress.newBuilder().setEmail(address).build()
 
 fun EmailAddress.toEmail() =
-        com.sourceforgery.tachikoma.common.Email(email)
+    com.sourceforgery.tachikoma.common.Email(email)
 
 fun grpcEmailInternal(emailAddress: String) =
-        EmailAddress.newBuilder().setEmail(emailAddress).build()
+    EmailAddress.newBuilder().setEmail(emailAddress).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpcInternal() =
-        NamedEmailAddress.newBuilder()
-                .setEmail(address.address)
-                .setName(name)
-                .build()
+    NamedEmailAddress.newBuilder()
+        .setEmail(address.address)
+        .setName(name)
+        .build()
 
 fun NamedEmailAddress.toNamedEmail() =
-        com.sourceforgery.tachikoma.common.NamedEmail(com.sourceforgery.tachikoma.common.Email(email), name)
+    com.sourceforgery.tachikoma.common.NamedEmail(com.sourceforgery.tachikoma.common.Email(email), name)
 
 fun EmailId.toGrpcInternal() =
-        com.sourceforgery.tachikoma.grpc.frontend.EmailId.newBuilder().setId(emailId).build()
+    com.sourceforgery.tachikoma.grpc.frontend.EmailId.newBuilder().setId(emailId).build()
 
 fun com.sourceforgery.tachikoma.grpc.frontend.EmailId.toEmailId() =
-        EmailId(id)
+    EmailId(id)
 
 fun com.sourceforgery.tachikoma.identifiers.EmailTransactionId.toGrpcInternal() =
-        EmailTransactionId.newBuilder().setId(emailTransactionId).build()
+    EmailTransactionId.newBuilder().setId(emailTransactionId).build()
 
 fun WebTokenAuthData.toAccountId(): AccountId? {
     return if (accountId == 0L) {
@@ -56,23 +56,23 @@ fun WebTokenAuthData.toAuthenticationId(): AuthenticationId? {
 }
 
 fun AuthenticationId.toUserId() =
-        UserId.newBuilder().setId(authenticationId).build()
+    UserId.newBuilder().setId(authenticationId).build()
 
 fun UserId.toAuthenticationId() =
-        AuthenticationId(id)
+    AuthenticationId(id)
 
 fun EmailRecipient.toNamedEmail() =
-        com.sourceforgery.tachikoma.common.NamedEmail(
-                address = namedEmail.email,
-                name = namedEmail.name
-        )
+    com.sourceforgery.tachikoma.common.NamedEmail(
+        address = namedEmail.email,
+        name = namedEmail.name
+    )
 
 fun String?.emptyToNull() =
-        if (this == null || this.isEmpty()) {
-            null
-        } else {
-            this
-        }
+    if (this == null || this.isEmpty()) {
+        null
+    } else {
+        this
+    }
 
 fun BlockedReason.toGrpc(): com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason {
     return when (this) {
@@ -91,21 +91,21 @@ fun BlockedReason.toGrpcRejectReason(): Rejected.RejectReason {
 }
 
 fun com.sourceforgery.tachikoma.identifiers.IncomingEmailId.toGrpc() =
-        IncomingEmailId.newBuilder().setId(incomingEmailId).build()
+    IncomingEmailId.newBuilder().setId(incomingEmailId).build()
 
 fun com.sourceforgery.tachikoma.common.NamedEmail.toGrpc() =
-        NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()
+    NamedEmailAddress.newBuilder().setEmail(address.address).setName(name).build()
 
 fun AuthenticationRole.toRole() =
-        when (this) {
-            AuthenticationRole.BACKEND -> AuthRole.BACKEND
-            AuthenticationRole.FRONTEND -> AuthRole.FRONTEND
-            AuthenticationRole.FRONTEND_ADMIN -> AuthRole.FRONTEND_ADMIN
-        }
+    when (this) {
+        AuthenticationRole.BACKEND -> AuthRole.BACKEND
+        AuthenticationRole.FRONTEND -> AuthRole.FRONTEND
+        AuthenticationRole.FRONTEND_ADMIN -> AuthRole.FRONTEND_ADMIN
+    }
 
 fun AuthenticationRole.toFrontendRole() =
-        when (this) {
-            AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
-            AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
-            else -> throw IllegalArgumentException("$this is not implemented as frontend role")
-        }
+    when (this) {
+        AuthenticationRole.FRONTEND -> FrontendUserRole.FRONTEND
+        AuthenticationRole.FRONTEND_ADMIN -> FrontendUserRole.FRONTEND_ADMIN
+        else -> throw IllegalArgumentException("$this is not implemented as frontend role")
+    }
