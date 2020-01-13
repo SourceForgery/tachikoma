@@ -38,6 +38,9 @@ deploy:
   script: travis_wait ./gradlew build --info
   on:
     branch: master
+- provider: script
+  script: travis_wait ./gradlew build --info
+  on:
     tags: true
 
 after_failure:
