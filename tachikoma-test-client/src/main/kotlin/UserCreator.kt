@@ -40,7 +40,7 @@ fun createChannel(tachikomaUrl: URI): ManagedChannel {
             .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
             .apply {
                 if (plaintext) {
-                    usePlaintext(true)
+                    usePlaintext()
                 } else {
                     useTransportSecurity()
                     sslContext(
