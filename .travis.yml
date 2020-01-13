@@ -41,7 +41,7 @@ deploy:
   skip_cleanup: true
   script: ./gradlew build --info
   on:
-   condition: tag is present OR branch = master
+   condition: (tag IS present OR branch = master)
 
 after_failure:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then artifacts upload $(find */build/reports); fi
