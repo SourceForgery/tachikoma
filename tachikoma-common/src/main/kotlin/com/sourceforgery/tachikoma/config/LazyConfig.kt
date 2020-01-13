@@ -14,11 +14,12 @@ private fun <T> convert(clazz: Class<T>, stringValue: String): T {
         @Suppress("UNCHECKED_CAST")
         if (clazz == UUID::class.java) {
             UUID.fromString(stringValue) as T
+        } else if (clazz == ByteArray::class.java) {
+            stringValue.toByteArray() as T
+        } else if (clazz == List::class.java) {
         } else if (clazz.isPrimitive) {
             val boxed = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(clazz, 1), 0)::class.java
             valueOf(boxed, stringValue) as T
-        } else if (clazz == ByteArray::class.java) {
-            stringValue.toByteArray() as T
         } else {
             valueOf(clazz, stringValue)
         }
