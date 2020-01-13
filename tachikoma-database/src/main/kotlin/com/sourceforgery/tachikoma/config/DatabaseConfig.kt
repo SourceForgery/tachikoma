@@ -7,5 +7,5 @@ interface DatabaseConfig {
     val databaseEncryptionKey: String
     val sqlUrl: URI
     val timeDatabaseQueries: Boolean
-    val mailDomain: MailDomain
+    val mailDomains: List<MailDomain>
 }

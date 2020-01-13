@@ -16,5 +16,5 @@ internal class Configuration : DatabaseConfig, TrackingConfig, MqConfig, WebServ
     override val baseUrl: URI by readConfig(URI("http://localhost:8070/"))
     override val sslCertChainFile by readConfig("")
     override val sslCertKeyFile by readConfig("")
-    override val mailDomain: MailDomain by readConfig(MailDomain("example.com"))
+    override val mailDomains by readConfig(listOf<MailDomain>())
 }
