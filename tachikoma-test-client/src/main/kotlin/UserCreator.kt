@@ -35,7 +35,6 @@ fun createChannel(tachikomaUrl: URI): ManagedChannel {
     val metadataAuth = Metadata()
     metadataAuth.put(APITOKEN_HEADER, tachikomaUrlWithPort.userInfo!!)
 
-
     return NettyChannelBuilder.forAddress(tachikomaUrlWithPort.host, tachikomaUrlWithPort.port)
             .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
             .apply {
@@ -50,7 +49,6 @@ fun createChannel(tachikomaUrl: URI): ManagedChannel {
             }
             .build()
 }
-
 
 fun main(args: Array<String>) {
     val tachikomaUrl = URI.create(System.getenv("TACHIKOMA_URL"))
