@@ -34,14 +34,13 @@ before_deploy:
 - export DOCKER_PUSH=true
 
 deploy:
+  skip_cleanup: false
 - provider: script
   script: travis_wait ./gradlew build --info
-  skip_cleanup: false
   on:
     branch: master
 - provider: script
   script: travis_wait ./gradlew build --info
-  skip_cleanup: false
   on:
     tags: true
 
