@@ -16,7 +16,6 @@ private fun <T> convert(clazz: Class<T>, stringValue: String): T {
             UUID.fromString(stringValue) as T
         } else if (clazz == ByteArray::class.java) {
             stringValue.toByteArray() as T
-        } else if (clazz == List::class.java) {
         } else if (clazz.isPrimitive) {
             val boxed = java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(clazz, 1), 0)::class.java
             valueOf(boxed, stringValue) as T
@@ -25,12 +24,6 @@ private fun <T> convert(clazz: Class<T>, stringValue: String): T {
         }
     } catch (e: Exception) {
         throw RuntimeException("Error running ${clazz.name}.valueOf($stringValue)", e)
-    }
-}
-
-private fun <T> readConfig(configKey: String, default: T, clazz: Class<T>): T {
-    return ConfigData.getProperty(configKey, default) {
-        convert(clazz, it)
     }
 }
 
@@ -46,8 +39,8 @@ private fun <T> valueOf(clazz: Class<T>, stringValue: String): T {
 
 private const val REALLY_BAD_KEY = "really_really_poor_dev_encryption_key"
 
-inline fun <reified R, reified T> readConfig(default: T): ReadOnlyProperty<R, T> =
-        ConfigReader(default, T::class.java)
+inline fun <reified R, reified T> readConfig(propertyName: String, default: T): ReadOnlyProperty<R, T> =
+        ConfigReader(propertyName, default, T::class.java)
 
 inline fun <reified T> getEnvironment(
     environmentKey: String,
@@ -80,11 +73,38 @@ class EnvGetter<T>(
     }
 }
 
-fun <R> readEncryptionConfig() = EncryptionConfig<R, String>(REALLY_BAD_KEY, String::class.java)
+fun <R> readEncryptionConfig(propertyName: String) = EncryptionConfig<R, String>(propertyName, REALLY_BAD_KEY, String::class.java)
 
-inline fun <reified R, reified T> readEncryptionConfig(defaultValue: T) = EncryptionConfig<R, T>(defaultValue, T::class.java)
+inline fun <reified R, reified T> readEncryptionConfig(propertyName: String, defaultValue: T) = EncryptionConfig<R, T>(propertyName, defaultValue, T::class.java)
 
-class EncryptionConfig<R, T>(defaultValue: T, clazz: Class<T>) : ConfigReader<R, T>(defaultValue = defaultValue, clazz = clazz) {
+inline fun <reified R, reified T> readListConfig(propertyName: String, defaultValue: List<T>) = ReadListConfig<R, T>(propertyName, defaultValue, T::class.java)
+
+@Suppress("UNCHECKED_CAST")
+class ReadListConfig<R, T2>(
+    propertyName: String,
+    defaultValue: List<T2>,
+    private val listClazz: Class<T2>
+) : ConfigReader<R, List<T2>>(
+        propertyName = propertyName,
+        defaultValue = defaultValue,
+        clazz = List::class.java as Class<List<T2>>
+) {
+    override fun <T> readConfig(configKey: String): T {
+        return ConfigData.getProperty(configKey, defaultValue) {
+            (it.split(',').map { convert(listClazz, it) })
+        } as T
+    }
+}
+
+class EncryptionConfig<R, T>(
+    propertyName: String,
+    defaultValue: T,
+    clazz: Class<T>
+) : ConfigReader<R, T>(
+        propertyName = propertyName,
+        defaultValue = defaultValue,
+        clazz = clazz
+) {
     override fun readValue(property: KProperty<*>) =
             super.readValue(property)
                     .also {
@@ -96,6 +116,7 @@ class EncryptionConfig<R, T>(defaultValue: T, clazz: Class<T>) : ConfigReader<R,
 }
 
 open class ConfigReader<R, T>(
+    internal val propertyName: String,
     internal val defaultValue: T,
     internal val clazz: Class<T>
 ) : ReadOnlyProperty<R, T> {
@@ -109,11 +130,17 @@ open class ConfigReader<R, T>(
 
     protected open fun readValue(property: KProperty<*>): T {
         if (!set) {
-            data = readConfig(property.name, defaultValue, clazz)
+            data = readConfig(property.name)
             set = true
         }
-        @Suppress("UNCHECKED_CAST")
-        return data as T
+        return data!!
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    protected open fun <T> readConfig(configKey: String): T {
+        return ConfigData.getProperty(configKey, defaultValue) {
+            convert(clazz, it)
+        } as T
     }
 }
 
@@ -123,8 +150,8 @@ private object ConfigData {
 
     init {
         val configFile = (
-                System.getProperty("TACHIKOMA_CONFIG")
-                        ?: System.getenv("TACHIKOMA_CONFIG")
+                System.getProperty("tachikomaConfig")
+                        ?: System.getenv("tachikomaConfig")
                 )
                 ?.let {
                     File(it)
