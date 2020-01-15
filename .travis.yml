@@ -21,10 +21,10 @@ before_install:
 
 install:
 - ./gradlew -x dockerTask assemble
-- travis_wait 20 ./gradlew assemble
+- ./gradlew -x dockerTask check
 
 script:
-- ./gradlew -x dockerTask check
+- travis_wait 20 ./gradlew assemble
 - |
     if [ "${TRAVIS_BRANCH:-}" = "master" ] || [ "${TRAVIS_TAG:-}" != "" ]; then
       docker version
