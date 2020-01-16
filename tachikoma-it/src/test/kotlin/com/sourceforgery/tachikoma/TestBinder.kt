@@ -124,7 +124,7 @@ enum class TestAttribute {
 }
 
 private class DatabaseTestConfig : DatabaseConfig {
-    override val mailDomain: MailDomain = MailDomain("example.net")
+    override val mailDomains: List<MailDomain> = listOf(MailDomain("example.net"))
     override val databaseEncryptionKey = "asdadsadsadsadasdadasdasdadasasd"
     override val sqlUrl = URI.create("h2://sa@mem/tests-${UUID.randomUUID()}")
     override val timeDatabaseQueries = false

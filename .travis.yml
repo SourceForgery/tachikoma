@@ -15,20 +15,19 @@ notifications:
     skip_join: true
 
 before_install:
-- set | grep travis_wait
 - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.8.1/install | bash
 - export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
 
 install:
-- ./gradlew -x dockerTask assemble
-- travis_wait 20 ./gradlew assemble
+- echo noop
 
 script:
 - ./gradlew -x dockerTask check
+- travis_wait 40 ./gradlew assemble
 - |
     if [ "${TRAVIS_BRANCH:-}" = "master" ] || [ "${TRAVIS_TAG:-}" != "" ]; then
       docker version
-      docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       export DOCKER_PUSH=true
       ./gradlew build
     fi

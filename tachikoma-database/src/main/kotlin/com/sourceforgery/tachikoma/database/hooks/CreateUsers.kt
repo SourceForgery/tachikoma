@@ -18,26 +18,28 @@ private constructor(
     private val ebeanServer: EbeanServer,
     private val internalCreateUserService: InternalCreateUserService
 ) {
-    private val mailDomain = databaseConfig.mailDomain
+    private val mailDomains = databaseConfig.mailDomains
 
     fun createUsers() {
         ebeanServer
             .beginTransaction()
             .use {
-                accountDAO.getByMailDomain(mailDomain)
-                    ?: also {
-                        val account = internalCreateUserService.createAccount(mailDomain)
-                        LOGGER.error { "Creating new account and authentications for $mailDomain" }
-                        val backendAuth = internalCreateUserService.createBackendAuthentication(account)
-                        LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuth.apiToken}'" }
-                        val frontendAuth = internalCreateUserService.createFrontendAuthentication(
-                            account = account,
-                            role = AuthenticationRole.FRONTEND_ADMIN,
-                            addApiToken = true
-                        )
-                        LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuth.apiToken}'" }
-                        createIncomingEmail(ebeanServer, account)
-                    }
+                for (mailDomain in mailDomains) {
+                    accountDAO.getByMailDomain(mailDomain)
+                        ?: also {
+                            val account = internalCreateUserService.createAccount(mailDomain)
+                            LOGGER.error { "Creating new account and authentications for $mailDomain" }
+                            val backendAuth = internalCreateUserService.createBackendAuthentication(account)
+                            LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuth.apiToken}'" }
+                            val frontendAuth = internalCreateUserService.createFrontendAuthentication(
+                                account = account,
+                                role = AuthenticationRole.FRONTEND_ADMIN,
+                                addApiToken = true
+                            )
+                            LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuth.apiToken}'" }
+                            createIncomingEmail(ebeanServer, account)
+                        }
+                }
                 it.commit()
             }
     }

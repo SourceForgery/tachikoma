@@ -79,7 +79,7 @@ class MTAEmailQueueServiceSpec : Spek({
             val accountDAO: AccountDAO = serviceLocator.get()
 
             // Setup auth
-            val account = accountDAO.getByMailDomain(databaseConfig.mailDomain)!!
+            val account = accountDAO.getByMailDomain(databaseConfig.mailDomains.first())!!
             authenticationDBO =
                 account.authentications
                     .first { it.role == AuthenticationRole.BACKEND }
