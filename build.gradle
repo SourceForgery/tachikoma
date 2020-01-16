@@ -38,6 +38,7 @@ task replaceVersion(type: Copy) {
     includeEmptyDirs = false
 }
 
+
 assemble.dependsOn replaceVersion
 
 subprojects {
