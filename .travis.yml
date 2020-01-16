@@ -28,7 +28,7 @@ script:
 - |
     if [ "${TRAVIS_BRANCH:-}" = "master" ] || [ "${TRAVIS_TAG:-}" != "" ]; then
       docker version
-      docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       export DOCKER_PUSH=true
       ./gradlew build
     fi
