@@ -18,8 +18,10 @@ before_install:
 - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.8.1/install | bash
 - export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
 
+install:
+- echo noop
+
 script:
-- ./gradlew -x dockerTask assemble
 - ./gradlew -x dockerTask check
 - travis_wait 40 ./gradlew assemble
 - |
