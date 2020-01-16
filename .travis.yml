@@ -19,17 +19,17 @@ before_install:
 - export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
 
 install:
-- echo noop
+- env | grep ^TRAVIS_
 
 script:
-- ./gradlew -x dockerTask check
-- travis_wait 40 ./gradlew assemble
 - |
     if ( [ "${TRAVIS_BRANCH:-}" = "master" ] && grep -q ^version=.*-SNAPSHOT gradle.properties )  || [ "${TRAVIS_TAG:-}" != "" ]; then
       docker version
       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       export DOCKER_PUSH=true
-      ./gradlew build
+      ./gradlew build publish
+    else
+      ./gradlew check
     fi
 
 after_failure:
