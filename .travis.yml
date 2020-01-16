@@ -25,7 +25,7 @@ script:
 - ./gradlew -x dockerTask check
 - travis_wait 40 ./gradlew assemble
 - |
-    if [ "${TRAVIS_BRANCH:-}" = "master" ] || [ "${TRAVIS_TAG:-}" != "" ]; then
+    if ( [ "${TRAVIS_BRANCH:-}" = "master" ] && grep -q ^version=.*-SNAPSHOT gradle.properties )  || [ "${TRAVIS_TAG:-}" != "" ]; then
       docker version
       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       export DOCKER_PUSH=true
