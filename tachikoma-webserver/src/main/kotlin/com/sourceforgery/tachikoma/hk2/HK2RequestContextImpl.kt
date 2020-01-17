@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.hk2
 
-import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.Sets
 import com.linecorp.armeria.server.ServiceRequestContext
@@ -64,13 +63,7 @@ private constructor(
     }
 
     private fun current(): Instance {
-        checkState(isActive, "Request scope has been already shut down.")
-        val armeriaCtx = ServiceRequestContext.currentOrNull()
-        val scopeInstance = if (armeriaCtx == null) {
-            threadLocalScopeInstance.get()
-        } else {
-            armeriaCtx.attr(HK2_CONTEXT_KEY).get()
-        }
+        val scopeInstance = retrieveCurrent()
 
         checkState(scopeInstance != null, "Not inside a request scope.")
 
@@ -82,26 +75,29 @@ private constructor(
         val armeriaCtx = ServiceRequestContext.currentOrNull()
         return if (armeriaCtx == null) {
             threadLocalScopeInstance.get()
+                    ?.also {
+                        LOGGER.trace { "Getting scope $it from local thread ${Thread.currentThread()}" }
+                    }
         } else {
             armeriaCtx.attr(HK2_CONTEXT_KEY).get()
+                    ?.also {
+                        LOGGER.trace { "Getting scope $it from armeria context $armeriaCtx in thread ${Thread.currentThread()}" }
+                    }
         }
     }
 
     private fun setCurrent(instance: Instance) {
         checkState(isActive, "Request scope has been already shut down.")
-        val armeriaCtx = ServiceRequestContext.currentOrNull()
-        if (armeriaCtx == null) {
-            threadLocalScopeInstance.set(instance)
-        } else {
-            armeriaCtx.attr(HK2_CONTEXT_KEY).set(instance)
-        }
+        resumeCurrent(instance)
     }
 
     private fun resumeCurrent(instance: Instance?) {
         val armeriaCtx = ServiceRequestContext.currentOrNull()
         if (armeriaCtx == null) {
+            LOGGER.trace { "Setting scope $instance to thread local ${Thread.currentThread()}" }
             threadLocalScopeInstance.set(instance)
         } else {
+            LOGGER.trace { "Setting scope $instance to armeria context $armeriaCtx in thread ${Thread.currentThread()}" }
             armeriaCtx.attr(HK2_CONTEXT_KEY).set(instance)
         }
     }
@@ -155,11 +151,13 @@ private constructor(
         }
 
         internal fun <T : Any> put(descriptor: ActiveDescriptor<T>, value: T): T? {
-            checkState(!store.containsKey(descriptor),
+            checkState(
+                !store.containsKey(descriptor),
                 "An instance for the descriptor %s was already seeded in this scope. Old instance: %s New instance: %s",
                 descriptor,
                 store[descriptor],
-                value)
+                value
+            )
 
             return store.put(descriptor, value) as T?
         }
@@ -179,20 +177,17 @@ private constructor(
                     remove<Any>(descriptor as ActiveDescriptor<Any>)
                 }
             } finally {
-                LOGGER.debug { "Released scope instance " + this }
+                LOGGER.debug { "Released scope instance $this" }
             }
         }
 
         override fun toString(): String {
-            return MoreObjects
-                .toStringHelper(this)
-                .add("id", id)
-                .add("store size", store.size).toString()
+            return "id = $id, store size = ${store.size}"
         }
     }
 
     companion object {
         val LOGGER = logger()
-        private val HK2_CONTEXT_KEY = AttributeKey.valueOf<HK2RequestContextImpl.Instance>("HK2_CONTEXT")
+        private val HK2_CONTEXT_KEY = AttributeKey.valueOf<Instance>("HK2_CONTEXT")
     }
 }
