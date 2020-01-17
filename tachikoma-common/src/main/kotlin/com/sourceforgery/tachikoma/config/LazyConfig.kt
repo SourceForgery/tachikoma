@@ -151,15 +151,13 @@ private object ConfigData {
     init {
         val configFile = (
                 System.getProperty("tachikomaConfig")
-                        ?: System.getenv("tachikomaConfig")
+                        ?: System.getenv("TACHIKOMA_CONFIG")
                 )
                 ?.let {
                     File(it)
                 }
         if (configFile == null) {
-            if (System.getenv("POD_TYPE") != null) {
-                LOGGER.error { "No config file defined via System property microWebserverConfig. Could work, but probably isn't what you want" }
-            }
+            LOGGER.error { "No config file defined via System property tachikomaConfig nor environment variable TACHIKOMA_CONFIG. Could work, but probably isn't what you want" }
         } else {
             try {
                 configFile.reader()
