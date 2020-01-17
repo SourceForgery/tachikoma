@@ -110,7 +110,7 @@ class EncryptionConfig<R, T>(
                     .also {
                         if (it == defaultValue) {
                             LogManager.getLogger("change_dev_key")
-                                    .error("You're using a DEV key for ${property.name}. Do NOT use in production!!")
+                                    .error("You're using a DEV key for ${property.name}/$propertyName. Do NOT use in production!!")
                         }
                     }
 }
@@ -130,7 +130,7 @@ open class ConfigReader<R, T>(
 
     protected open fun readValue(property: KProperty<*>): T {
         if (!set) {
-            data = readConfig(property.name)
+            data = readConfig(propertyName)
             set = true
         }
         return data!!
