@@ -64,10 +64,9 @@ private constructor(
 
     private fun current(): Instance {
         val scopeInstance = retrieveCurrent()
+                ?: error("Not inside a request scope.")
 
-        checkState(scopeInstance != null, "Not inside a request scope.")
-
-        return scopeInstance!!
+        return scopeInstance
     }
 
     private fun retrieveCurrent(): Instance? {
@@ -113,18 +112,16 @@ private constructor(
     override fun getContextInstance(): ReqCtxInstance = current()
 
     override fun <T> runInScope(ctx: ReqCtxInstance, task: (ServiceLocator) -> T): T {
-        val oldInstance = retrieveCurrent()
         try {
             setCurrent(ctx as Instance)
             LOGGER.trace { "Entering request scope" }
             return task(serviceLocator)
         } finally {
             LOGGER.trace { "Leaving request scope" }
-            resumeCurrent(oldInstance)
         }
     }
 
-    override fun <T> runInScope(task: (ServiceLocator) -> T): T {
+    override fun <T> runInNewScope(task: (ServiceLocator) -> T): T {
         val oldInstance = retrieveCurrent()
         val instance = createInstance()
         try {

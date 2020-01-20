@@ -95,7 +95,7 @@ private constructor(
         serverConfig.lazyLoadBatchSize = 100
         dataSourceProvider.provide(serverConfig)
 
-        return hK2RequestContext.runInScope {
+        return hK2RequestContext.runInNewScope {
             val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
             ebeanHooks
                 .handleIterator()

@@ -109,7 +109,7 @@ class WebServerStarter(
         serviceLocator
             .getServiceHandle(CreateUsers::class.java)
             .also { serviceHandle ->
-                hk2RequestScope.runInScope {
+                hk2RequestScope.runInNewScope {
                     serviceHandle.service.createUsers()
                     serviceHandle.destroy()
                 }

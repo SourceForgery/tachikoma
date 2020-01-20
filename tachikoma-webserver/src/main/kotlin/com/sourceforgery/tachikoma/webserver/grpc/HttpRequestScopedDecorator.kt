@@ -21,17 +21,14 @@ private constructor(
     private val serviceLocator: ServiceLocator
 ) : DecoratingHttpServiceFunction {
     override fun serve(delegate: HttpService, ctx: ServiceRequestContext, req: HttpRequest): HttpResponse {
-        val hk2Ctx = hK2RequestContext.createInstance()
-        ctx.log().addListener({ hK2RequestContext.release(hk2Ctx) }, RequestLogAvailability.COMPLETE)
-        return hK2RequestContext.runInScope(hk2Ctx
-        ) {
-            serviceLocator
+        val hk2Ctx = hK2RequestContext.getContextInstance()
+        ctx.log().addListener({ hK2RequestContext.release(hk2Ctx as HK2RequestContextImpl.Instance) }, RequestLogAvailability.COMPLETE)
+        serviceLocator
                 .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
                 .value = req
-            serviceLocator
+        serviceLocator
                 .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
                 .value = ctx
-            delegate.serve(ctx, req)
-        }
+        return delegate.serve(ctx, req)
     }
 }
