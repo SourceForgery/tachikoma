@@ -63,16 +63,9 @@ private constructor(
     }
 
     private fun current(): Instance {
-        val scopeInstance = retrieveCurrent()
-                ?: error("Not inside a request scope.")
-
-        return scopeInstance
-    }
-
-    private fun retrieveCurrent(): Instance? {
         checkState(isActive, "Request scope has been already shut down.")
         val armeriaCtx = ServiceRequestContext.currentOrNull()
-        return if (armeriaCtx == null) {
+        val instance = if (armeriaCtx == null) {
             threadLocalScopeInstance.get()
                     ?.also {
                         LOGGER.trace { "Getting scope $it from local thread ${Thread.currentThread()}" }
@@ -83,26 +76,15 @@ private constructor(
                         LOGGER.trace { "Getting scope $it from armeria context $armeriaCtx in thread ${Thread.currentThread()}" }
                     }
         }
+        return instance
+                ?: error("Not inside a request scope.")
     }
 
-    private fun setCurrent(instance: Instance) {
-        checkState(isActive, "Request scope has been already shut down.")
-        resumeCurrent(instance)
-    }
-
-    private fun resumeCurrent(instance: Instance?) {
-        val armeriaCtx = ServiceRequestContext.currentOrNull()
-        if (armeriaCtx == null) {
-            LOGGER.trace { "Setting scope $instance to thread local ${Thread.currentThread()}" }
-            threadLocalScopeInstance.set(instance)
-        } else {
-            LOGGER.trace { "Setting scope $instance to armeria context $armeriaCtx in thread ${Thread.currentThread()}" }
-            armeriaCtx.attr(HK2_CONTEXT_KEY).set(instance)
-        }
-    }
-
-    internal fun createInstance(): Instance {
-        return Instance()
+    override fun createInArmeriaContext(serviceRequestContext: ServiceRequestContext): ReqCtxInstance {
+        val instance = Instance()
+        LOGGER.trace { "Setting scope $instance to armeria context $serviceRequestContext in thread ${Thread.currentThread()}" }
+        serviceRequestContext.attr(HK2_CONTEXT_KEY).set(instance)
+        return instance
     }
 
     internal fun release(instance: Instance) {
@@ -112,26 +94,33 @@ private constructor(
     override fun getContextInstance(): ReqCtxInstance = current()
 
     override fun <T> runInScope(ctx: ReqCtxInstance, task: (ServiceLocator) -> T): T {
+        ctx as? Instance
+                ?: error("Must be instance from $javaClass")
         try {
-            setCurrent(ctx as Instance)
+            checkState(isActive, "Request scope has been already shut down.")
+            threadLocalScopeInstance.set(ctx)
             LOGGER.trace { "Entering request scope" }
             return task(serviceLocator)
         } finally {
             LOGGER.trace { "Leaving request scope" }
+            threadLocalScopeInstance.remove()
         }
     }
 
     override fun <T> runInNewScope(task: (ServiceLocator) -> T): T {
-        val oldInstance = retrieveCurrent()
-        val instance = createInstance()
+        if (threadLocalScopeInstance.get() != null) {
+            error("Already in request scope ${threadLocalScopeInstance.get()}")
+        }
+        val instance = Instance()
         try {
-            setCurrent(instance)
+            checkState(isActive, "Request scope has been already shut down.")
+            threadLocalScopeInstance.set(instance)
             LOGGER.trace { "Entering request scope" }
             return task(serviceLocator)
         } finally {
             LOGGER.trace { "Leaving request scope" }
             release(instance)
-            resumeCurrent(oldInstance)
+            threadLocalScopeInstance.remove()
         }
     }
 

@@ -95,16 +95,14 @@ private constructor(
         serverConfig.lazyLoadBatchSize = 100
         dataSourceProvider.provide(serverConfig)
 
-        return hK2RequestContext.runInNewScope {
-            val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
-            ebeanHooks
-                .handleIterator()
-                .forEach {
-                    it.service.postStart(ebeanServer)
-                    it.destroy()
-                }
-            ebeanServer
-        }
+        val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
+        ebeanHooks
+            .handleIterator()
+            .forEach {
+                it.service.postStart(ebeanServer)
+                it.destroy()
+            }
+        return ebeanServer
     }
 
     override fun dispose(instance: EbeanServer) {
