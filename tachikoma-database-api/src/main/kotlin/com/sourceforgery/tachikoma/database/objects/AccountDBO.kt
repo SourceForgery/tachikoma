@@ -18,13 +18,13 @@ class AccountDBO(
     @Column(unique = true)
     val mailDomain: MailDomain
 ) : GenericDBO() {
-    @OneToMany(mappedBy = "account", orphanRemoval = true)
+    @OneToMany(orphanRemoval = true)
     val authentications: List<AuthenticationDBO> = ArrayList()
-    @OneToMany(mappedBy = "account", orphanRemoval = true)
+    @OneToMany(orphanRemoval = true)
     val incomingEmailAddresses: List<IncomingEmailAddressDBO> = ArrayList()
-    @OneToMany(mappedBy = "account", orphanRemoval = true)
+    @OneToMany(orphanRemoval = true)
     val incomingEmails: List<IncomingEmailDBO> = ArrayList()
-    @OneToMany(mappedBy = "account", orphanRemoval = true)
+    @OneToMany(orphanRemoval = true)
     val blockedEmails: List<BlockedEmailDBO> = ArrayList()
 }
 
