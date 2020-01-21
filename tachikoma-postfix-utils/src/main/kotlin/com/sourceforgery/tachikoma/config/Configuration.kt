@@ -3,6 +3,6 @@ package com.sourceforgery.tachikoma.config
 import java.net.URI
 
 internal class Configuration {
-    val tachikomaUrl = readConfig("TACHIKOMA_URL", "", URI::class.java)
-    val insecure = readConfig("INSECURE", false)
+    val tachikomaUrl by readConfig("TACHIKOMA_URL", URI(""))
+    val insecure by readConfig("INSECURE", false)
 }

@@ -47,7 +47,6 @@ class WebServerStarter(
 
         val healthService = CorsServiceBuilder
             .forAnyOrigin()
-            .allowNullOrigin()
             .allowCredentials()
             .allowRequestMethods(HttpMethod.GET)
             .build(HealthCheckService.of())
@@ -110,7 +109,7 @@ class WebServerStarter(
         serviceLocator
             .getServiceHandle(CreateUsers::class.java)
             .also { serviceHandle ->
-                hk2RequestScope.runInScope {
+                hk2RequestScope.runInNewScope {
                     serviceHandle.service.createUsers()
                     serviceHandle.destroy()
                 }
@@ -129,6 +128,7 @@ fun main(vararg args: String) {
     System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())
 
     val serviceLocator = ServiceLocatorUtilities.bind(
+        "Webserver",
         CommonBinder(),
         StartupBinder(),
         RestBinder(),

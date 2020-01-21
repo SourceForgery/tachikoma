@@ -1,9 +1,10 @@
 package com.sourceforgery.tachikoma.common
 
+import io.ebean.annotation.DbEnumType
 import io.ebean.annotation.DbEnumValue
 
 enum class AuthenticationRole(
-    @get:DbEnumValue
+    @get:DbEnumValue(storage = DbEnumType.INTEGER)
     val stableValue: Int
 ) {
     BACKEND(0),

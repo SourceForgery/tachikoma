@@ -21,6 +21,7 @@ import com.sourceforgery.tachikoma.hk2.located
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -37,7 +38,7 @@ class MailDeliveryServiceSpec : Spek({
     val daoHelper: () -> DAOHelper = located { serviceLocator }
 
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder(), MinimalBinder(MailDeliveryService::class.java))!!
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder(), MinimalBinder(MailDeliveryService::class.java))!!
     }
     afterEachTest {
         serviceLocator.shutdown()

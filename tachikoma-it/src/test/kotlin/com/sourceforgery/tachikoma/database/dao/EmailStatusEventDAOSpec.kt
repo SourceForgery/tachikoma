@@ -10,6 +10,7 @@ import com.sourceforgery.tachikoma.hk2.located
 import java.time.Clock
 import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -26,6 +27,7 @@ internal class EmailStatusEventDAOSpec : Spek({
     val clock: () -> Clock = located { serviceLocator }
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(
+            RandomStringUtils.randomAlphanumeric(10),
             TestBinder(),
             MinimalBinder(EmailStatusEventDAO::class.java)
         )

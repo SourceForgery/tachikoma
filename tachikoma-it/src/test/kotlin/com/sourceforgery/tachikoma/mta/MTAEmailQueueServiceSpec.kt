@@ -29,6 +29,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -44,7 +45,7 @@ class MTAEmailQueueServiceSpec : Spek({
     val authentication: () -> AuthenticationMock = located { serviceLocator }
     val ebeanServer: () -> EbeanServer = located { serviceLocator }
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder())!!
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder())!!
     }
     afterEachTest { serviceLocator.shutdown() }
 
@@ -78,7 +79,7 @@ class MTAEmailQueueServiceSpec : Spek({
             val accountDAO: AccountDAO = serviceLocator.get()
 
             // Setup auth
-            val account = accountDAO.getByMailDomain(databaseConfig.mailDomain)!!
+            val account = accountDAO.getByMailDomain(databaseConfig.mailDomains.first())!!
             authenticationDBO =
                 account.authentications
                     .first { it.role == AuthenticationRole.BACKEND }

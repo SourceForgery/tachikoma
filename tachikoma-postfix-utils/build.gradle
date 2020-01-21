@@ -16,7 +16,6 @@ dependencies {
     implementation "io.grpc:grpc-stub:$grpc_version"
 
     implementation project(":tachikoma-common")
-    implementation project(":tachikoma-common")
     implementation project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm")
 }
 

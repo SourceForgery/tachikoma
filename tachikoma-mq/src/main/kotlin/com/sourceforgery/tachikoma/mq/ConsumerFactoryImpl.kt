@@ -35,7 +35,7 @@ private constructor(
     private var thread = 0
     private val connection: Connection
     private val sendChannel: Channel
-    private val closeExecutor = Executors.newSingleThreadExecutor()!!
+    private val closeExecutor = Executors.newSingleThreadExecutor()
 
     init {
         val connectionFactory = ConnectionFactory()

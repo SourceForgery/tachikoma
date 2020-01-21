@@ -15,7 +15,7 @@ if (!travisTag.empty) {
         throw new GroovyRuntimeException("GITHUB_API_TOKEN not set")
     }
     println("Trying to build release")
-    check.finalizedBy githubRelease
+    publish.finalizedBy githubRelease
 }
 
 github {
@@ -56,6 +56,6 @@ bintray {
 
 subprojects {
     if (!travisTag.empty) {
-        check.finalizedBy bintrayUpload
+        publish.finalizedBy bintrayUpload
     }
 }

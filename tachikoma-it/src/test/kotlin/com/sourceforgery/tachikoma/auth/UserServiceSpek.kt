@@ -25,6 +25,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
@@ -41,7 +42,7 @@ class UserServiceSpek : Spek({
     val ebeanServer: () -> EbeanServer = located { serviceLocator }
 
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(TestBinder(), DatabaseBinder(), MinimalBinder(UserService::class.java))!!
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder(), MinimalBinder(UserService::class.java))!!
     }
 
     afterEachTest {

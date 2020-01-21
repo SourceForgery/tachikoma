@@ -7,6 +7,7 @@ dependencies {
     implementation "com.google.protobuf:protobuf-java:$protoc_version"
     implementation "io.grpc:grpc-stub:$grpc_version"
     implementation "org.glassfish.hk2.external:javax.inject:$hk2_version"
+    implementation "com.linecorp.armeria:armeria:$armeria_version"
 
     api project(':tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm')
     api project(':tachikoma-internal-proto-jvm')

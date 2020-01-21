@@ -16,7 +16,7 @@ private constructor(
     private var future: ListenableFuture<Void>? = null
 
     fun work() {
-        hK2RequestContext.runInScope { serviceLocator ->
+        hK2RequestContext.runInNewScope { serviceLocator ->
             future = mqSequenceFactory.listenForJobs {
                 val jobClass = jobFactory.getJobClass(it)
                 val job = serviceLocator.create(jobClass)

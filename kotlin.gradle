@@ -50,13 +50,13 @@ dokka {
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava
-    classifier = 'source'
+    archiveClassifier.set('source')
 }
 assemble.dependsOn sourceJar
 
 task dokkaJar(type: Jar, dependsOn: dokka) {
     from dokka.outputDirectory
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
 }
 assemble.dependsOn dokkaJar
 

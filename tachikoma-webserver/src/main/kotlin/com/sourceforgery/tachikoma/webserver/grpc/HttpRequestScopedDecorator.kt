@@ -11,8 +11,6 @@ import com.sourceforgery.tachikoma.hk2.HK2RequestContextImpl
 import com.sourceforgery.tachikoma.hk2.SettableReference
 import com.sourceforgery.tachikoma.webserver.hk2.HTTP_REQUEST_TYPE
 import com.sourceforgery.tachikoma.webserver.hk2.REQUEST_CONTEXT_TYPE
-import io.netty.util.AttributeKey
-import java.util.function.Consumer
 import javax.inject.Inject
 import org.glassfish.hk2.api.ServiceLocator
 
@@ -23,31 +21,14 @@ private constructor(
     private val serviceLocator: ServiceLocator
 ) : DecoratingHttpServiceFunction {
     override fun serve(delegate: HttpService, ctx: ServiceRequestContext, req: HttpRequest): HttpResponse {
-        val oldHk2Ctx = hK2RequestContext.retrieveCurrent()
-        ctx.attr(OLD_HK2_CONTEXT_KEY).set(oldHk2Ctx)
-        val hk2Ctx = hK2RequestContext.createInstance()
-        ctx.attr(HK2_CONTEXT_KEY).set(hk2Ctx)
-        ctx.onEnter(Consumer {
-            hK2RequestContext.setCurrent(hk2Ctx)
-        })
-        ctx.onExit(Consumer {
-            hK2RequestContext.resumeCurrent(oldHk2Ctx)
-        })
+        val hk2Ctx = hK2RequestContext.createInArmeriaContext(ctx) as HK2RequestContextImpl.Instance
         ctx.log().addListener({ hK2RequestContext.release(hk2Ctx) }, RequestLogAvailability.COMPLETE)
-        return hK2RequestContext.runInScope(hk2Ctx
-        ) {
-            serviceLocator
+        serviceLocator
                 .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
                 .value = req
-            serviceLocator
+        serviceLocator
                 .getService<SettableReference<RequestContext>>(REQUEST_CONTEXT_TYPE)
                 .value = ctx
-            delegate.serve(ctx, req)
-        }
-    }
-
-    companion object {
-        private val HK2_CONTEXT_KEY = AttributeKey.valueOf<HK2RequestContextImpl.Instance>("HK2_CONTEXT")
-        private val OLD_HK2_CONTEXT_KEY = AttributeKey.valueOf<HK2RequestContextImpl.Instance>("OLD_HK2_CONTEXT")
+        return delegate.serve(ctx, req)
     }
 }
