@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.mq
 import com.google.common.util.concurrent.ListenableFuture
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.mq.jobs.JobFactory
+import java.util.concurrent.Executors
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 
@@ -16,7 +17,9 @@ private constructor(
     private var future: ListenableFuture<Void>? = null
 
     fun work() {
-        hK2RequestContext.runInNewScope { serviceLocator ->
+        val ctx = hK2RequestContext.createInstance()
+        // Destroy ctx when listener dies
+        hK2RequestContext.runInScope(ctx) { serviceLocator ->
             future = mqSequenceFactory.listenForJobs {
                 val jobClass = jobFactory.getJobClass(it)
                 val job = serviceLocator.create(jobClass)
@@ -25,6 +28,13 @@ private constructor(
                 } finally {
                     serviceLocator.preDestroy(job)
                 }
+            }.also {
+                it.addListener(
+                    Runnable {
+                        hK2RequestContext.release(ctx)
+                    },
+                    scopeFinalizer
+                )
             }
         }
     }
@@ -32,5 +42,11 @@ private constructor(
     @PreDestroy
     private fun preDestroy() {
         future?.cancel(false)
+    }
+
+    companion object {
+        private val scopeFinalizer = Executors.newSingleThreadExecutor {
+            Thread(it, "WorkerScopeFinalizer")
+        }
     }
 }

@@ -80,15 +80,17 @@ private constructor(
                 ?: error("Not inside a request scope.")
     }
 
+    override fun createInstance(): ReqCtxInstance = Instance()
+
     override fun createInArmeriaContext(serviceRequestContext: ServiceRequestContext): ReqCtxInstance {
-        val instance = Instance()
+        val instance = createInstance() as Instance
         LOGGER.trace { "Setting scope $instance to armeria context $serviceRequestContext in thread ${Thread.currentThread()}" }
         serviceRequestContext.attr(HK2_CONTEXT_KEY).set(instance)
         return instance
     }
 
-    internal fun release(instance: Instance) {
-        instance.release()
+    override fun release(ctx: ReqCtxInstance) {
+        (ctx as Instance).release()
     }
 
     override fun getContextInstance(): ReqCtxInstance = current()
@@ -111,7 +113,7 @@ private constructor(
         if (threadLocalScopeInstance.get() != null) {
             error("Already in request scope ${threadLocalScopeInstance.get()}")
         }
-        val instance = Instance()
+        val instance = createInstance() as Instance
         try {
             checkState(isActive, "Request scope has been already shut down.")
             threadLocalScopeInstance.set(instance)

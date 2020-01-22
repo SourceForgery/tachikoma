@@ -22,4 +22,6 @@ private constructor(
     }
 
     override fun createInArmeriaContext(serviceRequestContext: ServiceRequestContext) = TODO("not implemented")
+    override fun createInstance() = TODO("not implemented")
+    override fun release(ctx: ReqCtxInstance) = TODO("not implemented")
 }
