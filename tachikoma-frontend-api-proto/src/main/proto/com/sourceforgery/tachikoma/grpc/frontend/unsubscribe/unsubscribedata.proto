@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
+option java_outer_classname = "UnsubscribeDataClass";
 
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 
@@ -8,9 +9,9 @@ package com.sourceforgery.tachikoma.grpc.frontend.unsubscribe;
 
 message UnsubscribeData {
     // The email that wants to unsubscribe
-    EmailId emailId = 101;
+    EmailId email_id = 101;
     // The url where the redirect will go
-    string redirectUrl = 102;
+    string redirect_url = 102;
 }
 
 message SignedUnsubscribeData {

@@ -2,34 +2,34 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 
-import "google/protobuf/timestamp.proto";
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+import "google/protobuf/timestamp.proto";
 
 package com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent;
 
 service EmailStatusEventService {
 
     // Returns all email status events the last 7 days
-    rpc getEmailStatusEvents (GetEmailStatusEventsFilter) returns (stream EmailNotification);
+    rpc GetEmailStatusEvents (GetEmailStatusEventsFilter) returns (stream EmailNotification);
 }
 
 // Filter for retrieving historic e-mail status events
 message GetEmailStatusEventsFilter {
 
     // Only retrieve events that are newer than this timestamp
-    google.protobuf.Timestamp newerThan = 101;
+    google.protobuf.Timestamp newer_than = 101;
 
     // Filter events on recipient e-mail
-    EmailAddress recipientEmail = 102;
+    EmailAddress recipient_email = 102;
 
     // Filter events on from e-mail
-    EmailAddress fromEmail = 103;
+    EmailAddress from_email = 103;
 
     // Filter events on zero or more event types
     repeated Event events = 104;
 
     // Whether to include tracking data in the response or not . Like all bools, defaults to false.
-    bool includeTrackingData = 105;
+    bool include_tracking_data = 105;
 }
 
 // Event types available to filter on

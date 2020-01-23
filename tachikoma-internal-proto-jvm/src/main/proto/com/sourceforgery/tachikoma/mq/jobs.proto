@@ -8,26 +8,26 @@ package com.sourceforgery.tachikoma.mq;
 
 message JobMessage {
     // When this job was queued
-    google.protobuf.Timestamp creationTimestamp = 101;
+    google.protobuf.Timestamp creation_timestamp = 101;
     // Executed within 1 minute from this. Jobs without this, will be executed asap
-    google.protobuf.Timestamp requestedExecutionTime = 102;
+    google.protobuf.Timestamp requested_execution_time = 102;
     oneof jobData {
-        SendEmailJob sendEmailJob = 201;
+        SendEmailJob send_email_job = 201;
     }
 }
 
 // Job sending the message
 message SendEmailJob {
     // The email id to send
-    sint64 emailId = 101;
+    sint64 email_id = 101;
     // The maildomain to send from
-    string mailDomain = 102;
+    string mail_domain = 102;
 }
 
 message OutgoingEmailMessage {
     // When this job was queued
-    google.protobuf.Timestamp creationTimestamp = 101;
+    google.protobuf.Timestamp creation_timestamp = 101;
 
     // The email id to send
-    sint64 emailId = 102;
+    sint64 email_id = 102;
 }

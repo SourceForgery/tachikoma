@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
 
     @Suppress("DEPRECATION")
     val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-        .usePlaintext(true)
+        .usePlaintext()
         .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
         .build()
 

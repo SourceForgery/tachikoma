@@ -4,26 +4,26 @@ option java_multiple_files = true;
 
 package com.sourceforgery.tachikoma.grpc.frontend.maildelivery;
 
+import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
-import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 
 service MailDeliveryService {
     // Send emails. This will always succeed unless spam marked.
     // Failures can only be detected via DeliveryNotificationService.notificationStream()
-    rpc sendEmail (OutgoingEmail) returns (stream EmailQueueStatus);
+    rpc SendEmail (OutgoingEmail) returns (stream EmailQueueStatus);
 
-    rpc getIncomingEmails(google.protobuf.Empty) returns (stream IncomingEmail);
+    rpc GetIncomingEmails(google.protobuf.Empty) returns (stream IncomingEmail);
 }
 
 // A recipient
 message EmailRecipient {
     // Recipient email with name
-    NamedEmailAddress namedEmail = 101;
+    NamedEmailAddress named_email = 101;
 
     // Template variables (if using a template)
-    google.protobuf.Struct templateVars = 102;
+    google.protobuf.Struct template_vars = 102;
 
     // Optional
     // Metadata variables. These are sent back with callbacks.
@@ -36,7 +36,7 @@ message TrackingData {
     // Special domain used to track links. Used instead of the normal host.
     // See future documentation on how to set up with e.g. nginx/apache httpd/lighttpd which
     // is necessary for HSTS domains.
-    string trackingDomain = 101;
+    string tracking_domain = 101;
 
     // Not sent, but used in search and in callbacks
     repeated string tags = 102;
@@ -48,22 +48,22 @@ message TrackingData {
 // When sending with template
 message TemplateBody {
     // Which templating enging to use
-    TemplateEngine templatingEngine = 101;
+    TemplateEngine templating_engine = 101;
 
     // Subject template
     string subject = 102;
 
-    // Optional (required if plaintextTemplate is not set)
+    // Optional (required if plaintextTemplate is not set but both are ok)
     // This template will generate the html body
-    string htmlTemplate = 201;
+    string html_template = 201;
 
-    // Optional (required if htmlTemplate is not set)
+    // Optional (required if htmlTemplate is not set but both are ok)
     // This template will generate the plaintext body
-    string plaintextTemplate = 202;
+    string plaintext_template = 202;
 
     // Optional
     // Variables available in the template. Will only be used as defaults for the recipient ones
-    google.protobuf.Struct globalVars = 301;
+    google.protobuf.Struct global_vars = 301;
 }
 
 enum TemplateEngine {
@@ -79,11 +79,11 @@ enum TemplateEngine {
 message StaticBody {
     // Optional (required if plaintextBody is not set)
     // The html body to use
-    string htmlBody = 101;
+    string html_body = 101;
 
     // The plain text body to use
     // Optional (required if htmlBody is not set)
-    string plaintextBody = 102;
+    string plaintext_body = 102;
 
     // The subject of the email
     string subject = 103;
@@ -103,7 +103,7 @@ message OutgoingEmail {
 
     // Optional
     // Reply-to email, must have same domain as from email
-    EmailAddress replyTo = 104;
+    EmailAddress reply_to = 104;
 
     // Choose one of
     oneof body {
@@ -119,15 +119,15 @@ message OutgoingEmail {
 
     // Optional
     // Structure for setting up tracking
-    TrackingData trackingData = 302;
+    TrackingData tracking_data = 302;
 
     // Optional
     // For delayed sending
-    google.protobuf.Timestamp sendAt = 304;
+    google.protobuf.Timestamp send_at = 304;
 
     // Optional
     // Used for DKIM signing emails
-    string signingDomain = 305;
+    string signing_domain = 305;
 
     // Optional
     // Attached to email
@@ -141,10 +141,10 @@ message EmailQueueStatus {
     EmailAddress recipient = 101;
 
     // Only exists if DeliveryStatus is NOT rejected
-    EmailId emailId = 103;
+    EmailId email_id = 103;
 
     // The transaction the
-    EmailTransactionId transactionId = 104;
+    EmailTransactionId transaction_id = 104;
 
     // Possible outcomes of the attempt to queue
     oneof deliveryStatus {
@@ -163,11 +163,11 @@ message EmailQueueStatus {
 // Message was rejected outright with this reason
 message Rejected {
     // Free text description on why the email wasn't queued
-    string rejectionReason = 101;
+    string rejection_reason = 101;
 
     // What this combination of recipient email and
     // the enumerated reason of why the email was rejected (if it was)
-    RejectReason rejectReason = 201;
+    RejectReason reject_reason = 201;
     enum RejectReason {
         // Some reason not known. Hints may be available in rejectionReason
         UNKNOWN = 0;
@@ -187,13 +187,13 @@ message Queued {
 // Message was delayed. This is when the message will be sent
 message Scheduled {
     // When the message is scheduled to be sent
-    google.protobuf.Timestamp scheduledTo = 101;
+    google.protobuf.Timestamp scheduled_to = 101;
 }
 
 
 // IncomingEmail is an email that is sent to the mail server
 message IncomingEmail {
-    IncomingEmailId incomingEmailId = 101;
+    IncomingEmailId incoming_email_id = 101;
 
     NamedEmailAddress from = 201;
     NamedEmailAddress to = 202;

@@ -1,0 +1,49 @@
+package com.sourceforgery.tachikoma.buildsrc
+
+import org.gradle.api.JavaVersion
+import org.gradle.api.Project
+import org.gradle.api.tasks.bundling.Jar
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.getValue
+import org.gradle.kotlin.dsl.getting
+import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.kotlin.dsl.registering
+import sourceSets
+
+fun Project.javaSetup() {
+    apply(plugin = "java-library")
+
+    val assemble by tasks.getting
+
+    val javadocJar by tasks.registering(Jar::class) {
+        val javadoc by tasks.getting(Javadoc::class)
+        dependsOn(javadoc)
+        from(javadoc.destinationDir)
+        @Suppress("UnstableApiUsage")
+        archiveClassifier.set("javadoc")
+    }
+
+    if (JavaVersion.current().isJava8Compatible()) {
+        tasks.withType(Javadoc::class.java) {
+            val opts = options as StandardJavadocDocletOptions
+            opts.addStringOption("Xdoclint:none", "-quiet")
+        }
+    }
+
+    val sourceJar by tasks.registering(Jar::class) {
+        from(sourceSets["main"].allJava)
+        @Suppress("UnstableApiUsage")
+        archiveClassifier.set("source")
+    }
+
+    tasks.withType(JavaCompile::class.java).configureEach {
+        options.compilerArgs = listOf("-Xlint:unchecked", "-Xlint:deprecation")
+    }
+
+    assemble.dependsOn(sourceJar)
+    assemble.dependsOn(javadocJar)
+}

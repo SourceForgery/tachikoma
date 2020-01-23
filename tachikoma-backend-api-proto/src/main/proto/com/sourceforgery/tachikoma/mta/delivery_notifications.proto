@@ -10,20 +10,20 @@ import "google/protobuf/empty.proto";
 
 service MTADeliveryNotifications {
     // Used to tell webserver the latest status of a queued message
-    rpc setDeliveryStatus (DeliveryNotification) returns (google.protobuf.Empty);
+    rpc SetDeliveryStatus (DeliveryNotification) returns (google.protobuf.Empty);
 }
 
 // Use to signal that there's news about a message status
 message DeliveryNotification {
     // The queue_id (same as in MTAQueuedNotification.queueId)
-    string queueId = 101;
+    string queue_id = 101;
     // The origin recipient email address
-    string originalRecipient = 102;
+    string original_recipient = 102;
     // Postfix result code e.g. "2.0.0" for ok (remove the dots to get a code that is
     // SIMILAR to smtp reply codes)
     string status = 105;
 
     // Optional and freetext
-    string diagnoseText = 201;
+    string diagnose_text = 201;
     string reason = 202;
 }

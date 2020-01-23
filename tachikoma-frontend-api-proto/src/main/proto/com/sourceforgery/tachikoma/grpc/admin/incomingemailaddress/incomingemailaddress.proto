@@ -3,22 +3,22 @@ syntax = "proto3";
 option java_multiple_files = true;
 
 import "google/protobuf/empty.proto";
-import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+option java_outer_classname = "IncomingEmailAddressClass";
 
 package com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress;
 
 service IncomingEmailAddressService {
 
     // Returns all incoming e-mail addresses
-    rpc getIncomingEmailAddresses (google.protobuf.Empty) returns (stream IncomingEmailAddress);
+    rpc GetIncomingEmailAddresses (google.protobuf.Empty) returns (stream IncomingEmailAddress);
 
     // Add new incoming e-mail address
-    rpc addIncomingEmailAddress (IncomingEmailAddress) returns (google.protobuf.Empty);
+    rpc AddIncomingEmailAddress (IncomingEmailAddress) returns (google.protobuf.Empty);
 
     // Delete an incoming e-mail address
-    rpc deleteIncomingEmailAddress (IncomingEmailAddress) returns (google.protobuf.Empty);
+    rpc DeleteIncomingEmailAddress (IncomingEmailAddress) returns (google.protobuf.Empty);
 }
 
 message IncomingEmailAddress {
-    string localPart = 101;
+    string local_part = 101;
 }

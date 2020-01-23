@@ -8,9 +8,9 @@ package com.sourceforgery.tachikoma.grpc.frontend.auth;
 // The first part is the SHA1 HMAC
 // The second is this message
 message WebTokenAuthData {
-    sint64 userId = 101;
-    sint64 accountId = 102;
-    AuthRole authenticationRole = 103;
+    sint64 user_id = 101;
+    sint64 account_id = 102;
+    AuthRole authentication_role = 103;
 }
 
 // The different roles for a login
@@ -25,7 +25,7 @@ enum AuthRole {
 // Login service to handle webtokens
 service LoginService {
     // login. Will return either valid LoginResponse OR an error code
-    rpc login(LoginRequest) returns (LoginResponse);
+    rpc Login(LoginRequest) returns (LoginResponse);
 }
 
 // Login request
@@ -39,5 +39,5 @@ message LoginRequest {
 // A valid response with the header to add to requests
 message LoginResponse {
     // send this as a "x-webtoken" header on all subsequent requests
-    string authHeader = 101;
+    string auth_header = 101;
 }

@@ -10,7 +10,7 @@ import javax.annotation.meta.TypeQualifierDefault;
 
 @Documented
 @Nonnull
-@TypeQualifierDefault({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+@TypeQualifierDefault({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface NonnullByDefault {
 }

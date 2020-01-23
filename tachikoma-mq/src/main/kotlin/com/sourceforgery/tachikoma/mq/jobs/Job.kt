@@ -10,7 +10,7 @@ private constructor() {
         val jobDataCase = jobMessage.jobDataCase
         return when (jobDataCase) {
             JobMessage.JobDataCase.JOBDATA_NOT_SET -> throw IllegalArgumentException("Jobdata not set")
-            JobMessage.JobDataCase.SENDEMAILJOB -> SendEmailJob::class.java
+            JobMessage.JobDataCase.SEND_EMAIL_JOB -> SendEmailJob::class.java
         }
     }
 }

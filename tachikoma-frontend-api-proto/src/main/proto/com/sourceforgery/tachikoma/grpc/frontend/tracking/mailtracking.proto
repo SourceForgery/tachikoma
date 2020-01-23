@@ -5,18 +5,17 @@ option java_multiple_files = true;
 package com.sourceforgery.tachikoma.grpc.frontend.tracking;
 
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
-import "google/protobuf/empty.proto";
 
 service DeliveryNotificationService {
-    rpc notificationStream(NotificationStreamParameters) returns (stream EmailNotification);
+    rpc NotificationStream(NotificationStreamParameters) returns (stream EmailNotification);
 }
 
 // Parameters for the notification stream
 message NotificationStreamParameters {
     // Whether to include tracking data in the response or not.
     // Like all bools, defaults to false.
-    bool includeTrackingData = 101;
+    bool include_tracking_data = 101;
     // Whether to include subject in the response opr not.
     // Like all bools, defaults to false.
-    bool includeSubject = 102;
+    bool include_subject = 102;
 }
