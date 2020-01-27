@@ -38,9 +38,9 @@ fun Project.kotlinSetup() {
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
-            languageVersion = "1.2"
-            apiVersion = "1.2"
-            jvmTarget = "1.8"
+            languageVersion = "1.3"
+            apiVersion = "1.3"
+            jvmTarget = "11"
             freeCompilerArgs = listOf("-Xjsr305=strict", "-Xjvm-default=enable")
         }
     }
