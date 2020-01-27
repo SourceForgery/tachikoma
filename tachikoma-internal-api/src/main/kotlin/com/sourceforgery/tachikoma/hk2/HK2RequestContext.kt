@@ -8,6 +8,8 @@ interface HK2RequestContext {
     fun getContextInstance(): ReqCtxInstance
     fun <T> runInScope(ctx: ReqCtxInstance, task: (ServiceLocator) -> T): T
     fun createInArmeriaContext(serviceRequestContext: ServiceRequestContext): ReqCtxInstance
+    fun createInstance(): ReqCtxInstance
+    fun release(ctx: ReqCtxInstance)
 }
 
 interface ReqCtxInstance
