@@ -11,10 +11,10 @@ package com.sourceforgery.tachikoma.grpc.frontend.tracking;
 // in debugging.
 message UrlTrackingData {
     // The sending email
-    EmailId emailId = 101;
+    EmailId email_id = 101;
     // The url to redirect to (if any)
     // This is to avoid breaking existing emails for any reason.
-    string redirectUrl = 102;
+    string redirect_url = 102;
 }
 
 message UrlSignedMessage {

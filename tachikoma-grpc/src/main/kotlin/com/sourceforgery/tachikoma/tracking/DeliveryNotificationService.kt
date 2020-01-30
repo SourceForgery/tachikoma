@@ -87,7 +87,7 @@ private constructor(
 
     companion object {
         private val LOGGER = logger()
-        private val responseCloser = Executors.newCachedThreadPool()!!
+        private val responseCloser = Executors.newCachedThreadPool()
     }
 }
 
@@ -121,28 +121,28 @@ private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO,
 private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: DeliveryNotificationMessage): Any {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
     return when (deliveryNotificationMessage.notificationDataCase) {
-        DeliveryNotificationMessage.NotificationDataCase.MESSAGECLICKED -> {
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_CLICKED -> {
             clickedEvent = ClickedEvent.newBuilder()
                 .setIpAddress(deliveryNotificationMessage.messageClicked.ipAddress)
                 .setClickedUrl(deliveryNotificationMessage.messageClicked.clickedUrl)
                 .build()
         }
-        DeliveryNotificationMessage.NotificationDataCase.MESSAGEHARDBOUNCED -> {
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_HARD_BOUNCED -> {
             hardBouncedEvent = HardBouncedEvent.getDefaultInstance()
         }
-        DeliveryNotificationMessage.NotificationDataCase.MESSAGEOPENED -> {
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_OPENED -> {
             openedEvent = OpenedEvent.newBuilder().setIpAddress(deliveryNotificationMessage.messageOpened.ipAddress).build()
         }
-        DeliveryNotificationMessage.NotificationDataCase.MESSAGEDELIVERED -> {
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_DELIVERED -> {
             deliveredEvent = DeliveredEvent.getDefaultInstance()
         }
-        DeliveryNotificationMessage.NotificationDataCase.MESSAGESOFTBOUNCED -> {
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_SOFT_BOUNCED -> {
             softBouncedEvent = SoftBouncedEvent.getDefaultInstance()
         }
-        DeliveryNotificationMessage.NotificationDataCase.MESSAGEUNSUBSCRIBED -> {
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_UNSUBSCRIBED -> {
             unsubscribedEvent = UnsubscribedEvent.getDefaultInstance()
         }
-        DeliveryNotificationMessage.NotificationDataCase.MESSAGEQUEUED -> {
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_QUEUED -> {
             queuedEvent = QueuedEvent.getDefaultInstance()
         }
         DeliveryNotificationMessage.NotificationDataCase.NOTIFICATIONDATA_NOT_SET -> {

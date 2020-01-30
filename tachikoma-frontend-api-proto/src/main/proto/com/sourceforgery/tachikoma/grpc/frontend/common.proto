@@ -4,8 +4,8 @@ option java_multiple_files = true;
 
 package com.sourceforgery.tachikoma.grpc.frontend;
 
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 // Email address without recipient name
 message EmailAddress {
@@ -35,25 +35,25 @@ message IncomingEmailId {
 
 // Represents an e-mail notification, e.g. used for delivery status and in historic status events
 message EmailNotification {
-    EmailId emailId = 101;
-    EmailAddress recipientEmailAddress = 102;
-    EmailTransactionId emailTransactionId = 103;
+    EmailId email_id = 101;
+    EmailAddress recipient_email_address = 102;
+    EmailTransactionId email_transaction_id = 103;
     google.protobuf.Timestamp timestamp = 104;
-    MessageId messageId = 105;
+    MessageId message_id = 105;
     oneof notification {
-        SoftBouncedEvent softBouncedEvent = 201;
-        HardBouncedEvent hardBouncedEvent = 202;
-        DeliveredEvent deliveredEvent = 203;
-        QueuedEvent queuedEvent = 204;
-        OpenedEvent openedEvent = 205;
-        ClickedEvent clickedEvent = 206;
-        UnsubscribedEvent unsubscribedEvent = 207;
-        SpamEvent spamEvent = 208;
+        SoftBouncedEvent soft_bounced_event = 201;
+        HardBouncedEvent hard_bounced_event = 202;
+        DeliveredEvent delivered_event = 203;
+        QueuedEvent queued_event = 204;
+        OpenedEvent opened_event = 205;
+        ClickedEvent clicked_event = 206;
+        UnsubscribedEvent unsubscribed_event = 207;
+        SpamEvent spam_event = 208;
     }
     // Optional depending on parameters for the rpc method
     oneof tracking {
-        SentEmailTrackingData emailTrackingData = 301;
-        google.protobuf.Empty noTrackingData = 302;
+        SentEmailTrackingData email_tracking_data = 301;
+        google.protobuf.Empty no_tracking_data = 302;
     }
 
     // Optional depending on parameters for the rpc method
@@ -65,7 +65,7 @@ message SentEmailTrackingData {
     // Special domain used to track links. Used instead of the normal host.
     // See future documentation on how to set up with e.g. nginx/apache httpd/lighttpd which
     // is necessary for HSTS domains.
-    string trackingDomain = 101;
+    string tracking_domain = 101;
 
     // Not sent, but used in search and in callbacks
     repeated string tags = 102;
@@ -83,7 +83,7 @@ message SoftBouncedEvent {
 message HardBouncedEvent {
     // Free text saying what the other server said (if anything)
     // Will be empty if it's a connection error
-    string rejectReason = 101;
+    string reject_reason = 101;
 }
 
 // Message has been successfully delivered to other server
@@ -97,21 +97,21 @@ message QueuedEvent {
 // Message has been opened
 message OpenedEvent {
     // IP address that downloaded the tracking pixel
-    string ipAddress = 101;
+    string ip_address = 101;
 }
 
 // Message has been clicked
 message ClickedEvent {
     // Ip address that clicked the link
-    string ipAddress = 101;
+    string ip_address = 101;
     // Url clicked in the email
-    string clickedUrl = 102;
+    string clicked_url = 102;
 }
 
 // Message has caused receiver to unsubscribe
 message UnsubscribedEvent {
     // Ip address that unsubscribed
-    string ipAddress = 101;
+    string ip_address = 101;
 }
 
 // Message has been marked as spam
@@ -123,13 +123,13 @@ message Attachment {
     // The data of the attachment
     bytes data = 101;
     // The content type of the attachment
-    string contentType = 102;
+    string content_type = 102;
     // Optional
     // The filename (if any) for this attachment
-    string fileName = 103;
+    string file_name = 103;
 }
 
 // MessageId
 message MessageId {
-    string messageId = 101;
+    string message_id = 101;
 }
