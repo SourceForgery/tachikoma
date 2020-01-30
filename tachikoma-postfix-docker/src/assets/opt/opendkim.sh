@@ -6,7 +6,6 @@ if ! ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q do
     sleep infinity
 fi
 
-
 cat >> /etc/opendkim.conf <<EOF
 AutoRestart             Yes
 AutoRestartRate         10/1h
@@ -21,7 +20,7 @@ Mode                    sv
 PidFile                 /var/run/opendkim/opendkim.pid
 SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
-Socket                  local:/var/spool/postfix/opendkim/opendkim.sock
+Socket                  local:/opendkim/opendkim.sock
 EOF
 
 echo -n >/etc/opendkim/KeyTable
@@ -36,10 +35,9 @@ for A in /etc/opendkim/domainkeys/*._domainkey.*.private; do
 done
 
 
-mkdir -p /var/spool/postfix/opendkim
-
-chown opendkim:opendkim /var/spool/postfix/opendkim
-chmod 0750 /var/spool/postfix/opendkim
+mkdir -p /opendkim
+chown opendkim:opendkim /opendkim
+chmod 0750 /opendkim
 
 chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname *.private)
 
