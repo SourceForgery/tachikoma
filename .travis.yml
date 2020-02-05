@@ -17,10 +17,7 @@ before_install:
 - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.8.1/install | bash
 - export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
 - sudo apt-get -y install openjdk-11-jdk-headless
-- java -version
-- which java
-- echo $JAVA_HOME
-- /usr/lib/jvm/java-11-openjdk-amd64/bin/java -version
+- ./gradlew --version
 
 install:
 - env | grep ^TRAVIS_
@@ -45,6 +42,7 @@ after_success:
 env:
   global:
 # S3
+  - JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64/
   - ARTIFACTS_KEY: AKIAY74OWVITRRYAR4F3
   - ARTIFACTS_BUCKET: tachikoma-artifacts
   - secure: r7SaAA7kVxtdWJmanIttmzPqSiqch3HZX31M10Zxe4EnRNprZlY4TtZr7VeYAVE9kjg19I6acKUJ6+FbfQWPaP6FF7TRF3/CdZTWIkoabMKqzHqsxmuhjwcsvlZvgdz1L1MYEVlvtIC2QSAJ2Pg1hdbitGROvDk7aGBfg3FkMgvYNkHkUQu4Y+vzOuXnVEfscJIKX7+x7vL71gDF9pvJn14TAosv27sVubJymEnAFsvVEntEHBphj7qtLErBGRxApW1aeGFAY53T7vn82jwZBLxGjhaUiaPnZv7a8iiwBb2A3hlUokYuTn10NzbUFAGlamEtQC7/tbL/SP9g8npthoj1jpQaDsozjc7HmcHxZ2d7hdLrWdSNRQCvawYQW7P6ZhtrqICXt18k7A5pf2kewYmEMcYVRpdxzkvde0rtp6cpEP88SAoTC62WN73nUFXywMsIP+j6sY7Py7tFUebbuDhg+imbe/htMLt2WTS2jIVGzIsN4cfFC8WCVCo9HB/D9wO9+U/7URGVFztKycF7MHWUeQxmlFx1gsnPjnXBxo3FIlSV7W7toMkUjpqgpfMMKbqw+0e0R6HiPlFSbA5HhuPC2UE6jAZuK5BIj1vOfeXqwBz1pws7qtKCTnRc3hkQ29DnLz9po7CDSlF1fuphYlGicfLLffiTTv7OhpMp8TY=
