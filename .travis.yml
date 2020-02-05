@@ -18,6 +18,9 @@ before_install:
 - export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
 - sudo apt-get -y install openjdk-11-jdk-headless
 - java -version
+- which java
+- echo $JAVA_HOME
+- /usr/lib/jvm/java-11-openjdk-amd64/bin/java -version
 
 install:
 - env | grep ^TRAVIS_
