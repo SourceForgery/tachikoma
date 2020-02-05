@@ -11,6 +11,14 @@ val replaceVersion by tasks.registering(Copy::class) {
     includeEmptyDirs = false
 }
 
+tasks.getByPath(":githubRelease").dependsOn(replaceVersion)
+afterEvaluate {
+    extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
+        addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
+    }
+}
+
+
 allprojects {
     configurations.all {
         resolutionStrategy {

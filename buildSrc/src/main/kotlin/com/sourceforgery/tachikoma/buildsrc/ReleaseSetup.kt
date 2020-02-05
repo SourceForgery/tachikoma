@@ -29,17 +29,17 @@ fun Project.releaseSetup() {
         }
         println("Trying to build release")
         publishTask.finalizedBy("githubRelease")
+
     }
 
     afterEvaluate {
-        extensions.configure<GithubExtension>("github") {
+        extensions.getByType<GithubExtension>().apply {
             owner = "SourceForgery"
             repo = "tachikoma"
             token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
             tagName = travisTag
             targetCommitish = "master"
             name = "v${project.version}"
-            addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
         }
     }
 
