@@ -18,7 +18,7 @@ notifications:
 before_install:
 - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.8.1/install | bash
 - export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
-- apt-get -y install openjdk-11-jdk-headless
+- sudo apt-get -y install openjdk-11-jdk-headless
 
 install:
 - env | grep ^TRAVIS_
