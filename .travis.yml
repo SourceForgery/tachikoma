@@ -15,7 +15,7 @@ notifications:
 
 before_install:
 - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.8.1/install | bash
-- export ARTIFACTS_TARGET_PATHS="artifacts/TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
+- export ARTIFACTS_TARGET_PATHS="artifacts/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
 - sudo apt-get -y install openjdk-11-jdk-headless
 - ./gradlew --version
 
@@ -29,15 +29,15 @@ script:
       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       export DOCKER_PUSH=true
       ./gradlew build
-      ./gradlew publish --stacktrace
+      ./gradlew publish --stacktrace --debug >debug_log
     else
       ./gradlew check
     fi
 
 after_failure:
-- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then artifacts upload $(find */build/reports); fi
+- if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then artifacts upload $(find */build/reports debug_log); fi
 after_success:
-- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then artifacts upload $(find */build/reports); fi
+- if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then artifacts upload $(find */build/reports debug_log); fi
 
 env:
   global:
