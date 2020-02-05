@@ -15,8 +15,10 @@ val zipProtoc by tasks.registering(Zip::class) {
     destinationDirectory.set(file("$buildDir/libs/"))
 }
 
-rootProject.extensions.getByType(co.riiid.gradle.GithubExtension::class.java).apply {
-    addAssets(listOf("${buildDir}/libs/tachikoma-frontend-api-proto-${project.version}.zip"))
+afterEvaluate {
+    rootProject.extensions.getByType(co.riiid.gradle.GithubExtension::class.java).apply {
+        addAssets(listOf("${buildDir}/libs/tachikoma-frontend-api-proto-${project.version}.zip"))
+    }
 }
 
 tasks["assemble"].dependsOn(zipProtoc)

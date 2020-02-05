@@ -19,8 +19,10 @@ dependencies {
     implementation("org.glassfish.hk2.external:javax.inject:$hk2Version")
 }
 
-rootProject.extensions.configure<co.riiid.gradle.GithubExtension>("github") {
-    setAssets(*(assets + arrayOf("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")))
+afterEvaluate {
+    rootProject.extensions.configure<co.riiid.gradle.GithubExtension>("github") {
+        setAssets(*(assets + arrayOf("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")))
+    }
 }
 
 extensions.configure<JavaApplication>("application") {

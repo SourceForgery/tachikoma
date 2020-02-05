@@ -9,7 +9,7 @@ import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.closureOf
 import org.gradle.kotlin.dsl.getByType
 import java.io.File
-
+import addAssets
 
 fun Project.releaseSetup() {
     apply(plugin = "net.researchgate.release")
@@ -31,14 +31,16 @@ fun Project.releaseSetup() {
         publishTask.finalizedBy("githubRelease")
     }
 
-    extensions.configure<GithubExtension>("github") {
-        owner = "SourceForgery"
-        repo = "tachikoma"
-        token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
-        tagName = travisTag
-        targetCommitish = "master"
-        name = "v${project.version}"
-        setAssets("${project.buildDir}/kubernetes/deployment-webserver.yaml")
+    afterEvaluate {
+        extensions.configure<GithubExtension>("github") {
+            owner = "SourceForgery"
+            repo = "tachikoma"
+            token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
+            tagName = travisTag
+            targetCommitish = "master"
+            name = "v${project.version}"
+            addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
+        }
     }
 
 
