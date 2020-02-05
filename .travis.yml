@@ -1,7 +1,5 @@
 sudo: required
 dist: bionic
-jdk:
-- openjdk11
 cache:
 - directories:
   - "$HOME/.gradle"
