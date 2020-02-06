@@ -28,8 +28,7 @@ script:
       docker version
       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       export DOCKER_PUSH=true
-      ./gradlew build
-      ./gradlew publish --stacktrace --debug >debug_log
+      ./gradlew build publish --stacktrace --debug >debug_log
     else
       ./gradlew check
     fi
