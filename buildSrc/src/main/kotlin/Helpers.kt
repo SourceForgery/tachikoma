@@ -60,7 +60,7 @@ fun GithubExtension.addAssets(assets: List<String>) {
     setAssets(*newAssets.toTypedArray())
 }
 
-fun org.gradle.api.Project.publishing(configure: org.gradle.api.publish.PublishingExtension.() -> Unit): Unit =
+fun Project.publishing(configure: org.gradle.api.publish.PublishingExtension.() -> Unit): Unit =
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("publishing", configure)
 
 /** This also handles the groovy 'with' function in a hacky manner */
