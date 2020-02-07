@@ -11,7 +11,7 @@ val replaceVersion by tasks.registering(Copy::class) {
     includeEmptyDirs = false
 }
 
-tasks.getByPath(":githubRelease") {
+tasks.getByPath(":githubRelease").apply {
     dependsOn(replaceVersion)
     doFirst {
         project.extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
@@ -21,6 +21,7 @@ tasks.getByPath(":githubRelease") {
         }
     }
 }
+
 afterEvaluate {
     extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
         addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
