@@ -55,7 +55,7 @@ val googleNativePrefix = OperatingSystem.current().nativePrefix
     .replace("amd64", "x86_64")
 
 fun GithubExtension.addAssets(assets: List<String>) {
-    val newAssets = assets.toMutableList()
+    val newAssets = assets.toMutableSet()
     newAssets += assets
     setAssets(*newAssets.toTypedArray())
 }

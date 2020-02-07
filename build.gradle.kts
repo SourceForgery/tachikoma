@@ -16,7 +16,7 @@ tasks.getByPath(":githubRelease").apply {
     doFirst {
         project.extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
             for (asset in assets) {
-                logger.error("\"$asset\": ${File(asset).length()}")
+                logger.info("\"$asset\": ${File(asset).length()}")
             }
         }
     }
@@ -25,16 +25,6 @@ tasks.getByPath(":githubRelease").apply {
 afterEvaluate {
     extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
         addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
-    }
-}
-
-afterEvaluate {
-    afterEvaluate {
-        extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
-            for (asset in assets) {
-                logger.error("\"$asset\": ${File(asset).length()}")
-            }
-        }
     }
 }
 
