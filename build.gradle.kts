@@ -18,6 +18,16 @@ afterEvaluate {
     }
 }
 
+afterEvaluate {
+    afterEvaluate {
+        extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
+            for (asset in assets) {
+                logger.error("\"$asset\": ${File(asset).length()}")
+            }
+        }
+    }
+}
+
 
 allprojects {
     configurations.all {
