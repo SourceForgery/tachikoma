@@ -71,10 +71,11 @@ private constructor(
                         LOGGER.trace { "Getting scope $it from local thread ${Thread.currentThread()}" }
                     }
         } else {
-            armeriaCtx.attr(HK2_CONTEXT_KEY).get()
-                    ?.also {
-                        LOGGER.trace { "Getting scope $it from armeria context $armeriaCtx in thread ${Thread.currentThread()}" }
-                    }
+            armeriaCtx.attr(HK2_CONTEXT_KEY)
+                ?.get()
+                ?.also {
+                    LOGGER.trace { "Getting scope $it from armeria context $armeriaCtx in thread ${Thread.currentThread()}" }
+                }
         }
         return instance
                 ?: error("Not inside a request scope.")

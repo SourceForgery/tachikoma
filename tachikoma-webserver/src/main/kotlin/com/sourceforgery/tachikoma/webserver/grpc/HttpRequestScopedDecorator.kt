@@ -3,7 +3,6 @@ package com.sourceforgery.tachikoma.webserver.grpc
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.RequestContext
-import com.linecorp.armeria.common.logging.RequestLogAvailability
 import com.linecorp.armeria.server.DecoratingHttpServiceFunction
 import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.ServiceRequestContext
@@ -22,7 +21,9 @@ private constructor(
 ) : DecoratingHttpServiceFunction {
     override fun serve(delegate: HttpService, ctx: ServiceRequestContext, req: HttpRequest): HttpResponse {
         val hk2Ctx = hK2RequestContext.createInArmeriaContext(ctx) as HK2RequestContextImpl.Instance
-        ctx.log().addListener({ hK2RequestContext.release(hk2Ctx) }, RequestLogAvailability.COMPLETE)
+        ctx.log()
+            .whenComplete()
+            .whenComplete { log, _ -> hK2RequestContext.release(hk2Ctx) }
         serviceLocator
                 .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
                 .value = req
