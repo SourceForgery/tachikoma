@@ -23,7 +23,7 @@ tasks.getByPath(":githubRelease").apply {
 }
 
 extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
-    addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
+    addAssets("$buildDir/kubernetes/deployment-webserver.yaml")
 }
 
 @Suppress("UnstableApiUsage")

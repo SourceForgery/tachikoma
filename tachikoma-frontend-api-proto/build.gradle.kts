@@ -17,7 +17,7 @@ val zipProtoc by tasks.registering(Zip::class) {
 
 afterEvaluate {
     rootProject.extensions.getByType(co.riiid.gradle.GithubExtension::class.java).apply {
-        addAssets(listOf("${buildDir}/libs/tachikoma-frontend-api-proto-${project.version}.zip"))
+        addAssets("$buildDir/libs/tachikoma-frontend-api-proto-${project.version}.zip")
     }
 }
 

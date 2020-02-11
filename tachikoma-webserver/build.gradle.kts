@@ -20,7 +20,7 @@ dependencies {
 }
 
 rootProject.extensions.configure<co.riiid.gradle.GithubExtension>("github") {
-    setAssets(*(assets + arrayOf("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")))
+    addAssets("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")
 }
 
 extensions.configure<JavaApplication>("application") {

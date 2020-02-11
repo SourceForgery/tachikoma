@@ -20,6 +20,7 @@ import org.gradle.kotlin.dsl.closureOf
 import org.gradle.kotlin.dsl.delegateClosureOf
 import se.transmode.gradle.plugins.docker.DockerTask
 import java.io.File
+import java.util.TreeSet
 
 fun Project.duplicateClassesChecker(configure: DuplicateClassesExtension.() -> Unit) {
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("duplicateClassesChecker", configure)
@@ -54,9 +55,11 @@ fun Project.bintray(block: BintrayExtension.() -> Unit) {
 val googleNativePrefix = OperatingSystem.current().nativePrefix
     .replace("amd64", "x86_64")
 
-fun GithubExtension.addAssets(assets: List<String>) {
-    val newAssets = assets.toMutableSet()
-    newAssets += assets
+fun GithubExtension.addAssets(vararg assetsList: String) {
+    val newAssets = assetsList.toCollection(TreeSet())
+    val oldAssets = assets?.toSet()
+        ?: emptySet()
+    newAssets += oldAssets
     setAssets(*newAssets.toTypedArray())
 }
 
