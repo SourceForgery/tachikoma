@@ -22,12 +22,11 @@ tasks.getByPath(":githubRelease").apply {
     }
 }
 
-afterEvaluate {
-    extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
-        addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
-    }
+extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
+    addAssets(listOf("${project.buildDir}/kubernetes/deployment-webserver.yaml"))
 }
 
+@Suppress("UnstableApiUsage")
 allprojects {
     configurations.all {
         resolutionStrategy {
@@ -43,7 +42,6 @@ allprojects {
                 substitute(module("net.jcip:jcip-annotations")).with(module("com.google.code.findbugs:jsr305:$jsr305Version"))
                 substitute(module("javax.annotation:javax.annotation-api")).with(module("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion"))
                 substitute(module("javax.activation:activation")).with(module("com.sun.activation:javax.activation:1.2.0"))
-//                substitute(module())
 
                 all {
                     when (val requested = requested) {
@@ -73,15 +71,15 @@ allprojects {
     }
 }
 
-tasks.getByName("assemble").dependsOn(replaceVersion)
+tasks["assemble"].dependsOn(replaceVersion)
 
 subprojects {
     apply(plugin = "idea")
 
     extensions.getByType<org.gradle.plugins.ide.idea.model.IdeaModel>().apply {
         module {
-            outputDir = file("'build/idea-out")
-            testOutputDir = file("'build/idea-testout")
+            outputDir = file("build/idea-out")
+            testOutputDir = file("build/idea-testout")
         }
     }
 

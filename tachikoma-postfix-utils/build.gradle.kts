@@ -19,10 +19,9 @@ dependencies {
 extensions.configure<JavaApplication>("application") {
     mainClassName = "com.sourceforgery.tachikoma.postfix.MainKt"
 }
-afterEvaluate {
-    rootProject.extensions.configure<co.riiid.gradle.GithubExtension> {
-        addAssets(listOf("$buildDir/distributions/tachikoma-postfix-utils-${project.version}.tar"))
-    }
+
+rootProject.extensions.configure<co.riiid.gradle.GithubExtension> {
+    addAssets(listOf("$buildDir/distributions/tachikoma-postfix-utils-${project.version}.tar"))
 }
 
 tasks[ApplicationPlugin.TASK_DIST_ZIP_NAME].enabled = false

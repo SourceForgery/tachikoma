@@ -32,8 +32,9 @@ fun Project.grpcSetup() {
         }
 
     dependencies {
-        implementation(project(":tachikoma-protobuf-annotations"))
         api("io.grpc:grpc-protobuf:$grpcVersion")
+
+        implementation(project(":tachikoma-protobuf-annotations"))
         implementation("io.grpc:grpc-stub:$grpcVersion")
         implementation("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion")
     }

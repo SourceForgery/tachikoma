@@ -9,7 +9,6 @@ import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.closureOf
 import org.gradle.kotlin.dsl.getByType
 import java.io.File
-import addAssets
 
 fun Project.releaseSetup() {
     apply(plugin = "net.researchgate.release")
@@ -32,15 +31,13 @@ fun Project.releaseSetup() {
 
     }
 
-    afterEvaluate {
-        extensions.getByType<GithubExtension>().apply {
-            owner = "SourceForgery"
-            repo = "tachikoma"
-            token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
-            tagName = travisTag
-            targetCommitish = "master"
-            name = "v${project.version}"
-        }
+    extensions.getByType<GithubExtension>().apply {
+        owner = "SourceForgery"
+        repo = "tachikoma"
+        token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
+        tagName = travisTag
+        targetCommitish = "master"
+        name = "v${project.version}"
     }
 
 

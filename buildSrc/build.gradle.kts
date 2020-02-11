@@ -49,6 +49,7 @@ repositories {
     maven { url = URI("https://dl.bintray.com/youcruit/YouCruit") }
 }
 
+@Suppress("UnstableApiUsage")
 plugins {
     idea
     `kotlin-dsl`

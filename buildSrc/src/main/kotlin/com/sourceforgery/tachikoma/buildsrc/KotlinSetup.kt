@@ -22,18 +22,20 @@ import sourceSets
 import spekVersion
 import testImplementation
 
+@Suppress("UnstableApiUsage")
 fun Project.kotlinSetup() {
     apply(plugin = "kotlin")
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
     apply(plugin = "org.jetbrains.dokka")
 
     dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+
         testImplementation("org.jetbrains.spek:spek-junit-platform-engine:$spekVersion")
         testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
         testImplementation("org.junit.platform:junit-platform-runner:1.1.0")
         testImplementation("org.glassfish.hk2:hk2-locator:$hk2Version")
         testImplementation("org.glassfish.hk2:hk2-utils:$hk2Version")
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     }
 
     tasks.withType<KotlinCompile>().configureEach {
@@ -49,7 +51,6 @@ fun Project.kotlinSetup() {
         debug.set(false)
         verbose.set(true)
         android.set(false)
-//            reporter = "checkstyle"
         ignoreFailures.set(false)
         disabledRules.set(listOf("final-newline"))
     }
@@ -60,7 +61,7 @@ fun Project.kotlinSetup() {
     }
 
     val sourceJar by tasks.registering(Jar::class) {
-        from(sourceSets.getByName("main").allJava)
+        from(sourceSets["main"].allJava)
         archiveClassifier.set("source")
     }
     val assemble by tasks
