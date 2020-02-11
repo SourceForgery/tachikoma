@@ -1,4 +1,4 @@
-val armeriaVersion = "0.97.0"
+val armeriaVersion = "0.98.0"
 val bytebuddyVersion = "1.9.13"
 val ebeanAnnotationVersion = "6.1"
 val ebeanVersion = "12.1.9"
