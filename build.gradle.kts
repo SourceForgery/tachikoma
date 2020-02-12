@@ -13,13 +13,6 @@ val replaceVersion by tasks.registering(Copy::class) {
 
 tasks.getByPath(":githubRelease").apply {
     dependsOn(replaceVersion)
-    doFirst {
-        project.extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
-            for (asset in assets) {
-                logger.info("\"$asset\": ${File(asset).length()}")
-            }
-        }
-    }
 }
 
 extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
