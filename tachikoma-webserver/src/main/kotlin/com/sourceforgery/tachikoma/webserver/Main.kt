@@ -5,7 +5,7 @@ import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.Server
-import com.linecorp.armeria.server.cors.CorsServiceBuilder
+import com.linecorp.armeria.server.cors.CorsService
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
 import com.sourceforgery.tachikoma.CommonBinder
@@ -45,8 +45,8 @@ class WebServerStarter(
     private fun startServerInBackground(): CompletableFuture<Void> {
         val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
 
-        val healthService = CorsServiceBuilder
-            .forAnyOrigin()
+        val healthService = CorsService
+            .builderForAnyOrigin()
             .allowCredentials()
             .allowRequestMethods(HttpMethod.GET)
             .build(HealthCheckService.of())

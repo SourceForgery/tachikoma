@@ -72,7 +72,6 @@ private constructor(
                     }
         } else {
             armeriaCtx.attr(HK2_CONTEXT_KEY)
-                ?.get()
                 ?.also {
                     LOGGER.trace { "Getting scope $it from armeria context $armeriaCtx in thread ${Thread.currentThread()}" }
                 }
@@ -86,7 +85,7 @@ private constructor(
     override fun createInArmeriaContext(serviceRequestContext: ServiceRequestContext): ReqCtxInstance {
         val instance = createInstance() as Instance
         LOGGER.trace { "Setting scope $instance to armeria context $serviceRequestContext in thread ${Thread.currentThread()}" }
-        serviceRequestContext.attr(HK2_CONTEXT_KEY).set(instance)
+        serviceRequestContext.setAttr(HK2_CONTEXT_KEY, instance)
         return instance
     }
 

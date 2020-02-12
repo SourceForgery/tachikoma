@@ -23,7 +23,7 @@ private constructor(
         val hk2Ctx = hK2RequestContext.createInArmeriaContext(ctx) as HK2RequestContextImpl.Instance
         ctx.log()
             .whenComplete()
-            .whenComplete { log, _ -> hK2RequestContext.release(hk2Ctx) }
+            .whenComplete { _, _ -> hK2RequestContext.release(hk2Ctx) }
         serviceLocator
                 .getService<SettableReference<HttpRequest>>(HTTP_REQUEST_TYPE)
                 .value = req
