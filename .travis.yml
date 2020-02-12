@@ -31,6 +31,8 @@ script:
       ./gradlew build publish --stacktrace --debug -Dorg.gradle.parallel=false >debug_log
     else
       ./gradlew check
+      ./gradlew -p buildSrc dependencyUpdates
+      ./gradlew dependencyUpdates
     fi
 
 after_failure:

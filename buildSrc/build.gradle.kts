@@ -1,4 +1,3 @@
-
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import java.net.URI
 
@@ -9,10 +8,10 @@ dependencies {
     implementation("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4") {
         exclude(group = "nekohtml", module = "xercesMinimal")
     }
-    implementation("org.jlleitschuh.gradle:ktlint-gradle:9.1.1")
-    implementation("io.ebean:ebean-gradle-plugin:12.1.1")
-    implementation("net.researchgate:gradle-release:2.8.0")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r")
+    implementation("org.jlleitschuh.gradle:ktlint-gradle:9.2.0")
+    implementation("io.ebean:ebean-gradle-plugin:12.1.12")
+    implementation("net.researchgate:gradle-release:2.8.1")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("org.junit.platform:junit-platform-gradle-plugin:1.2.0")
     implementation("se.transmode.gradle:gradle-docker:1.2-youcruit-9")
@@ -54,6 +53,7 @@ plugins {
     idea
     `kotlin-dsl`
     `embedded-kotlin`
+    id("com.github.ben-manes.versions") version "0.27.0"
 }
 
 kotlinDslPluginOptions {

@@ -5,7 +5,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
     implementation("io.grpc:grpc-netty:$grpcVersion")
     implementation("io.netty:netty-tcnative-boringssl-static:$nettyVersionSsl:$googleNativePrefix")
-    implementation("com.github.jnr:jnr-unixsocket:0.18")
+    implementation("com.github.jnr:jnr-unixsocket:0.25")
     implementation("com.google.protobuf:protobuf-java-util:$protocVersion")
     implementation(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))

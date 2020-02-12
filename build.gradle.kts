@@ -25,11 +25,10 @@ allprojects {
         resolutionStrategy {
             failOnVersionConflict()
             dependencySubstitution {
-                substitute(module("javax.annotation:javax.annotation-api")).with(module("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion"))
                 substitute(module("org.slf4j:jcl-over-slf4j")).with(module("org.apache.logging.log4j:log4j-jcl:$log4j2Version"))
                 substitute(module("org.slf4j:jul-to-slf4j")).with(module("org.apache.logging.log4j:log4j-jul:$log4j2Version"))
                 substitute(module("org.slf4j:slf4j-simple")).with(module("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version"))
-                substitute(module("javax.inject:javax.inject:1")).with(module("org.glassfish.hk2.external:javax.inject:$hk2Version"))
+                substitute(module("javax.inject:javax.inject:1")).with(module("org.glassfish.hk2.external:jakarta.inject:$hk2Version"))
                 substitute(module("com.google.guava:guava-jdk5")).with(module("com.google.guava:guava:$guavaVersion"))
                 substitute(module("com.google.code.findbugs:annotations")).with(module("com.google.code.findbugs:jsr305:$jsr305Version"))
                 substitute(module("net.jcip:jcip-annotations")).with(module("com.google.code.findbugs:jsr305:$jsr305Version"))
@@ -56,6 +55,8 @@ allprojects {
                 "com.google.code.gson:gson:$gsonVersion",
                 "com.google.guava:guava:$guavaVersion",
                 "com.google.errorprone:error_prone_annotations:2.3.3",
+                "jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion",
+                "net.bytebuddy:byte-buddy:$bytebuddyVersion",
                 "org.codehaus.mojo:animal-sniffer-annotations:1.18",
                 "org.postgresql:postgresql:$postgresqlDriverVersion",
                 "org.slf4j:slf4j-api:1.7.29"
