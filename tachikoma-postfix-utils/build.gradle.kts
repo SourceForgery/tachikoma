@@ -3,7 +3,7 @@ apply(plugin = "application")
 apply(plugin = "com.google.osdetector")
 
 dependencies {
-    implementation("com.github.jnr:jnr-unixsocket:0.18")
+    implementation("com.github.jnr:jnr-unixsocket:0.25")
     implementation("io.grpc:grpc-netty:$grpcVersion")
     implementation("io.netty:netty-tcnative-boringssl-static:$nettyVersionSsl:$googleNativePrefix")
     implementation("net.sf.expectit:expectit-core:0.9.0")

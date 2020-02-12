@@ -16,7 +16,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-iostreams:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
     implementation("org.glassfish.hk2:hk2-api:$hk2Version")
-    implementation("org.glassfish.hk2.external:javax.inject:$hk2Version")
+    implementation("org.glassfish.hk2.external:jakarta.inject:$hk2Version")
 }
 
 rootProject.extensions.configure<co.riiid.gradle.GithubExtension>("github") {

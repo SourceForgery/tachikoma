@@ -111,7 +111,7 @@ class WebServerStarter(
             .also { serviceHandle ->
                 hk2RequestScope.runInNewScope {
                     serviceHandle.service.createUsers()
-                    serviceHandle.destroy()
+                    serviceHandle.close()
                 }
             }
     }

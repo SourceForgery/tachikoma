@@ -77,7 +77,7 @@ private constructor(
                     it.commit()
                 }
             }
-            serviceHandle.destroy()
+            serviceHandle.close()
         }
     }
 
@@ -100,7 +100,7 @@ private constructor(
             .handleIterator()
             .forEach {
                 it.service.postStart(ebeanServer)
-                it.destroy()
+                it.close()
             }
         return ebeanServer
     }
