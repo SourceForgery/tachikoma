@@ -24,8 +24,6 @@ rootProject.extensions.configure<co.riiid.gradle.GithubExtension> {
     addAssets("$buildDir/distributions/tachikoma-postfix-utils-${project.version}.tar")
 }
 
-tasks.getByPath(":githubRelease").apply {
-    dependsOn(ApplicationPlugin.TASK_DIST_TAR_NAME)
-}
+tasks.getByPath(":githubRelease").dependsOn(ApplicationPlugin.TASK_DIST_TAR_NAME)
 
 tasks[ApplicationPlugin.TASK_DIST_ZIP_NAME].enabled = false

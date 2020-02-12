@@ -27,8 +27,6 @@ extensions.configure<JavaApplication>("application") {
     mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
 }
 
-tasks.getByPath(":githubRelease").apply {
-    dependsOn(ApplicationPlugin.TASK_DIST_TAR_NAME)
-}
+tasks.getByPath(":githubRelease").dependsOn(ApplicationPlugin.TASK_DIST_TAR_NAME)
 
 tasks[ApplicationPlugin.TASK_DIST_ZIP_NAME].enabled = false
