@@ -4,6 +4,7 @@ import com.sourceforgery.tachikoma.buildsrc.CheckDuplicateClassesTask
 import hk2Version
 import implementation
 import kotlinVersion
+import kotlinCoroutineVersion
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.apply
@@ -30,6 +31,7 @@ fun Project.kotlinSetup() {
 
     dependencies {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 
         testImplementation("org.jetbrains.spek:spek-junit-platform-engine:$spekVersion")
         testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
