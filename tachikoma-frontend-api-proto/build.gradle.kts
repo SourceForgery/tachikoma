@@ -20,6 +20,6 @@ rootProject.extensions.getByType(co.riiid.gradle.GithubExtension::class.java).ap
 }
 
 tasks["assemble"].dependsOn(zipProtoc)
-tasks.getByPath(":githubRelease").apply {
+rootProject.tasks["githubRelease"].apply {
     dependsOn(zipProtoc)
 }

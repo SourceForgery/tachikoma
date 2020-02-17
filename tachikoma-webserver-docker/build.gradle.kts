@@ -1,6 +1,7 @@
 applyDocker()
 
-val tarTask = tasks.getByPath(":tachikoma-webserver:${ApplicationPlugin.TASK_DIST_TAR_NAME}")
+val tarTask = project(":tachikoma-webserver")
+    .tasks[ApplicationPlugin.TASK_DIST_TAR_NAME]
 
 val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.DockerTask::class) {
     dependsOn(tarTask)

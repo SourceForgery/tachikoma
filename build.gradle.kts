@@ -11,7 +11,7 @@ val replaceVersion by tasks.registering(Copy::class) {
     includeEmptyDirs = false
 }
 
-tasks.getByPath(":githubRelease").apply {
+rootProject.tasks["githubRelease"].apply {
     dependsOn(replaceVersion)
 }
 
