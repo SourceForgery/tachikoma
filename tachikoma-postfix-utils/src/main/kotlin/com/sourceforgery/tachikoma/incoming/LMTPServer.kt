@@ -14,9 +14,9 @@ import org.apache.logging.log4j.kotlin.logger
 class LMTPServer(
     private val socket: Socket,
     private val param: (String, String, String) -> MailAcceptanceResult
-) : Runnable {
+) {
 
-    override fun run() {
+    fun receiveMail() {
         try {
             socket.use { lmtpSocket ->
 
@@ -70,8 +70,8 @@ class LMTPServer(
 
     companion object {
         private val LOGGER = logger()
-        private val INCOMING_LOGGER = logger("smtp.incoming.debug.incoming_in")
-        private val OUTGOING_LOGGER = logger("smtp.incoming.debug.incoming_out")
+        private val INCOMING_LOGGER = logger("smtp.send.debug.incoming_in")
+        private val OUTGOING_LOGGER = logger("smtp.send.debug.incoming_out")
     }
 }
 

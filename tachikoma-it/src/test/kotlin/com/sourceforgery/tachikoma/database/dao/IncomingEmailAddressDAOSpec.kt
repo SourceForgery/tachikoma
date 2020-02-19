@@ -135,7 +135,7 @@ internal class IncomingEmailAddressDAOSpec : Spek({
             val incomingEmail = incomingEmailAddressDAO.getByEmail(email)
 
             assertNotNull(incomingEmail)
-            assertEquals(authentication1.account.id, incomingEmail!!.account.id)
+            assertEquals(authentication1.account.id, incomingEmail.account.id)
             assertEquals("a", incomingEmail.localPart)
         }
 
@@ -159,8 +159,8 @@ internal class IncomingEmailAddressDAOSpec : Spek({
 
             assertNotNull(incomingEmail1)
             assertNotNull(incomingEmail2)
-            assertEquals(authentication1.account.id, incomingEmail1!!.account.id)
-            assertEquals(authentication2.account.id, incomingEmail2!!.account.id)
+            assertEquals(authentication1.account.id, incomingEmail1.account.id)
+            assertEquals(authentication2.account.id, incomingEmail2.account.id)
             assertEquals("", incomingEmail1.localPart)
             assertEquals("b", incomingEmail2.localPart)
         }

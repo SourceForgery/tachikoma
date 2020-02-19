@@ -7,9 +7,13 @@ import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import io.grpc.Channel
 import io.grpc.stub.StreamObserver
+import java.io.IOException
+import java.io.PrintWriter
 import java.net.Socket
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
+import net.sf.expectit.Expect
 import net.sf.expectit.ExpectBuilder
 import net.sf.expectit.matcher.Matchers.regexp
 import org.apache.logging.log4j.Level
@@ -21,66 +25,78 @@ class MailSender(
 ) {
     private lateinit var response: StreamObserver<MTAQueuedNotification>
     private val stub = MTAEmailQueueGrpc.newStub(channel)
+    private val executor = Executors.newCachedThreadPool()
 
     fun start() {
         response = stub.getEmails(fromServerStreamObserver)
         LOGGER.info { "Connecting. Trying to listen for emails" }
     }
 
+    @Throws(IOException::class)
     fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
         LOGGER.info { "Got email: ${emailMessage.emailId}" }
 
-        try {
+        val success = try {
             Socket("localhost", 25).use { smtpSocket ->
-                val os = IoBuilder.forLogger("smtp.debug").setLevel(Level.TRACE).buildPrintWriter()
-                ExpectBuilder()
-                    .withEchoOutput(os)
-                    .withEchoInput(os)
-                    .withInputs(smtpSocket.getInputStream())
-                    .withOutput(smtpSocket.getOutputStream())
-                    .withLineSeparator("\r\n")
-                    .withExceptionOnFailure()
-                    .withTimeout(180, TimeUnit.SECONDS)
-                    .build().use { expect ->
-                        expect.expectNoSmtpError("^220 ")
-                        expect.emptyBuffer()
-                        expect.sendLine("EHLO localhost")
-                            .expectNoSmtpError("^250 ")
-                        expect.emptyBuffer()
-                        expect.sendLine("MAIL FROM: ${emailMessage.from}")
-                            .expectNoSmtpError("^250 ")
-                        expect.sendLine("RCPT TO: ${emailMessage.emailAddress}")
-                            .expectNoSmtpError("^250 ")
-                        expect.emptyBuffer()
-                        emailMessage.bccList.forEach {
-                            expect.sendLine("RCPT TO: $it")
-                                .expectNoSmtpError("^250 ")
-                            expect.emptyBuffer()
-                        }
-                        expect.sendLine("DATA")
-                            .expectNoSmtpError("^354 ")
-                        expect.expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
-                        val queueId = expect.send(emailMessage.body)
-                            .sendLine(".")
-                            .expectNoSmtpError("^250 .* queued as (.*)$")
-                            .group(1)
-                        expect.sendLine("QUIT")
+                IoBuilder.forLogger("smtp.debug")
+                    .setLevel(Level.TRACE)
+                    .buildPrintWriter()!!
+                    .use { os ->
+                        createExpect(os, smtpSocket).use { expect ->
+                            val queueId = ssmtpSendEmail(expect, emailMessage)
 
-                        LOGGER.info { "Successfully send email: ${emailMessage.emailId}" }
-                        return MTAQueuedNotification.newBuilder()
-                            .setQueueId(queueId)
-                            .setEmailId(emailMessage.emailId)
-                            .setSuccess(true)
-                            .build()
+                            LOGGER.info { "Successfully send email: ${emailMessage.emailId} with QueueId: $queueId" }
+                            true
+                        }
                     }
             }
         } catch (e: Exception) {
-            LOGGER.error("Failed to send message", e)
-            return MTAQueuedNotification.newBuilder()
-                .setEmailId(emailMessage.emailId)
-                .setSuccess(false)
-                .build()
+            LOGGER.error(e) { "Failed to send message" }
+            false
         }
+        return MTAQueuedNotification.newBuilder()
+            .setEmailId(emailMessage.emailId)
+            .setSuccess(success)
+            .build()
+    }
+
+    private fun createExpect(os: PrintWriter, smtpSocket: Socket): Expect = ExpectBuilder()
+        .withEchoOutput(os)
+        .withEchoInput(os)
+        .withInputs(smtpSocket.getInputStream())
+        .withOutput(smtpSocket.getOutputStream())
+        .withLineSeparator("\r\n")
+        .withExceptionOnFailure()
+        .withExecutor(executor)
+        .withTimeout(180, TimeUnit.SECONDS)
+        .build()
+
+    private fun ssmtpSendEmail(expect: Expect, emailMessage: EmailMessage): String {
+        expect.expectNoSmtpError("^220 ")
+        expect.emptyBuffer()
+        expect.sendLine("EHLO localhost")
+            .expectNoSmtpError("^250 ")
+        expect.emptyBuffer()
+        expect.sendLine("MAIL FROM: ${emailMessage.from}")
+            .expectNoSmtpError("^250 ")
+        expect.sendLine("RCPT TO: ${emailMessage.emailAddress}")
+            .expectNoSmtpError("^250 ")
+        expect.emptyBuffer()
+        emailMessage.bccList.forEach {
+            expect.sendLine("RCPT TO: $it")
+                .expectNoSmtpError("^250 ")
+            expect.emptyBuffer()
+        }
+        expect.sendLine("DATA")
+            .expectNoSmtpError("^354 ")
+        expect.expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
+        val queueId = expect.send(emailMessage.body)
+            .sendLine(".")
+            .expectNoSmtpError("^250 .* queued as (.*)$")
+            .group(1)!!
+        expect.sendLine("QUIT")
+
+        return queueId
 
         // EHLO <domain> (localhost)
         // MAIL FROM: foobar@domain

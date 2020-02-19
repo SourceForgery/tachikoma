@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.postfix
 
 import com.sourceforgery.tachikoma.config.Configuration
-import com.sourceforgery.tachikoma.incoming.IncomingEmail
+import com.sourceforgery.tachikoma.incoming.IncomingEmailHandler
 import com.sourceforgery.tachikoma.mailer.MailSender
 import com.sourceforgery.tachikoma.syslog.Syslogger
 import io.grpc.Metadata
@@ -75,7 +75,8 @@ internal constructor(
             .idleTimeout(365, TimeUnit.DAYS)
             .build()
         MailSender(channel).start()
-        IncomingEmail(channel).start()
+        val incomingEmail = IncomingEmailHandler(channel)
+        incomingEmail.start()
         Syslogger(channel).blockingSniffer()
     }
 
