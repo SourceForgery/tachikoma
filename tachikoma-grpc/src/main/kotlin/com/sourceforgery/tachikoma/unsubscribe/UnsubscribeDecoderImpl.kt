@@ -37,6 +37,6 @@ private constructor(
             .setMessage(ByteString.copyFrom(parcelled))
             .setSignature(ByteString.copyFrom(signature))
             .build()
-        return Base64.getUrlEncoder().encodeToString(signedMessage.toByteArray()).trimEnd('=')
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(signedMessage.toByteArray())
     }
 }
