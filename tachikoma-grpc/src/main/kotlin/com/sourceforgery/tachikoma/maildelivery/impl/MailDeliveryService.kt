@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
+import com.sourceforgery.jersey.uribuilder.JerseyUriBuilder
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
@@ -67,7 +68,6 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
-import net.moznion.uribuildertiny.URIBuilderTiny
 import org.apache.logging.log4j.kotlin.logger
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -379,8 +379,8 @@ private constructor(
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
         // TODO Abuse-email should be system-wide config parameter
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
-        // TODO Add this url (abuse)
-        message.addHeader("X-Report-Abuse", "You can also report abuse here: ${trackingConfig.baseUrl}/abuse/$messageId")
+        val abuseUrl = JerseyUriBuilder(trackingConfig.baseUrl).paths("abuse", messageId.messageId).build()
+        message.addHeader("X-Report-Abuse", "You can also report abuse here: $abuseUrl")
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
 
@@ -390,8 +390,8 @@ private constructor(
             .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
-        return URIBuilderTiny(trackingConfig.baseUrl)
-            .appendPaths("unsubscribe", unsubscribeUrl)
+        return JerseyUriBuilder(trackingConfig.baseUrl)
+            .paths("unsubscribe", unsubscribeUrl)
             .build()
     }
 
@@ -402,8 +402,8 @@ private constructor(
             .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
-        return URIBuilderTiny(trackingConfig.baseUrl)
-            .appendPaths("unsubscribeClick", unsubscribeUrl)
+        return JerseyUriBuilder(trackingConfig.baseUrl)
+            .paths("unsubscribeClick", unsubscribeUrl)
             .build()
     }
 
@@ -414,15 +414,15 @@ private constructor(
             .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-        return URIBuilderTiny(trackingConfig.baseUrl)
-            .appendPaths("c", trackingUrl)
+        return JerseyUriBuilder(trackingConfig.baseUrl)
+            .paths("c", trackingUrl)
             .build()
     }
 
     private fun replaceLinks(doc: Document, emailId: EmailId) {
         val links = doc.select("a[href]")
-        links.forEach {
-            val originalUri = it.attr("href")
+        for (link in links) {
+            val originalUri = link.attr("href")
                 ?: ""
             val newUri = UNSUB_REGEX.matchEntire(originalUri)
                 ?.let {
@@ -431,7 +431,7 @@ private constructor(
                 }
                 ?: createTrackingLink(emailId, originalUri)
 
-            it.attr("href", newUri.toString())
+            link.attr("href", newUri.toString())
         }
     }
 
@@ -441,8 +441,8 @@ private constructor(
             .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-        val trackingUri = URIBuilderTiny(trackingConfig.baseUrl)
-            .appendPaths("t", trackingUrl)
+        val trackingUri = JerseyUriBuilder(trackingConfig.baseUrl)
+            .paths("t", trackingUrl)
             .build()
 
         val trackingPixel = Element("img")
