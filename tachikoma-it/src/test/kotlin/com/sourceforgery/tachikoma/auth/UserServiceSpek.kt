@@ -15,7 +15,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.ModifyUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.PasswordAuth
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
-import com.sourceforgery.tachikoma.hk2.located
+import com.sourceforgery.tachikoma.hk2.hk2
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.users.UserService
 import io.ebean.EbeanServer
@@ -37,9 +37,9 @@ import org.junit.runner.RunWith
 @RunWith(JUnitPlatform::class)
 class UserServiceSpek : Spek({
     lateinit var serviceLocator: ServiceLocator
-    val userService: () -> UserService = located { serviceLocator }
-    val authenticationDAO: () -> AuthenticationDAO = located { serviceLocator }
-    val ebeanServer: () -> EbeanServer = located { serviceLocator }
+    val userService: UserService by hk2 { serviceLocator }
+    val authenticationDAO: AuthenticationDAO by hk2 { serviceLocator }
+    val ebeanServer: EbeanServer by hk2 { serviceLocator }
 
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder(), MinimalBinder(UserService::class.java))!!
@@ -51,7 +51,7 @@ class UserServiceSpek : Spek({
 
     fun createAuthentication(domain: String): AuthenticationDBO {
         val accountDBO = AccountDBO(MailDomain(domain))
-        ebeanServer().save(accountDBO)
+        ebeanServer.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
             login = domain,
@@ -60,7 +60,7 @@ class UserServiceSpek : Spek({
             role = AuthenticationRole.FRONTEND_ADMIN,
             account = accountDBO
         )
-        ebeanServer().save(authenticationDBO)
+        ebeanServer.save(authenticationDBO)
 
         return authenticationDBO
     }
@@ -79,10 +79,10 @@ class UserServiceSpek : Spek({
             .build()
         val req = AddUserRequest.parseFrom(b4.toByteArray())
 
-        val resp = userService().addFrontendUser(req)
+        val resp = userService.addFrontendUser(req)
         val user = resp.user
 
-        val actual = authenticationDAO().getById(user.authId.toAuthenticationId())!!
+        val actual = authenticationDAO.getById(user.authId.toAuthenticationId())!!
         assertEquals(b4.active, user.active)
         assertEquals(b4.active, actual.active)
 
@@ -110,10 +110,10 @@ class UserServiceSpek : Spek({
                 .build()
             val oldApiToken = newUser.apiToken
             val oldMailDomain = newUser.account.mailDomain
-            val resp = userService().modifyFrontendUser(before, newUser)
+            val resp = userService.modifyFrontendUser(before, newUser)
 
             val user = resp.user
-            val actual = authenticationDAO().getById(user.authId.toAuthenticationId())!!
+            val actual = authenticationDAO.getById(user.authId.toAuthenticationId())!!
             assertEquals(before.active, user.active)
             assertEquals(before.active, actual.active)
 
