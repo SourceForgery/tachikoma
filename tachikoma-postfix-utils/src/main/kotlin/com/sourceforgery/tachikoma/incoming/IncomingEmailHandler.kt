@@ -22,6 +22,7 @@ class IncomingEmailHandler(
         return GlobalScope.launch(Dispatchers.IO) {
             SOCKET_PATH.delete()
             SOCKET_PATH.deleteOnExit()
+            SOCKET_PATH.parentFile.mkdirs()
             val address = UnixSocketAddress(SOCKET_PATH)
             try {
                 UnixServerSocketChannel.open()!!
