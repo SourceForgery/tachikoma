@@ -3,7 +3,6 @@ package com.sourceforgery.tachikoma.database.server
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
-import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import io.ebean.EbeanServer
 import io.ebean.config.EncryptKey
 import io.ebean.config.EncryptKeyManager
@@ -26,7 +25,6 @@ private constructor(
     private val dbObjectMapper: DBObjectMapper,
     private val ebeanHooks: IterableProvider<EbeanHook>,
     private val databaseUpgrades: IterableProvider<DatabaseUpgrade>,
-    private val hK2RequestContext: HK2RequestContext,
     private val dataSourceProvider: DataSourceProvider
 ) : Factory<EbeanServer> {
 
