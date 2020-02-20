@@ -9,7 +9,7 @@ Content-Type: multipart/alternative;
 List-Unsubscribe-Post: One-Click
 List-Unsubscribe: <http://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>, <mailto:unsub-not-really-random1@example.com?subject=unsub>
 X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@example.com
-X-Report-Abuse: You can also report abuse here: http://localhost//abuse/not-really-random1@example.com
+X-Report-Abuse: You can also report abuse here: http://localhost/abuse/not-really-random1@example.com
 X-Tachikoma-User: 1
 
 --XXXXXX

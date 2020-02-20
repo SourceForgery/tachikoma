@@ -1,6 +1,7 @@
 rootProject.name = "com.sourceforgery.tachikoma"
 
 include(
+    "jersey-uri-builder",
     "tachikoma-protobuf-annotations",
 
     "tachikoma-backend-api-proto",
