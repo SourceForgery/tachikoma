@@ -8,6 +8,7 @@ import com.linecorp.armeria.server.Server
 import com.linecorp.armeria.server.cors.CorsService
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
+import com.linecorp.armeria.server.logging.AccessLogWriter
 import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.GrpcBinder
@@ -54,6 +55,7 @@ class WebServerStarter(
         // Order matters!
         val serverBuilder = Server.builder()
             .serviceUnder("/health", healthService)
+            .accessLogWriter(AccessLogWriter.combined(), true)
         val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
 
         val restDecoratorFunction = Function<HttpService, HttpService> { it.decorate(requestScoped) }
