@@ -24,6 +24,8 @@ PidFile                 /var/run/opendkim/opendkim.pid
 SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
 Socket                  inet:8891@localhost
+SignHeaders             From,Reply-To,Sender,To,CC,Subject,Message-Id,Date,List-Unsubscribe-Post,List-Unsubscribe,X-Tachikoma-User
+AlwaysSignHeaders       From,Reply-To,Sender,To,CC,Subject,Message-Id,Date,List-Unsubscribe-Post,List-Unsubscribe,X-Tachikoma-User
 EOF
 
 echo -n >/etc/opendkim/KeyTable
