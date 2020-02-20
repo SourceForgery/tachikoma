@@ -96,19 +96,34 @@ Requires=docker.service
 [Service]
 Type=simple
 Environment=name=tachikoma-postfix
+Environment=configDir=/opt/example.com
 Environment=mailDomain=EXAMPLE.COM
 Environment=backendApiKey=XXXXXXXXXXXXXXXXX
 Environment=webserverHost=TACHIKOMA-SERVER.EXAMPLE.COM
 Environment=image=sourceforgery/tachikoma-postfix:VERSION
 
 ExecStartPre=/usr/bin/docker pull ${image}
-ExecStart=/usr/bin/docker run --rm=true -p 25:25 --name=${name} \
+ExecStart=/usr/bin/docker run --rm=true -p 587:587 -p 25:25 --name=${name} \
   -e MAIL_DOMAIN_MX=false \
   -e TACHIKOMA_URL=https://${mailDomain}:${backendApiKey}@${webserverHost} \
-  -v /etc/ssl/private/domainkeys:/etc/opendkim/domainkeys:ro \
+  -v ${configDir}/domainkeys:/etc/opendkim/domainkeys \
+  -v ${configDir}/postfix:/var/spool/postfix \
   ${image}
-ExecStop=-/usr/bin/docker stop ${name}
 
+ExecStop=-/usr/bin/docker stop ${name}
+Restart=always
+RestartSec=10s
+TimeoutStartSec=5min
 [Install]
 WantedBy=multi-user.target
 ```
+
+### Setting up mail domains ###
+
+* Add your email domain e.g example.com to the server configuration `MAIL_DOMAINS=example.com` this is a , separated list for
+multiple domains.
+* Setup SPF for your domain using this [tool](https://mxtoolbox.com/SPFRecordGenerator.aspx?domain=example.com)
+* Create DKIM certificate for example.com follow these [instructions](http://knowledge.ondmarc.com/en/articles/2141527-generating-1024-bits-dkim-public-and-private-keys-using-openssl-on-a-mac)
+* Create directories e.g `mkdir -p /opt/example.com/domainkeys /opt/example.com/postfix`
+* Put the private key in `/etc/opendkim/domainkeys` or if you use a docker version make sure that you put the file in the mounted directory 
+e.g `/opt/example.com/domainkeys` make sure that you name the file `<DNS_NAME>._domainkey.<DOMAIN>.private` e.g `20180719._domainkey.example.com.private` where DNS_NAME is what you set in the above instructions.
