@@ -81,4 +81,5 @@ fun Project.grpcSetup() {
     afterEvaluate {
         tasks["generateProto"].dependsOn(downloadProtocLint)
     }
+    fixUglyCode()
 }
