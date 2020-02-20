@@ -16,11 +16,13 @@ LogWhy                  Yes
 Canonicalization        relaxed/relaxed
 KeyTable                refile:/etc/opendkim/KeyTable
 SigningTable            refile:/etc/opendkim/SigningTable
+ExternalIgnoreList      refile:/etc/opendkim/TrustedHosts
+InternalHosts           refile:/etc/opendkim/TrustedHosts
 Mode                    sv
 PidFile                 /var/run/opendkim/opendkim.pid
 SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
-Socket                  local:/opendkim/opendkim.sock
+Socket                  inet:8891@localhost
 EOF
 
 echo -n >/etc/opendkim/KeyTable
