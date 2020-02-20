@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma.postfix
 
+import com.sourceforgery.jersey.uribuilder.addPort
+import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.incoming.IncomingEmailHandler
 import com.sourceforgery.tachikoma.mailer.MailSender
@@ -11,7 +13,6 @@ import io.grpc.stub.MetadataUtils
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
-import java.net.URI
 import java.util.concurrent.TimeUnit
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
@@ -24,30 +25,10 @@ internal constructor(
     private val configuration: Configuration
 ) {
 
-    private val tachikomaUrl = addPort(configuration.tachikomaUrl)
-
-    private fun withoutPassword(uri: URI): String {
-        val query = uri.rawQuery?.let { "?$it" } ?: ""
-        return "${uri.scheme}://${uri.host}${uri.path ?: "/"}$query"
-    }
-
-    private fun addPort(uri: URI): URI {
-        val query = uri.rawQuery?.let { "?$it" } ?: ""
-        val port: Int =
-            if (uri.port == -1) {
-                when (uri.scheme) {
-                    "http" -> 80
-                    "https" -> 443
-                    else -> throw IllegalArgumentException("Unknown proto's default port is unknown")
-                }
-            } else {
-                uri.port
-            }
-        return URI.create("${uri.scheme}://${uri.userInfo}@${uri.host}:$port${uri.path ?: "/"}$query")
-    }
+    private val tachikomaUrl = configuration.tachikomaUrl.addPort()
 
     fun run() {
-        LOGGER.info { "Connecting to ${withoutPassword(tachikomaUrl)}" }
+        LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
 
         val plaintext = tachikomaUrl.scheme == "http"
 

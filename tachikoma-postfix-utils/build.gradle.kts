@@ -12,6 +12,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
     implementation("io.grpc:grpc-stub:$grpcVersion")
 
+    implementation(project(":jersey-uri-builder"))
     implementation(project(":tachikoma-common"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
 }
