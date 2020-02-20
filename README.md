@@ -103,7 +103,7 @@ Environment=webserverHost=TACHIKOMA-SERVER.EXAMPLE.COM
 Environment=image=sourceforgery/tachikoma-postfix:VERSION
 
 ExecStartPre=/usr/bin/docker pull ${image}
-ExecStart=/usr/bin/docker run --rm=true -p 587:587 -p 25:25 --name=${name} \
+ExecStart=/usr/bin/docker run --rm=true -p 25:25 --name=${name} \
   -e MAIL_DOMAIN_MX=false \
   -e TACHIKOMA_URL=https://${mailDomain}:${backendApiKey}@${webserverHost} \
   -v ${configDir}/domainkeys:/etc/opendkim/domainkeys \
