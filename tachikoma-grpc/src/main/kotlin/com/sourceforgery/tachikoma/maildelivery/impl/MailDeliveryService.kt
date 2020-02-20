@@ -69,6 +69,7 @@ import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
 import org.apache.logging.log4j.kotlin.logger
+import org.jetbrains.annotations.TestOnly
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -384,7 +385,8 @@ private constructor(
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
 
-    private fun createUnsubscribeOneClickPostLink(emailId: EmailId): URI {
+    @TestOnly
+    fun createUnsubscribeOneClickPostLink(emailId: EmailId): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
             .setEmailId(emailId.toGrpcInternal())
             .build()
@@ -395,10 +397,11 @@ private constructor(
             .build()
     }
 
-    private fun createUnsubscribeClickLink(emailId: EmailId, redirectUri: String = ""): URI {
+    @TestOnly
+    fun createUnsubscribeClickLink(emailId: EmailId, redirectUri: URI? = null): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
             .setEmailId(emailId.toGrpcInternal())
-            .setRedirectUrl(redirectUri)
+            .setRedirectUrl(redirectUri?.toString() ?: "")
             .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
@@ -407,7 +410,8 @@ private constructor(
             .build()
     }
 
-    private fun createTrackingLink(emailId: EmailId, originalUri: String): URI {
+    @TestOnly
+    fun createTrackingLink(emailId: EmailId, originalUri: String): URI {
         val trackingData = UrlTrackingData.newBuilder()
             .setEmailId(emailId.toGrpcInternal())
             .setRedirectUrl(originalUri)
@@ -427,7 +431,7 @@ private constructor(
             val newUri = UNSUB_REGEX.matchEntire(originalUri)
                 ?.let {
                     // Convert into unsubscribe link
-                    createUnsubscribeClickLink(emailId, it.groupValues[1])
+                    createUnsubscribeClickLink(emailId, URI(it.groupValues[1]))
                 }
                 ?: createTrackingLink(emailId, originalUri)
 

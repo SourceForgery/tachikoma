@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.auth.AuthenticationMock
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.config.DebugConfig
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
@@ -116,6 +117,10 @@ class TestBinder(
         bindAsContract(DBObjectMapperImpl::class.java)
             .to(DBObjectMapper::class.java)
             .`in`(Singleton::class.java)
+
+        bind(object : DebugConfig {
+            override val sendDebugData = true
+        }).to(DebugConfig::class.java)
     }
 }
 
