@@ -375,7 +375,7 @@ private constructor(
         val bounceReturnPathEmail = Email("bounce-$messageId")
 
         // MUST have a valid DomainKeys Identified Mail (DKIM) signature that covers at least the List-Unsubscribe and List-Unsubscribe-Post headers
-        message.addHeader("List-Unsubscribe-Post", "One-Click")
+        message.addHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
         message.addHeader("List-Unsubscribe", "<$unsubscribeUri>, <mailto:$unsubscribeEmail?subject=unsub>")
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
         // TODO Abuse-email should be system-wide config parameter

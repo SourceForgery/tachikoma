@@ -82,6 +82,7 @@ class WebServerStarter(
                     port(8443, SessionProtocol.HTTPS)
                 } else {
                     port(8070, SessionProtocol.HTTP)
+                    LOGGER.warn { "Unsubscribe may not work properly as rfc8058 REQUIRES https" }
                 }
             }
             .requestTimeout(Duration.ofDays(365))

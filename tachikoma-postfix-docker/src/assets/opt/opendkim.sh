@@ -1,8 +1,9 @@
 #!/bin/bash -eu
 
 if ! ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q domain; then
-    echo "No domain keys matching pattern /etc/opendkim/domainkeys/*._domainkey.*.private was found"
-    echo "Skipping dkim configuration and startup"
+    logger -s "No domain keys matching pattern /etc/opendkim/domainkeys/*._domainkey.*.private was found"
+    logger -s "Features such as unsubscribe will not work properly as spec requires DKIM"
+    logger -s "Skipping dkim configuration and startup"
     sleep infinity
 fi
 

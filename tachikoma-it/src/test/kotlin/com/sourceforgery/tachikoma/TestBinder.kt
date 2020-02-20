@@ -49,7 +49,7 @@ class TestBinder(
     override fun configure() {
         bind(object : TrackingConfig {
             override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd".toByteArray()
-            override val baseUrl: URI = URI.create("http://localhost/")
+            override val baseUrl: URI = URI.create("https://localhost/")
         })
             .to(TrackingConfig::class.java)
 
