@@ -8,7 +8,7 @@ dependencies {
     implementation("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4") {
         exclude(group = "nekohtml", module = "xercesMinimal")
     }
-    implementation("org.jlleitschuh.gradle:ktlint-gradle:9.2.0")
+    implementation("org.jlleitschuh.gradle:ktlint-gradle:9.2.1")
     implementation("io.ebean:ebean-gradle-plugin:12.1.12")
     implementation("net.researchgate:gradle-release:2.8.1")
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r")
