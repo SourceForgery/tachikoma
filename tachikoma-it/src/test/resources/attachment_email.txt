@@ -1,6 +1,7 @@
 Return-Path: bounce-not-really-random1@example.com
 Date: XXXXX
 From: Valid From Email <from@example.com>
+To: Valid Email <foo@example.com>
 Message-ID: <not-really-random1@example.com>
 Subject: Test mail subject
 MIME-Version: 1.0

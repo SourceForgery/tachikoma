@@ -44,9 +44,9 @@ mkdir -p /opendkim
 chown opendkim:opendkim /opendkim
 chmod 0750 /opendkim
 
-chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname *.private)
+chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname "*.private")
 
-chmod 400 $(find /etc/opendkim/domainkeys -iname *.private)
+chmod 400 $(find /etc/opendkim/domainkeys -iname "*.private")
 
 # Make sure rsyslog is started first
 while ! nc -z localhost 514
