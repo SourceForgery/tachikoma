@@ -62,6 +62,7 @@ import java.util.Properties
 import java.util.concurrent.Executors
 import javax.activation.DataHandler
 import javax.inject.Inject
+import javax.mail.Message
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
@@ -168,7 +169,8 @@ private constructor(
                         emailId = emailDBO.id,
                         messageId = messageId,
                         fromEmail = fromEmail,
-                        sender = sender
+                        sender = sender,
+                        recipient = recipient
                     )
                     OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
                         request = request,
@@ -237,7 +239,8 @@ private constructor(
             emailId = emailId,
             messageId = messageId,
             fromEmail = fromEmail,
-            sender = sender
+            sender = sender,
+            recipient = recipient
         )
     }
 
@@ -246,7 +249,8 @@ private constructor(
         emailId: EmailId,
         messageId: MessageId,
         fromEmail: Email,
-        sender: AccountId
+        sender: AccountId,
+        recipient: EmailRecipient
     ): Pair<String, String> {
         val static = request.static
         val htmlBody = static.htmlBody.emptyToNull()
@@ -260,7 +264,8 @@ private constructor(
             emailId = emailId,
             messageId = messageId,
             fromEmail = fromEmail,
-            sender = sender
+            sender = sender,
+            recipient = recipient
         )
     }
 
@@ -293,7 +298,8 @@ private constructor(
         emailId: EmailId,
         messageId: MessageId,
         fromEmail: Email,
-        sender: AccountId
+        sender: AccountId,
+        recipient: EmailRecipient
     ): String {
         if (htmlBody == null && plaintextBody == null) {
             throw IllegalArgumentException("Needs at least one of plaintext or html")
@@ -301,8 +307,9 @@ private constructor(
 
         val session = Session.getDefaultInstance(Properties())
         val message = MimeMessage(session)
-        message.setFrom(InternetAddress(request.from.email, request.from.name))
+        message.setFrom(request.from.toNamedEmail().toAddress())
         message.setSubject(subject, "UTF-8")
+        message.setRecipients(Message.RecipientType.TO, arrayOf(recipient.toAddress()))
 
         if (request.replyTo.email.isNotBlank()) {
             val replyToMailDomain = request.replyTo.toEmail().domain.mailDomain
@@ -489,3 +496,9 @@ private constructor(
         private val responseCloser = Executors.newCachedThreadPool()
     }
 }
+
+fun NamedEmail.toAddress(): InternetAddress =
+    InternetAddress(address.address, name)
+
+fun EmailRecipient.toAddress(): InternetAddress =
+    InternetAddress(namedEmail.email, namedEmail.name)
