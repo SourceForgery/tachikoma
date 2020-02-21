@@ -26,7 +26,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
     exposePort(8443)
     exposePort(8070)
 
-    defaultCommand(listOf("bash", "-c", "if [ ! -f /etc/tachikoma/rsyslog/external.conf ]; then; rm -f /etc/rsyslog.d/external.conf; fi ; /usr/sbin/rsyslogd && /opt/tachikoma-webserver/bin/tachikoma-webserver"))
+    defaultCommand(listOf("bash", "-c", "if [ ! -f /etc/tachikoma/rsyslog/external.conf ]; then rm -f /etc/rsyslog.d/external.conf; fi ; /usr/sbin/rsyslogd && /opt/tachikoma-webserver/bin/tachikoma-webserver"))
 
     runCommand("""
         sed -r "/(KLogPermitNonKernelFacility|imklog)/d" -i /etc/rsyslog.conf &&
