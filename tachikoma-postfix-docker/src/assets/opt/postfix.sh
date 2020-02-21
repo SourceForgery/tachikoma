@@ -58,8 +58,6 @@ if [[ -n "$(find /etc/postfix/certs -iname '*.crt')" && -n "$(find /etc/postfix/
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
 fi
 
-# Sleep to let opendkim start
-sleep 3
 
 # OpenDKIM
 if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q domain; then
@@ -67,7 +65,20 @@ if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q doma
   postconf -e milter_default_action=accept
   postconf -e smtpd_milters=inet:localhost:8891
   postconf -e non_smtpd_milters=inet:localhost:8891
+
+  # Make sure opendkim is started first
+  while ! nc -z localhost 8891
+  do
+    sleep 0.1
+  done
 fi
+
+# Make sure rsyslog is started first
+while ! nc -z localhost 514
+do
+  sleep 0.1
+done
+
 
 service postfix start
 

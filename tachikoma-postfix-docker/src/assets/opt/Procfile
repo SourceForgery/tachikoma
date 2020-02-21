@@ -1,4 +1,4 @@
+syslog: /opt/rsyslog.sh
 opendkim: /opt/opendkim.sh
 postfix: /opt/postfix.sh
 tachikoma_utils: /opt/tachikoma.sh
-syslog: bash -c "while ! nc -z localhost 25; do sleep 0.1; done; /usr/sbin/rsyslogd -n"
