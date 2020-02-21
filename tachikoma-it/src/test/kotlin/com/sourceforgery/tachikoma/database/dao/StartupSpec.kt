@@ -4,7 +4,7 @@ import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.TestAttribute
 import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
-import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.hk2.getValue
 import io.ebean.EbeanServer
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebeaninternal.server.core.DefaultServer
@@ -29,7 +29,7 @@ class StartupSpec : Spek({
     }
     describe("Test") {
         it("Test upgrade scripts") {
-            val ebeanServer: EbeanServer = serviceLocator.get()
+            val ebeanServer: EbeanServer by serviceLocator
             val platform = (ebeanServer as DefaultServer).databasePlatform
             assertTrue(platform is PostgresPlatform, "platform is $platform")
             ebeanServer.find(EmailDBO::class.java).findList()

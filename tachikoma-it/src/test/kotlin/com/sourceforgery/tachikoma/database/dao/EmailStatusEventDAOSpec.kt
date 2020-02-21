@@ -6,7 +6,7 @@ import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.hk2.located
+import com.sourceforgery.tachikoma.hk2.hk2
 import java.time.Clock
 import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
@@ -22,9 +22,9 @@ import org.junit.runner.RunWith
 @RunWith(JUnitPlatform::class)
 internal class EmailStatusEventDAOSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
-    val emailStatusEventDAO: () -> EmailStatusEventDAO = located { serviceLocator }
-    val daoHelper: () -> DAOHelper = located { serviceLocator }
-    val clock: () -> Clock = located { serviceLocator }
+    val emailStatusEventDAO: EmailStatusEventDAO by hk2 { serviceLocator }
+    val daoHelper: DAOHelper by hk2 { serviceLocator }
+    val clock: Clock by hk2 { serviceLocator }
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(
             RandomStringUtils.randomAlphanumeric(10),
@@ -41,45 +41,45 @@ internal class EmailStatusEventDAOSpec : Spek({
 
         it("it should return all recent status events for specified account") {
 
-            val authentication1 = daoHelper().createAuthentication("example.org")
-            daoHelper().createEmailStatusEvent(
+            val authentication1 = daoHelper.createAuthentication("example.org")
+            daoHelper.createEmailStatusEvent(
                 authentication = authentication1,
                 from = Email("from@example.org"),
                 recipient = Email("recipient1@example.org"),
                 emailStatus = EmailStatus.DELIVERED
             )
-            daoHelper().createEmailStatusEvent(
+            daoHelper.createEmailStatusEvent(
                 authentication = authentication1,
                 from = Email("from@example.org"),
                 recipient = Email("recipient2@example.org"),
                 emailStatus = EmailStatus.DELIVERED
             )
-            val event1 = daoHelper().createEmailStatusEvent(
+            val event1 = daoHelper.createEmailStatusEvent(
                 authentication = authentication1,
                 from = Email("from@example.org"),
                 recipient = Email("recipient3@example.org"),
                 emailStatus = EmailStatus.DELIVERED,
-                dateCreated = clock().instant().minus(3, ChronoUnit.DAYS)
+                dateCreated = clock.instant().minus(3, ChronoUnit.DAYS)
             )
-            val event2 = daoHelper().createEmailStatusEvent(
+            val event2 = daoHelper.createEmailStatusEvent(
                 authentication = authentication1,
                 from = Email("from@example.org"),
                 recipient = Email("recipient3@example.org"),
                 emailStatus = EmailStatus.UNSUBSCRIBE,
-                dateCreated = clock().instant().minus(2, ChronoUnit.DAYS)
+                dateCreated = clock.instant().minus(2, ChronoUnit.DAYS)
             )
 
-            val authentication2 = daoHelper().createAuthentication("example.com")
-            daoHelper().createEmailStatusEvent(
+            val authentication2 = daoHelper.createAuthentication("example.com")
+            daoHelper.createEmailStatusEvent(
                 authentication = authentication2,
                 from = Email("from@example.com"),
                 recipient = Email("recipient@example.com"),
                 emailStatus = EmailStatus.DELIVERED
             )
 
-            val eventsTimeLimit = clock().instant().minus(4, ChronoUnit.DAYS)
+            val eventsTimeLimit = clock.instant().minus(4, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO().getEvents(
+            val emailStatusEvents = emailStatusEventDAO.getEvents(
                 accountId = authentication1.account.id,
                 instant = eventsTimeLimit,
                 recipientEmail = Email("recipient3@example.org"),
@@ -94,27 +94,27 @@ internal class EmailStatusEventDAOSpec : Spek({
 
         it("it should not return events outside time limit") {
 
-            val authentication1 = daoHelper().createAuthentication("example.org")
-            daoHelper().createEmailStatusEvent(
+            val authentication1 = daoHelper.createAuthentication("example.org")
+            daoHelper.createEmailStatusEvent(
                 authentication = authentication1,
                 from = Email("from@example.org"),
                 recipient = Email("recipient1@example.org"),
                 emailStatus = EmailStatus.DELIVERED,
-                dateCreated = clock().instant().minus(3, ChronoUnit.DAYS)
+                dateCreated = clock.instant().minus(3, ChronoUnit.DAYS)
 
             )
-            daoHelper().createEmailStatusEvent(
+            daoHelper.createEmailStatusEvent(
                 authentication = authentication1,
                 from = Email("from@example.org"),
                 recipient = Email("recipient1@example.org"),
                 emailStatus = EmailStatus.DELIVERED,
-                dateCreated = clock().instant().minus(4, ChronoUnit.DAYS)
+                dateCreated = clock.instant().minus(4, ChronoUnit.DAYS)
 
             )
 
-            val eventsTimeLimit = clock().instant().minus(2, ChronoUnit.DAYS)
+            val eventsTimeLimit = clock.instant().minus(2, ChronoUnit.DAYS)
 
-            val emailStatusEvents = emailStatusEventDAO().getEvents(
+            val emailStatusEvents = emailStatusEventDAO.getEvents(
                 accountId = authentication1.account.id,
                 instant = eventsTimeLimit
             )

@@ -21,4 +21,13 @@ class Email {
 
     // Don't change this. Used for string templates
     override fun toString() = address
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Email) return false
+
+        return address == other.address
+    }
+
+    override fun hashCode() = address.hashCode()
 }

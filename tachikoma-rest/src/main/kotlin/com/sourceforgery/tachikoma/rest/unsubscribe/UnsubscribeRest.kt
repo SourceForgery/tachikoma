@@ -25,6 +25,7 @@ import com.sourceforgery.tachikoma.rest.RestUtil
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import java.time.Clock
+import java.util.Optional
 import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
 
@@ -44,9 +45,10 @@ private constructor(
     @ConsumesGroup(Consumes("multipart/form-data"), Consumes("application/x-www-form-urlencoded"))
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String,
-        @Param("List-Unsubscribe") listUnsubscribe: String
+        @Param("List-Unsubscribe") optionalListUnsubscribe: Optional<String>
     ): HttpResponse {
         try {
+            val listUnsubscribe = optionalListUnsubscribe.orElse(null)
             if (listUnsubscribe != ONE_CLICK_FORM_DATA) {
                 throw IllegalArgumentException("Not valid One-Click unsubscribe form data $listUnsubscribe")
             }

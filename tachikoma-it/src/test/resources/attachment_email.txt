@@ -6,10 +6,10 @@ Subject: Test mail subject
 MIME-Version: 1.0
 Content-Type: multipart/alternative; 
 	boundary="XXXXXX"
-List-Unsubscribe-Post: One-Click
-List-Unsubscribe: <http://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>, <mailto:unsub-not-really-random1@example.com?subject=unsub>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+List-Unsubscribe: <https://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>, <mailto:unsub-not-really-random1@example.com?subject=unsub>
 X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@example.com
-X-Report-Abuse: You can also report abuse here: http://localhost/abuse/not-really-random1@example.com
+X-Report-Abuse: You can also report abuse here: https://localhost/abuse/not-really-random1@example.com
 X-Tachikoma-User: 1
 
 --XXXXXX
@@ -29,8 +29,8 @@ Content-Transfer-Encoding: quoted-printable
                                       .
 =2E
 .                =20
-<img src=3D"http://localhost/t/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo"=
- height=3D"1" width=3D"1"></body></html>
+<img src=3D"https://localhost/t/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo=
+" height=3D"1" width=3D"1"></body></html>
 --XXXXXX
 Content-Type: application/pdf; name=NotReally.pdf
 Content-Transfer-Encoding: base64

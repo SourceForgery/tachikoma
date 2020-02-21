@@ -45,7 +45,7 @@ constructor(
         transaction: EmailSendTransactionDBO,
         messageId: MessageId,
         mtaQueueId: String? = null,
-        metaData: Map<String, String> = HashMap()
+        metaData: Map<String, String> = emptyMap()
     ) : this(
         recipient = recipient.address,
         recipientName = recipient.name,

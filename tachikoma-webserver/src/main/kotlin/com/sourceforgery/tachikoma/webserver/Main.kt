@@ -15,7 +15,7 @@ import com.sourceforgery.tachikoma.GrpcBinder
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
-import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.hk2.getValue
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MqBinder
 import com.sourceforgery.tachikoma.rest.RestBinder
@@ -44,7 +44,7 @@ class WebServerStarter(
 ) {
 
     private fun startServerInBackground(): CompletableFuture<Void> {
-        val requestScoped: HttpRequestScopedDecorator = serviceLocator.get()
+        val requestScoped: HttpRequestScopedDecorator by serviceLocator
 
         val healthService = CorsService
             .builderForAnyOrigin()
@@ -56,15 +56,15 @@ class WebServerStarter(
         val serverBuilder = Server.builder()
             .serviceUnder("/health", healthService)
             .accessLogWriter(AccessLogWriter.combined(), true)
-        val exceptionHandler: RestExceptionHandlerFunction = serviceLocator.get()
+        val exceptionHandler: RestExceptionHandlerFunction by serviceLocator
 
         val restDecoratorFunction = Function<HttpService, HttpService> { it.decorate(requestScoped) }
         for (restService in serviceLocator.getAllServices(RestService::class.java)) {
             serverBuilder.annotatedService("/", restService, restDecoratorFunction, exceptionHandler)
         }
 
-        val exceptionInterceptor: GrpcExceptionInterceptor = serviceLocator.get()
-        val webServerConfig: WebServerConfig = serviceLocator.get()
+        val exceptionInterceptor: GrpcExceptionInterceptor by serviceLocator
+        val webServerConfig: WebServerConfig by serviceLocator
 
         val grpcServiceBuilder = GrpcService.builder().supportedSerializationFormats(GrpcSerializationFormats.values())
         for (grpcService in serviceLocator.getAllServices(BindableService::class.java)) {
@@ -82,6 +82,7 @@ class WebServerStarter(
                     port(8443, SessionProtocol.HTTPS)
                 } else {
                     port(8070, SessionProtocol.HTTP)
+                    LOGGER.warn { "Unsubscribe may not work properly as rfc8058 REQUIRES https" }
                 }
             }
             .requestTimeout(Duration.ofDays(365))
@@ -107,7 +108,7 @@ class WebServerStarter(
     }
 
     private fun startDatabase() {
-        val hk2RequestScope: HK2RequestContext = serviceLocator.get()
+        val hk2RequestScope: HK2RequestContext by serviceLocator
         serviceLocator
             .getServiceHandle(CreateUsers::class.java)
             .also { serviceHandle ->

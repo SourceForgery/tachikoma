@@ -8,7 +8,7 @@ import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.hk2.get
+import com.sourceforgery.tachikoma.hk2.hk2
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.ebean.EbeanServer
 import java.util.UUID
@@ -28,12 +28,10 @@ import org.junit.runner.RunWith
 @RunWith(JUnitPlatform::class)
 internal class IncomingEmailAddressDAOSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
-    lateinit var incomingEmailAddressDAO: IncomingEmailAddressDAO
-    lateinit var ebeanServer: EbeanServer
+    val incomingEmailAddressDAO: IncomingEmailAddressDAO by hk2 { serviceLocator }
+    val ebeanServer: EbeanServer by hk2 { serviceLocator }
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder())
-        incomingEmailAddressDAO = serviceLocator.get()
-        ebeanServer = serviceLocator.get()
     }
 
     afterEachTest {

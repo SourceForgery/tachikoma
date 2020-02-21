@@ -16,8 +16,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.StaticBody
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
-import com.sourceforgery.tachikoma.hk2.get
-import com.sourceforgery.tachikoma.hk2.located
+import com.sourceforgery.tachikoma.hk2.getValue
+import com.sourceforgery.tachikoma.hk2.hk2
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import java.nio.charset.StandardCharsets
 import java.util.Base64
@@ -34,8 +34,8 @@ import org.junit.runner.RunWith
 @RunWith(JUnitPlatform::class)
 class MailDeliveryServiceSpec : Spek({
     lateinit var serviceLocator: ServiceLocator
-    val mailDeliveryService: () -> MailDeliveryService = located { serviceLocator }
-    val daoHelper: () -> DAOHelper = located { serviceLocator }
+    val mailDeliveryService: MailDeliveryService by hk2 { serviceLocator }
+    val daoHelper: DAOHelper by hk2 { serviceLocator }
 
     beforeEachTest {
         serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder(), MinimalBinder(MailDeliveryService::class.java))!!
@@ -46,7 +46,7 @@ class MailDeliveryServiceSpec : Spek({
 
     describe("Send emails") {
         it("with attachment") {
-            val authentication = daoHelper().createAuthentication(fromEmail.toNamedEmail().address.domain)
+            val authentication = daoHelper.createAuthentication(fromEmail.toNamedEmail().address.domain)
             val email = OutgoingEmail.newBuilder()
                 .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
                 .addAttachments(Attachment.newBuilder()
@@ -64,13 +64,13 @@ class MailDeliveryServiceSpec : Spek({
                 ).setSubject("Test mail subject"))
                 .build()
             val responseObserver = QueueStreamObserver<EmailQueueStatus>()
-            mailDeliveryService().sendEmail(
+            mailDeliveryService.sendEmail(
                 request = email,
                 sender = authentication.account.id,
                 responseObserver = responseObserver,
                 authenticationId = authentication.id
             )
-            val emailDAO: EmailDAO = serviceLocator.get()
+            val emailDAO: EmailDAO by serviceLocator
             val queued = responseObserver.take(500)
             val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
             val boundary = Regex("\tboundary=\"(.*?)\"").find(byEmailId.body!!)!!.groupValues[1]
