@@ -18,7 +18,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
 
     runCommand("""apt-get update && \
                   apt-get -y dist-upgrade && \
-                  apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-11-jdk-headless netcat-openbsd && \
+                  apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-11-jdk-headless netcat-openbsd lsof && \
                   apt-get clean && \
                   rm -rf /var/cache/apt/ /var/lib/apt/lists/*
               """)
@@ -53,7 +53,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
 
     runCommand("chmod a+x /opt/tachikoma-postfix-utils/bin/tachikoma-postfix-utils")
 
-    addInstruction("HEALTHCHECK", "CMD /bin/nc -z localhost 25 || exit 1")
+    addInstruction("HEALTHCHECK", "CMD lsof -ni :25 | grep -q LISTEN || exit 1")
 
     push = rootProject.extensions.extraProperties["dockerPush"] as Boolean
 }
