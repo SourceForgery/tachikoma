@@ -25,7 +25,7 @@ SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
 Socket                  inet:8891@localhost
 SignHeaders             From,Reply-To,Sender,To,CC,Subject,Message-Id,Date,List-Unsubscribe-Post,List-Unsubscribe,X-Tachikoma-User
-AlwaysSignHeaders       From,Reply-To,Sender,To,CC,Subject,Message-Id,Date,List-Unsubscribe-Post,List-Unsubscribe,X-Tachikoma-User
+# AlwaysSignHeaders       From,Reply-To,Sender,To,CC,Subject,Message-Id,Date,List-Unsubscribe-Post,List-Unsubscribe,X-Tachikoma-User
 EOF
 
 echo -n >/etc/opendkim/KeyTable
@@ -47,5 +47,11 @@ chmod 0750 /opendkim
 chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname *.private)
 
 chmod 400 $(find /etc/opendkim/domainkeys -iname *.private)
+
+# Make sure rsyslog is started first
+while ! nc -z localhost 514
+do
+  sleep 0.1
+done
 
 exec /usr/sbin/opendkim -f
