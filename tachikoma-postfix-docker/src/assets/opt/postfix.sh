@@ -48,20 +48,26 @@ postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
 postmap hash:/etc/postfix/vmailbox
 
 # TLS
-if [[ -n "$(find /etc/postfix/certs -iname *.crt)" && -n "$(find /etc/postfix/certs -iname *.key)" ]]; then
-  postconf -e smtpd_tls_cert_file=$(find /etc/postfix/certs -iname *.crt)
-  postconf -e smtpd_tls_key_file=$(find /etc/postfix/certs -iname *.key)
+if [[ -n "$(find /etc/postfix/certs -iname '*.crt')" && -n "$(find /etc/postfix/certs -iname '*.key')" ]]; then
+  # shellcheck disable=SC2046
+  postconf -e smtpd_tls_cert_file="$(find /etc/postfix/certs -iname '*.crt')"
+  postconf -e smtpd_tls_key_file="$(find /etc/postfix/certs -iname '*.key')"
   chmod 400 /etc/postfix/certs/*.*
   postconf -M submission/inet="submission   inet   n   -   n   -   -   smtpd"
   postconf -P "submission/inet/syslog_name=postfix/submission"
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
 fi
 
+# Sleep to let opendkim start
+sleep 3
+
 # OpenDKIM
-postconf -e milter_protocol=2
-postconf -e milter_default_action=accept
-postconf -e smtpd_milters=inet:localhost:8891
-postconf -e non_smtpd_milters=inet:localhost:8891
+if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q domain; then
+  postconf -e milter_protocol=2
+  postconf -e milter_default_action=accept
+  postconf -e smtpd_milters=inet:localhost:8891
+  postconf -e non_smtpd_milters=inet:localhost:8891
+fi
 
 service postfix start
 
