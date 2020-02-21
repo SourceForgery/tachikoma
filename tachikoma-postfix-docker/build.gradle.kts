@@ -25,7 +25,6 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
     runCommand("pip3 install --no-cache-dir honcho==1.0.1")
 
     exposePort(25)
-    exposePort(587)
 
     addFile(file("src/assets/"))
 
