@@ -82,6 +82,4 @@ done
 
 service postfix start
 
-touch /var/log/mail.log
-
 exec tail -f /var/log/mail.log
