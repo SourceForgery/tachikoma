@@ -9,8 +9,8 @@ import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsEx
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionCatcher
 import com.sourceforgery.tachikoma.rest.catchers.RestExceptionCatcher
 import io.grpc.Status
-import org.apache.logging.log4j.kotlin.logger
 import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
 
 class InvalidOrInsufficientCredentialsCatcher
 @Inject
