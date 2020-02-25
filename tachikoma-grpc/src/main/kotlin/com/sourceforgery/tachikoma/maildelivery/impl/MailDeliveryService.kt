@@ -103,7 +103,7 @@ private constructor(
         val auth = authenticationDAO.getActiveById(authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
         if (fromEmail.domain != auth.account.mailDomain) {
-            throw InvalidOrInsufficientCredentialsException()
+            throw InvalidOrInsufficientCredentialsException("${auth.account.mailDomain} is not allowed to send emails with from domain: ${fromEmail.domain}")
         }
 
         val transaction = EmailSendTransactionDBO(

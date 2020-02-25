@@ -9,6 +9,7 @@ import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsEx
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionCatcher
 import com.sourceforgery.tachikoma.rest.catchers.RestExceptionCatcher
 import io.grpc.Status
+import org.apache.logging.log4j.kotlin.logger
 import javax.inject.Inject
 
 class InvalidOrInsufficientCredentialsCatcher
@@ -20,5 +21,9 @@ private constructor(
         HttpResponse.of(FORBIDDEN)
 
     override fun status(t: InvalidOrInsufficientCredentialsException) =
-        Status.PERMISSION_DENIED
+        Status.PERMISSION_DENIED.augmentDescription(t.message)
+
+    override fun logError(t: InvalidOrInsufficientCredentialsException) {
+        logger.warn { t.message }
+    }
 }
