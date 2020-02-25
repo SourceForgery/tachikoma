@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
     implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("com.sun.mail:javax.mail:1.6.2")
 }
 
 val applicationMainClassName = "TracerKt"

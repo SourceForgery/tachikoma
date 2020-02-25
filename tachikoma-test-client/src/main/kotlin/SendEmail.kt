@@ -8,17 +8,51 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.Metadata.ASCII_STRING_MARSHALLER
 import io.grpc.stub.MetadataUtils
+import java.net.URI
 import java.time.Instant
+import javax.mail.internet.InternetAddress
 
 private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", ASCII_STRING_MARSHALLER)
 
 fun main(args: Array<String>) {
     val metadataAuth = Metadata()
-    metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
+    val frontendUri = URI.create(
+        System.getenv("TACHI_FRONTEND_URI")
+            ?: error("Need to specifify env TACHI_FRONTEND_URI")
+    )
+    val from = InternetAddress(
+        System.getenv("TACHI_FROM")
+            ?: error("Need to specifify env TACHI_FROM")
+    )
+    val to = InternetAddress.parse(
+        System.getenv("TACHI_TO")
+            ?: error("Need to specifify env TACHI_TO (multiple addresses possible via RFC822 format)")
+    )
 
+    metadataAuth.put(APITOKEN_HEADER, frontendUri.authority)
+
+    val https = when (frontendUri.scheme) {
+        "https" -> true
+        "http" -> false
+        else -> error("Only supports http or https")
+    }
+
+    val port = if (frontendUri.port != -1) {
+        frontendUri.port
+    } else {
+        if (https) {
+            443
+        } else {
+            80
+        }
+    }
     @Suppress("DEPRECATION")
-    val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-        .usePlaintext()
+    val channel = ManagedChannelBuilder.forAddress(frontendUri.host, port)
+        .apply {
+            if (!https) {
+                usePlaintext()
+            }
+        }
         .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
         .build()
 
@@ -67,16 +101,18 @@ fun main(args: Array<String>) {
                 .setHtmlBody(mailBody)
                 .setSubject("Test email öåäöäåöäåöåäöäå 日本." + Instant.now())
         )
-        .addRecipients(EmailRecipient.newBuilder()
-            .setNamedEmail(
-                NamedEmailAddress.newBuilder()
-                    .setEmail("kjdsfljkhsdf@example.net")
-                    .setName("This won't work")
-            )
-        )
+        .addAllRecipients(to.map {
+            EmailRecipient.newBuilder()
+                .setNamedEmail(
+                    NamedEmailAddress.newBuilder()
+                        .setEmail(it.address)
+                        .setName(it.personal)
+                )
+                .build()
+        })
         .setFrom(NamedEmailAddress.newBuilder()
-            .setEmail("test@example.net")
-            .setName("This won't work")
+            .setEmail(from.address)
+            .setName(from.personal)
         )
         .build()
 
