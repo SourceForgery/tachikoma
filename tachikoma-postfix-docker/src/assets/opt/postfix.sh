@@ -82,4 +82,4 @@ done
 
 service postfix start
 
-exec tail -f /var/log/mail.log
+sleep infinity
