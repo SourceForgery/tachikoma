@@ -76,7 +76,7 @@ private constructor(
                             wrapException("Incorrect domain(${splitAuthString.first}")
                         }
                     }
-                    ?: wrapException("Nonexistant domain(${splitAuthString.first}")
+                    ?: wrapException("No api key found when trying to auth domain (${splitAuthString.first})")
             }
             ?: NO_AUTHENTICATION
 
