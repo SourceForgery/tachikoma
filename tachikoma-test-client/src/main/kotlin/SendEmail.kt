@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
             ?: error("Need to specifify env TACHI_TO (multiple addresses possible via RFC822 format)")
     )
 
-    metadataAuth.put(APITOKEN_HEADER, frontendUri.authority)
+    metadataAuth.put(APITOKEN_HEADER, frontendUri.userInfo)
 
     val https = when (frontendUri.scheme) {
         "https" -> true
