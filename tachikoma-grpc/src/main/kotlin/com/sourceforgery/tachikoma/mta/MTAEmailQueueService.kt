@@ -237,7 +237,7 @@ private constructor(
 
     companion object {
         private val LOGGER = logger()
-        private val responseCloser = Executors.newCachedThreadPool()!!
+        private val responseCloser = Executors.newCachedThreadPool()
     }
 }
 
