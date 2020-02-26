@@ -1,5 +1,12 @@
 #!/bin/bash -eu
 
+
+# Make sure rsyslog is started first
+while [ ! -e /dev/log ]
+do
+  sleep 0.1
+done
+
 if ! ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q domain; then
     logger -s "No domain keys matching pattern /etc/opendkim/domainkeys/*._domainkey.*.private was found"
     logger -s "Features such as unsubscribe will not work properly as spec requires DKIM"
@@ -48,10 +55,5 @@ chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname "*.private")
 
 chmod 400 $(find /etc/opendkim/domainkeys -iname "*.private")
 
-# Make sure rsyslog is started first
-while [ ! -e /dev/log ]
-do
-  sleep 0.1
-done
 
 exec /usr/sbin/opendkim -f
