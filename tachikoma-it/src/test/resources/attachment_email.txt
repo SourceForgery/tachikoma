@@ -8,7 +8,7 @@ MIME-Version: 1.0
 Content-Type: multipart/alternative; 
 	boundary="XXXXXX"
 List-Unsubscribe-Post: List-Unsubscribe=One-Click
-List-Unsubscribe: <https://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>, <mailto:unsub-not-really-random1@example.com?subject=unsub>
+List-Unsubscribe: <mailto:unsub-not-really-random1@example.com>, <https://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>
 X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@example.com
 X-Report-Abuse: You can also report abuse here: https://localhost/abuse/not-really-random1@example.com
 X-Tachikoma-User: 1

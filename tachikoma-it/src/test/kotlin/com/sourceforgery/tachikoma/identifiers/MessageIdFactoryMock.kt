@@ -4,6 +4,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class MessageIdFactoryMock : MessageIdFactory {
     private var counter = AtomicInteger()
-    override fun createMessageId() =
+    override fun createMessageId(domain: MailDomain) =
         MessageId("not-really-random${counter.incrementAndGet()}@example.com")
 }

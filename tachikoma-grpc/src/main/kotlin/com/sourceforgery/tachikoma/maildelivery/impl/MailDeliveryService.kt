@@ -154,7 +154,9 @@ private constructor(
                     continue
                 }
 
-                val messageId = messageIdFactory.createMessageId()
+                val messageId = messageIdFactory.createMessageId(
+                    domain = fromEmail.domain
+                )
                 val emailDBO = EmailDBO(
                     recipient = recipientEmail,
                     transaction = transaction,
