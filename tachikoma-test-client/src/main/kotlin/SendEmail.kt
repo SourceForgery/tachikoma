@@ -85,21 +85,23 @@ fun main(args: Array<String>) {
     |            <p class="center" style="font-size: 16px;color: #626262;padding: 20px;margin: 0;text-align: center;">
     |                Acme Inc AB Ghmb.
     |            </p>
-    |            <a class="button" href="https://localhost:3001/api/login/asdf" target="_blank" style="text-decoration: none;color: #fff;display: inline-block;background-color: #fd844a;padding: 10px 16px;border-radius: 2px;font-size: 16px;font-weight: 500;border: none;margin-top: 20px;margin-bottom: 20px;">
+    |            <a class="button" href="https://google.com/" target="_blank" style="text-decoration: none;color: #fff;display: inline-block;background-color: #fd844a;padding: 10px 16px;border-radius: 2px;font-size: 16px;font-weight: 500;border: none;margin-top: 20px;margin-bottom: 20px;">
     |                Go to questions
     |            </a>
     |            <br><br><br>
     |            <h6>Some footer text</h6>
     |        </div>
+    |        <a href="*|UNSUB|*">Unsubscribe from list</a>
     |    </center>
     |</body>
     """.trimMargin()
 
     val outgoingEmail = OutgoingEmail.newBuilder()
+        .setUnsubscribeRedirectUri("https://google.com/?q=unsubscribed")
         .setStatic(
             StaticBody.newBuilder()
                 .setHtmlBody(mailBody)
-                .setSubject("Test email öåäöäåöäåöåäöäå 日本." + Instant.now())
+                .setSubject("Application for öåäöäåöäåöåäöäå 日本." + Instant.now())
         )
         .addAllRecipients(to.map {
             EmailRecipient.newBuilder()

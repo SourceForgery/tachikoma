@@ -322,7 +322,8 @@ private constructor(
             message.replyTo = arrayOf(InternetAddress(request.replyTo.email))
         }
 
-        addListAndAbuseHeaders(message, emailId, messageId, fromEmail, sender)
+        val unsubscribeUri = createUnsubscribeOneClickPostLink(emailId, request.unsubscribeRedirectUri)
+        addListAndAbuseHeaders(message, messageId, fromEmail, sender, unsubscribeUri)
 
         for ((key, value) in request.headersMap) {
             message.addHeader(key, value)
@@ -337,7 +338,7 @@ private constructor(
                     .prettyPrint(false)
             }
 
-        replaceLinks(htmlDoc, emailId)
+        replaceLinks(htmlDoc, emailId, unsubscribeUri)
         injectTrackingPixel(htmlDoc, emailId)
 
         val plaintextPart = MimeBodyPart()
@@ -374,11 +375,9 @@ private constructor(
             )
     }
 
-    private fun addListAndAbuseHeaders(message: MimeMessage, emailId: EmailId, messageId: MessageId, fromEmail: Email, accountId: AccountId) {
+    private fun addListAndAbuseHeaders(message: MimeMessage, messageId: MessageId, fromEmail: Email, accountId: AccountId, unsubscribeUri: URI) {
         // TODO Headers to set:
         // List-Help (IMPORTANT): <https://support.google.com/a/example.com/bin/topic.py?topic=25838>, <mailto:debug+help@example.com>
-
-        val unsubscribeUri = createUnsubscribeOneClickPostLink(emailId)
 
         val unsubscribeEmail = Email("unsub-$messageId")
         val bounceReturnPathEmail = Email("bounce-$messageId")
@@ -395,9 +394,10 @@ private constructor(
     }
 
     @TestOnly
-    fun createUnsubscribeOneClickPostLink(emailId: EmailId): URI {
+    fun createUnsubscribeOneClickPostLink(emailId: EmailId, unsubscribeRedirectUri: String): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
             .setEmailId(emailId.toGrpcInternal())
+            .setRedirectUrl(unsubscribeRedirectUri)
             .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
@@ -415,7 +415,7 @@ private constructor(
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("unsubscribeClick", unsubscribeUrl)
+            .paths("unsubscribe", unsubscribeUrl)
             .build()
     }
 
@@ -432,18 +432,16 @@ private constructor(
             .build()
     }
 
-    private fun replaceLinks(doc: Document, emailId: EmailId) {
+    private fun replaceLinks(doc: Document, emailId: EmailId, unsubscribeUri: URI) {
         val links = doc.select("a[href]")
         for (link in links) {
             val originalUri = link.attr("href")
                 ?: ""
-            val newUri = UNSUB_REGEX.matchEntire(originalUri)
-                ?.let {
-                    // Convert into unsubscribe link
-                    createUnsubscribeClickLink(emailId, URI(it.groupValues[1]))
-                }
-                ?: createTrackingLink(emailId, originalUri)
-
+            val newUri = if (originalUri == "*|UNSUB|*") {
+                unsubscribeUri
+            } else {
+                createTrackingLink(emailId, originalUri)
+            }
             link.attr("href", newUri.toString())
         }
     }
@@ -492,7 +490,6 @@ private constructor(
     }
 
     companion object {
-        private val UNSUB_REGEX = Regex("\\*\\|UNSUB:(.*)\\|\\*")
         private val LOGGER = logger()
         private val PRINTER = JsonFormat.printer()!!
         private val responseCloser = Executors.newCachedThreadPool()

@@ -132,6 +132,11 @@ message OutgoingEmail {
     // Optional
     // Attached to email
     repeated Attachment attachments = 401;
+
+    // Optional
+    // Unsubscribe redirect URI
+    // User is redirected to this when unsubscribe is clicked
+    string unsubscribe_redirect_uri = 501;
 }
 
 // Every email sent will generate one or more of these

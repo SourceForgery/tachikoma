@@ -52,7 +52,6 @@ private constructor(
             if (listUnsubscribe != ONE_CLICK_FORM_DATA) {
                 throw IllegalArgumentException("Not valid One-Click unsubscribe form data $listUnsubscribe")
             }
-
             createAndSendUnsubscribeEvent(unsubscribeDataString)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
@@ -61,7 +60,7 @@ private constructor(
         return HttpResponse.of(HttpStatus.OK)
     }
 
-    @Get("regex:^/unsubscribeClick/(?<unsubscribeData>.*)")
+    @Get("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String
     ): HttpResponse {

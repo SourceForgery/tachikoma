@@ -190,7 +190,7 @@ class UnsubscribeRestTest {
         )
         ebeanServer.save(emailDBO)
 
-        unsubscribeOneClickPostUri = mailDeliveryService.createUnsubscribeOneClickPostLink(emailDBO.id)
+        unsubscribeOneClickPostUri = mailDeliveryService.createUnsubscribeOneClickPostLink(emailDBO.id, "")
         unsubscribeClickUri = mailDeliveryService.createUnsubscribeClickLink(emailDBO.id)
     }
 
