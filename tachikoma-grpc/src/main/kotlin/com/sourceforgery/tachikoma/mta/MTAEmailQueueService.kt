@@ -23,6 +23,8 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.MessageHardBounced
 import com.sourceforgery.tachikoma.mq.MessageQueued
 import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
 import java.time.Clock
@@ -126,7 +128,10 @@ private constructor(
             }
 
             override fun onError(t: Throwable) {
-                LOGGER.error(t) { "Error in MTAEmailQueueService" }
+                if ((t as? StatusRuntimeException)?.status != Status.CANCELLED) {
+                    // Only log if there's something more interesting than a closed connection
+                    LOGGER.error(t) { "Error in MTAEmailQueueService" }
+                }
                 future.cancel(true)
             }
         }
