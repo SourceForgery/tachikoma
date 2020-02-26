@@ -142,7 +142,7 @@ private constructor(
         val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), body.inputStream())
         val receiverAddress = InternetAddress(request.emailAddress)
         val recipientEmail = Email(receiverAddress.address)
-        val accountTypePair = handleUnsubscribe(recipientEmail, mimeMessage)
+        val accountTypePair = handleUnsubscribe(recipientEmail)
             ?: handleHardBounce(recipientEmail)
             ?: handleNormalEmails(recipientEmail)
 
@@ -209,8 +209,8 @@ private constructor(
         }
     }
 
-    private fun handleUnsubscribe(recipientAddress: Email, mimeMessage: MimeMessage): Pair<AccountDBO, IncomingEmailType>? {
-        return if (recipientAddress.address.startsWith("unsub-") && mimeMessage.subject.startsWith(prefix = "unsub", ignoreCase = true)) {
+    private fun handleUnsubscribe(recipientAddress: Email): Pair<AccountDBO, IncomingEmailType>? {
+        return if (recipientAddress.address.startsWith("unsub-")) {
             val messageId = MessageId(recipientAddress.address.substringAfter('-'))
             emailDAO.getByMessageId(messageId)
                 ?.let { email ->
