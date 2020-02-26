@@ -11,9 +11,9 @@ val replaceVersion by tasks.registering(Copy::class) {
     includeEmptyDirs = false
 }
 
-rootProject.tasks["githubRelease"].apply {
-    dependsOn(replaceVersion)
-}
+tasks["assemble"].dependsOn(replaceVersion)
+
+rootProject.tasks["githubRelease"].dependsOn(replaceVersion)
 
 extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
     addAssets("$buildDir/kubernetes/deployment-webserver.yaml")
@@ -21,6 +21,8 @@ extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
 
 @Suppress("UnstableApiUsage")
 allprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
     configurations.all {
         resolutionStrategy {
             failOnVersionConflict()
@@ -49,7 +51,6 @@ allprojects {
                             }
                     }
                 }
-
             }
             force(
                 "com.google.code.gson:gson:$gsonVersion",
@@ -63,11 +64,7 @@ allprojects {
             )
         }
     }
-}
 
-tasks["assemble"].dependsOn(replaceVersion)
-
-subprojects {
     apply(plugin = "idea")
 
     extensions.getByType<org.gradle.plugins.ide.idea.model.IdeaModel>().apply {
