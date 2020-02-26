@@ -49,7 +49,7 @@ chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname "*.private")
 chmod 400 $(find /etc/opendkim/domainkeys -iname "*.private")
 
 # Make sure rsyslog is started first
-while ! nc -z localhost 514
+while [ ! -e /dev/log ]
 do
   sleep 0.1
 done

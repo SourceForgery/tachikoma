@@ -74,11 +74,10 @@ if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q doma
 fi
 
 # Make sure rsyslog is started first
-while ! nc -z localhost 514
+while [ ! -e /dev/log ]
 do
   sleep 0.1
 done
-
 
 service postfix start
 
