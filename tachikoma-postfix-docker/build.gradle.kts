@@ -1,6 +1,5 @@
 applyDocker()
 
-
 val tarTask = tasks.getByPath(":tachikoma-postfix-utils:${ApplicationPlugin.TASK_DIST_TAR_NAME}")
 
 val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.DockerTask::class) {

@@ -9,7 +9,7 @@ include(
 
     "tachikoma-frontend-api-proto",
     "tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm",
-//"tachikoma-frontend-api-proto:tachikoma-frontend-api-js",
+// "tachikoma-frontend-api-proto:tachikoma-frontend-api-js",
 
     "tachikoma-internal-proto-jvm",
     "tachikoma-internal-api",
@@ -21,7 +21,7 @@ include(
     "tachikoma-mq",
     "tachikoma-grpc",
     "tachikoma-rest",
-//"tachikoma-frontend",
+// "tachikoma-frontend",
     "tachikoma-startup",
     "tachikoma-webserver",
     "tachikoma-webserver-docker",
