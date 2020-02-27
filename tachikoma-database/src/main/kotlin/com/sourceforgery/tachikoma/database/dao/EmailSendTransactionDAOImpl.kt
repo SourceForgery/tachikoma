@@ -14,5 +14,5 @@ private constructor(
         ebeanServer.save(emailSendTransactionDBO)
 
     override fun get(emailTransactionId: EmailTransactionId): EmailSendTransactionDBO? =
-        ebeanServer.find(EmailSendTransactionDBO::class.java, emailTransactionId.id)
+        ebeanServer.find(EmailSendTransactionDBO::class.java, emailTransactionId.emailTransactionId)
 }
