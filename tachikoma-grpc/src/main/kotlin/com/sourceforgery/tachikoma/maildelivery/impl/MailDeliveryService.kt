@@ -187,22 +187,24 @@ private constructor(
                 emailDBO.subject = pair.first
                 emailDBO.body = pair.second
                 emailDAO.save(emailDBO)
-
-                mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                    requestedSendTime = requestedSendTime,
-                    emailId = emailDBO.id,
-                    mailDomain = auth.account.mailDomain
-                ))
-
-                responseObserver.onNext(
-                    EmailQueueStatus.newBuilder()
-                        .setEmailId(emailDBO.id.toGrpcInternal())
-                        .setQueued(Queued.getDefaultInstance())
-                        .setTransactionId(transaction.id.toGrpcInternal())
-                        .setRecipient(emailDBO.recipient.toGrpcInternal())
-                        .build()
-                )
             }
+        }
+        val refreshedTransaction = emailSendTransactionDAO.get(transaction.id)!!
+        for (emailDBO in refreshedTransaction.emails) {
+            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
+                requestedSendTime = requestedSendTime,
+                emailId = emailDBO.id,
+                mailDomain = auth.account.mailDomain
+            ))
+
+            responseObserver.onNext(
+                EmailQueueStatus.newBuilder()
+                    .setEmailId(emailDBO.id.toGrpcInternal())
+                    .setQueued(Queued.getDefaultInstance())
+                    .setTransactionId(transaction.id.toGrpcInternal())
+                    .setRecipient(emailDBO.recipient.toGrpcInternal())
+                    .build()
+            )
         }
     }
 
