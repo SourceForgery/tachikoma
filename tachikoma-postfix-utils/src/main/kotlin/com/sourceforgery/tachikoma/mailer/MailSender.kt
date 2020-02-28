@@ -36,6 +36,8 @@ class MailSender(
     fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
         LOGGER.info { "Got email: ${emailMessage.emailId}" }
 
+        val builder = MTAQueuedNotification.newBuilder()
+            .setEmailId(emailMessage.emailId)
         val success = try {
             Socket("localhost", 25).use { smtpSocket ->
                 IoBuilder.forLogger("smtp.debug")
@@ -44,7 +46,7 @@ class MailSender(
                     .use { os ->
                         createExpect(os, smtpSocket).use { expect ->
                             val queueId = ssmtpSendEmail(expect, emailMessage)
-
+                            builder.queueId = queueId
                             LOGGER.info { "Successfully send email: ${emailMessage.emailId} with QueueId: $queueId" }
                             true
                         }
@@ -54,9 +56,7 @@ class MailSender(
             LOGGER.error(e) { "Failed to send message" }
             false
         }
-        return MTAQueuedNotification.newBuilder()
-            .setEmailId(emailMessage.emailId)
-            .setSuccess(success)
+        return builder.setSuccess(success)
             .build()
     }
 

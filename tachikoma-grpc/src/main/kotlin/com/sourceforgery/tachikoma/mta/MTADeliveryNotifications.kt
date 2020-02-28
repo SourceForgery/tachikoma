@@ -25,7 +25,7 @@ private constructor(
     private val clock: Clock
 ) {
     fun setDeliveryStatus(request: DeliveryNotification) {
-        LOGGER.debug { "$request" }
+        LOGGER.trace { "$request" }
         val queueId = request.queueId
         val email = emailDAO.getByQueueId(queueId)
         if (email != null) {

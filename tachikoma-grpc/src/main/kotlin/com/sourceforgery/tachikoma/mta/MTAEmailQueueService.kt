@@ -89,7 +89,10 @@ private constructor(
                 }
 
                 if (value.success) {
-                    LOGGER.debug { "Successfully delivered email with id $emailId" }
+                    check(queueId.isNotBlank()) {
+                        "No queueId set in spite of successful delivery of email $emailId"
+                    }
+                    LOGGER.debug { "Successfully delivered email with id $emailId and mtaQueueId $queueId" }
                     email.mtaQueueId = queueId
                     emailDAO.save(email)
 
