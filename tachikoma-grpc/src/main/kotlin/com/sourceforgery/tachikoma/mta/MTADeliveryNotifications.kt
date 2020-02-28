@@ -25,6 +25,7 @@ private constructor(
     private val clock: Clock
 ) {
     fun setDeliveryStatus(request: DeliveryNotification) {
+        LOGGER.debug { "$request" }
         val queueId = request.queueId
         val email = emailDAO.getByQueueId(queueId)
         if (email != null) {
@@ -72,7 +73,7 @@ private constructor(
                 )
                 statusEventDBO.dateCreated = creationTimestamp
                 emailStatusEventDAO.save(statusEventDBO)
-
+                LOGGER.debug { "Setting status $status for email ${email.messageId}" }
                 mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
             }
         }
