@@ -6,7 +6,7 @@ import io.ebean.annotation.DbEnumValue
 enum class EmailStatus(
     @Suppress("unused")
     @get:DbEnumValue(storage = DbEnumType.INTEGER)
-    val dbValue: Int
+    internal val dbValue: Int
 ) {
     HARD_BOUNCED(0),
     QUEUED(1),
