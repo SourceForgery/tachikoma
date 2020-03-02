@@ -48,6 +48,8 @@ else
   postconf -e virtual_mailbox_domains="$TACHIKOMA_HOSTNAME"
 fi
 
+postconf -e "bounce_service_name=discard"
+
 postconf -e virtual_transport=lmtp:unix:tachikoma/incoming_tachikoma
 postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
 
@@ -59,7 +61,7 @@ if [[ -n "$(find /etc/postfix/certs -iname '*.crt')" && -n "$(find /etc/postfix/
   postconf -e smtpd_tls_cert_file="$(find /etc/postfix/certs -iname '*.crt')"
   postconf -e smtpd_tls_key_file="$(find /etc/postfix/certs -iname '*.key')"
   chmod 400 /etc/postfix/certs/*.*
-  postconf -M submission/inet="submission   inet   n   -   n   -   -   smtpd"
+  postconf -M "submission/inet=submission   inet   n   -   n   -   -   smtpd"
   postconf -P "submission/inet/syslog_name=postfix/submission"
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
 fi
