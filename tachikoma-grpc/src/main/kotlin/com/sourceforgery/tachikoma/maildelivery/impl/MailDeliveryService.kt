@@ -439,12 +439,14 @@ private constructor(
         for (link in links) {
             val originalUri = link.attr("href")
                 ?: ""
-            val newUri = if (originalUri == "*|UNSUB|*") {
-                unsubscribeUri
-            } else {
-                createTrackingLink(emailId, originalUri)
+            if (originalUri == "*|UNSUB|*") {
+                link.attr("href", unsubscribeUri.toString())
+            } else if (originalUri.startsWith("http://") || originalUri.startsWith("https://")) {
+                link.attr(
+                    "href",
+                    createTrackingLink(emailId, originalUri).toString()
+                )
             }
-            link.attr("href", newUri.toString())
         }
     }
 
