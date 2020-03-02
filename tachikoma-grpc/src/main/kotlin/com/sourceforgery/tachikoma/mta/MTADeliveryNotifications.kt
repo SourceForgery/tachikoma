@@ -37,21 +37,21 @@ private constructor(
 
             val status = when (request.status.substring(0, 2)) {
                 "2." -> {
-                    if (!arrayOf("2.0.0", "2.6.0").contains(request.status)) {
+                    if (!listOf("2.0.0", "2.6.0").contains(request.status)) {
                         LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it DELIVERED anyway" }
                     }
                     notificationMessageBuilder.messageDelivered = MessageDelivered.getDefaultInstance()
                     EmailStatus.DELIVERED
                 }
                 "4." -> {
-                    if (!arrayOf("4.0.0", "4.4.1").contains(request.status)) {
+                    if (!listOf("4.0.0", "4.4.1").contains(request.status)) {
                         LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it SOFT_BOUNCED anyway" }
                     }
                     notificationMessageBuilder.messageSoftBounced = MessageSoftBounced.getDefaultInstance()
                     EmailStatus.SOFT_BOUNCED
                 }
                 "5." -> {
-                    if (!arrayOf("5.0.0").contains(request.status)) {
+                    if (!listOf("5.0.0").contains(request.status)) {
                         LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it HARD_BOUNCED anyway" }
                     }
                     notificationMessageBuilder.messageHardBounced = MessageHardBounced.getDefaultInstance()
@@ -68,7 +68,8 @@ private constructor(
                     emailStatus = status,
                     email = email,
                     metaData = StatusEventMetaData(
-                        mtaStatusCode = request.status
+                        mtaStatusCode = request.status,
+                        mtaDiagnosticText = request.diagnoseText
                     )
                 )
                 statusEventDBO.dateCreated = creationTimestamp
