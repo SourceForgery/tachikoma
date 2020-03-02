@@ -44,14 +44,14 @@ private constructor(
                     EmailStatus.DELIVERED
                 }
                 "4." -> {
-                    if (!listOf("4.0.0", "4.4.1").contains(request.status)) {
+                    if (!softBounceList.contains(request.status)) {
                         LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it SOFT_BOUNCED anyway" }
                     }
                     notificationMessageBuilder.messageSoftBounced = MessageSoftBounced.getDefaultInstance()
                     EmailStatus.SOFT_BOUNCED
                 }
                 "5." -> {
-                    if (!listOf("5.0.0").contains(request.status)) {
+                    if (!hardBounceList.contains(request.status)) {
                         LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it HARD_BOUNCED anyway" }
                     }
                     notificationMessageBuilder.messageHardBounced = MessageHardBounced.getDefaultInstance()
@@ -81,6 +81,24 @@ private constructor(
     }
 
     companion object {
+        private val hardBounceList = listOf(
+            "5.0.0", // Generic error
+            "5.4.1", // Spam
+            "5.5.0", // Unknown recipient
+            "5.4.4", // Unable to route??
+            "5.2.2", // Mailbox full
+            "5.1.1", // Unknown recipient
+            "5.7.1", // Unknown recipient
+            "5.3.0" // Spam
+        )
+        private val softBounceList = listOf(
+            "4.0.0", // Generic soft bounce
+            "4.1.0", // Rate limited
+            "4.2.0", // Temporarily deferred due to user complaints (SPAM?)
+            "4.4.1", // Connection busy
+            "4.4.2", // Network connection issue
+            "4.7.1" // Temporarily deferred due to user complaints (SPAM?)
+        )
         private val LOGGER = logger()
     }
 }
