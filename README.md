@@ -127,3 +127,17 @@ multiple domains.
 * Create directories e.g `mkdir -p /opt/example.com/domainkeys /opt/example.com/postfix`
 * Put the private key in `/etc/opendkim/domainkeys` or if you use a docker version make sure that you put the file in the mounted directory 
 e.g `/opt/example.com/domainkeys` make sure that you name the file `<DNS_NAME>._domainkey.<DOMAIN>.private` e.g `20180719._domainkey.example.com.private` where DNS_NAME is what you set in the above instructions.
+
+### Postfix settings that differ from default ###
+
+In `/opt/postfix.sh` some default configurations have been altered
+
+By default tachikoma does not reply to the sender with a bounce message, this as the server handles the response instead. 
+To revert to the default post fix behaviour remove the following line from the file 
+
+`postconf -e "bounce_service_name=discard"`
+
+The default retry behaviour has also been altered for deferred email to retry in 14400s (4 hours) instead of 4000s (just over an hour) and it will keep trying
+for three days instead of five. To revert to the default behaviour remove these lines 
+
+`postconf -e "maximal_backoff_time=14400s" postconf -e "maximal_queue_lifetime=3d"` 

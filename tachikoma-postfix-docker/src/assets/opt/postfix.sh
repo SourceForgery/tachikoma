@@ -49,6 +49,8 @@ else
 fi
 
 postconf -e "bounce_service_name=discard"
+postconf -e "maximal_backoff_time=14400s"
+postconf -e "maximal_queue_lifetime=3d"
 
 postconf -e virtual_transport=lmtp:unix:tachikoma/incoming_tachikoma
 postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
