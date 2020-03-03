@@ -13,9 +13,9 @@ import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
 import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.objects.id
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.IncomingEmailNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
@@ -188,8 +188,8 @@ private constructor(
 
     private fun handleHardBounce(recipientAddress: Email): Pair<AccountDBO, IncomingEmailType>? {
         return if (recipientAddress.address.startsWith("bounce-")) {
-            val messageId = MessageId(recipientAddress.address.substringAfter('-'))
-            emailDAO.getByMessageId(messageId)
+            val autoMailId = AutoMailId(recipientAddress.address.substringAfter('-'))
+            emailDAO.getByAutoMailId(autoMailId)
                 ?.let { email ->
                     val emailStatusEventDBO = EmailStatusEventDBO(
                         email = email,
@@ -214,8 +214,8 @@ private constructor(
 
     private fun handleUnsubscribe(recipientAddress: Email): Pair<AccountDBO, IncomingEmailType>? {
         return if (recipientAddress.address.startsWith("unsub-")) {
-            val messageId = MessageId(recipientAddress.address.substringAfter('-'))
-            emailDAO.getByMessageId(messageId)
+            val autoMailId = AutoMailId(recipientAddress.address.substringAfter('-'))
+            emailDAO.getByAutoMailId(autoMailId)
                 ?.let { email ->
                     val emailStatusEventDBO = EmailStatusEventDBO(
                         email = email,

@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.database.objects
 
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.annotation.DbJsonB
@@ -21,6 +22,10 @@ constructor(
     val recipient: Email,
     @Column
     val recipientName: String,
+    @Column(unique = true)
+    // Automatic handling mail id
+    // Used as e.g. "unsub-[autoMailId]" and "bounce-[autoMailId]"
+    val autoMailId: AutoMailId,
     @ManyToOne(cascade = [CascadeType.ALL])
     val transaction: EmailSendTransactionDBO,
     @Column(unique = true)
@@ -44,6 +49,7 @@ constructor(
         recipient: NamedEmail,
         transaction: EmailSendTransactionDBO,
         messageId: MessageId,
+        autoMailId: AutoMailId,
         mtaQueueId: String? = null,
         metaData: Map<String, String> = emptyMap()
     ) : this(
@@ -51,6 +57,7 @@ constructor(
         recipientName = recipient.name,
         transaction = transaction,
         messageId = messageId,
+        autoMailId = autoMailId,
         mtaQueueId = mtaQueueId,
         metaData = metaData
     )
@@ -58,3 +65,6 @@ constructor(
 
 val EmailDBO.id: EmailId
     get() = EmailId(dbId!!)
+
+val EmailDBO.recipientNamedEmail: NamedEmail
+    get() = NamedEmail(recipient, recipientName)

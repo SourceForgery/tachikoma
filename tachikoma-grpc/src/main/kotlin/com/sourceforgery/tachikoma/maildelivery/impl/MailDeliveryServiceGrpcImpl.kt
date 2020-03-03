@@ -39,8 +39,7 @@ private constructor(
             mailDeliveryService.sendEmail(
                 request = request,
                 responseObserver = responseObserver,
-                authenticationId = authentication.authenticationId,
-                sender = authentication.accountId
+                authenticationId = authentication.authenticationId
             )
             responseObserver.onCompleted()
         } catch (e: Exception) {

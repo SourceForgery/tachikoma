@@ -66,7 +66,6 @@ class MailDeliveryServiceSpec : Spek({
             val responseObserver = QueueStreamObserver<EmailQueueStatus>()
             mailDeliveryService.sendEmail(
                 request = email,
-                sender = authentication.account.id,
                 responseObserver = responseObserver,
                 authenticationId = authentication.id
             )

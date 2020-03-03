@@ -23,6 +23,7 @@ import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
+import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
 import java.net.URI
@@ -47,11 +48,13 @@ class TestBinder(
     }
 
     override fun configure() {
-        bind(object : TrackingConfig {
+        bind(object : TrackingConfig, UnsubscribeConfig {
             override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd".toByteArray()
             override val baseUrl: URI = URI.create("https://localhost/")
+            override val unsubscribeDomainOverride = MailDomain("example.net")
         })
             .to(TrackingConfig::class.java)
+            .to(UnsubscribeConfig::class.java)
 
         bindAsContract(PerThreadContext::class.java)
             .to(PerThread::class.java)

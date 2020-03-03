@@ -13,7 +13,7 @@ class Version10 : DatabaseUpgrade {
             ALTER TABLE e_email_status ADD CONSTRAINT ck_e_email_status_email_status CHECK ( email_status in (0, 1, 2, 3, 4, 5, 6, 7));
         """.trimIndent()
 
-        DdlRunner(false, "create-all.sql")
+        DdlRunner(false, javaClass.simpleName)
             .runAll(content, connection)
         return -10
     }

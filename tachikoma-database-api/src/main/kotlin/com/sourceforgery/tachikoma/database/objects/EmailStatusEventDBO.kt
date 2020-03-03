@@ -4,6 +4,7 @@ import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.identifiers.EmailStatusId
 import io.ebean.annotation.CreatedTimestamp
 import io.ebean.annotation.DbJson
+import io.ebean.annotation.Index
 import io.ebean.bean.EntityBean
 import java.time.Instant
 import javax.persistence.CascadeType
@@ -21,6 +22,7 @@ import javax.persistence.Transient
 @Entity
 class EmailStatusEventDBO(
     @Column
+    @Index
     val emailStatus: EmailStatus,
     @ManyToOne(cascade = [CascadeType.ALL])
     val email: EmailDBO,

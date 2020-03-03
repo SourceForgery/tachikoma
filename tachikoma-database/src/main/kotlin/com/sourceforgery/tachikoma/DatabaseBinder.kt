@@ -32,6 +32,7 @@ import com.sourceforgery.tachikoma.database.server.PostgresqlDataSourceProvider
 import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.upgrades.Version1
 import com.sourceforgery.tachikoma.database.upgrades.Version10
+import com.sourceforgery.tachikoma.database.upgrades.Version11
 import com.sourceforgery.tachikoma.database.upgrades.Version2
 import com.sourceforgery.tachikoma.database.upgrades.Version3
 import com.sourceforgery.tachikoma.database.upgrades.Version4
@@ -124,7 +125,8 @@ class DatabaseBinder : AbstractBinder() {
             Version7::class.java,
             Version8::class.java,
             Version9::class.java,
-            Version10::class.java
+            Version10::class.java,
+            Version11::class.java
         )
         var idx = 0
         for (databaseUpgrade in databaseUpgrades) {
