@@ -390,7 +390,9 @@ private constructor(
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
         // TODO Abuse-email should be system-wide config parameter
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
-        val abuseUrl = JerseyUriBuilder(trackingConfig.baseUrl).paths("abuse", messageId.messageId).build()
+        val abuseUrl = JerseyUriBuilder(trackingConfig.baseUrl)
+            .paths("abuse/{0}")
+            .build(messageId.messageId)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: $abuseUrl")
         message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
     }
@@ -404,8 +406,8 @@ private constructor(
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("unsubscribe", unsubscribeUrl)
-            .build()
+            .paths("unsubscribe/{0}")
+            .build(unsubscribeUrl)
     }
 
     @TestOnly
@@ -417,8 +419,8 @@ private constructor(
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("unsubscribe", unsubscribeUrl)
-            .build()
+            .paths("unsubscribe/{0}")
+            .build(unsubscribeUrl)
     }
 
     @TestOnly
@@ -430,8 +432,8 @@ private constructor(
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
         return JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("c", trackingUrl)
-            .build()
+            .paths("c/{0}")
+            .build(trackingUrl)
     }
 
     private fun replaceLinks(doc: Document, emailId: EmailId, unsubscribeUri: URI) {
@@ -457,8 +459,8 @@ private constructor(
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
         val trackingUri = JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("t", trackingUrl)
-            .build()
+            .paths("t/{0}")
+            .build(trackingUrl)
 
         val trackingPixel = Element("img")
         trackingPixel.attr("src", trackingUri.toString())
