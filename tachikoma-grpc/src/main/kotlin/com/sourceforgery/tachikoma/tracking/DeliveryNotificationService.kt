@@ -95,6 +95,7 @@ private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO,
     return EmailNotification.newBuilder().apply {
         emailId = emailData.id.toGrpcInternal()
         recipientEmailAddress = emailData.recipient.toGrpcInternal()
+        senderEmailAddress = emailData.transaction.fromEmail.toGrpcInternal()
         emailTransactionId = emailData.transaction.id.toGrpcInternal()
         timestamp = this@toEmailNotification.creationTimestamp
         messageId = MessageId.newBuilder().setMessageId(emailData.messageId.messageId).build()

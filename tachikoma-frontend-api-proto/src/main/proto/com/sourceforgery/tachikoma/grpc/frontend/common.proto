@@ -40,6 +40,7 @@ message EmailNotification {
     EmailTransactionId email_transaction_id = 103;
     google.protobuf.Timestamp timestamp = 104;
     MessageId message_id = 105;
+    EmailAddress sender_email_address = 106;
     oneof notification {
         SoftBouncedEvent soft_bounced_event = 201;
         HardBouncedEvent hard_bounced_event = 202;

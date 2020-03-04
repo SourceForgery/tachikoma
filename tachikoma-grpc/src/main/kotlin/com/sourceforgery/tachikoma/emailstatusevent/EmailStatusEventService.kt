@@ -70,6 +70,7 @@ private constructor(
         val builder = EmailNotification.newBuilder()
         builder.emailId = emailStatusEventDBO.email.id.toGrpcInternal()
         builder.recipientEmailAddress = emailStatusEventDBO.email.recipient.toGrpcInternal()
+        builder.senderEmailAddress = emailStatusEventDBO.email.transaction.fromEmail.toGrpcInternal()
         builder.emailTransactionId = emailStatusEventDBO.email.transaction.id.toGrpcInternal()
         builder.timestamp = emailStatusEventDBO.dateCreated!!.toTimestamp()
         if (includeTrackingData) {
