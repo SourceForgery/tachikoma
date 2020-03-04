@@ -12,6 +12,7 @@ import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import kotlin.test.assertNotNull
@@ -65,7 +66,8 @@ internal class EmailDAOSpec : Spek({
             recipient = recipient,
             recipientName = "Mr. Recipient",
             transaction = emailSendTransaction,
-            messageId = MessageId("1023"),
+            messageId = MessageId("1023@example.com"),
+            autoMailId = AutoMailId("1023@example.net"),
             mtaQueueId = null,
             metaData = emptyMap()
         )

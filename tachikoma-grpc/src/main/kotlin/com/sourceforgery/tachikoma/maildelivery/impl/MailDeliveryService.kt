@@ -18,6 +18,7 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
+import com.sourceforgery.tachikoma.database.objects.recipientNamedEmail
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsException
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
@@ -36,10 +37,10 @@ import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
@@ -47,6 +48,7 @@ import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
+import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -79,6 +81,7 @@ class MailDeliveryService
 @Inject
 private constructor(
     private val trackingConfig: TrackingConfig,
+    private val unsubscribeConfig: UnsubscribeConfig,
     private val dbObjectMapper: DBObjectMapper,
     private val emailDAO: EmailDAO,
     private val emailSendTransactionDAO: EmailSendTransactionDAO,
@@ -97,8 +100,7 @@ private constructor(
     fun sendEmail(
         request: OutgoingEmail,
         responseObserver: StreamObserver<EmailQueueStatus>,
-        authenticationId: AuthenticationId,
-        sender: AccountId
+        authenticationId: AuthenticationId
     ) {
         val auth = authenticationDAO.getActiveById(authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
@@ -157,30 +159,31 @@ private constructor(
                 val messageId = messageIdFactory.createMessageId(
                     domain = fromEmail.domain
                 )
+                val unsubscribeDomainOverride = unsubscribeConfig.unsubscribeDomainOverride
+                val autoMailId = if (unsubscribeDomainOverride == null) {
+                    AutoMailId("$messageId")
+                } else {
+                    AutoMailId("${messageId.localPart}@$unsubscribeDomainOverride")
+                }
+
                 val emailDBO = EmailDBO(
                     recipient = recipientEmail,
                     transaction = transaction,
                     messageId = messageId,
-                    metaData = recipient.metadataMap
+                    metaData = recipient.metadataMap,
+                    autoMailId = autoMailId
                 )
                 emailDAO.save(emailDBO)
 
                 val pair = when (request.bodyCase) {
                     OutgoingEmail.BodyCase.STATIC -> getStaticBody(
                         request = request,
-                        emailId = emailDBO.id,
-                        messageId = messageId,
-                        fromEmail = fromEmail,
-                        sender = sender,
-                        recipient = recipient
+                        emailDBO = emailDBO
                     )
                     OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
                         request = request,
                         recipient = recipient,
-                        emailId = emailDBO.id,
-                        messageId = messageId,
-                        fromEmail = fromEmail,
-                        sender = sender
+                        emailDBO = emailDBO
                     )
                     else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
                 }
@@ -211,10 +214,7 @@ private constructor(
     private fun getTemplateBody(
         request: OutgoingEmail,
         recipient: EmailRecipient,
-        emailId: EmailId,
-        messageId: MessageId,
-        fromEmail: Email,
-        sender: AccountId
+        emailDBO: EmailDBO
     ): Pair<String, String> {
         val template = request.template
         if (template.htmlTemplate.isBlank() && template.plaintextTemplate.isBlank()) {
@@ -240,21 +240,13 @@ private constructor(
             htmlBody = htmlBody.emptyToNull(),
             plaintextBody = plaintextBody.emptyToNull(),
             subject = subject,
-            emailId = emailId,
-            messageId = messageId,
-            fromEmail = fromEmail,
-            sender = sender,
-            recipient = recipient
+            emailDBO = emailDBO
         )
     }
 
     private fun getStaticBody(
         request: OutgoingEmail,
-        emailId: EmailId,
-        messageId: MessageId,
-        fromEmail: Email,
-        sender: AccountId,
-        recipient: EmailRecipient
+        emailDBO: EmailDBO
     ): Pair<String, String> {
         val static = request.static
         val htmlBody = static.htmlBody.emptyToNull()
@@ -265,11 +257,7 @@ private constructor(
             htmlBody = htmlBody,
             plaintextBody = plaintextBody,
             subject = static.subject,
-            emailId = emailId,
-            messageId = messageId,
-            fromEmail = fromEmail,
-            sender = sender,
-            recipient = recipient
+            emailDBO = emailDBO
         )
     }
 
@@ -299,11 +287,7 @@ private constructor(
         htmlBody: String?,
         plaintextBody: String?,
         subject: String,
-        emailId: EmailId,
-        messageId: MessageId,
-        fromEmail: Email,
-        sender: AccountId,
-        recipient: EmailRecipient
+        emailDBO: EmailDBO
     ): String {
         if (htmlBody == null && plaintextBody == null) {
             throw IllegalArgumentException("Needs at least one of plaintext or html")
@@ -313,7 +297,7 @@ private constructor(
         val message = MimeMessage(session)
         message.setFrom(request.from.toNamedEmail().toAddress())
         message.setSubject(subject, "UTF-8")
-        message.setRecipients(Message.RecipientType.TO, arrayOf(recipient.toAddress()))
+        message.setRecipients(Message.RecipientType.TO, arrayOf(emailDBO.recipientNamedEmail.toAddress()))
 
         if (request.replyTo.email.isNotBlank()) {
             val replyToMailDomain = request.replyTo.toEmail().domain.mailDomain
@@ -324,8 +308,12 @@ private constructor(
             message.replyTo = arrayOf(InternetAddress(request.replyTo.email))
         }
 
-        val unsubscribeUri = createUnsubscribeOneClickPostLink(emailId, request.unsubscribeRedirectUri)
-        addListAndAbuseHeaders(message, messageId, fromEmail, sender, unsubscribeUri)
+        val unsubscribeUri = createUnsubscribeOneClickPostLink(emailDBO.id, request.unsubscribeRedirectUri)
+        addListAndAbuseHeaders(
+            message = message,
+            emailDBO = emailDBO,
+            unsubscribeUri = unsubscribeUri
+        )
 
         for ((key, value) in request.headersMap) {
             message.addHeader(key, value)
@@ -340,8 +328,8 @@ private constructor(
                     .prettyPrint(false)
             }
 
-        replaceLinks(htmlDoc, emailId, unsubscribeUri)
-        injectTrackingPixel(htmlDoc, emailId)
+        replaceLinks(htmlDoc, emailDBO.id, unsubscribeUri)
+        injectTrackingPixel(htmlDoc, emailDBO.id)
 
         val plaintextPart = MimeBodyPart()
         val plainText = getPlainText(htmlDoc)
@@ -366,7 +354,7 @@ private constructor(
 
         message.setContent(multipart)
         message.saveChanges()
-        message.setHeader("Message-ID", "<${messageId.messageId}>")
+        message.setHeader("Message-ID", "<${emailDBO.messageId}>")
 
         val result = ByteArrayOutputStream()
         message.writeTo(result)
@@ -377,22 +365,23 @@ private constructor(
             )
     }
 
-    private fun addListAndAbuseHeaders(message: MimeMessage, messageId: MessageId, fromEmail: Email, accountId: AccountId, unsubscribeUri: URI) {
+    private fun addListAndAbuseHeaders(message: MimeMessage, emailDBO: EmailDBO, unsubscribeUri: URI) {
         // TODO Headers to set:
         // List-Help (IMPORTANT): <https://support.google.com/a/example.com/bin/topic.py?topic=25838>, <mailto:debug+help@example.com>
 
-        val unsubscribeEmail = Email("unsub-$messageId")
-        val bounceReturnPathEmail = Email("bounce-$messageId")
-
+        val unsubscribeEmail = Email("unsub-${emailDBO.autoMailId}")
+        val bounceReturnPathEmail = Email("bounce-${emailDBO.autoMailId}")
         // MUST have a valid DomainKeys Identified Mail (DKIM) signature that covers at least the List-Unsubscribe and List-Unsubscribe-Post headers
         message.addHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
         message.addHeader("List-Unsubscribe", "<mailto:$unsubscribeEmail>, <$unsubscribeUri>")
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
         // TODO Abuse-email should be system-wide config parameter
-        message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${fromEmail.domain}")
-        val abuseUrl = JerseyUriBuilder(trackingConfig.baseUrl).paths("abuse", messageId.messageId).build()
+        message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${emailDBO.transaction.fromEmail.domain}")
+        val abuseUrl = JerseyUriBuilder(trackingConfig.baseUrl)
+            .paths("abuse/{0}")
+            .build(emailDBO.autoMailId.autoMailId)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: $abuseUrl")
-        message.addHeader("X-Tachikoma-User", accountId.accountId.toString())
+        message.addHeader("X-Tachikoma-User", emailDBO.transaction.authentication.id.toString())
     }
 
     @TestOnly
@@ -404,8 +393,8 @@ private constructor(
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("unsubscribe", unsubscribeUrl)
-            .build()
+            .paths("unsubscribe/{0}")
+            .build(unsubscribeUrl)
     }
 
     @TestOnly
@@ -417,8 +406,8 @@ private constructor(
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
         return JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("unsubscribe", unsubscribeUrl)
-            .build()
+            .paths("unsubscribe/{0}")
+            .build(unsubscribeUrl)
     }
 
     @TestOnly
@@ -430,8 +419,8 @@ private constructor(
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
         return JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("c", trackingUrl)
-            .build()
+            .paths("c/{0}")
+            .build(trackingUrl)
     }
 
     private fun replaceLinks(doc: Document, emailId: EmailId, unsubscribeUri: URI) {
@@ -457,8 +446,8 @@ private constructor(
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
         val trackingUri = JerseyUriBuilder(trackingConfig.baseUrl)
-            .paths("t", trackingUrl)
-            .build()
+            .paths("t/{0}")
+            .build(trackingUrl)
 
         val trackingPixel = Element("img")
         trackingPixel.attr("src", trackingUri.toString())
@@ -502,6 +491,3 @@ private constructor(
 
 fun NamedEmail.toAddress(): InternetAddress =
     InternetAddress(address.address, name)
-
-fun EmailRecipient.toAddress(): InternetAddress =
-    InternetAddress(namedEmail.email, namedEmail.name)

@@ -24,6 +24,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
 import com.sourceforgery.tachikoma.hk2.getValue
 import com.sourceforgery.tachikoma.hk2.hk2
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
@@ -186,7 +187,8 @@ class UnsubscribeRestTest {
         emailDBO = EmailDBO(
             recipient = NamedEmail(blockedEmail, "Foobar"),
             transaction = transaction,
-            messageId = MessageId("2-id")
+            messageId = MessageId("2-id@example.com"),
+            autoMailId = AutoMailId("2-id@example.net")
         )
         ebeanServer.save(emailDBO)
 

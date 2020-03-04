@@ -13,6 +13,7 @@ import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.StatusEventMetaData
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.EbeanServer
@@ -67,7 +68,8 @@ private constructor(
                 metaData = emptyMap(),
                 tags = emptyList()
             ),
-            messageId = MessageId(UUID.randomUUID().toString()),
+            messageId = MessageId("${UUID.randomUUID()}@example.com"),
+            autoMailId = AutoMailId("${UUID.randomUUID()}@example.net"),
             mtaQueueId = null,
             metaData = emptyMap()
         )

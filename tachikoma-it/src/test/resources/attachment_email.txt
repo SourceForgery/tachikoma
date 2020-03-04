@@ -1,4 +1,4 @@
-Return-Path: bounce-not-really-random1@example.com
+Return-Path: bounce-not-really-random1@example.net
 Date: XXXXX
 From: Valid From Email <from@example.com>
 To: Valid Email <foo@example.com>
@@ -8,10 +8,10 @@ MIME-Version: 1.0
 Content-Type: multipart/alternative; 
 	boundary="XXXXXX"
 List-Unsubscribe-Post: List-Unsubscribe=One-Click
-List-Unsubscribe: <mailto:unsub-not-really-random1@example.com>, <https://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>
+List-Unsubscribe: <mailto:unsub-not-really-random1@example.net>, <https://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>
 X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@example.com
-X-Report-Abuse: You can also report abuse here: https://localhost/abuse/not-really-random1@example.com
-X-Tachikoma-User: 1
+X-Report-Abuse: You can also report abuse here: https://localhost/abuse/not-really-random1@example.net
+X-Tachikoma-User: 101
 
 --XXXXXX
 Content-Type: text/plain; charset=utf-8

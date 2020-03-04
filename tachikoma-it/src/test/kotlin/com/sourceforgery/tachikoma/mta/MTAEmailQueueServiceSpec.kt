@@ -17,6 +17,7 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.hk2.getValue
 import com.sourceforgery.tachikoma.hk2.hk2
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.mq.MQSenderMock
@@ -88,7 +89,8 @@ class MTAEmailQueueServiceSpec : Spek({
             email = EmailDBO(
                 recipient = Email("foo@example.net"),
                 recipientName = "Nobody",
-                messageId = MessageId("sdjklfjklsdfkl@example.net"),
+                messageId = MessageId("sdjklfjklsdfkl@example.com"),
+                autoMailId = AutoMailId("sdjklfjklsdfkl@example.net"),
                 metaData = emptyMap(),
                 transaction = EmailSendTransactionDBO(
                     jsonRequest = JsonNodeFactory.instance.objectNode(),

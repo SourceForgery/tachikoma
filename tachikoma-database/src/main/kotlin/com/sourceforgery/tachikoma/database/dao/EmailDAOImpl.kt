@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.database.dao
 
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
+import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.EbeanServer
 import javax.inject.Inject
 
@@ -26,12 +26,11 @@ private constructor(
     override fun getByEmailId(emailId: EmailId) =
         ebeanServer.find(EmailDBO::class.java, emailId.emailId)
 
-    override fun getByMessageId(messageId: MessageId): EmailDBO? {
-        return ebeanServer.find(EmailDBO::class.java)
+    override fun getByAutoMailId(autoMailId: AutoMailId) =
+        ebeanServer.find(EmailDBO::class.java)
             .where()
-            .eq("messageId", messageId.messageId)
+            .eq("autoMailId", autoMailId.autoMailId)
             .findOne()
-    }
 
     override fun getByQueueId(queueId: String) =
         ebeanServer.find(EmailDBO::class.java)
