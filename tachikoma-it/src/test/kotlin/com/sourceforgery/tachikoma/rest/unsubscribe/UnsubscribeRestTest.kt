@@ -160,7 +160,11 @@ class UnsubscribeRestTest {
     private lateinit var server: Server
     private val blockedEmail = Email("recip@example.net")
     private val fromEmail = Email("foo@example.com")
-    private val okHttpClient = OkHttpClient()
+    private val okHttpClient = OkHttpClient.Builder()
+        .followSslRedirects(true)
+        .followRedirects(true)
+        .build()
+
     @Before
     fun beforeTest() {
         serviceLocator = ServiceLocatorUtilities.bind(

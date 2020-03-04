@@ -35,9 +35,17 @@ private constructor(
     private val remoteIP: RemoteIP,
     private val mqSender: MQSender
 ) : RestService {
-    @Get("regex:^/t/(?<trackingData>.*)")
+    @Get("regex:^/t/(?<trackingData>.*)}")
     @Produces("image/gif")
     fun trackOpen(@Param("trackingData") trackingDataString: String): HttpResponse {
+        return if (trackingDataString.endsWith("/1")) {
+            actuallyTrackOpen(trackingDataString.removeSuffix("/1"))
+        } else {
+            RestUtil.httpRedirect("/t/$trackingDataString/1")
+        }
+    }
+
+    private fun actuallyTrackOpen(trackingDataString: String): HttpResponse {
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
@@ -66,6 +74,14 @@ private constructor(
     @Get("regex:^/c/(?<trackingData>.*)")
     @Produces("text/html")
     fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
+        return if (trackingDataString.endsWith("/1")) {
+            actuallyTrackClick(trackingDataString.removeSuffix("/1"))
+        } else {
+            RestUtil.httpRedirect("/c/$trackingDataString/1")
+        }
+    }
+
+    private fun actuallyTrackClick(trackingDataString: String): HttpResponse {
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
