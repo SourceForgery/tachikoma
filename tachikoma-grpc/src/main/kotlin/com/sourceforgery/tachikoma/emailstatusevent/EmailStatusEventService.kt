@@ -10,6 +10,9 @@ import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
+import com.sourceforgery.tachikoma.grpc.frontend.EmailMetrics
+import com.sourceforgery.tachikoma.grpc.frontend.EmailMetricsClickData
+import com.sourceforgery.tachikoma.grpc.frontend.EmailMetricsOpenData
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
@@ -73,6 +76,7 @@ private constructor(
         builder.senderEmailAddress = emailStatusEventDBO.email.transaction.fromEmail.toGrpcInternal()
         builder.emailTransactionId = emailStatusEventDBO.email.transaction.id.toGrpcInternal()
         builder.timestamp = emailStatusEventDBO.dateCreated!!.toTimestamp()
+        builder.emailMetrics = emailStatusEventDBO.toEmailMetrics()
         if (includeTrackingData) {
             builder.setEmailTrackingData(SentEmailTrackingData.newBuilder())
             // TODO Insert logic to retrieve tracking data include it
@@ -110,3 +114,26 @@ private constructor(
         }.build()
     }
 }
+
+private fun EmailStatusEventDBO.toEmailMetrics() =
+    EmailMetrics.newBuilder()
+        .addAllOpens(
+            email.emailStatusEvents.filter { it.emailStatus == EmailStatus.OPENED }
+                .map {
+                    EmailMetricsOpenData.newBuilder()
+                        .setIpAddress(it.metaData.ipAddress ?: "")
+                        .setTimestamp(it.dateCreated!!.toTimestamp())
+                        .setUserAgent(it.metaData.userAgent ?: "")
+                        .build()
+                }
+        )
+        .addAllClicks(
+            email.emailStatusEvents.filter { it.emailStatus == EmailStatus.CLICKED }
+                .map {
+                    EmailMetricsClickData.newBuilder()
+                        .setIpAddress(it.metaData.ipAddress ?: "")
+                        .setTimestamp(it.dateCreated!!.toTimestamp())
+                        .setUserAgent(it.metaData.userAgent ?: "")
+                        .build()
+                }
+        ).build()

@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.rest.tracking
 
-import com.linecorp.armeria.common.HttpHeaderNames
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.common.MediaType
