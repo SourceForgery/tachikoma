@@ -64,18 +64,26 @@ private constructor(
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String
     ): HttpResponse {
-        try {
+        return if (unsubscribeDataString.endsWith("/1")) {
+            actuallyUnsubscribe(unsubscribeDataString.removeSuffix("/1"))
+        } else {
+            RestUtil.httpRedirect("/unsubscribe/$unsubscribeDataString/1")
+        }
+    }
+
+    private fun actuallyUnsubscribe(unsubscribeDataString: String): HttpResponse {
+        return try {
             val unsubscribeData = createAndSendUnsubscribeEvent(unsubscribeDataString)
             val redirectUrl = unsubscribeData.redirectUrl
             if (redirectUrl.isBlank()) {
-                return HttpResponse.of(HttpStatus.OK)
+                HttpResponse.of(HttpStatus.OK)
             } else {
-                return RestUtil.httpRedirect(redirectUrl)
+                RestUtil.httpRedirect(redirectUrl)
             }
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
             LOGGER.debug(e) { "Failed to unsubscribe $unsubscribeDataString" }
-            return HttpResponse.of(HttpStatus.OK)
+            HttpResponse.of(HttpStatus.OK)
         }
     }
 
