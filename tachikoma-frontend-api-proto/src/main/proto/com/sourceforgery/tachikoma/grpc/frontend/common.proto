@@ -90,7 +90,7 @@ message EmailMetricsClickData {
     string clicked_url = 102;
     // User agent for the click
     string user_agent = 103;
-    // Clicked time stamp
+    // Clicked timestamp
     google.protobuf.Timestamp timestamp = 104;
 }
 
