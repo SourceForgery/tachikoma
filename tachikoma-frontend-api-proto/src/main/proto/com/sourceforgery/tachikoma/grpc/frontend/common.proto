@@ -41,7 +41,6 @@ message EmailNotification {
     google.protobuf.Timestamp timestamp = 104;
     MessageId message_id = 105;
     EmailAddress sender_email_address = 106;
-    // Metrics for clicks and opens of an email
     oneof notification {
         SoftBouncedEvent soft_bounced_event = 201;
         HardBouncedEvent hard_bounced_event = 202;
@@ -52,6 +51,7 @@ message EmailNotification {
         UnsubscribedEvent unsubscribed_event = 207;
         SpamEvent spam_event = 208;
     }
+    // Email tracking data
     // Optional depending on parameters for the rpc method
     oneof tracking {
         SentEmailTrackingData email_tracking_data = 301;
@@ -61,6 +61,7 @@ message EmailNotification {
     // Optional depending on parameters for the rpc method
     string subject = 401;
 
+    // Metrics for clicks and opens of an email
     // Optional depending on parameters for the rpc method
     oneof metrics {
         EmailMetrics email_metrics = 501;
