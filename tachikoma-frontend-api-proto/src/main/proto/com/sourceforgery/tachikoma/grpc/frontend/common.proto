@@ -79,7 +79,7 @@ message EmailMetricsOpenData {
     string ip_address = 101;
     // User agent for the opening email
     string user_agent = 102;
-    // Opened time stamp
+    // Opened timestamp
     google.protobuf.Timestamp timestamp = 103;
 }
 
