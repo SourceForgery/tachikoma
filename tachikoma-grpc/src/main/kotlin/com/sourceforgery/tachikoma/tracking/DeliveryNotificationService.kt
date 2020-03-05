@@ -2,12 +2,17 @@ package com.sourceforgery.tachikoma.tracking
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.protobuf.Empty
+import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
+import com.sourceforgery.tachikoma.grpc.frontend.EmailMetrics
+import com.sourceforgery.tachikoma.grpc.frontend.EmailMetricsClickData
+import com.sourceforgery.tachikoma.grpc.frontend.EmailMetricsOpenData
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.MessageId
@@ -110,6 +115,13 @@ private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO,
         } else {
             noTrackingData = Empty.getDefaultInstance()
         }
+
+        if (request.includeMetricsData) {
+            emailMetrics = emailData.toEmailMetrics()
+        } else {
+            noMetricsData = Empty.getDefaultInstance()
+        }
+
         if (request.includeSubject) {
             emailData.subject?.also {
                 subject = it
@@ -118,6 +130,29 @@ private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO,
         setEventData(this@toEmailNotification)
     }.build()
 }
+
+fun EmailDBO.toEmailMetrics(): EmailMetrics =
+    EmailMetrics.newBuilder()
+        .addAllOpens(
+            emailStatusEvents.filter { it.emailStatus == EmailStatus.OPENED }
+                .map {
+                    EmailMetricsOpenData.newBuilder()
+                        .setIpAddress(it.metaData.ipAddress ?: "")
+                        .setTimestamp(it.dateCreated!!.toTimestamp())
+                        .setUserAgent(it.metaData.userAgent ?: "")
+                        .build()
+                }
+        )
+        .addAllClicks(
+            emailStatusEvents.filter { it.emailStatus == EmailStatus.CLICKED }
+                .map {
+                    EmailMetricsClickData.newBuilder()
+                        .setIpAddress(it.metaData.ipAddress ?: "")
+                        .setTimestamp(it.dateCreated!!.toTimestamp())
+                        .setUserAgent(it.metaData.userAgent ?: "")
+                        .build()
+                }
+        ).build()
 
 private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: DeliveryNotificationMessage): Any {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")

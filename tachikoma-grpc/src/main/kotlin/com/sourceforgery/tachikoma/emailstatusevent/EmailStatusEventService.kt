@@ -10,9 +10,6 @@ import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
-import com.sourceforgery.tachikoma.grpc.frontend.EmailMetrics
-import com.sourceforgery.tachikoma.grpc.frontend.EmailMetricsClickData
-import com.sourceforgery.tachikoma.grpc.frontend.EmailMetricsOpenData
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
@@ -26,6 +23,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.GetEmailStatus
 import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
+import com.sourceforgery.tachikoma.tracking.toEmailMetrics
 import io.grpc.stub.StreamObserver
 import javax.inject.Inject
 
@@ -79,7 +77,7 @@ private constructor(
         builder.timestamp = emailStatusEventDBO.dateCreated!!.toTimestamp()
 
         if (includeMetricsData) {
-            builder.emailMetrics = emailStatusEventDBO.toEmailMetrics()
+            builder.emailMetrics = emailStatusEventDBO.email.toEmailMetrics()
         } else {
             builder.noMetricsData = Empty.getDefaultInstance()
         }
@@ -132,26 +130,3 @@ private constructor(
         }.build()
     }
 }
-
-private fun EmailStatusEventDBO.toEmailMetrics() =
-    EmailMetrics.newBuilder()
-        .addAllOpens(
-            email.emailStatusEvents.filter { it.emailStatus == EmailStatus.OPENED }
-                .map {
-                    EmailMetricsOpenData.newBuilder()
-                        .setIpAddress(it.metaData.ipAddress ?: "")
-                        .setTimestamp(it.dateCreated!!.toTimestamp())
-                        .setUserAgent(it.metaData.userAgent ?: "")
-                        .build()
-                }
-        )
-        .addAllClicks(
-            email.emailStatusEvents.filter { it.emailStatus == EmailStatus.CLICKED }
-                .map {
-                    EmailMetricsClickData.newBuilder()
-                        .setIpAddress(it.metaData.ipAddress ?: "")
-                        .setTimestamp(it.dateCreated!!.toTimestamp())
-                        .setUserAgent(it.metaData.userAgent ?: "")
-                        .build()
-                }
-        ).build()

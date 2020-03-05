@@ -18,4 +18,7 @@ message NotificationStreamParameters {
     // Whether to include subject in the response opr not.
     // Like all bools, defaults to false.
     bool include_subject = 102;
+    // Whether to include metrics in the response or not.
+    // Like all bools, defaults to false
+    bool include_metrics_data = 103;
 }
