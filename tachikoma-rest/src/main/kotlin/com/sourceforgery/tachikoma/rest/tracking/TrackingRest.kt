@@ -37,7 +37,7 @@ private constructor(
     private val remoteIP: RemoteIP,
     private val mqSender: MQSender
 ) : RestService {
-    @Get("regex:^/t/(?<trackingData>.*)}")
+    @Get("regex:^/t/(?<trackingData>.*)")
     @Produces("image/gif")
     fun trackOpen(
         @Param("trackingData") trackingDataString: String,
