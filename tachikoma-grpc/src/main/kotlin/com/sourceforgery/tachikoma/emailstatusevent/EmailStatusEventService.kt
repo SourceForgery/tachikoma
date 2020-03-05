@@ -86,12 +86,22 @@ private constructor(
         return when (emailStatusEventDBO.emailStatus) {
             EmailStatus.OPENED -> {
                 val ipAddress = emailStatusEventDBO.metaData.ipAddress ?: ""
-                builder.setOpenedEvent(OpenedEvent.newBuilder().setIpAddress(ipAddress).build())
+                builder.setOpenedEvent(
+                    OpenedEvent.newBuilder()
+                        .setIpAddress(ipAddress)
+                        .setUserAgent(emailStatusEventDBO.metaData.userAgent ?: "")
+                        .build()
+                )
             }
 
             EmailStatus.CLICKED -> {
                 val ipAddress = emailStatusEventDBO.metaData.ipAddress ?: ""
-                builder.setClickedEvent(ClickedEvent.newBuilder().setIpAddress(ipAddress).build())
+                builder.setClickedEvent(
+                    ClickedEvent.newBuilder()
+                        .setIpAddress(ipAddress)
+                        .setUserAgent(emailStatusEventDBO.metaData.userAgent ?: "")
+                        .build()
+                )
             }
             EmailStatus.HARD_BOUNCED -> {
                 builder.setHardBouncedEvent(HardBouncedEvent.getDefaultInstance())

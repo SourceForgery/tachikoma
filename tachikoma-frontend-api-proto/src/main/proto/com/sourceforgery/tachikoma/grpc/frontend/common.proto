@@ -126,6 +126,8 @@ message QueuedEvent {
 message OpenedEvent {
     // IP address that downloaded the tracking pixel
     string ip_address = 101;
+    // Opened by client with user agent
+    string user_agent = 102;
 }
 
 // Message has been clicked
@@ -134,6 +136,8 @@ message ClickedEvent {
     string ip_address = 101;
     // Url clicked in the email
     string clicked_url = 102;
+    // Clicked by client with user agent
+    string user_agent = 103;
 }
 
 // Message has caused receiver to unsubscribe

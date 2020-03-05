@@ -68,7 +68,10 @@ private constructor(
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
                 .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                 .setEmailMessageId(email.id.emailId)
-                .setMessageOpened(MessageOpened.newBuilder().setIpAddress(remoteIP.remoteAddress))
+                .setMessageOpened(
+                    MessageOpened.newBuilder()
+                        .setIpAddress(remoteIP.remoteAddress)
+                )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
