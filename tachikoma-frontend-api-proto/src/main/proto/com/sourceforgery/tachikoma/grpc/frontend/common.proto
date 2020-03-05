@@ -51,6 +51,7 @@ message EmailNotification {
         UnsubscribedEvent unsubscribed_event = 207;
         SpamEvent spam_event = 208;
     }
+    // Email tracking data
     // Optional depending on parameters for the rpc method
     oneof tracking {
         SentEmailTrackingData email_tracking_data = 301;
@@ -59,6 +60,38 @@ message EmailNotification {
 
     // Optional depending on parameters for the rpc method
     string subject = 401;
+
+    // Metrics for clicks and opens of an email
+    // Optional depending on parameters for the rpc method
+    oneof metrics {
+        google.protobuf.Empty no_metrics_data = 501;
+        EmailMetrics email_metrics = 502;
+    }
+}
+
+message EmailMetrics {
+    repeated EmailMetricsOpenData opens = 101;
+    repeated EmailMetricsClickData clicks = 102;
+}
+
+message EmailMetricsOpenData {
+    // IP address that downloaded the tracking pixel
+    string ip_address = 101;
+    // User agent for the opening email
+    string user_agent = 102;
+    // Opened timestamp
+    google.protobuf.Timestamp timestamp = 103;
+}
+
+message EmailMetricsClickData {
+    // Ip address that clicked the link
+    string ip_address = 101;
+    // Url clicked in the email
+    string clicked_url = 102;
+    // User agent for the click
+    string user_agent = 103;
+    // Clicked timestamp
+    google.protobuf.Timestamp timestamp = 104;
 }
 
 // Tracking data structure for a single email
@@ -99,6 +132,8 @@ message QueuedEvent {
 message OpenedEvent {
     // IP address that downloaded the tracking pixel
     string ip_address = 101;
+    // Opened by client with user agent
+    string user_agent = 102;
 }
 
 // Message has been clicked
@@ -107,6 +142,8 @@ message ClickedEvent {
     string ip_address = 101;
     // Url clicked in the email
     string clicked_url = 102;
+    // Clicked by client with user agent
+    string user_agent = 103;
 }
 
 // Message has caused receiver to unsubscribe

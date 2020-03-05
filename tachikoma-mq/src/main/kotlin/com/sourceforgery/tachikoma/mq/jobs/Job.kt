@@ -8,6 +8,7 @@ class JobFactory
 private constructor() {
     fun getJobClass(jobMessage: JobMessage): Class<out Job> {
         val jobDataCase = jobMessage.jobDataCase
+        @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
         return when (jobDataCase) {
             JobMessage.JobDataCase.JOBDATA_NOT_SET -> throw IllegalArgumentException("Jobdata not set")
             JobMessage.JobDataCase.SEND_EMAIL_JOB -> SendEmailJob::class.java

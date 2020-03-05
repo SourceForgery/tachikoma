@@ -3,7 +3,9 @@ package com.sourceforgery.tachikoma.rest.tracking
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.common.MediaType
+import com.linecorp.armeria.server.annotation.Default
 import com.linecorp.armeria.server.annotation.Get
+import com.linecorp.armeria.server.annotation.Header
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Produces
 import com.sourceforgery.tachikoma.common.EmailStatus
@@ -37,15 +39,18 @@ private constructor(
 ) : RestService {
     @Get("regex:^/t/(?<trackingData>.*)}")
     @Produces("image/gif")
-    fun trackOpen(@Param("trackingData") trackingDataString: String): HttpResponse {
+    fun trackOpen(
+        @Param("trackingData") trackingDataString: String,
+        @Header("User-Agent") @Default("") userAgent: String
+    ): HttpResponse {
         return if (trackingDataString.endsWith("/1")) {
-            actuallyTrackOpen(trackingDataString.removeSuffix("/1"))
+            actuallyTrackOpen(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
             RestUtil.httpRedirect("/t/$trackingDataString/1")
         }
     }
 
-    private fun actuallyTrackOpen(trackingDataString: String): HttpResponse {
+    private fun actuallyTrackOpen(trackingDataString: String, userAgent: String): HttpResponse {
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
@@ -54,7 +59,8 @@ private constructor(
                 emailStatus = EmailStatus.OPENED,
                 email = email,
                 metaData = StatusEventMetaData(
-                    ipAddress = remoteIP.remoteAddress
+                    ipAddress = remoteIP.remoteAddress,
+                    userAgent = userAgent
                 )
             )
             emailStatusEventDAO.save(emailStatusEvent)
@@ -62,7 +68,10 @@ private constructor(
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
                 .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                 .setEmailMessageId(email.id.emailId)
-                .setMessageOpened(MessageOpened.newBuilder().setIpAddress(remoteIP.remoteAddress))
+                .setMessageOpened(
+                    MessageOpened.newBuilder()
+                        .setIpAddress(remoteIP.remoteAddress)
+                )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
@@ -73,15 +82,18 @@ private constructor(
 
     @Get("regex:^/c/(?<trackingData>.*)")
     @Produces("text/html")
-    fun trackClick(@Param("trackingData") trackingDataString: String): HttpResponse {
+    fun trackClick(
+        @Param("trackingData") trackingDataString: String,
+        @Header("User-Agent") @Default("") userAgent: String
+    ): HttpResponse {
         return if (trackingDataString.endsWith("/1")) {
-            actuallyTrackClick(trackingDataString.removeSuffix("/1"))
+            actuallyTrackClick(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
             RestUtil.httpRedirect("/c/$trackingDataString/1")
         }
     }
 
-    private fun actuallyTrackClick(trackingDataString: String): HttpResponse {
+    private fun actuallyTrackClick(trackingDataString: String, userAgent: String): HttpResponse {
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
@@ -91,7 +103,8 @@ private constructor(
                 email = email,
                 metaData = StatusEventMetaData(
                     ipAddress = remoteIP.remoteAddress,
-                    trackingLink = trackingData.redirectUrl
+                    trackingLink = trackingData.redirectUrl,
+                    userAgent = userAgent
                 ))
             emailStatusEventDAO.save(emailStatusEvent)
 
