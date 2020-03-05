@@ -57,9 +57,9 @@ private constructor(
 
         emailStatusEventDAO.getEvents(
             accountId = authenticationDBO.account.id,
-            instant = request.newerThan?.toInstant(),
-            recipientEmail = request.recipientEmail?.toEmail(),
-            fromEmail = request.fromEmail?.toEmail(),
+            instant = request.newerThan.toInstant(),
+            recipientEmail = request.recipientEmail.toEmail(),
+            fromEmail = request.fromEmail.toEmail(),
             events = events
         )
             .forEach {
