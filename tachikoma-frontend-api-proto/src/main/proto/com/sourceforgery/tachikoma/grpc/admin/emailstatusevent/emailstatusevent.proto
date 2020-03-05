@@ -31,7 +31,7 @@ message GetEmailStatusEventsFilter {
     // Whether to include tracking data in the response or not . Like all bools, defaults to false.
     bool include_tracking_data = 105;
 
-    // Whether to include email metrics in the response or not. If true all clicks and opens per email is included in the respons
+    // Whether to include email metrics in the response or not. If true all clicks and opens per email is included in the response
     bool include_metrics_data = 106;
 }
 
