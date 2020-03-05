@@ -42,7 +42,6 @@ message EmailNotification {
     MessageId message_id = 105;
     EmailAddress sender_email_address = 106;
     // Metrics for clicks and opens of an email
-    EmailMetrics email_metrics = 107;
     oneof notification {
         SoftBouncedEvent soft_bounced_event = 201;
         HardBouncedEvent hard_bounced_event = 202;
@@ -61,6 +60,12 @@ message EmailNotification {
 
     // Optional depending on parameters for the rpc method
     string subject = 401;
+
+    // Optional depending on parameters for the rpc method
+    oneof metrics {
+        EmailMetrics email_metrics = 501;
+        google.protobuf.Empty no_metrics_data = 502;
+    }
 }
 
 message EmailMetrics {

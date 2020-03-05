@@ -54,35 +54,43 @@ private constructor(
                 }
             }
         val includeTrackingData = request.includeTrackingData
+        val includeMetricsData = request.includeMetricsData
 
         emailStatusEventDAO.getEvents(
-            accountId = authenticationDBO.account.id,
-            instant = request.newerThan.toInstant(),
-            recipientEmail = request.recipientEmail.toEmail(),
-            fromEmail = request.fromEmail.toEmail(),
-            events = events
-        )
+                accountId = authenticationDBO.account.id,
+                instant = request.newerThan.toInstant(),
+                recipientEmail = request.recipientEmail.toEmail(),
+                fromEmail = request.fromEmail.toEmail(),
+                events = events
+            )
             .forEach {
                 responseObserver.onNext(
-                    getEmailNotification(it, includeTrackingData)
+                    getEmailNotification(it, includeTrackingData, includeMetricsData)
                 )
             }
     }
 
-    private fun getEmailNotification(emailStatusEventDBO: EmailStatusEventDBO, includeTrackingData: Boolean): EmailNotification {
+    private fun getEmailNotification(emailStatusEventDBO: EmailStatusEventDBO, includeTrackingData: Boolean, includeMetricsData: Boolean): EmailNotification {
         val builder = EmailNotification.newBuilder()
         builder.emailId = emailStatusEventDBO.email.id.toGrpcInternal()
         builder.recipientEmailAddress = emailStatusEventDBO.email.recipient.toGrpcInternal()
         builder.senderEmailAddress = emailStatusEventDBO.email.transaction.fromEmail.toGrpcInternal()
         builder.emailTransactionId = emailStatusEventDBO.email.transaction.id.toGrpcInternal()
         builder.timestamp = emailStatusEventDBO.dateCreated!!.toTimestamp()
-        builder.emailMetrics = emailStatusEventDBO.toEmailMetrics()
+
+        if (includeMetricsData) {
+            builder.emailMetrics = emailStatusEventDBO.toEmailMetrics()
+        } else {
+            builder.noMetricsData = Empty.getDefaultInstance()
+        }
+
         if (includeTrackingData) {
             builder.setEmailTrackingData(SentEmailTrackingData.newBuilder())
             // TODO Insert logic to retrieve tracking data include it
         } else {
             builder.noTrackingData = Empty.getDefaultInstance()
         }
+
         return when (emailStatusEventDBO.emailStatus) {
             EmailStatus.OPENED -> {
                 val ipAddress = emailStatusEventDBO.metaData.ipAddress ?: ""
