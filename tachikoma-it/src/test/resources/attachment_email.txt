@@ -20,6 +20,7 @@ Content-Transfer-Encoding: quoted-printable
 This is a test
                                       .
 =2E
+}
 .                =20
 
 --XXXXXX
@@ -29,6 +30,7 @@ Content-Transfer-Encoding: quoted-printable
 <html><head></head><body>This is a test
                                       .
 =2E
+}
 .                =20
 <img src=3D"https://localhost/t/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo=
 " height=3D"1" width=3D"1"></body></html>

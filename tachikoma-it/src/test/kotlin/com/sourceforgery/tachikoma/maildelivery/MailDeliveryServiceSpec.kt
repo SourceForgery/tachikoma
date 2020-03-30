@@ -58,6 +58,7 @@ class MailDeliveryServiceSpec : Spek({
                     """This is a test
                             |                                      .
                             |.
+                            |}
                             |.                 ${""}
                             |"""
                         .trimMargin()
