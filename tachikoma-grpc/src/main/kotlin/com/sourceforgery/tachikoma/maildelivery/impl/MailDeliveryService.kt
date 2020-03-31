@@ -94,7 +94,8 @@ private constructor(
     private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
     private val incomingEmailDAO: IncomingEmailDAO,
     private val authenticationDAO: AuthenticationDAO,
-    private val messageIdFactory: MessageIdFactory
+    private val messageIdFactory: MessageIdFactory,
+    private val mailDeliveryConfig: MailDeliveryConfig
 ) {
 
     fun sendEmail(
@@ -237,7 +238,7 @@ private constructor(
         val subject = mergeTemplate(template.subject, globalVars, recipientVars)
         return subject to wrapAndPackBody(
             request = request,
-            htmlBody = htmlBody.emptyToNull(),
+            htmlBody = inlineCSS(htmlBody).emptyToNull(),
             plaintextBody = plaintextBody.emptyToNull(),
             subject = subject,
             emailDBO = emailDBO
@@ -254,11 +255,19 @@ private constructor(
 
         return static.subject to wrapAndPackBody(
             request = request,
-            htmlBody = htmlBody,
+            htmlBody = inlineCSS(htmlBody).emptyToNull(),
             plaintextBody = plaintextBody,
             subject = static.subject,
             emailDBO = emailDBO
         )
+    }
+
+    private fun inlineCSS(htmlBody: String?): String? {
+        return if (mailDeliveryConfig.inlineCSS) {
+            inlineCSS(htmlBody)
+        } else {
+            htmlBody
+        }
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
