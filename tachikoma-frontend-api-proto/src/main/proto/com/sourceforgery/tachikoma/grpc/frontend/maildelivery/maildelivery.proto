@@ -138,7 +138,7 @@ message OutgoingEmail {
     // User is redirected to this when unsubscribe is clicked
     string unsubscribe_redirect_uri = 501;
 
-    // Optional
+    // Default false
     // Inline all css from <style> tags on the html elements
     // Defaults to false
     bool inline_css = 601;
