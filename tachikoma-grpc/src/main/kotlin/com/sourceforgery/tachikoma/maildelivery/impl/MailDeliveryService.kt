@@ -61,6 +61,8 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.HashMap
 import java.util.Properties
+import java.util.StringTokenizer
+import java.util.TreeMap
 import java.util.concurrent.Executors
 import javax.activation.DataHandler
 import javax.inject.Inject
@@ -237,7 +239,7 @@ private constructor(
         val subject = mergeTemplate(template.subject, globalVars, recipientVars)
         return subject to wrapAndPackBody(
             request = request,
-            htmlBody = htmlBody.emptyToNull(),
+            htmlBody = htmlBody,
             plaintextBody = plaintextBody.emptyToNull(),
             subject = subject,
             emailDBO = emailDBO
@@ -321,12 +323,15 @@ private constructor(
 
         val multipart = MimeMultipart("alternative")
 
-        val htmlDoc = Jsoup.parse(htmlBody ?: "<html><body>$plaintextBody</body></html>")
-            .apply {
-                outputSettings()
-                    .indentAmount(0)
-                    .prettyPrint(false)
-            }
+        val htmlDoc = parseHTML(
+            htmlBody = htmlBody,
+            plaintextBody = plaintextBody ?: "",
+            inlineCSS = request.inlineCss
+        ).apply {
+            outputSettings()
+                .indentAmount(0)
+                .prettyPrint(false)
+        }
 
         replaceLinks(htmlDoc, emailDBO.id, unsubscribeUri)
         injectTrackingPixel(htmlDoc, emailDBO.id)
@@ -382,6 +387,97 @@ private constructor(
             .build(emailDBO.autoMailId.autoMailId)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: $abuseUrl")
         message.addHeader("X-Tachikoma-User", emailDBO.transaction.authentication.id.toString())
+    }
+
+    /**
+     * Css inliner for email, inspiration taken from
+     * http://stackoverflow.com/questions/4521557/automatically-convert-style-sheets-to-inline-style
+     *
+     * Thanks to Hecho por Grekz
+     */
+    @TestOnly
+    fun parseHTML(htmlBody: String?, plaintextBody: String, inlineCSS: Boolean): Document {
+        if (htmlBody == null || !inlineCSS) {
+            return Jsoup.parse(htmlBody ?: "<html><body>$plaintextBody</body></html>")
+        }
+        val style = "style"
+        val htmlDocument = Jsoup.parse(htmlBody)
+        val els = htmlDocument.select(style)
+        val selectorMap: LinkedHashMap<String, String> = LinkedHashMap()
+        val inlineProps: HashMap<Int, String> = HashMap()
+        for (e in els) {
+            val styleRules = e.allElements[0].data().replace("\n".toRegex(), "").trim { it <= ' ' }
+            val delims = "{}"
+            val st = StringTokenizer(styleRules, delims)
+
+            while (st.countTokens() > 1) {
+                val selector = st.nextToken().trim().replace(Regex(" +"), " ")
+                val properties = st.nextToken().trim().replace(Regex(" +"), " ").replace("\"", "'")
+                selectorMap[selector] = properties
+            }
+        }
+
+        selectorMap.forEach { elem ->
+            var selector = elem.key
+            val properties = elem.value
+            var ignoreSelector = false
+
+            // Process selectors such as "a:hover"
+            if (selector.indexOf(":") > 0) {
+                selector = selector.substring(0, selector.indexOf(":"))
+            }
+            if (selector.isEmpty()) {
+                ignoreSelector = true
+            }
+            if (selector.contains("*") || selector.contains("@")) {
+                ignoreSelector = true
+            }
+            if (!ignoreSelector) {
+                val selectedElements = htmlDocument.select(selector)
+                for (selElem in selectedElements) {
+                    if (!inlineProps.containsKey(selElem.hashCode())) {
+                        inlineProps[selElem.hashCode()] = selElem.attr(style)
+                    }
+                    val oldProperties = selElem.attr(style)
+                    selElem.attr(
+                        style,
+                        if (oldProperties.isNotEmpty()) {
+                            val inlineProperties = inlineProps[selElem.hashCode()]!!
+                            concatenateProperties(oldProperties, properties, inlineProperties)
+                        } else {
+                            properties
+                        }
+                    )
+                }
+            }
+        }
+        return htmlDocument
+    }
+
+    private fun concatenateProperties(
+        oldProps: String,
+        newProps: String,
+        inlineProps: String
+    ): String {
+        val resultingProps = TreeMap<String, String>()
+        oldProps.split(";").filter { it.isNotBlank() }.forEach { el ->
+            val (selector, prop) = el.split(":")
+            resultingProps[selector.trim()] = prop.trim().replace(";", "")
+        }
+
+        newProps.split(";").filter { it.isNotBlank() }.forEach { el ->
+            val (selector, prop) = el.split(":")
+            resultingProps[selector.trim()] = prop.trim().replace(";", "")
+        }
+
+        if (inlineProps.isNotBlank()) {
+            inlineProps.split(";").filter { it.isNotBlank() }.forEach { el ->
+                val (selector, prop) = el.split(":")
+                resultingProps[selector.trim()] = prop.trim().replace(";", "")
+            }
+        }
+
+        return resultingProps.map { "${it.key}: ${it.value}" }.joinToString("; ")
     }
 
     @TestOnly
