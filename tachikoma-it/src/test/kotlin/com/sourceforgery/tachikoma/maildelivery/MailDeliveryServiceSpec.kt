@@ -27,6 +27,7 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
+import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
@@ -42,6 +43,42 @@ class MailDeliveryServiceSpec : Spek({
     }
     afterEachTest {
         serviceLocator.shutdown()
+    }
+
+    describe("Simple email inlined css") {
+        it("Simple email inlined css") {
+            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
+            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expected.html").readText()).html()
+            val actual = mailDeliveryService.parseHTML(input, "", true).html()
+            assertEquals(expected, actual)
+        }
+    }
+
+    describe("Complex email inlined css") {
+        it("Complex email inlined css") {
+            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
+            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expected.html").readText()).html()
+            val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", true).html()).html()
+            assertEquals(expected, actual)
+        }
+    }
+
+    describe("Simple email no css inlineing") {
+        it("Simple email no css inlineing") {
+            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
+            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expectedNoInlining.html").readText()).html()
+            val actual = mailDeliveryService.parseHTML(input, "", false).html()
+            assertEquals(expected, actual)
+        }
+    }
+
+    describe("Complex email no css inlineing") {
+        it("Complex email no css inlineing") {
+            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
+            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expectedNoInlining.html").readText()).html()
+            val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", false).html()).html()
+            assertEquals(expected, actual)
+        }
     }
 
     describe("Send emails") {
