@@ -140,7 +140,6 @@ message OutgoingEmail {
 
     // Default false
     // Inline all css from <style> tags on the html elements
-    // Defaults to false
     bool inline_css = 601;
 }
 
