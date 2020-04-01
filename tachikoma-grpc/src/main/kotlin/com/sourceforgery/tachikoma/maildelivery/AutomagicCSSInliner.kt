@@ -18,7 +18,7 @@ fun inlineStyles(html: String?): Document? {
     }
     val doc = Jsoup.parse(html)
     val style = "style"
-    val els = doc.select(style) // to get all the style elements
+    val els = doc.select(style)
     val selectorMap: TreeMap<String, String> = TreeMap()
     val inlineProps: HashMap<Int, String> = HashMap()
     for (e in els) {

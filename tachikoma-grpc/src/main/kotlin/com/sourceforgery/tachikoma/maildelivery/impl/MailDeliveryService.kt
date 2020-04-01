@@ -43,6 +43,7 @@ import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.maildelivery.getPlainText
+import com.sourceforgery.tachikoma.maildelivery.inlineStyles
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
@@ -94,8 +95,7 @@ private constructor(
     private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
     private val incomingEmailDAO: IncomingEmailDAO,
     private val authenticationDAO: AuthenticationDAO,
-    private val messageIdFactory: MessageIdFactory,
-    private val mailDeliveryConfig: MailDeliveryConfig
+    private val messageIdFactory: MessageIdFactory
 ) {
 
     fun sendEmail(
@@ -238,7 +238,11 @@ private constructor(
         val subject = mergeTemplate(template.subject, globalVars, recipientVars)
         return subject to wrapAndPackBody(
             request = request,
-            htmlBody = inlineCSS(htmlBody).emptyToNull(),
+            htmlBody = if (request.inlineCss) {
+                runCSSInline(htmlBody)
+            } else {
+                htmlBody
+            },
             plaintextBody = plaintextBody.emptyToNull(),
             subject = subject,
             emailDBO = emailDBO
@@ -255,19 +259,19 @@ private constructor(
 
         return static.subject to wrapAndPackBody(
             request = request,
-            htmlBody = inlineCSS(htmlBody).emptyToNull(),
+            htmlBody = if (request.inlineCss) {
+                runCSSInline(htmlBody)
+            } else {
+                htmlBody
+            },
             plaintextBody = plaintextBody,
             subject = static.subject,
             emailDBO = emailDBO
         )
     }
 
-    private fun inlineCSS(htmlBody: String?): String? {
-        return if (mailDeliveryConfig.inlineCSS) {
-            inlineCSS(htmlBody)
-        } else {
-            htmlBody
-        }
+    private fun runCSSInline(htmlBody: String?): String? {
+        return inlineStyles(htmlBody)?.html()
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
