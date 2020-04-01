@@ -19,7 +19,7 @@ fun inlineStyles(html: String?): Document? {
     val doc = Jsoup.parse(html)
     val style = "style"
     val els = doc.select(style)
-    val selectorMap: TreeMap<String, String> = TreeMap()
+    val selectorMap: LinkedHashMap<String, String> = LinkedHashMap()
     val inlineProps: HashMap<Int, String> = HashMap()
     for (e in els) {
         val styleRules = e.allElements[0].data().replace("\n".toRegex(), "").trim { it <= ' ' }
