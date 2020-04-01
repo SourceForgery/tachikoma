@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.config
 
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryConfig
 import com.sourceforgery.tachikoma.mq.MqConfig
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
@@ -10,7 +9,6 @@ import java.net.URI
 internal class Configuration :
     DatabaseConfig,
     DebugConfig,
-    MailDeliveryConfig,
     MqConfig,
     TrackingConfig,
     UnsubscribeConfig,
@@ -28,5 +26,4 @@ internal class Configuration :
     override val sslCertKeyFile by readConfig("SSL_CERT_KEY_FILE", "")
     override val mailDomains by readListConfig("MAIL_DOMAINS", listOf(MailDomain("example.com")))
     override val unsubscribeDomainOverride by readConfig("UNSUBSCRIBE_DOMAIN_OVERRIDE", null as MailDomain?)
-    override val inlineCSS by readConfig("MAIL_DELIVERY_INLINE_CSS", true)
 }

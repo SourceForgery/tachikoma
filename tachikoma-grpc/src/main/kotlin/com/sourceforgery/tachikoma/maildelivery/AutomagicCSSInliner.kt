@@ -7,11 +7,10 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 /**
- * Css inliner for email,from
+ * Css inliner for email, inspiration taken from
  * http://stackoverflow.com/questions/4521557/automatically-convert-style-sheets-to-inline-style
  *
- * @author dennis<xzhuang></xzhuang>@avos.com>
- * @date 2013-1-9
+ * Thanks to Hecho por Grekz
  */
 fun inlineStyles(html: String?): Document? {
     if (html == null) {
