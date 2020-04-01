@@ -19,4 +19,13 @@ class AutomagicCSSInliner : Spek({
             assertEquals(expected, actual)
         }
     }
+
+    describe("Test AutomagicCSSInliner inline css on complex email") {
+        it("Complex email") {
+            val input = this.javaClass.getResource("/cssInliner/complex/input.html").readText()
+            val expected = Jsoup.parse(this.javaClass.getResource("/cssInliner/complex/expected.html").readText()).html()
+            val actual = Jsoup.parse(inlineStyles(input)?.html()).html()
+            assertEquals(expected, actual)
+        }
+    }
 })
