@@ -1,11 +1,9 @@
 package com.sourceforgery.tachikoma.webserver
 
-import com.linecorp.armeria.common.HttpMethod
 import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.Server
-import com.linecorp.armeria.server.cors.CorsService
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
 import com.linecorp.armeria.server.logging.AccessLogWriter
@@ -46,11 +44,7 @@ class WebServerStarter(
     private fun startServerInBackground(): CompletableFuture<Void> {
         val requestScoped: HttpRequestScopedDecorator by serviceLocator
 
-        val healthService = CorsService
-            .builderForAnyOrigin()
-            .allowCredentials()
-            .allowRequestMethods(HttpMethod.GET)
-            .build(HealthCheckService.of())
+        val healthService = HealthCheckService.of()
 
         // Order matters!
         val serverBuilder = Server.builder()

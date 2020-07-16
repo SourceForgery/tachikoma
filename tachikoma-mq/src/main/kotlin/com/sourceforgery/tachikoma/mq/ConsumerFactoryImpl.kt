@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.mq
 
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.SettableFuture
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
@@ -9,6 +10,7 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.MessageProperties
+import com.rabbitmq.client.impl.ChannelN
 import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
@@ -19,7 +21,6 @@ import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Clock
 import java.time.Duration
-import java.util.concurrent.Executors
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
@@ -35,7 +36,6 @@ private constructor(
     private var thread = 0
     private val connection: Connection
     private val sendChannel: Channel
-    private val closeExecutor = Executors.newSingleThreadExecutor()
 
     init {
         val connectionFactory = ConnectionFactory()
@@ -44,6 +44,10 @@ private constructor(
         connectionFactory.setUri(mqConfig.mqUrl)
         connection = connectionFactory.newConnection()
         sendChannel = connection.createChannel()
+
+        createQueue(FAILED_INCOMING_EMAIL_NOTIFICATIONS)
+        createQueue(FAILED_DELIVERY_NOTIFICATIONS)
+        createQueue(FAILED_OUTGOING_EMAILS)
 
         for (messageQueue in JobMessageQueue.values()) {
             createQueue(messageQueue)
@@ -59,8 +63,7 @@ private constructor(
         connection.close()
     }
 
-    private inner class WorkerThread
-    internal constructor(
+    private inner class WorkerThread(
         runnable: Runnable,
         private val threadName: String
     ) : Thread(runnable, threadName) {
@@ -68,7 +71,7 @@ private constructor(
         @Synchronized
         override fun start() {
             if (threadName == name) {
-                LOGGER.info { "Starting thread: " + name }
+                LOGGER.info { "Starting thread: $name" }
             }
             super.start()
         }
@@ -133,33 +136,48 @@ private constructor(
             .createChannel()!!
 
         val future = SettableFuture.create<Void>()
-        future.addListener(Runnable {
-            LOGGER.info("Closing channel")
-            channel.close()
-        }, closeExecutor)
+        future.addListener(
+            Runnable {
+                LOGGER.info("Closing channel")
+                try {
+                    channel.close()
+                } catch (ignored: Exception) {
+                    // 'tis ok
+                }
+            },
+            MoreExecutors.directExecutor()
+        )
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
                 LOGGER.debug { "Processing message, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
-                var handledResult = false
+                var success = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
                     hK2RequestContext.runInScope(ctx) { callback(parsedMessage) }
-                    channel.basicAck(envelope.deliveryTag, false)
-                    handledResult = true
+                    success = true
                 } catch (e: Exception) {
                     LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
-                    future.setException(e)
-                    handledResult = true
                 } finally {
-                    if (!handledResult) {
-                        // Will be NACK'd by closing channel when Future completes
-                        future.cancel(true)
+                    try {
+                        if (success) {
+                            channel.basicAck(envelope.deliveryTag, false)
+                        } else {
+                            channel.basicNack(envelope.deliveryTag, false, false)
+                        }
+                    } catch (e: Exception) {
+                        LOGGER.warn(e) { "Failed to ACK/NACK error" }
                     }
                 }
             }
         }
         channel.basicConsume(messageQueue.name, false, consumer)
-        channel.addShutdownListener { future.cancel(false) }
+        channel.addShutdownListener {
+            if (it.isInitiatedByApplication) {
+                future.cancel(false)
+            } else {
+                (channel as ChannelN).processShutdownSignal(it, true, true)
+            }
+        }
         return future
     }
 
@@ -188,7 +206,7 @@ private constructor(
     }
 
     override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
-        return listenOnQueue(JobMessageQueue.JOBS) { it ->
+        return listenOnQueue(JobMessageQueue.JOBS) {
             val messageQueue = getRequeueQueueByRequestedExecutionTime(it)
             if (messageQueue == null) {
                 // Message has waited long enough
