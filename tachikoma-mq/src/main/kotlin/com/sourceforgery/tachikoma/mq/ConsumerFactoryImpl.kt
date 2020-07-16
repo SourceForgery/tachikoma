@@ -154,13 +154,18 @@ private constructor(
                 try {
                     val parsedMessage = messageQueue.parser(body)
                     hK2RequestContext.runInScope(ctx) { callback(parsedMessage) }
-                    channel.basicAck(envelope.deliveryTag, false)
                     success = true
                 } catch (e: Exception) {
                     LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
                 } finally {
-                    if (!success) {
-                        channel.basicNack(envelope.deliveryTag, false, false)
+                    try {
+                        if (success) {
+                            channel.basicAck(envelope.deliveryTag, false)
+                        } else {
+                            channel.basicNack(envelope.deliveryTag, false, false)
+                        }
+                    } catch (e: Exception) {
+                        LOGGER.warn(e) { "Failed to ACK/NACK error" }
                     }
                 }
             }
