@@ -10,6 +10,7 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.MessageProperties
+import com.rabbitmq.client.impl.ChannelN
 import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
@@ -165,7 +166,13 @@ private constructor(
             }
         }
         channel.basicConsume(messageQueue.name, false, consumer)
-        channel.addShutdownListener { future.cancel(false) }
+        channel.addShutdownListener {
+            if (it.isInitiatedByApplication) {
+                future.cancel(false)
+            } else {
+                (channel as ChannelN).processShutdownSignal(it, true, true)
+            }
+        }
         return future
     }
 
