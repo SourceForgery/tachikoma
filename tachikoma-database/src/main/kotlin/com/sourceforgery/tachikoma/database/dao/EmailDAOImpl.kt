@@ -39,7 +39,7 @@ private constructor(
             .eq("mtaQueueId", mtaQueueId)
             .or()
             .eq("recipient", recipient.address)
-            .arrayContains("transaction.bcc", recipient.address)
+            .raw("transaction.bcc @> array[?]::text[]", recipient.address)
             .endOr()
             .orderBy()
             .desc("dateCreated")

@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.database.dao
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.protobuf.util.JsonFormat
+import com.sourceforgery.tachikoma.TestAttribute
 import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
@@ -16,6 +17,7 @@ import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import org.apache.commons.lang3.RandomStringUtils
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
@@ -31,7 +33,7 @@ internal class EmailDAOSpec : Spek({
     lateinit var emailDAO: EmailDAO
     lateinit var dbObjectMapper: DBObjectMapper
     beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
+        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(TestAttribute.POSTGRESQL))
         emailDAO = serviceLocator.getService(EmailDAO::class.java)
         dbObjectMapper = serviceLocator.getService(DBObjectMapper::class.java)
     }
@@ -42,7 +44,7 @@ internal class EmailDAOSpec : Spek({
 
     val PRINTER = JsonFormat.printer()!!
 
-    fun getEmailDBO(from: Email, recipient: Email): EmailDBO {
+    fun getEmailDBO(from: Email, recipient: Email, bcc: List<Email> = emptyList()): EmailDBO {
         val account = AccountDBO(MailDomain("example.com"))
         val authentication = AuthenticationDBO(
             encryptedPassword = null,
@@ -59,7 +61,8 @@ internal class EmailDAOSpec : Spek({
             fromEmail = from,
             authentication = authentication,
             metaData = emptyMap(),
-            tags = emptyList()
+            tags = emptyList(),
+            bcc = bcc.map { it.address }
         )
 
         return EmailDBO(
@@ -86,6 +89,23 @@ internal class EmailDAOSpec : Spek({
 
             val savedEmail = emailDAO.fetchEmailData(emailDBO.id)
 
+            assertNotNull(savedEmail)
+        }
+        it("should be possible to retrieve an email by mtaQueueId and email") {
+            val from = Email("from@example.com")
+            val recipient = Email("recipient@example.com")
+            val bccRecipient = Email("bcc_recipient@example.com")
+
+            val emailDBO = getEmailDBO(from, recipient, listOf(bccRecipient))
+            val mtaQueueId = RandomStringUtils.randomAlphanumeric(10)
+            emailDBO.mtaQueueId = mtaQueueId
+
+            assertNull(emailDAO.getByQueueId(mtaQueueId, recipient))
+            emailDAO.save(emailDBO)
+
+            assertNull(emailDAO.getByQueueId(mtaQueueId, from))
+
+            val savedEmail = emailDAO.getByQueueId(mtaQueueId, bccRecipient)
             assertNotNull(savedEmail)
         }
     }
