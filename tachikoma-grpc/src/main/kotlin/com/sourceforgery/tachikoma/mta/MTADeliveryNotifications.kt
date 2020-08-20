@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.mta
 
+import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -27,7 +28,7 @@ private constructor(
     fun setDeliveryStatus(request: DeliveryNotification) {
         LOGGER.trace { "$request" }
         val queueId = request.queueId
-        val email = emailDAO.getByQueueId(queueId)
+        val email = emailDAO.getByQueueId(queueId, Email(request.originalRecipient))
         if (email != null) {
             val creationTimestamp = clock.instant()!!
             val notificationMessageBuilder = DeliveryNotificationMessage
