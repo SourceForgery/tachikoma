@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.mta
 
+import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -27,8 +28,11 @@ private constructor(
     fun setDeliveryStatus(request: DeliveryNotification) {
         LOGGER.trace { "$request" }
         val queueId = request.queueId
-        val email = emailDAO.getByQueueId(queueId)
-        if (email != null) {
+        val recipient = Email(request.originalRecipient)
+        val email = emailDAO.getByQueueId(queueId, recipient)
+        if (email == null) {
+            LOGGER.warn { "Did not find any email with mtaQueueId: $queueId and associated email $recipient" }
+        } else if (email.recipient == recipient) {
             val creationTimestamp = clock.instant()!!
             val notificationMessageBuilder = DeliveryNotificationMessage
                 .newBuilder()

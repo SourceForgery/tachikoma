@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.database.dao
 
+import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
@@ -32,9 +33,16 @@ private constructor(
             .eq("autoMailId", autoMailId.autoMailId)
             .findOne()
 
-    override fun getByQueueId(queueId: String) =
+    override fun getByQueueId(mtaQueueId: String, recipient: Email) =
         ebeanServer.find(EmailDBO::class.java)
             .where()
-            .eq("mtaQueueId", queueId)
+            .eq("mtaQueueId", mtaQueueId)
+            .or()
+            .eq("recipient", recipient.address)
+            .arrayContains("transaction.bcc", recipient.address)
+            .endOr()
+            .orderBy()
+            .desc("dateCreated")
+            .setMaxRows(1)
             .findOne()
 }
