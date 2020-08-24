@@ -15,6 +15,8 @@ dependencies {
     implementation(project(":jersey-uri-builder"))
     implementation(project(":tachikoma-common"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
+
+    testImplementation("io.mockk:mockk:1.10.0")
 }
 
 extensions.configure<JavaApplication>("application") {
