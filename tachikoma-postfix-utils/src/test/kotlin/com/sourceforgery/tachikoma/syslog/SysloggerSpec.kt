@@ -3,13 +3,13 @@ package com.sourceforgery.tachikoma.syslog
 import io.grpc.Channel
 import io.mockk.clearAllMocks
 import io.mockk.mockk
+import kotlin.test.assertEquals
+import kotlin.test.fail
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
-import kotlin.test.assertEquals
-import kotlin.test.fail
 
 @RunWith(JUnitPlatform::class)
 internal class SysloggerSpec : Spek({

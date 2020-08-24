@@ -5,9 +5,9 @@ package com.sourceforgery.tachikoma.syslog
 import com.sourceforgery.tachikoma.mta.DeliveryNotification
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpc
 import io.grpc.Channel
-import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 import java.io.RandomAccessFile
+import org.apache.logging.log4j.kotlin.logger
 
 class Syslogger(grpcChannel: Channel) {
 
