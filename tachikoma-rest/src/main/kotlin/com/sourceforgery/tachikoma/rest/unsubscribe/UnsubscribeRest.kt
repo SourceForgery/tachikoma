@@ -9,6 +9,7 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -21,9 +22,11 @@ import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
 import com.sourceforgery.tachikoma.rest.RestService
-import com.sourceforgery.tachikoma.rest.RestUtil
+import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.guava.future
 import java.time.Clock
 import java.util.Optional
 import javax.inject.Inject
@@ -38,15 +41,16 @@ private constructor(
     private val emailDAO: EmailDAO,
     private val emailStatusEventDAO: EmailStatusEventDAO,
     private val blockedEmailDAO: BlockedEmailDAO,
-    private val remoteIP: RemoteIP
-) : RestService {
+    private val remoteIP: RemoteIP,
+    tachikomaScope: TachikomaScope
+) : RestService, CoroutineScope by tachikomaScope {
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     @ConsumesGroup(Consumes("multipart/form-data"), Consumes("application/x-www-form-urlencoded"))
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String,
         @Param("List-Unsubscribe") optionalListUnsubscribe: Optional<String>
-    ): HttpResponse {
+    ) = future {
         try {
             val listUnsubscribe = optionalListUnsubscribe.orElse(null)
             if (listUnsubscribe != ONE_CLICK_FORM_DATA) {
@@ -57,17 +61,17 @@ private constructor(
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
             LOGGER.debug(e) { "Failed to unsubscribe $unsubscribeDataString" }
         }
-        return HttpResponse.of(HttpStatus.OK)
+        HttpResponse.of(HttpStatus.OK)
     }
 
     @Get("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String
-    ): HttpResponse {
-        return if (unsubscribeDataString.endsWith("/1")) {
+    ) = future {
+         if (unsubscribeDataString.endsWith("/1")) {
             actuallyUnsubscribe(unsubscribeDataString.removeSuffix("/1"))
         } else {
-            RestUtil.httpRedirect("/unsubscribe/$unsubscribeDataString/1")
+            httpRedirect("/unsubscribe/$unsubscribeDataString/1")
         }
     }
 
@@ -78,7 +82,7 @@ private constructor(
             if (redirectUrl.isBlank()) {
                 HttpResponse.of(HttpStatus.OK)
             } else {
-                RestUtil.httpRedirect(redirectUrl)
+                httpRedirect(redirectUrl)
             }
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }

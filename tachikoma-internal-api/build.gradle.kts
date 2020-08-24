@@ -7,6 +7,7 @@ dependencies {
     implementation("org.glassfish.hk2.external:jakarta.inject:$hk2Version")
     implementation("com.linecorp.armeria:armeria:$armeriaVersion")
 
+    api(project(":tachikoma-common"))
     api(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))
     api(project(":tachikoma-internal-proto-jvm"))
 }

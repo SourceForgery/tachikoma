@@ -10,6 +10,7 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Produces
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
@@ -21,9 +22,11 @@ import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageClicked
 import com.sourceforgery.tachikoma.mq.MessageOpened
 import com.sourceforgery.tachikoma.rest.RestService
-import com.sourceforgery.tachikoma.rest.RestUtil
+import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.guava.future
 import java.util.Base64
 import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
@@ -35,18 +38,21 @@ private constructor(
     private val emailDAO: EmailDAO,
     private val emailStatusEventDAO: EmailStatusEventDAO,
     private val remoteIP: RemoteIP,
-    private val mqSender: MQSender
-) : RestService {
+    private val mqSender: MQSender,
+    tachikomaScope: TachikomaScope
+) : RestService, CoroutineScope by tachikomaScope {
+
+
     @Get("regex:^/t/(?<trackingData>.*)")
     @Produces("image/gif")
     fun trackOpen(
         @Param("trackingData") trackingDataString: String,
         @Header("User-Agent") @Default("") userAgent: String
-    ): HttpResponse {
-        return if (trackingDataString.endsWith("/1")) {
+    ) = future {
+        if (trackingDataString.endsWith("/1")) {
             actuallyTrackOpen(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
-            RestUtil.httpRedirect("/t/$trackingDataString/1")
+            httpRedirect("/t/$trackingDataString/1")
         }
     }
 
@@ -85,11 +91,11 @@ private constructor(
     fun trackClick(
         @Param("trackingData") trackingDataString: String,
         @Header("User-Agent") @Default("") userAgent: String
-    ): HttpResponse {
-        return if (trackingDataString.endsWith("/1")) {
+    ) = future {
+        if (trackingDataString.endsWith("/1")) {
             actuallyTrackClick(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
-            RestUtil.httpRedirect("/c/$trackingDataString/1")
+            httpRedirect("/c/$trackingDataString/1")
         }
     }
 
@@ -117,7 +123,7 @@ private constructor(
                 )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
 
-            return RestUtil.httpRedirect(trackingData.redirectUrl)
+            return httpRedirect(trackingData.redirectUrl)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e) { "Failed to track invalid link $trackingDataString" }

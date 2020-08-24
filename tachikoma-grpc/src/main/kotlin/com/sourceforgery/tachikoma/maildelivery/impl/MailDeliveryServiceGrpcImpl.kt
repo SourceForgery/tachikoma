@@ -2,12 +2,15 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
+import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
 
@@ -16,9 +19,10 @@ internal class MailDeliveryServiceGrpcImpl
 private constructor(
     private val mailDeliveryService: MailDeliveryService,
     private val authentication: Authentication,
-    private val grpcExceptionMap: GrpcExceptionMap
-) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase() {
-    override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) {
+    private val grpcExceptionMap: GrpcExceptionMap,
+    tachikomaScope: TachikomaScope
+) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase(), CoroutineScope by tachikomaScope {
+    override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) = grpcLaunch {
         try {
             authentication.requireFrontend()
             LOGGER.info { "Connected, user ${authentication.authenticationId} getting incoming mails from ${authentication.mailDomain}" }
@@ -33,7 +37,7 @@ private constructor(
         }
     }
 
-    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) {
+    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) = grpcLaunch {
         try {
             authentication.requireFrontend()
             mailDeliveryService.sendEmail(

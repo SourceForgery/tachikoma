@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.common.Clocker
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import java.time.Clock
 import javax.inject.Singleton
@@ -11,6 +12,8 @@ class CommonBinder : AbstractBinder() {
         bind(Clocker())
             .to(Clock::class.java)
         bindAsContract(JobMessageFactory::class.java)
+            .`in`(Singleton::class.java)
+        bindAsContract(TachikomaScope::class.java)
             .`in`(Singleton::class.java)
     }
 }

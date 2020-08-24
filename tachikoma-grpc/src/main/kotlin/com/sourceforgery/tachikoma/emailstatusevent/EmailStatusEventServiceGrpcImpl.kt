@@ -1,11 +1,14 @@
 package com.sourceforgery.tachikoma.emailstatusevent
 
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatusEventServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.GetEmailStatusEventsFilter
+import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 
 internal class EmailStatusEventServiceGrpcImpl
@@ -13,10 +16,11 @@ internal class EmailStatusEventServiceGrpcImpl
 private constructor(
     private val authentication: Authentication,
     private val emailStatsEventService: EmailStatusEventService,
-    private val grpcExceptionMap: GrpcExceptionMap
-) : EmailStatusEventServiceGrpc.EmailStatusEventServiceImplBase() {
+    private val grpcExceptionMap: GrpcExceptionMap,
+    tachikomaScope: TachikomaScope
+) : EmailStatusEventServiceGrpc.EmailStatusEventServiceImplBase(), CoroutineScope by tachikomaScope {
 
-    override fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>) {
+    override fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>) = grpcLaunch {
         try {
             authentication.requireFrontend()
             emailStatsEventService.getEmailStatusEvents(request, responseObserver, authentication.authenticationId)

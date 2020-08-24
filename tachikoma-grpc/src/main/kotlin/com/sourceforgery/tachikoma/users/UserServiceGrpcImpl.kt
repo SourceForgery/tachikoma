@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.users
 
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.exceptions.NotFoundException
@@ -13,9 +14,11 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.ModifyUserResponse
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveUserResponse
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.UserServiceGrpc
+import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
 
 class UserServiceGrpcImpl
@@ -24,9 +27,10 @@ private constructor(
     private val userService: UserService,
     private val authentication: Authentication,
     private val grpcExceptionMap: GrpcExceptionMap,
-    private val authenticationDAO: AuthenticationDAO
-) : UserServiceGrpc.UserServiceImplBase() {
-    override fun addFrontendUser(request: AddUserRequest, responseObserver: StreamObserver<ModifyUserResponse>) {
+    private val authenticationDAO: AuthenticationDAO,
+    tachikomaScope: TachikomaScope
+) : UserServiceGrpc.UserServiceImplBase(), CoroutineScope by tachikomaScope {
+    override fun addFrontendUser(request: AddUserRequest, responseObserver: StreamObserver<ModifyUserResponse>) = grpcLaunch {
         try {
             authentication.requireFrontendAdmin(MailDomain(request.mailDomain))
             val user = userService.addFrontendUser(request)
@@ -37,7 +41,7 @@ private constructor(
         }
     }
 
-    override fun getFrontendUsers(request: GetUsersRequest, responseObserver: StreamObserver<FrontendUser>) {
+    override fun getFrontendUsers(request: GetUsersRequest, responseObserver: StreamObserver<FrontendUser>) = grpcLaunch {
         try {
             authentication.requireFrontend()
             userService.getFrontendUsers(authentication.mailDomain, responseObserver)
@@ -47,7 +51,7 @@ private constructor(
         }
     }
 
-    override fun modifyFrontendUser(request: ModifyUserRequest, responseObserver: StreamObserver<ModifyUserResponse>) {
+    override fun modifyFrontendUser(request: ModifyUserRequest, responseObserver: StreamObserver<ModifyUserResponse>) = grpcLaunch {
         try {
             val auth = authenticationDAO.getById(AuthenticationId(request.authId.id))
                 ?: throw NotFoundException()
@@ -63,7 +67,7 @@ private constructor(
         }
     }
 
-    override fun removeUser(request: RemoveUserRequest, responseObserver: StreamObserver<RemoveUserResponse>) {
+    override fun removeUser(request: RemoveUserRequest, responseObserver: StreamObserver<RemoveUserResponse>) = grpcLaunch {
         try {
             val auth = authenticationDAO.getById(AuthenticationId(request.userToRemove.id))
                 ?: throw NotFoundException()
