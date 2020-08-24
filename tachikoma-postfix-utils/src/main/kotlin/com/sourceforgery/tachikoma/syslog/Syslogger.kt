@@ -49,7 +49,7 @@ class Syslogger(grpcChannel: Channel) {
                             .setReason(status.substringBefore(' '))
                             .setQueueId(queueId)
                             .setStatus(dsn)
-                            .setOriginalRecipient(originalRecipient)
+                            .setOriginalRecipient(originalRecipient.trim('<', '>'))
                             .build()
                     }
                 }
