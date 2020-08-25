@@ -30,24 +30,24 @@ import io.grpc.stub.StreamObserver
 import java.time.Clock
 import java.util.Properties
 import java.util.concurrent.Executors
-import javax.inject.Inject
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class MTAEmailQueueService
-@Inject
-private constructor(
-    private val clock: Clock,
-    private val mqSequenceFactory: MQSequenceFactory,
-    private val emailDAO: EmailDAO,
-    private val incomingEmailDAO: IncomingEmailDAO,
-    private val emailStatusEventDAO: EmailStatusEventDAO,
-    private val blockedEmailDAO: BlockedEmailDAO,
-    private val mqSender: MQSender,
-    private val incomingEmailAddressDAO: IncomingEmailAddressDAO
-) {
+class MTAEmailQueueService(override val di: DI) : DIAware {
+    private val clock: Clock by instance()
+    private val mqSequenceFactory: MQSequenceFactory by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val incomingEmailDAO: IncomingEmailDAO by instance()
+    private val emailStatusEventDAO: EmailStatusEventDAO by instance()
+    private val blockedEmailDAO: BlockedEmailDAO by instance()
+    private val mqSender: MQSender by instance()
+    private val incomingEmailAddressDAO: IncomingEmailAddressDAO by instance()
+
     fun getEmails(responseObserver: StreamObserver<EmailMessage>, mailDomain: MailDomain): StreamObserver<MTAQueuedNotification> {
         LOGGER.info { "MTA connected with mail domain $mailDomain " }
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver

@@ -6,11 +6,10 @@ import io.ebean.config.dbplatform.h2.H2Platform
 import io.ebean.datasource.DataSourceConfig
 import java.sql.Connection
 import java.util.UUID
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
 
-class H2DataSourceProvider
-@Inject
-private constructor() : DataSourceProvider {
+class H2DataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
     override fun provide(serverConfig: ServerConfig) {
         val dataSourceConfig = DataSourceConfig()
         dataSourceConfig.heartbeatSql = "select 1"

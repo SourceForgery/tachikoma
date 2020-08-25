@@ -1,8 +1,5 @@
 package com.sourceforgery.tachikoma.auth
 
-import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.MinimalBinder
-import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
@@ -15,8 +12,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.ModifyUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.PasswordAuth
 import com.sourceforgery.tachikoma.grpc.frontend.toAuthenticationId
 import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
-import com.sourceforgery.tachikoma.hk2.hk2
 import com.sourceforgery.tachikoma.identifiers.MailDomain
+import com.sourceforgery.tachikoma.testModule
 import com.sourceforgery.tachikoma.users.UserService
 import io.ebean.EbeanServer
 import java.util.UUID
@@ -25,29 +22,22 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.apache.commons.lang3.RandomStringUtils
-import org.glassfish.hk2.api.ServiceLocator
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.junit.platform.runner.JUnitPlatform
-import org.junit.runner.RunWith
+import org.junit.Test
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.singleton
 
-@RunWith(JUnitPlatform::class)
-class UserServiceSpek : Spek({
-    lateinit var serviceLocator: ServiceLocator
-    val userService: UserService by hk2 { serviceLocator }
-    val authenticationDAO: AuthenticationDAO by hk2 { serviceLocator }
-    val ebeanServer: EbeanServer by hk2 { serviceLocator }
-
-    beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder(), MinimalBinder(UserService::class.java))!!
+class UserServiceSpek : DIAware {
+    override val di = DI {
+        importOnce(testModule(), allowOverride = true)
+        bind<UserService>() with singleton { UserService(di) }
     }
 
-    afterEachTest {
-        serviceLocator.shutdown()
-    }
+    val userService: UserService by instance()
+    val authenticationDAO: AuthenticationDAO by instance()
+    val ebeanServer: EbeanServer by instance()
 
     fun createAuthentication(domain: String): AuthenticationDBO {
         val accountDBO = AccountDBO(MailDomain(domain))
@@ -72,9 +62,10 @@ class UserServiceSpek : Spek({
             .setAddApiToken(false)
             .setAuthenticationRole(FrontendUserRole.FRONTEND)
             .setMailDomain("example.com")
-            .setPasswordAuth(PasswordAuth.newBuilder()
-                .setLogin("foobar")
-                .setPassword("123")
+            .setPasswordAuth(
+                PasswordAuth.newBuilder()
+                    .setLogin("foobar")
+                    .setPassword("123")
             )
             .build()
         val req = AddUserRequest.parseFrom(b4.toByteArray())
@@ -101,33 +92,32 @@ class UserServiceSpek : Spek({
         return actual
     }
 
-    describe("UserServiceSpec") {
-        it("create & modify user") {
-            val newUser = createUser()
-            val before = ModifyUserRequest.newBuilder()
-                .setActive(false)
-                .setApiToken(ApiToken.RESET_API_TOKEN)
-                .build()
-            val oldApiToken = newUser.apiToken
-            val oldMailDomain = newUser.account.mailDomain
-            val resp = userService.modifyFrontendUser(before, newUser)
+    @Test
+    fun `create & modify user`() {
+        val newUser = createUser()
+        val before = ModifyUserRequest.newBuilder()
+            .setActive(false)
+            .setApiToken(ApiToken.RESET_API_TOKEN)
+            .build()
+        val oldApiToken = newUser.apiToken
+        val oldMailDomain = newUser.account.mailDomain
+        val resp = userService.modifyFrontendUser(before, newUser)
 
-            val user = resp.user
-            val actual = authenticationDAO.getById(user.authId.toAuthenticationId())!!
-            assertEquals(before.active, user.active)
-            assertEquals(before.active, actual.active)
+        val user = resp.user
+        val actual = authenticationDAO.getById(user.authId.toAuthenticationId())!!
+        assertEquals(before.active, user.active)
+        assertEquals(before.active, actual.active)
 
-            assertEquals(before.authenticationRole, user.authenticationRole)
-            assertEquals(before.authenticationRole, actual.role.toFrontendRole())
+        assertEquals(before.authenticationRole, user.authenticationRole)
+        assertEquals(before.authenticationRole, actual.role.toFrontendRole())
 
-            assertEquals(actual.apiToken, resp.apiToken)
+        assertEquals(actual.apiToken, resp.apiToken)
 
-            assertNull(actual.recipientOverride)
-            assertFalse(user.hasRecipientOverride())
+        assertNull(actual.recipientOverride)
+        assertFalse(user.hasRecipientOverride())
 
-            assertEquals(oldMailDomain, actual.account.mailDomain)
+        assertEquals(oldMailDomain, actual.account.mailDomain)
 
-            assertNotEquals(oldApiToken, actual.apiToken)
-        }
+        assertNotEquals(oldApiToken, actual.apiToken)
     }
-})
+}

@@ -8,8 +8,6 @@ dependencies {
     implementation(project(":tachikoma-common"))
 
     implementation("org.postgresql:postgresql:$postgresqlDriverVersion")
-    implementation("org.glassfish.hk2:hk2-locator:$hk2Version")
-    implementation("org.glassfish.hk2:hk2-utils:$hk2Version")
 }
 
 tasks["compileJava"].apply {

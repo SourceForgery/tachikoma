@@ -33,17 +33,17 @@ import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class DeliveryNotificationService
-@Inject
-private constructor(
-    private val mqSequenceFactory: MQSequenceFactory,
-    private val emailDAO: EmailDAO,
-    private val grpcExceptionMap: GrpcExceptionMap
-) {
-    fun notificationStream(
+internal class DeliveryNotificationService(override val di: DI) : DIAware {
+    private val mqSequenceFactory: MQSequenceFactory by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val grpcExceptionMap: GrpcExceptionMap by instance()
+
+    suspend fun notificationStream(
         responseObserver: StreamObserver<EmailNotification>,
         request: NotificationStreamParameters,
         authenticationId: AuthenticationId,

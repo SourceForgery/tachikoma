@@ -1,19 +1,13 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.sourceforgery.tachikoma.logging.InvokeCounter
 import java.time.Duration
-import javax.annotation.PreDestroy
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
 
-class LogEverything
-@Inject
-private constructor() : InvokeCounter {
+class LogEverything() : InvokeCounter {
 
     var slowThreshold = Duration.ofSeconds(1)!!
-    private val mapper by lazy(LazyThreadSafetyMode.NONE) {
-        ObjectMapper()
-    }
 
     private val loggedQueries = object : LinkedHashMap<String, Long>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
@@ -21,8 +15,7 @@ private constructor() : InvokeCounter {
         }
     }
 
-    @PreDestroy
-    fun dump() {
+    override fun dump() {
         if (LOGGER.delegate.isWarnEnabled) {
             val totalMilliseconds = loggedQueries.asSequence().sumBy { it.value.toInt() }
             if (totalMilliseconds > slowThreshold.toMillis()) {
@@ -39,6 +32,17 @@ private constructor() : InvokeCounter {
     }
 
     companion object {
-        val LOGGER = logger("sql.log_everything")
+        private val mapper by lazy(LazyThreadSafetyMode.NONE) {
+            ObjectMapper()
+        }
+        private val LOGGER = logger("sql.log_everything")
+    }
+}
+
+object LogNothing : InvokeCounter {
+    override fun inc(sql: String?, millis: Long) {
+    }
+
+    override fun dump() {
     }
 }

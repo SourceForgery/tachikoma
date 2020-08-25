@@ -6,24 +6,29 @@ import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddressServiceGrpc
-import com.sourceforgery.tachikoma.grpc.grpcLaunch
+import com.sourceforgery.tachikoma.grpc.grpcFuture
 import io.grpc.stub.StreamObserver
-import javax.inject.Inject
-import kotlinx.coroutines.CoroutineScope
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.direct
+import org.kodein.di.instance
+import org.kodein.di.provider
 
-internal class IncomingEmailAddressServiceGrpcImpl
-@Inject
-private constructor(
-    private val incomingEmailAddressService: IncomingEmailAddressService,
-    private val grpcExceptionMap: GrpcExceptionMap,
-    private val authentication: Authentication,
-    tachikomaScope: TachikomaScope
-) : IncomingEmailAddressServiceGrpc.IncomingEmailAddressServiceImplBase(), CoroutineScope by tachikomaScope {
+internal class IncomingEmailAddressServiceGrpcImpl(
+    override val di: DI
+) : IncomingEmailAddressServiceGrpc.IncomingEmailAddressServiceImplBase(),
+    DIAware,
+    TachikomaScope by di.direct.instance() {
 
-    override fun addIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) = grpcLaunch {
+    private val incomingEmailAddressService: IncomingEmailAddressService by instance()
+    private val grpcExceptionMap: GrpcExceptionMap by instance()
+    private val authentication: () -> Authentication by provider()
+
+    override fun addIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) = grpcFuture(responseObserver) {
         try {
-            authentication.requireFrontendAdmin(authentication.mailDomain)
-            incomingEmailAddressService.addIncomingEmailAddress(request, authentication.authenticationId)
+            val auth = authentication()
+            auth.requireFrontendAdmin(auth.mailDomain)
+            incomingEmailAddressService.addIncomingEmailAddress(request, auth.authenticationId)
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } catch (e: Exception) {
@@ -31,20 +36,22 @@ private constructor(
         }
     }
 
-    override fun getIncomingEmailAddresses(request: Empty, responseObserver: StreamObserver<IncomingEmailAddress>) = grpcLaunch {
+    override fun getIncomingEmailAddresses(request: Empty, responseObserver: StreamObserver<IncomingEmailAddress>) = grpcFuture(responseObserver) {
         try {
-            authentication.requireFrontendAdmin(authentication.mailDomain)
-            incomingEmailAddressService.getIncomingEmailAddresses(responseObserver, authentication.authenticationId)
+            val auth = authentication()
+            auth.requireFrontendAdmin(auth.mailDomain)
+            incomingEmailAddressService.getIncomingEmailAddresses(responseObserver, auth.authenticationId)
             responseObserver.onCompleted()
         } catch (e: Exception) {
             responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
         }
     }
 
-    override fun deleteIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) = grpcLaunch {
+    override fun deleteIncomingEmailAddress(request: IncomingEmailAddress, responseObserver: StreamObserver<Empty>) = grpcFuture(responseObserver) {
         try {
-            authentication.requireFrontendAdmin(authentication.mailDomain)
-            incomingEmailAddressService.deleteIncomingEmailAddress(request, authentication.authenticationId)
+            val auth = authentication()
+            auth.requireFrontendAdmin(auth.mailDomain)
+            incomingEmailAddressService.deleteIncomingEmailAddress(request, auth.authenticationId)
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } catch (e: Exception) {

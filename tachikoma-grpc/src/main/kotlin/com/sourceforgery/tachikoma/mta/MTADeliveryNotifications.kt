@@ -14,17 +14,17 @@ import com.sourceforgery.tachikoma.mq.MessageDelivered
 import com.sourceforgery.tachikoma.mq.MessageHardBounced
 import com.sourceforgery.tachikoma.mq.MessageSoftBounced
 import java.time.Clock
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class MTADeliveryNotifications
-@Inject
-private constructor(
-    private val emailDAO: EmailDAO,
-    private val emailStatusEventDAO: EmailStatusEventDAO,
-    private val mqSender: MQSender,
-    private val clock: Clock
-) {
+internal class MTADeliveryNotifications(override val di: DI) : DIAware {
+    private val emailDAO: EmailDAO by instance()
+    private val emailStatusEventDAO: EmailStatusEventDAO by instance()
+    private val mqSender: MQSender by instance()
+    private val clock: Clock by instance()
+
     fun setDeliveryStatus(request: DeliveryNotification) {
         LOGGER.trace { "$request" }
         val queueId = request.queueId

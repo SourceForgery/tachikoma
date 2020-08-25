@@ -1,27 +1,22 @@
 package com.sourceforgery.tachikoma.maildelivery
 
 import kotlin.test.assertEquals
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
 import org.jsoup.Jsoup
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
 
 @RunWith(JUnitPlatform::class)
-class HtmlToPlainTextSpec : Spek({
+class HtmlToPlainTextSpec {
 
-    describe("Convert simple html to plain text") {
-        it("simple") {
+    fun `Convert simple html to plain text - simple`() {
+        val plainText = getPlainText(simpleHtmlDoc)
 
-            val plainText = getPlainText(simpleHtmlDoc)
-
-            assertEquals(simpleHtmlText, plainText)
-        }
+        assertEquals(simpleHtmlText, plainText)
     }
-}) {
+
     companion object {
-        val simpleHtmlDoc = Jsoup.parse("""
+        val simpleHtmlDoc = Jsoup.parse(
+            """
             <!doctype html><html><head>
   <meta http-equiv="Content-Type" content="text/simpleHtmlDoc; charset=UTF-8">
   <meta name="viewport" content="width=device-width">
@@ -66,7 +61,8 @@ class HtmlToPlainTextSpec : Spek({
 
 
 <img src="http://example.com:8070/t/qgYGqgYDCNodsgYUXZxYoaar0iLOs-QkYTYkuZMv3HM" height="1" width="1"></body></simpleHtmlDoc>
-""")
+"""
+        )
 
         val simpleHtmlText = """
 HELLO

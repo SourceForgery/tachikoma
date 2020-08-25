@@ -25,30 +25,31 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
-import org.apache.logging.log4j.kotlin.logger
 import java.time.Clock
 import java.util.Optional
-import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.direct
+import org.kodein.di.instance
 
-internal class UnsubscribeRest
-@Inject
-private constructor(
-    private val clock: Clock,
-    private val mqSender: MQSender,
-    private val unsubscribeDecoder: UnsubscribeDecoder,
-    private val emailDAO: EmailDAO,
-    private val emailStatusEventDAO: EmailStatusEventDAO,
-    private val blockedEmailDAO: BlockedEmailDAO,
-    private val remoteIP: RemoteIP,
-    tachikomaScope: TachikomaScope
-) : RestService, TachikomaScope by tachikomaScope {
+internal class UnsubscribeRest(
+    override val di: DI
+) : RestService, DIAware, TachikomaScope by di.direct.instance() {
+    private val clock: Clock by instance()
+    private val mqSender: MQSender by instance()
+    private val unsubscribeDecoder: UnsubscribeDecoder by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val emailStatusEventDAO: EmailStatusEventDAO by instance()
+    private val blockedEmailDAO: BlockedEmailDAO by instance()
+    private val remoteIP: RemoteIP by instance()
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     @ConsumesGroup(Consumes("multipart/form-data"), Consumes("application/x-www-form-urlencoded"))
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String,
         @Param("List-Unsubscribe") optionalListUnsubscribe: Optional<String>
-    ) = future {
+    ) = scopedFuture {
         try {
             val listUnsubscribe = optionalListUnsubscribe.orElse(null)
             if (listUnsubscribe != ONE_CLICK_FORM_DATA) {
@@ -65,7 +66,7 @@ private constructor(
     @Get("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String
-    ) = future {
+    ) = scopedFuture {
         if (unsubscribeDataString.endsWith("/1")) {
             actuallyUnsubscribe(unsubscribeDataString.removeSuffix("/1"))
         } else {

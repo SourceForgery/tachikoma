@@ -25,15 +25,17 @@ import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toUserId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.grpc.stub.StreamObserver
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class UserService
-@Inject
-private constructor(
-    private val accountDAO: AccountDAO,
-    private val authenticationDAO: AuthenticationDAO,
-    private val internalCreateUsers: InternalCreateUserService
-) {
+class UserService(
+    override val di: DI
+) : DIAware {
+    private val accountDAO: AccountDAO by instance()
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val internalCreateUsers: InternalCreateUserService by instance()
+
     fun addFrontendUser(request: AddUserRequest): ModifyUserResponse {
         val role = frontendRole(request.authenticationRole)
         val password: String? = request.passwordAuth.password.emptyToNull()

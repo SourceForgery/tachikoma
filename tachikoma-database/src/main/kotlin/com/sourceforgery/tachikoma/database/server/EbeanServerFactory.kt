@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.server
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
+import com.sourceforgery.tachikoma.logging.InvokeCounter
 import io.ebean.EbeanServer
 import io.ebean.config.EncryptKey
 import io.ebean.config.EncryptKeyManager
@@ -10,23 +11,21 @@ import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourcePool
 import java.sql.DriverManager
-import javax.inject.Inject
 import javax.sql.DataSource
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
-import org.glassfish.hk2.api.Factory
-import org.glassfish.hk2.api.IterableProvider
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.allInstances
+import org.kodein.di.instance
 
-class EbeanServerFactory
-@Inject
-private constructor(
-    private val databaseConfig: DatabaseConfig,
-    private val counter: InvokeCounter,
-    private val dbObjectMapper: DBObjectMapper,
-    private val ebeanHooks: IterableProvider<EbeanHook>,
-    private val databaseUpgrades: IterableProvider<DatabaseUpgrade>,
-    private val dataSourceProvider: DataSourceProvider
-) : Factory<EbeanServer> {
+class EbeanServerFactory(override val di: DI) : DIAware {
+    private val databaseConfig: DatabaseConfig by instance()
+    private val counter: InvokeCounter by instance()
+    private val dbObjectMapper: DBObjectMapper by instance()
+    private val ebeanHooks by allInstances<EbeanHook>()
+    private val databaseUpgrades by allInstances<DatabaseUpgrade>()
+    private val dataSourceProvider: DataSourceProvider by instance()
 
     private inner class WrappedServerConfig : ServerConfig() {
         override fun setDataSource(originalDataSource: DataSource?) {
@@ -58,15 +57,12 @@ private constructor(
 
     private fun upgradeDatabase(dataSource: DataSource) {
         var currentVersion = 0
-        for (serviceHandle in databaseUpgrades.handleIterator()) {
-            val newVersion = serviceHandle.activeDescriptor.ranking
-            if (newVersion == 0) {
-                throw RuntimeException("Rank must be set on ${serviceHandle.activeDescriptor.implementationClass}")
-            }
+        for (service in databaseUpgrades.sortedByDescending { it.newVersion }) {
+            val newVersion = service.newVersion
             if (newVersion < currentVersion) {
                 dataSource.connection.use {
                     it.autoCommit = false
-                    currentVersion = serviceHandle.service.run(it)
+                    currentVersion = service.run(it)
                     it.prepareStatement("UPDATE database_version SET version = ?")
                         .use {
                             it.setInt(1, currentVersion)
@@ -75,11 +71,10 @@ private constructor(
                     it.commit()
                 }
             }
-            serviceHandle.close()
         }
     }
 
-    override fun provide(): EbeanServer {
+    fun provide(): EbeanServer {
         DriverManager.setLogWriter(IoBuilder.forLogger("DriverManager").setLevel(Level.DEBUG).buildPrintWriter())
 
         val serverConfig = WrappedServerConfig()
@@ -95,15 +90,9 @@ private constructor(
 
         val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
         ebeanHooks
-            .handleIterator()
             .forEach {
-                it.service.postStart(ebeanServer)
-                it.close()
+                it.postStart(ebeanServer)
             }
         return ebeanServer
-    }
-
-    override fun dispose(instance: EbeanServer) {
-        instance.shutdown(true, false)
     }
 }

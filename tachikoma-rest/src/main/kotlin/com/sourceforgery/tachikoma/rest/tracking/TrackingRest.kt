@@ -25,27 +25,28 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
-import org.apache.logging.log4j.kotlin.logger
 import java.util.Base64
-import javax.inject.Inject
+import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.direct
+import org.kodein.di.instance
 
-internal class TrackingRest
-@Inject
-private constructor(
-    private val trackingDecoder: TrackingDecoder,
-    private val emailDAO: EmailDAO,
-    private val emailStatusEventDAO: EmailStatusEventDAO,
-    private val remoteIP: RemoteIP,
-    private val mqSender: MQSender,
-    tachikomaScope: TachikomaScope
-) : RestService, TachikomaScope by tachikomaScope {
+internal class TrackingRest(
+    override val di: DI
+) : RestService, DIAware, TachikomaScope by di.direct.instance() {
+    private val trackingDecoder: TrackingDecoder by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val emailStatusEventDAO: EmailStatusEventDAO by instance()
+    private val remoteIP: RemoteIP by instance()
+    private val mqSender: MQSender by instance()
 
     @Get("regex:^/t/(?<trackingData>.*)")
     @Produces("image/gif")
     fun trackOpen(
         @Param("trackingData") trackingDataString: String,
         @Header("User-Agent") @Default("") userAgent: String
-    ) = future {
+    ) = scopedFuture {
         if (trackingDataString.endsWith("/1")) {
             actuallyTrackOpen(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
@@ -88,7 +89,7 @@ private constructor(
     fun trackClick(
         @Param("trackingData") trackingDataString: String,
         @Header("User-Agent") @Default("") userAgent: String
-    ) = future {
+    ) = scopedFuture {
         if (trackingDataString.endsWith("/1")) {
             actuallyTrackClick(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
@@ -108,15 +109,17 @@ private constructor(
                     ipAddress = remoteIP.remoteAddress,
                     trackingLink = trackingData.redirectUrl,
                     userAgent = userAgent
-                ))
+                )
+            )
             emailStatusEventDAO.save(emailStatusEvent)
 
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
                 .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                 .setEmailMessageId(email.id.emailId)
-                .setMessageClicked(MessageClicked.newBuilder()
-                    .setIpAddress(remoteIP.remoteAddress)
-                    .setClickedUrl(trackingData.redirectUrl)
+                .setMessageClicked(
+                    MessageClicked.newBuilder()
+                        .setIpAddress(remoteIP.remoteAddress)
+                        .setClickedUrl(trackingData.redirectUrl)
                 )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
 

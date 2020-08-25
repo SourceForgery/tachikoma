@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.postfix
 
 import com.linecorp.armeria.client.Clients
 import com.sourceforgery.jersey.uribuilder.addPort
+import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.incoming.IncomingEmailHandler
@@ -26,7 +27,7 @@ internal constructor(
     fun run() {
         LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
 
-        val builder = Clients.builder(tachikomaUrl.withoutPassword())
+        val builder = Clients.builder(tachikomaUrl.withoutPassword().ensureGproto())
             .addHeader("x-apitoken", tachikomaUrl.userInfo)
             .responseTimeout(Duration.ofDays(365))
             .writeTimeout(Duration.ofDays(365))

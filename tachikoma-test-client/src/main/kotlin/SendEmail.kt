@@ -1,62 +1,36 @@
 import com.google.protobuf.util.JsonFormat
+import com.linecorp.armeria.client.Clients
+import com.sourceforgery.jersey.uribuilder.ensureGproto
+import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.StaticBody
-import io.grpc.ManagedChannelBuilder
-import io.grpc.Metadata
-import io.grpc.Metadata.ASCII_STRING_MARSHALLER
-import io.grpc.stub.MetadataUtils
 import java.net.URI
+import java.time.Duration
 import java.time.Instant
 import javax.mail.internet.InternetAddress
 
-private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", ASCII_STRING_MARSHALLER)
-
 fun main(args: Array<String>) {
-    val metadataAuth = Metadata()
     val frontendUri = URI.create(
         System.getenv("TACHI_FRONTEND_URI")
-            ?: error("Need to specifify env TACHI_FRONTEND_URI")
+            ?: error("Need to specify env TACHI_FRONTEND_URI")
     )
     val from = InternetAddress(
         System.getenv("TACHI_FROM")
-            ?: error("Need to specifify env TACHI_FROM")
+            ?: error("Need to specify env TACHI_FROM")
     )
     val to = InternetAddress.parse(
         System.getenv("TACHI_TO")
-            ?: error("Need to specifify env TACHI_TO (multiple addresses possible via RFC822 format)")
+            ?: error("Need to specify env TACHI_TO (multiple addresses possible via RFC822 format)")
     )
 
-    metadataAuth.put(APITOKEN_HEADER, frontendUri.userInfo)
-
-    val https = when (frontendUri.scheme) {
-        "https" -> true
-        "http" -> false
-        else -> error("Only supports http or https")
-    }
-
-    val port = if (frontendUri.port != -1) {
-        frontendUri.port
-    } else {
-        if (https) {
-            443
-        } else {
-            80
-        }
-    }
-    @Suppress("DEPRECATION")
-    val channel = ManagedChannelBuilder.forAddress(frontendUri.host, port)
-        .apply {
-            if (!https) {
-                usePlaintext()
-            }
-        }
-        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-        .build()
-
-    val stub = MailDeliveryServiceGrpc.newBlockingStub(channel)
+    val stub = Clients.builder(frontendUri.withoutPassword().ensureGproto())
+        .addHeader("x-apitoken", frontendUri.userInfo)
+        .responseTimeout(Duration.ofDays(365))
+        .writeTimeout(Duration.ofDays(365))
+        .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
     val mailBody = """
     |<body>
@@ -112,9 +86,10 @@ fun main(args: Array<String>) {
                 )
                 .build()
         })
-        .setFrom(NamedEmailAddress.newBuilder()
-            .setEmail(from.address)
-            .setName(from.personal)
+        .setFrom(
+            NamedEmailAddress.newBuilder()
+                .setEmail(from.address)
+                .setName(from.personal)
         )
         .build()
 

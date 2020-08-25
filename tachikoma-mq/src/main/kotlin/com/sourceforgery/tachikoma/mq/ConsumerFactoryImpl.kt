@@ -15,23 +15,21 @@ import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
-import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Clock
 import java.time.Duration
-import javax.annotation.PreDestroy
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class ConsumerFactoryImpl
-@Inject
-private constructor(
-    mqConfig: MqConfig,
-    private val clock: Clock,
-    private val hK2RequestContext: HK2RequestContext
-) : MQSequenceFactory, MQSender, MQManager {
+internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQSender, MQManager, DIAware {
+
+    private val mqConfig: MqConfig by instance()
+    private val clock: Clock by instance()
+
     @Volatile
     private var thread = 0
     private val connection: Connection
@@ -57,8 +55,7 @@ private constructor(
         }
     }
 
-    @PreDestroy
-    private fun close() {
+    fun close() {
         sendChannel.close()
         connection.close()
     }
@@ -131,7 +128,6 @@ private constructor(
     }
 
     override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
-        val ctx = hK2RequestContext.getContextInstance()
         val channel = connection
             .createChannel()!!
 
@@ -153,7 +149,7 @@ private constructor(
                 var success = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
-                    hK2RequestContext.runInScope(ctx) { callback(parsedMessage) }
+                    callback(parsedMessage)
                     success = true
                 } catch (e: Exception) {
                     LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }

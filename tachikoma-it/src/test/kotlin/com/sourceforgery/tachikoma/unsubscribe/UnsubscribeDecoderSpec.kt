@@ -1,57 +1,55 @@
 package com.sourceforgery.tachikoma.unsubscribe
 
-import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
+import com.sourceforgery.tachikoma.testModule
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import org.apache.commons.lang3.RandomStringUtils
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.junit.platform.runner.JUnitPlatform
-import org.junit.runner.RunWith
+import org.junit.Test
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-@RunWith(JUnitPlatform::class)
-internal class UnsubscribeDecoderSpec : Spek({
-    val serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder())
-    val unsubscribeDecoder = serviceLocator.getService(UnsubscribeDecoder::class.java)
+class UnsubscribeDecoderSpec : DIAware {
+    override val di = DI {
+        importOnce(testModule(), allowOverride = true)
+    }
+    val unsubscribeDecoder: UnsubscribeDecoder by instance()
 
-    describe("UnsubscribeDecoderSpec") {
+    @Test
+    fun `should create an unsubscribe url`() {
 
-        it("should create an unsubscribe url") {
+        val emailId = EmailId
+            .newBuilder()
+            .setId(999)
+            .build()
 
-            val emailId = EmailId
-                .newBuilder()
-                .setId(999)
-                .build()
+        val unsubscribeData = UnsubscribeData
+            .newBuilder()
+            .setEmailId(emailId)
+            .build()
 
-            val unsubscribeData = UnsubscribeData
-                .newBuilder()
-                .setEmailId(emailId)
-                .build()
+        val url = unsubscribeDecoder.createUrl(unsubscribeData)
 
-            val url = unsubscribeDecoder.createUrl(unsubscribeData)
+        assertEquals("qgYGqgYDCM4PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8", url)
+    }
 
-            assertEquals("qgYGqgYDCM4PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8", url)
-        }
+    @Test
+    fun `should decode an unsubscribe url`() {
 
-        it("should decode an unsubscribe url") {
+        val unsubscribeDataString = "qgYGqgYDCM4PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8"
 
-            val unsubscribeDataString = "qgYGqgYDCM4PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8"
+        val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
 
-            val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
+        assertEquals(999, unsubscribeData.emailId.id)
+    }
 
-            assertEquals(999, unsubscribeData.emailId.id)
-        }
+    @Test
+    fun `should throw if trying to decode an invalid url`() {
+        val unsubscribeDataString = "qgYGqgYDCM5PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8"
 
-        it("should throw if trying to decode an invalid url") {
-            val unsubscribeDataString = "qgYGqgYDCM5PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8"
-
-            assertFailsWith<RuntimeException> {
-                unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
-            }
+        assertFailsWith<RuntimeException> {
+            unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
         }
     }
-})
+}

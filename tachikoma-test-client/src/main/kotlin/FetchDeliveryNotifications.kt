@@ -1,27 +1,25 @@
 import com.google.protobuf.util.JsonFormat
+import com.linecorp.armeria.client.Clients
+import com.sourceforgery.jersey.uribuilder.ensureGproto
+import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
-import io.grpc.ManagedChannelBuilder
-import io.grpc.Metadata
-import io.grpc.stub.MetadataUtils
 import io.grpc.stub.StreamObserver
-import java.util.concurrent.TimeUnit
-
-private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
+import java.net.URI
+import java.time.Duration
 
 fun main(args: Array<String>) {
-    val metadataAuth = Metadata()
-    metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
+    val frontendUri = URI.create(
+        System.getenv("TACHI_FRONTEND_URI")
+            ?: error("Need to specify env TACHI_FRONTEND_URI")
+    )
 
-    @Suppress("DEPRECATION")
-    val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-        .usePlaintext()
-        .idleTimeout(365, TimeUnit.DAYS)
-        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-        .build()
-
-    val stub = DeliveryNotificationServiceGrpc.newStub(channel)
+    val stub = Clients.builder(frontendUri.withoutPassword().ensureGproto())
+        .addHeader("x-apitoken", frontendUri.userInfo)
+        .responseTimeout(Duration.ofDays(365))
+        .writeTimeout(Duration.ofDays(365))
+        .build(DeliveryNotificationServiceGrpc.DeliveryNotificationServiceStub::class.java)
 
     try {
         val fromServerStreamObserver = object : StreamObserver<EmailNotification> {

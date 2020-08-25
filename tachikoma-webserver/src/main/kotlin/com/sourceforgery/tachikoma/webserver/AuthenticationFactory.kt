@@ -23,30 +23,29 @@ import io.netty.util.AsciiString
 import java.util.Base64
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
-import org.glassfish.hk2.api.Factory
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
+import org.kodein.di.provider
 
-class AuthenticationFactory
-@Inject
-private constructor(
-    private val httpHeaders: HttpHeaders,
-    private val webServerConfig: WebServerConfig,
-    private val authenticationDAO: AuthenticationDAO,
-    private val accountDAO: AccountDAO
-) : Factory<Authentication> {
+class AuthenticationFactory(override val di: DI) : DIAware {
+    private val httpHeaders by provider<HttpHeaders>()
+    private val webServerConfig: WebServerConfig by instance()
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val accountDAO: AccountDAO by instance()
 
     private val apiKeyCache = CacheBuilder.newBuilder()
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(CacheLoader.from<String, Authentication?> { parseApiTokenHeader(it) })
 
-    override fun provide() =
+    fun provide() =
         parseWebTokenHeader()
             ?: parseApiTokenHeader()
             ?: NO_AUTHENTICATION
 
     private fun parseApiTokenHeader(): Authentication? =
-        httpHeaders[APITOKEN_HEADER]
+        httpHeaders()[APITOKEN_HEADER]
             ?.let {
                 try {
                     apiKeyCache[it]
@@ -85,7 +84,7 @@ private constructor(
     }
 
     private fun parseWebTokenHeader(): Authentication? {
-        val webtokenHeader = httpHeaders[WEBTOKEN_HEADER]
+        val webtokenHeader = httpHeaders()[WEBTOKEN_HEADER]
             ?: return null
         val splitToken = webtokenHeader.split(
             delimiters = *charArrayOf('.'),
@@ -112,9 +111,6 @@ private constructor(
             accountId = accountId,
             accountDAO = accountDAO
         )
-    }
-
-    override fun dispose(instance: Authentication) {
     }
 
     companion object {

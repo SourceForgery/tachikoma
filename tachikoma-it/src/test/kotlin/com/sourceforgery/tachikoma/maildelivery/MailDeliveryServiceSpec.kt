@@ -2,9 +2,6 @@ package com.sourceforgery.tachikoma.maildelivery
 
 import com.google.protobuf.ByteString
 import com.sourceforgery.tachikoma.DAOHelper
-import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.MinimalBinder
-import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
@@ -16,82 +13,77 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.StaticBody
 import com.sourceforgery.tachikoma.grpc.frontend.toEmailId
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
-import com.sourceforgery.tachikoma.hk2.getValue
-import com.sourceforgery.tachikoma.hk2.hk2
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
+import com.sourceforgery.tachikoma.mq.JobMessageFactory
+import com.sourceforgery.tachikoma.testModule
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import org.apache.commons.lang3.RandomStringUtils
-import org.glassfish.hk2.api.ServiceLocator
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
-import org.junit.platform.runner.JUnitPlatform
-import org.junit.runner.RunWith
+import org.junit.Test
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.singleton
 
-@RunWith(JUnitPlatform::class)
-class MailDeliveryServiceSpec : Spek({
-    lateinit var serviceLocator: ServiceLocator
-    val mailDeliveryService: MailDeliveryService by hk2 { serviceLocator }
-    val daoHelper: DAOHelper by hk2 { serviceLocator }
-
-    beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder(), MinimalBinder(MailDeliveryService::class.java))!!
-    }
-    afterEachTest {
-        serviceLocator.shutdown()
+class MailDeliveryServiceSpec : DIAware {
+    override val di = DI {
+        importOnce(testModule(), allowOverride = true)
+        bind<JobMessageFactory>() with singleton { JobMessageFactory(di) }
+        bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
     }
 
-    describe("Simple email inlined css") {
-        it("Simple email inlined css") {
-            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
-            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expected.html").readText()).html()
-            val actual = mailDeliveryService.parseHTML(input, "", true).html()
-            assertEquals(expected, actual)
-        }
+    val mailDeliveryService: MailDeliveryService by instance()
+    val daoHelper: DAOHelper by instance()
+    val emailDAO: EmailDAO by instance()
+
+    @Test
+    fun `Simple email inlined css`() {
+        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
+        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expected.html").readText()).html()
+        val actual = mailDeliveryService.parseHTML(input, "", true).html()
+        assertEquals(expected, actual)
     }
 
-    describe("Complex email inlined css") {
-        it("Complex email inlined css") {
-            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
-            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expected.html").readText()).html()
-            val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", true).html()).html()
-            assertEquals(expected, actual)
-        }
+    @Test
+    fun `Complex email inlined css`() {
+        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
+        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expected.html").readText()).html()
+        val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", true).html()).html()
+        assertEquals(expected, actual)
     }
 
-    describe("Simple email no css inlineing") {
-        it("Simple email no css inlineing") {
-            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
-            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expectedNoInlining.html").readText()).html()
-            val actual = mailDeliveryService.parseHTML(input, "", false).html()
-            assertEquals(expected, actual)
-        }
+    @Test
+    fun `Simple email no css inlineing`() {
+        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
+        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expectedNoInlining.html").readText()).html()
+        val actual = mailDeliveryService.parseHTML(input, "", false).html()
+        assertEquals(expected, actual)
     }
 
-    describe("Complex email no css inlineing") {
-        it("Complex email no css inlineing") {
-            val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
-            val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expectedNoInlining.html").readText()).html()
-            val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", false).html()).html()
-            assertEquals(expected, actual)
-        }
+    @Test
+    fun `Complex email no css inlineing`() {
+        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
+        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expectedNoInlining.html").readText()).html()
+        val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", false).html()).html()
+        assertEquals(expected, actual)
     }
 
-    describe("Send emails") {
-        it("with attachment") {
-            val authentication = daoHelper.createAuthentication(fromEmail.toNamedEmail().address.domain)
-            val email = OutgoingEmail.newBuilder()
-                .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
-                .addAttachments(Attachment.newBuilder()
+    @Test
+    fun `Send emails with attachment`() {
+        val authentication = daoHelper.createAuthentication(fromEmail.toNamedEmail().address.domain)
+        val email = OutgoingEmail.newBuilder()
+            .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
+            .addAttachments(
+                Attachment.newBuilder()
                     .setContentType("application/pdf")
                     .setData(ByteString.copyFrom(data))
-                    .setFileName("NotReally.pdf"))
-                .setFrom(fromEmail)
-                .setStatic(StaticBody.newBuilder().setPlaintextBody(
+                    .setFileName("NotReally.pdf")
+            )
+            .setFrom(fromEmail)
+            .setStatic(
+                StaticBody.newBuilder().setPlaintextBody(
                     """This is a test
                             |                                      .
                             |.
@@ -99,29 +91,28 @@ class MailDeliveryServiceSpec : Spek({
                             |.                 ${""}
                             |"""
                         .trimMargin()
-                ).setSubject("Test mail subject"))
-                .build()
-            val responseObserver = QueueStreamObserver<EmailQueueStatus>()
-            mailDeliveryService.sendEmail(
-                request = email,
-                responseObserver = responseObserver,
-                authenticationId = authentication.id
+                ).setSubject("Test mail subject")
             )
-            val emailDAO: EmailDAO by serviceLocator
-            val queued = responseObserver.take(500)
-            val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
-            val boundary = Regex("\tboundary=\"(.*?)\"").find(byEmailId.body!!)!!.groupValues[1]
+            .build()
+        val responseObserver = QueueStreamObserver<EmailQueueStatus>()
+        mailDeliveryService.sendEmail(
+            request = email,
+            responseObserver = responseObserver,
+            authenticationId = authentication.id
+        )
+        val queued = responseObserver.take(500)
+        val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
+        val boundary = Regex("\tboundary=\"(.*?)\"").find(byEmailId.body!!)!!.groupValues[1]
 
-            val modifiedBody = byEmailId.body!!.replace(boundary, "XXXXXX")
-                .replace(Regex("Date: .*"), "Date: XXXXX")
+        val modifiedBody = byEmailId.body!!.replace(boundary, "XXXXXX")
+            .replace(Regex("Date: .*"), "Date: XXXXX")
 
-            val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
-                it.readBytes().toString(StandardCharsets.UTF_8)
-            }
-            assertEquals(expected, modifiedBody)
+        val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
+            it.readBytes().toString(StandardCharsets.UTF_8)
         }
+        assertEquals(expected, modifiedBody)
     }
-}) {
+
     companion object {
         val validEmail = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()
         val fromEmail = NamedEmailAddress.newBuilder().setEmail("from@example.com").setName("Valid From Email").build()

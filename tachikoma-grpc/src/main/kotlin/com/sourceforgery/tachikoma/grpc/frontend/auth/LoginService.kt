@@ -10,14 +10,14 @@ import com.sourceforgery.tachikoma.grpc.frontend.toRole
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.util.Base64
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class LoginService
-@Inject
-private constructor(
-    private val authenticationDAO: AuthenticationDAO,
-    private val webtokenAuthConfig: WebtokenAuthConfig
-) {
+class LoginService(override val di: DI) : DIAware {
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val webtokenAuthConfig: WebtokenAuthConfig by instance()
+
     fun login(loginRequest: LoginRequest): LoginResponse {
         val auth = authenticationDAO.validateApiToken(loginRequest.username)
         val correct = auth

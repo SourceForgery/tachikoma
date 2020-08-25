@@ -25,14 +25,14 @@ import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.tracking.toEmailMetrics
 import io.grpc.stub.StreamObserver
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class EmailStatusEventService
-@Inject
-private constructor(
-    private val authenticationDAO: AuthenticationDAO,
-    private val emailStatusEventDAO: EmailStatusEventDAO
-) {
+internal class EmailStatusEventService(override val di: DI) : DIAware {
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val emailStatusEventDAO: EmailStatusEventDAO by instance()
+
     fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>, authenticationId: AuthenticationId) {
 
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!

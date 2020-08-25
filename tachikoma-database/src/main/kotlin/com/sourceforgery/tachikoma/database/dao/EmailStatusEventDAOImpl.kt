@@ -4,17 +4,16 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.identifiers.AccountId
-import io.ebean.EbeanServer
+import io.ebean.Database
 import java.time.Instant
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class EmailStatusEventDAOImpl
-@Inject
-private constructor(
-    private val ebeanServer: EbeanServer
-) : EmailStatusEventDAO {
+class EmailStatusEventDAOImpl(override val di: DI) : EmailStatusEventDAO, DIAware {
+    private val database: Database by instance()
 
-    override fun save(emailStatusEventDBO: EmailStatusEventDBO) = ebeanServer.save(emailStatusEventDBO)
+    override fun save(emailStatusEventDBO: EmailStatusEventDBO) = database.save(emailStatusEventDBO)
 
     override fun getEvents(
         accountId: AccountId,
@@ -23,7 +22,7 @@ private constructor(
         fromEmail: Email?,
         events: List<EmailStatus>
     ): List<EmailStatusEventDBO> {
-        return ebeanServer
+        return database
             .find(EmailStatusEventDBO::class.java)
             .where()
             .eq("email.transaction.authentication.account.dbId", accountId.accountId)

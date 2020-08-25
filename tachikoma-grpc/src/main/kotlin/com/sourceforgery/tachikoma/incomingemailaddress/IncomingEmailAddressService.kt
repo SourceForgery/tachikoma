@@ -6,14 +6,13 @@ import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddress
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.grpc.stub.StreamObserver
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class IncomingEmailAddressService
-@Inject
-private constructor(
-    private val authenticationDAO: AuthenticationDAO,
-    private val incomingEmailAddressDAO: IncomingEmailAddressDAO
-) {
+internal class IncomingEmailAddressService(override val di: DI) : DIAware {
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val incomingEmailAddressDAO: IncomingEmailAddressDAO by instance()
 
     fun addIncomingEmailAddress(request: IncomingEmailAddress, authenticationId: AuthenticationId) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!

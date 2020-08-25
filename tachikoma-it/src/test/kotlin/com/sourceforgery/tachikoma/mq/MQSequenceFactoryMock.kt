@@ -9,18 +9,14 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
-import javax.annotation.PreDestroy
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
 
-class MQSequenceFactoryMock
-@Inject
-private constructor() : MQSequenceFactory {
+class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
     val deliveryNotifications = LinkedBlockingQueue<QueueMessageWrap<DeliveryNotificationMessage>>(1)
     val jobs = LinkedBlockingQueue<QueueMessageWrap<JobMessage>>(1)
     val outgoingEmails = LinkedBlockingQueue<QueueMessageWrap<OutgoingEmailMessage>>(1)
     val incomingEmails = LinkedBlockingQueue<QueueMessageWrap<IncomingEmailNotificationMessage>>(1)
-
-    private val executorService: ExecutorService = Executors.newCachedThreadPool()
 
     override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(deliveryNotifications, callback)
@@ -55,8 +51,7 @@ private constructor() : MQSequenceFactory {
         return listenOnQueue(incomingEmails, callback)
     }
 
-    @PreDestroy
-    fun shutdown() {
-        executorService.shutdownNow()
+    companion object {
+        private val executorService: ExecutorService = Executors.newCachedThreadPool()
     }
 }

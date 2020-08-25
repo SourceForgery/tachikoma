@@ -4,11 +4,10 @@ import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
 
-class PostgresqlEmbeddedDataSourceProvider
-@Inject
-private constructor() : DataSourceProvider {
+class PostgresqlEmbeddedDataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
     override fun provide(serverConfig: ServerConfig) {
         val pg = EmbeddedPostgres.builder()
             .setServerConfig("listen_addresses", "127.0.0.1")

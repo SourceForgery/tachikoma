@@ -5,17 +5,12 @@ import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.coroutines.TachikomaScopeImpl
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import java.time.Clock
-import javax.inject.Singleton
-import org.glassfish.hk2.utilities.binding.AbstractBinder
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.singleton
 
-class CommonBinder : AbstractBinder() {
-    override fun configure() {
-        bind(Clocker())
-            .to(Clock::class.java)
-        bindAsContract(JobMessageFactory::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(TachikomaScopeImpl::class.java)
-            .to(TachikomaScope::class.java)
-            .`in`(Singleton::class.java)
-    }
+val commonModule = DI.Module("common") {
+    bind<Clock>() with singleton { Clocker() }
+    bind<JobMessageFactory>() with singleton { JobMessageFactory(di) }
+    bind<TachikomaScope>() with singleton { TachikomaScopeImpl(di) }
 }

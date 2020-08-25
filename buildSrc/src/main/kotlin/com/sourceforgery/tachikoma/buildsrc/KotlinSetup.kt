@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.buildsrc
 
 import com.sourceforgery.tachikoma.buildsrc.CheckDuplicateClassesTask
-import hk2Version
 import implementation
 import kotlinVersion
 import kotlinCoroutineVersion
@@ -20,7 +19,6 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import sourceSets
-import spekVersion
 import testImplementation
 
 @Suppress("UnstableApiUsage")
@@ -33,11 +31,9 @@ fun Project.kotlinSetup() {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 
-        testImplementation("org.jetbrains.spek:spek-junit-platform-engine:$spekVersion")
         testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
         testImplementation("org.junit.platform:junit-platform-runner:1.1.0")
-        testImplementation("org.glassfish.hk2:hk2-locator:$hk2Version")
-        testImplementation("org.glassfish.hk2:hk2-utils:$hk2Version")
+        testImplementation("org.junit.jupiter:junit-jupiter-engine:5.1.0")
     }
 
     tasks.withType<KotlinCompile>().configureEach {

@@ -6,16 +6,17 @@ import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.BlockedEmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
-import io.ebean.EbeanServer
-import javax.inject.Inject
+import io.ebean.Database
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class BlockedEmailDAOImpl
-@Inject
-private constructor(
-    private val ebeanServer: EbeanServer
-) : BlockedEmailDAO {
+class BlockedEmailDAOImpl(override val di: DI) : BlockedEmailDAO, DIAware {
+
+    private val database: Database by instance()
+
     override fun getBlockedReason(accountDBO: AccountDBO, from: Email, recipient: Email): BlockedReason? {
-        return ebeanServer.find(BlockedEmailDBO::class.java)
+        return database.find(BlockedEmailDBO::class.java)
             .where()
             .eq("account", accountDBO)
             .eq("fromEmail", from)
@@ -35,12 +36,12 @@ private constructor(
                 blockedReason = toBlockedReason(statusEvent.emailStatus),
                 account = account
             )
-            ebeanServer.save(blockedEmail)
+            database.save(blockedEmail)
         }
     }
 
     override fun unblock(statusEventDBO: EmailStatusEventDBO) {
-        ebeanServer
+        database
             .find(BlockedEmailDBO::class.java)
             .where()
             .eq("account", statusEventDBO.email.transaction.authentication.account)
@@ -50,7 +51,7 @@ private constructor(
     }
 
     override fun unblock(accountDBO: AccountDBO, from: Email?, recipient: Email) {
-        ebeanServer
+        database
             .find(BlockedEmailDBO::class.java)
             .where()
             .raw("fromEmail = ? IS NOT FALSE", from)
@@ -60,7 +61,7 @@ private constructor(
     }
 
     override fun getBlockedEmails(accountDBO: AccountDBO): List<BlockedEmailDBO> =
-        ebeanServer
+        database
             .find(BlockedEmailDBO::class.java)
             .where()
             .eq("account", accountDBO)

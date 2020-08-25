@@ -1,5 +1,6 @@
 
 import com.linecorp.armeria.client.Clients
+import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.grpc.frontend.EmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.AddUserRequest
@@ -17,7 +18,7 @@ fun main(args: Array<String>) {
         throw IllegalArgumentException("First argument is not an email")
     }
 
-    val stub = Clients.builder(tachikomaUrl.withoutPassword())
+    val stub = Clients.builder(tachikomaUrl.withoutPassword().ensureGproto())
         .addHeader("x-apitoken", tachikomaUrl.userInfo)
         .build(UserServiceGrpc.UserServiceBlockingStub::class.java)
 

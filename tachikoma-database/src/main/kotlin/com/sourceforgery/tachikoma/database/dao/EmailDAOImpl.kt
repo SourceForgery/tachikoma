@@ -4,37 +4,37 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import io.ebean.EbeanServer
-import javax.inject.Inject
+import io.ebean.Database
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class EmailDAOImpl
-@Inject
-private constructor(
-    private val ebeanServer: EbeanServer
-) : EmailDAO {
+class EmailDAOImpl(override val di: DI) : EmailDAO, DIAware {
+
+    private val database: Database by instance()
     override fun fetchEmailData(emailMessageId: EmailId) =
-        ebeanServer.find(EmailDBO::class.java, emailMessageId.emailId)
+        database.find(EmailDBO::class.java, emailMessageId.emailId)
 
     override fun fetchEmailData(emailMessageIds: List<EmailId>): List<EmailDBO> {
-        return ebeanServer.find(EmailDBO::class.java)
+        return database.find(EmailDBO::class.java)
             .where()
             .`in`("dbId", emailMessageIds.map { it.emailId })
             .findList()
     }
 
-    override fun save(emailDBO: EmailDBO) = ebeanServer.save(emailDBO)
+    override fun save(emailDBO: EmailDBO) = database.save(emailDBO)
 
     override fun getByEmailId(emailId: EmailId) =
-        ebeanServer.find(EmailDBO::class.java, emailId.emailId)
+        database.find(EmailDBO::class.java, emailId.emailId)
 
     override fun getByAutoMailId(autoMailId: AutoMailId) =
-        ebeanServer.find(EmailDBO::class.java)
+        database.find(EmailDBO::class.java)
             .where()
             .eq("autoMailId", autoMailId.autoMailId)
             .findOne()
 
     override fun getByQueueId(mtaQueueId: String, recipient: Email) =
-        ebeanServer.find(EmailDBO::class.java)
+        database.find(EmailDBO::class.java)
             .where()
             .eq("mtaQueueId", mtaQueueId)
             .or()

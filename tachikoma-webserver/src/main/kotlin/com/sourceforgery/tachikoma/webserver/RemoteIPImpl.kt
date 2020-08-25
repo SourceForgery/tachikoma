@@ -1,24 +1,24 @@
 package com.sourceforgery.tachikoma.webserver
 
-import com.linecorp.armeria.common.HttpRequest
+import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.RequestContext
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import io.netty.util.AsciiString
 import java.net.InetSocketAddress
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.provider
 
-class RemoteIPImpl
-@Inject
-private constructor(
-    private val httpRequest: HttpRequest,
-    private val requestContext: RequestContext
-) : RemoteIP {
+class RemoteIPImpl(override val di: DI) : RemoteIP, DIAware {
+    private val httpHeaders: () -> HttpHeaders by provider()
+    private val requestContext: () -> RequestContext by provider()
+
     override val remoteAddress: String
         get() {
-            return httpRequest.headers().get(X_FORWARDED_FOR)
+            return httpHeaders().get(X_FORWARDED_FOR)
                 ?.substringBefore(',')
                 ?: let {
-                    requestContext.remoteAddress<InetSocketAddress>()!!
+                    requestContext().remoteAddress<InetSocketAddress>()!!
                         .address
                         .hostAddress
                 }

@@ -1,8 +1,6 @@
 package com.sourceforgery.tachikoma.mta
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.sourceforgery.tachikoma.DatabaseBinder
-import com.sourceforgery.tachikoma.TestBinder
 import com.sourceforgery.tachikoma.auth.AuthenticationMock
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.common.Email
@@ -15,8 +13,6 @@ import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
-import com.sourceforgery.tachikoma.hk2.getValue
-import com.sourceforgery.tachikoma.hk2.hk2
 import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
@@ -24,35 +20,78 @@ import com.sourceforgery.tachikoma.mq.MQSenderMock
 import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import com.sourceforgery.tachikoma.mq.OutgoingEmailMessage
 import com.sourceforgery.tachikoma.mq.QueueMessageWrap
-import io.ebean.EbeanServer
+import com.sourceforgery.tachikoma.testModule
+import io.ebean.Database
 import java.time.Clock
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import org.apache.commons.lang3.RandomStringUtils
-import org.glassfish.hk2.api.ServiceLocator
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.junit.platform.runner.JUnitPlatform
-import org.junit.runner.RunWith
+import org.junit.Before
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
 
-@RunWith(JUnitPlatform::class)
-class MTAEmailQueueServiceSpec : Spek({
-    lateinit var serviceLocator: ServiceLocator
-    val mtaEmailQueueService: MTAEmailQueueService by hk2 { serviceLocator }
-    val authentication: AuthenticationMock by hk2 { serviceLocator }
-    val ebeanServer: EbeanServer by hk2 { serviceLocator }
-    beforeEachTest {
-        serviceLocator = ServiceLocatorUtilities.bind(RandomStringUtils.randomAlphanumeric(10), TestBinder(), DatabaseBinder())!!
+class MTAEmailQueueServiceSpec {
+    lateinit var di: DI
+    lateinit var authenticationDBO: AuthenticationDBO
+    lateinit var email: EmailDBO
+    lateinit var authentication: AuthenticationMock
+    lateinit var mqSequenceFactoryMock: MQSequenceFactoryMock
+    lateinit var mqSenderMock: MQSenderMock
+    lateinit var clock: Clock
+    lateinit var mtaEmailQueueService: MTAEmailQueueService
+    lateinit var database: Database
+
+    @Before
+    fun `create di`() {
+        di = DI {
+            import(testModule())
+        }
+        authentication = di.direct.instance()
+        mqSequenceFactoryMock = di.direct.instance()
+        mqSenderMock = di.direct.instance()
+        clock = di.direct.instance()
+        mtaEmailQueueService = di.direct.instance()
+        database = di.direct.instance()
     }
-    afterEachTest { serviceLocator.shutdown() }
+
+    @Before
+    fun `create prerequisites`() {
+        createAuthentication("example.net")
+        val databaseConfig: DatabaseConfig by di.instance()
+        val accountDAO: AccountDAO by di.instance()
+
+        // Setup auth
+        val account = accountDAO.getByMailDomain(databaseConfig.mailDomains.first())!!
+        authenticationDBO =
+            account.authentications
+                .first { it.role == AuthenticationRole.BACKEND }
+        authentication.from(authenticationDBO)
+
+        email = EmailDBO(
+            recipient = Email("foo@example.net"),
+            recipientName = "Nobody",
+            messageId = MessageId("sdjklfjklsdfkl@example.com"),
+            autoMailId = AutoMailId("sdjklfjklsdfkl@example.net"),
+            metaData = emptyMap(),
+            transaction = EmailSendTransactionDBO(
+                jsonRequest = JsonNodeFactory.instance.objectNode(),
+                fromEmail = Email("foodsjklff@example.net"),
+                authentication = authenticationDBO,
+                metaData = emptyMap(),
+                tags = emptyList()
+            )
+        )
+        email.body = "${UUID.randomUUID()}"
+        database.save(email)
+    }
 
     fun createAuthentication(domain: String): AuthenticationDBO {
+        val database: Database by di.instance()
+
         val accountDBO = AccountDBO(MailDomain(domain))
-        ebeanServer.save(accountDBO)
+        database.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
             login = domain,
@@ -61,93 +100,58 @@ class MTAEmailQueueServiceSpec : Spek({
             role = AuthenticationRole.BACKEND,
             account = accountDBO
         )
-        ebeanServer.save(authenticationDBO)
+        database.save(authenticationDBO)
 
         return authenticationDBO
     }
 
-    describe("MTA queue service test") {
-        val mqSequenceFactoryMock: MQSequenceFactoryMock by hk2 { serviceLocator }
-        val mqSenderMock: MQSenderMock by hk2 { serviceLocator }
-        val clock: Clock by hk2 { serviceLocator }
+    fun `Create email test`() {
+        val responseObserver = QueueStreamObserver<EmailMessage>()
 
-        lateinit var authenticationDBO: AuthenticationDBO
-        lateinit var email: EmailDBO
+        mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
 
-        beforeEachTest {
-            createAuthentication("example.net")
-            val databaseConfig: DatabaseConfig by serviceLocator
-            val accountDAO: AccountDAO by serviceLocator
-
-            // Setup auth
-            val account = accountDAO.getByMailDomain(databaseConfig.mailDomains.first())!!
-            authenticationDBO =
-                account.authentications
-                    .first { it.role == AuthenticationRole.BACKEND }
-            authentication.from(authenticationDBO)
-
-            email = EmailDBO(
-                recipient = Email("foo@example.net"),
-                recipientName = "Nobody",
-                messageId = MessageId("sdjklfjklsdfkl@example.com"),
-                autoMailId = AutoMailId("sdjklfjklsdfkl@example.net"),
-                metaData = emptyMap(),
-                transaction = EmailSendTransactionDBO(
-                    jsonRequest = JsonNodeFactory.instance.objectNode(),
-                    fromEmail = Email("foodsjklff@example.net"),
-                    authentication = authenticationDBO,
-                    metaData = emptyMap(),
-                    tags = emptyList()
-                )
+        mqSequenceFactoryMock.outgoingEmails.add(
+            QueueMessageWrap(
+                OutgoingEmailMessage.newBuilder()
+                    .setCreationTimestamp(clock.instant().toTimestamp())
+                    .setEmailId(email.id.emailId)
+                    .build()
             )
-            email.body = "${UUID.randomUUID()}"
-            ebeanServer.save(email)
-        }
+        )
 
-        it("Create email test") {
-            val responseObserver = QueueStreamObserver<EmailMessage>()
+        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
 
-            mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
+        assertEquals(1, responseObserver.queue.size)
+        val emailMessage = responseObserver.queue.take().get()
+            ?: throw NullPointerException("Should not be a onComplete event")
+        assertNotNull(responseObserver)
+        assertEquals(emailMessage.body, email.body)
+        assertEquals(emailMessage.emailAddress, email.recipient.address)
+        assertEquals(emailMessage.emailId, email.id.emailId)
+    }
 
-            mqSequenceFactoryMock.outgoingEmails.add(QueueMessageWrap(OutgoingEmailMessage.newBuilder()
-                .setCreationTimestamp(clock.instant().toTimestamp())
-                .setEmailId(email.id.emailId)
-                .build()
-            ))
+    fun `Receive queue message`() {
 
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+        val responseObserver = QueueStreamObserver<EmailMessage>()
+        val requestStreamObserver = mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
 
-            assertEquals(1, responseObserver.queue.size)
-            val emailMessage = responseObserver.queue.take().get()
-                ?: throw NullPointerException("Should not be a onComplete event")
-            assertNotNull(responseObserver)
-            assertEquals(emailMessage.body, email.body)
-            assertEquals(emailMessage.emailAddress, email.recipient.address)
-            assertEquals(emailMessage.emailId, email.id.emailId)
-        }
-
-        it("Receive queue message") {
-
-            val responseObserver = QueueStreamObserver<EmailMessage>()
-            val requestStreamObserver = mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
-
-            requestStreamObserver.onNext(MTAQueuedNotification.newBuilder()
+        requestStreamObserver.onNext(
+            MTAQueuedNotification.newBuilder()
                 .setEmailId(email.id.emailId)
                 .setQueueId("foobarQueueId")
                 .setRecipientEmailAddress(email.body!!)
                 .setSuccess(true)
                 .build()
-            )
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
-            mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+        )
+        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
 
-            assertEquals(1, mqSenderMock.deliveryNotifications.size)
-            ebeanServer.refresh(email)
-            assertEquals("foobarQueueId", email.mtaQueueId)
-            assertEquals(1, mqSenderMock.deliveryNotifications.size)
-            val notification = mqSenderMock.deliveryNotifications.take()
-            assertEquals(email.id.emailId, notification.emailMessageId)
-        }
+        assertEquals(1, mqSenderMock.deliveryNotifications.size)
+        database.refresh(email)
+        assertEquals("foobarQueueId", email.mtaQueueId)
+        assertEquals(1, mqSenderMock.deliveryNotifications.size)
+        val notification = mqSenderMock.deliveryNotifications.take()
+        assertEquals(email.id.emailId, notification.emailMessageId)
     }
-})
+}

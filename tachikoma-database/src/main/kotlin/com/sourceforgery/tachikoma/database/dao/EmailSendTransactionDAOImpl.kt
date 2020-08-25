@@ -2,17 +2,16 @@ package com.sourceforgery.tachikoma.database.dao
 
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
-import io.ebean.EbeanServer
-import javax.inject.Inject
+import io.ebean.Database
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class EmailSendTransactionDAOImpl
-@Inject
-private constructor(
-    private val ebeanServer: EbeanServer
-) : EmailSendTransactionDAO {
+class EmailSendTransactionDAOImpl(override val di: DI) : EmailSendTransactionDAO, DIAware {
+    private val database: Database by instance()
     override fun save(emailSendTransactionDBO: EmailSendTransactionDBO) =
-        ebeanServer.save(emailSendTransactionDBO)
+        database.save(emailSendTransactionDBO)
 
     override fun get(emailTransactionId: EmailTransactionId): EmailSendTransactionDBO? =
-        ebeanServer.find(EmailSendTransactionDBO::class.java, emailTransactionId.emailTransactionId)
+        database.find(EmailSendTransactionDBO::class.java, emailTransactionId.emailTransactionId)
 }
