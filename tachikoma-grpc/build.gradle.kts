@@ -8,6 +8,7 @@ dependencies {
     implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
     implementation("org.glassfish.hk2.external:jakarta.inject:$hk2Version")
     implementation("org.glassfish.hk2:hk2-api:$hk2Version")
+    implementation("com.google.protobuf:protobuf-java-util:$protocVersion")
 
     implementation(project(":jersey-uri-builder"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))

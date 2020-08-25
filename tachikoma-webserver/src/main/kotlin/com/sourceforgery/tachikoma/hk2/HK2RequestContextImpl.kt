@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.Sets
 import com.linecorp.armeria.server.ServiceRequestContext
 import io.netty.util.AttributeKey
+import kotlinx.coroutines.ThreadContextElement
+import kotlinx.coroutines.asContextElement
 import java.util.HashMap
 import java.util.UUID
 import javax.inject.Inject
@@ -94,6 +96,8 @@ private constructor(
     }
 
     override fun getContextInstance(): ReqCtxInstance = current()
+
+    override fun asContextElement(): ThreadContextElement<out ReqCtxInstance> = threadLocalScopeInstance.asContextElement()
 
     override fun <T> runInScope(ctx: ReqCtxInstance, task: (ServiceLocator) -> T): T {
         ctx as? Instance

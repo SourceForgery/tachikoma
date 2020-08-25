@@ -9,9 +9,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedEmailServic
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.RemoveBlockedEmailRequest
 import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 
 internal class BlockedEmailServiceGrpcImpl
 @Inject

@@ -6,8 +6,8 @@ import com.sourceforgery.tachikoma.grpc.NullStreamObserver
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 
 internal class MTAEmailQueueServiceGrpcImpl
 @Inject

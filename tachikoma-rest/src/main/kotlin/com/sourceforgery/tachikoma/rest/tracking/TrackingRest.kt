@@ -25,11 +25,9 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.guava.future
+import org.apache.logging.log4j.kotlin.logger
 import java.util.Base64
 import javax.inject.Inject
-import org.apache.logging.log4j.kotlin.logger
 
 internal class TrackingRest
 @Inject
@@ -40,8 +38,7 @@ private constructor(
     private val remoteIP: RemoteIP,
     private val mqSender: MQSender,
     tachikomaScope: TachikomaScope
-) : RestService, CoroutineScope by tachikomaScope {
-
+) : RestService, TachikomaScope by tachikomaScope {
 
     @Get("regex:^/t/(?<trackingData>.*)")
     @Produces("image/gif")

@@ -6,6 +6,7 @@ import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
+import grpcKotlinVersion
 import grpcVersion
 import implementation
 import jakartaAnnotationsVersion
@@ -62,6 +63,9 @@ fun Project.grpcSetup() {
             id("grpc") {
                 artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
             }
+            id("grpckt") {
+                artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion"
+            }
             id("lint") {
                 path = downloadProtocLint.outputFile.absolutePath
             }
@@ -71,6 +75,7 @@ fun Project.grpcSetup() {
             all().configureEach {
                 plugins {
                     id("grpc") {}
+                    id("grpckt") {}
                     id("lint") {
                         option("sort_imports")
                     }

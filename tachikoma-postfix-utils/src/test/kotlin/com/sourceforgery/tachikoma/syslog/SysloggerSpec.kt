@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.syslog
 
-import io.grpc.Channel
+import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpc
 import io.mockk.clearAllMocks
 import io.mockk.mockk
 import kotlin.test.assertEquals
@@ -13,8 +13,8 @@ import org.junit.runner.RunWith
 
 @RunWith(JUnitPlatform::class)
 internal class SysloggerSpec : Spek({
-    val channel: Channel = mockk()
-    val syslogger = Syslogger(channel)
+    val stub: MTADeliveryNotificationsGrpc.MTADeliveryNotificationsBlockingStub = mockk()
+    val syslogger = Syslogger(stub)
 
     beforeEachTest {
         clearAllMocks()

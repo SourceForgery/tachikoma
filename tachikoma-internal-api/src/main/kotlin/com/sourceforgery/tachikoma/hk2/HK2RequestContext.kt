@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.hk2
 
 import com.linecorp.armeria.server.ServiceRequestContext
+import kotlinx.coroutines.ThreadContextElement
 import org.glassfish.hk2.api.ServiceLocator
 
 interface HK2RequestContext {
@@ -10,6 +11,7 @@ interface HK2RequestContext {
     fun createInArmeriaContext(serviceRequestContext: ServiceRequestContext): ReqCtxInstance
     fun createInstance(): ReqCtxInstance
     fun release(ctx: ReqCtxInstance)
+    fun asContextElement(): ThreadContextElement<out ReqCtxInstance>
 }
 
 interface ReqCtxInstance

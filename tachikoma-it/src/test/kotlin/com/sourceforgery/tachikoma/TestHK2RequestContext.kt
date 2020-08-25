@@ -3,6 +3,8 @@ package com.sourceforgery.tachikoma
 import com.linecorp.armeria.server.ServiceRequestContext
 import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.hk2.ReqCtxInstance
+import kotlinx.coroutines.ThreadContextElement
+import kotlinx.coroutines.asContextElement
 import javax.inject.Inject
 import org.glassfish.hk2.api.ServiceLocator
 
@@ -20,6 +22,8 @@ private constructor(
     override fun <T> runInNewScope(task: (ServiceLocator) -> T): T {
         return task(serviceLocator)
     }
+
+    override fun asContextElement() = ThreadLocal.withInitial { getContextInstance() }.asContextElement()
 
     override fun createInArmeriaContext(serviceRequestContext: ServiceRequestContext) = TODO("not implemented")
     override fun createInstance() = TODO("not implemented")

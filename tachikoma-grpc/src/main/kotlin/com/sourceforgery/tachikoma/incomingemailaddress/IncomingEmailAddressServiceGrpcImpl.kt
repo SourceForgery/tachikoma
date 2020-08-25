@@ -4,13 +4,12 @@ import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
-import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedEmailServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddressServiceGrpc
 import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 
 internal class IncomingEmailAddressServiceGrpcImpl
 @Inject

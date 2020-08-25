@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.rest.unsubscribe
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.Server
+import com.sourceforgery.tachikoma.CommonBinder
 import com.sourceforgery.tachikoma.DatabaseBinder
 import com.sourceforgery.tachikoma.MinimalBinder
 import com.sourceforgery.tachikoma.TestBinder
@@ -169,6 +170,7 @@ class UnsubscribeRestTest {
     fun beforeTest() {
         serviceLocator = ServiceLocatorUtilities.bind(
             RandomStringUtils.randomAlphanumeric(10),
+            CommonBinder(),
             TestBinder(),
             DatabaseBinder(),
             RestBinder(),

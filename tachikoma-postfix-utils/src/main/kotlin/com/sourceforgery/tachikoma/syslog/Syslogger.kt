@@ -4,16 +4,13 @@ package com.sourceforgery.tachikoma.syslog
 
 import com.sourceforgery.tachikoma.mta.DeliveryNotification
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpc
-import io.grpc.Channel
 import java.io.File
 import java.io.RandomAccessFile
 import org.apache.logging.log4j.kotlin.logger
 
-class Syslogger(grpcChannel: Channel) {
-
-    private val stub by lazy {
-        MTADeliveryNotificationsGrpc.newBlockingStub(grpcChannel)
-    }
+class Syslogger(
+    private val stub: MTADeliveryNotificationsGrpc.MTADeliveryNotificationsBlockingStub
+) {
 
     fun blockingSniffer() {
         LOGGER.info("Started logging")

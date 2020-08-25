@@ -8,8 +8,8 @@ import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.EmailStatusEve
 import com.sourceforgery.tachikoma.grpc.frontend.emailstatusevent.GetEmailStatusEventsFilter
 import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 
 internal class EmailStatusEventServiceGrpcImpl
 @Inject

@@ -18,8 +18,8 @@ import com.sourceforgery.tachikoma.grpc.grpcLaunch
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CoroutineScope
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 
 class UserServiceGrpcImpl
 @Inject

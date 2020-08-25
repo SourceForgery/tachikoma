@@ -25,12 +25,10 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.guava.future
+import org.apache.logging.log4j.kotlin.logger
 import java.time.Clock
 import java.util.Optional
 import javax.inject.Inject
-import org.apache.logging.log4j.kotlin.logger
 
 internal class UnsubscribeRest
 @Inject
@@ -43,7 +41,7 @@ private constructor(
     private val blockedEmailDAO: BlockedEmailDAO,
     private val remoteIP: RemoteIP,
     tachikomaScope: TachikomaScope
-) : RestService, CoroutineScope by tachikomaScope {
+) : RestService, TachikomaScope by tachikomaScope {
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     @ConsumesGroup(Consumes("multipart/form-data"), Consumes("application/x-www-form-urlencoded"))
@@ -68,7 +66,7 @@ private constructor(
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String
     ) = future {
-         if (unsubscribeDataString.endsWith("/1")) {
+        if (unsubscribeDataString.endsWith("/1")) {
             actuallyUnsubscribe(unsubscribeDataString.removeSuffix("/1"))
         } else {
             httpRedirect("/unsubscribe/$unsubscribeDataString/1")
