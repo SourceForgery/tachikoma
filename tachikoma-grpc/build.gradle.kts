@@ -8,6 +8,7 @@ dependencies {
     implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
     implementation("com.google.protobuf:protobuf-java-util:$protocVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutineVersion")
+    implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
 
     implementation(project(":jersey-uri-builder"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))

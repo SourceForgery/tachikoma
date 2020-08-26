@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.buildsrc
 
-import com.sourceforgery.tachikoma.buildsrc.CheckDuplicateClassesTask
 import implementation
 import kotlinVersion
 import kotlinCoroutineVersion
@@ -28,6 +27,7 @@ fun Project.kotlinSetup() {
     apply(plugin = "org.jetbrains.dokka")
 
     dependencies {
+        implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutineVersion"))
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 

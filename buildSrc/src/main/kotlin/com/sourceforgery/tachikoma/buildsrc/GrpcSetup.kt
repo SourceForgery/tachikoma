@@ -10,6 +10,7 @@ import grpcKotlinVersion
 import grpcVersion
 import implementation
 import jakartaAnnotationsVersion
+import kotlinCoroutineVersion
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
@@ -23,6 +24,7 @@ import java.net.URL
 
 fun Project.grpcSetup() {
     apply(plugin = "com.google.protobuf")
+    apply(plugin = "kotlin")
     javaSetup()
 
     val downloadProtocLint: DownloadFileTask = rootProject.tasks.findByName("downloadProtocLint") as? DownloadFileTask
@@ -33,10 +35,14 @@ fun Project.grpcSetup() {
         }
 
     dependencies {
+        implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutineVersion"))
+
         api("io.grpc:grpc-protobuf:$grpcVersion")
 
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
         implementation(project(":tachikoma-protobuf-annotations"))
         implementation("io.grpc:grpc-stub:$grpcVersion")
+        implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
         implementation("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion")
     }
 
@@ -45,10 +51,6 @@ fun Project.grpcSetup() {
         "main" {
             resources {
                 srcDir("src/main/proto")
-            }
-            java {
-                srcDir(file("${buildDir}/generated/source/proto/main/grpc/"))
-                srcDir(file("${buildDir}/generated/source/proto/main/java/"))
             }
         }
     }

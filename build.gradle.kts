@@ -37,6 +37,9 @@ allprojects {
                     when (val requested = requested) {
                         is org.gradle.internal.component.external.model.DefaultModuleComponentSelector ->
                             when (requested.group) {
+                                "io.grpc" -> if ("kotlin" !in requested.module) {
+                                    useTarget("${requested.group}:${requested.module}:$grpcVersion")
+                                }
                                 "com.google.protobuf" -> useTarget("${requested.group}:${requested.module}:$protocVersion")
                                 "org.apache.logging.log4j" -> if (requested.module != "log4j-api-kotlin") {
                                     useTarget("${requested.group}:${requested.module}:$log4j2Version")
