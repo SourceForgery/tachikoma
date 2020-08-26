@@ -11,7 +11,7 @@ import org.kodein.di.instance
 class SendEmailJob(override val di: DI) : Job {
     private val mqSender: MQSender by instance()
 
-    override fun execute(jobMessage: JobMessage) {
+    override suspend fun execute(jobMessage: JobMessage) {
         val sendEmailJob = jobMessage.sendEmailJob
         val outgoingEmail = OutgoingEmailMessage.newBuilder()
             .setEmailId(sendEmailJob.emailId)

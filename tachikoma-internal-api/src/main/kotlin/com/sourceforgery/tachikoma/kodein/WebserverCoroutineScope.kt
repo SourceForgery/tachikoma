@@ -5,6 +5,7 @@ import com.sourceforgery.tachikoma.logging.InvokeCounter
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asContextElement
+import kotlinx.coroutines.withContext
 
 /**
  * Coroutine scope in which kodein will correctly supply the thread local RequestContext.
@@ -46,6 +47,15 @@ fun CoroutineScope.withRequestContext(requestContext: RequestContext?, invokeCou
 
 val threadLocalRequestContext: ThreadLocal<RequestContext> = ThreadLocal()
 val threadLocalLogEverything: ThreadLocal<InvokeCounter> = ThreadLocal()
+
+suspend fun <T> withInvokeCounterContext(invokeCounter: InvokeCounter, block: suspend () -> T): T =
+    try {
+        withContext(threadLocalLogEverything.asContextElement()) {
+            block()
+        }
+    } finally {
+        invokeCounter.dump()
+    }
 
 fun <T> withInvokeCounter(invokeCounter: InvokeCounter, block: () -> T): T {
     val old = threadLocalLogEverything.get()

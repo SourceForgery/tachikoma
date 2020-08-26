@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.mq
 
 import com.google.common.util.concurrent.ListenableFuture
-import com.sourceforgery.tachikoma.kodein.withInvokeCounter
+import com.sourceforgery.tachikoma.kodein.withInvokeCounterContext
 import com.sourceforgery.tachikoma.logging.InvokeCounterFactory
 import com.sourceforgery.tachikoma.mq.jobs.JobFactory
 import org.kodein.di.DI
@@ -16,7 +16,7 @@ class JobWorker(override val di: DI) : DIAware {
 
     fun work() {
         future = mqSequenceFactory.listenForJobs {
-            withInvokeCounter(invokeCounterFactory.create()) {
+            withInvokeCounterContext(invokeCounterFactory.create()) {
                 val job = jobFactory.getJobClass(it)
                 job.execute(it)
             }

@@ -16,5 +16,5 @@ class JobFactory(override val di: DI) : DIAware {
 }
 
 interface Job : DIAware {
-    fun execute(jobMessage: JobMessage)
+    suspend fun execute(jobMessage: JobMessage)
 }
