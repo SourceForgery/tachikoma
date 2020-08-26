@@ -4,7 +4,7 @@ import java.net.URI
 import kotlin.test.assertEquals
 import org.junit.Test
 
-class ConfigReaderSpek {
+class ConfigReaderTest {
     @Test
     fun `Config file test`() {
         val file = createTempFile()

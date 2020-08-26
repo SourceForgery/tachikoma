@@ -13,7 +13,7 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
-class StartupSpec : DIAware {
+class StartupTest : DIAware {
     override val di = DI {
         importOnce(testModule(TestAttribute.POSTGRESQL), allowOverride = true)
     }

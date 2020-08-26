@@ -29,7 +29,7 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
-class BlockedEmailDAOSpec : DIAware {
+class BlockedEmailDAOTest : DIAware {
     override val di: DI = DI {
         importOnce(testModule(), allowOverride = true)
     }

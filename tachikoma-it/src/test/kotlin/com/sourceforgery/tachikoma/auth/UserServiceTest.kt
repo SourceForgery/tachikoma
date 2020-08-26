@@ -29,7 +29,7 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
 
-class UserServiceSpek : DIAware {
+class UserServiceTest : DIAware {
     override val di = DI {
         importOnce(testModule(), allowOverride = true)
         bind<UserService>() with singleton { UserService(di) }

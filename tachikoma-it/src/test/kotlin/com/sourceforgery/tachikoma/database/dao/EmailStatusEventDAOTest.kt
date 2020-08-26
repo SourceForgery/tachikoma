@@ -13,7 +13,7 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
-class EmailStatusEventDAOSpec : DIAware {
+class EmailStatusEventDAOTest : DIAware {
     override val di = DI {
         importOnce(testModule(), allowOverride = true)
     }

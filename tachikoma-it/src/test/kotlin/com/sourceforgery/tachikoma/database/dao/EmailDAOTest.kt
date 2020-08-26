@@ -27,7 +27,7 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
-class EmailDAOSpec : DIAware {
+class EmailDAOTest : DIAware {
     override val di = DI {
         importOnce(testModule(TestAttribute.POSTGRESQL), allowOverride = true)
     }

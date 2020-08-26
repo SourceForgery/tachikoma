@@ -32,7 +32,7 @@ import org.kodein.di.DI
 import org.kodein.di.direct
 import org.kodein.di.instance
 
-class MTAEmailQueueServiceSpec {
+class MTAEmailQueueServiceTest {
     lateinit var di: DI
     lateinit var authenticationDBO: AuthenticationDBO
     lateinit var email: EmailDBO

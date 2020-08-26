@@ -27,7 +27,7 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
 
-class MailDeliveryServiceSpec : DIAware {
+class MailDeliveryServiceTest : DIAware {
     override val di = DI {
         importOnce(testModule(), allowOverride = true)
         bind<JobMessageFactory>() with singleton { JobMessageFactory(di) }

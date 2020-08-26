@@ -8,7 +8,7 @@ import kotlin.test.fail
 import org.junit.Before
 import org.junit.Test
 
-class SysloggerSpec {
+class SysloggerTest {
     val stub: MTADeliveryNotificationsGrpc.MTADeliveryNotificationsBlockingStub = mockk()
     val syslogger = Syslogger(stub)
 

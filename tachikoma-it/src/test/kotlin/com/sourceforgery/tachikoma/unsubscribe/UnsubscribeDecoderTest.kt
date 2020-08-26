@@ -10,7 +10,7 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
-class UnsubscribeDecoderSpec : DIAware {
+class UnsubscribeDecoderTest : DIAware {
     override val di = DI {
         importOnce(testModule(), allowOverride = true)
     }

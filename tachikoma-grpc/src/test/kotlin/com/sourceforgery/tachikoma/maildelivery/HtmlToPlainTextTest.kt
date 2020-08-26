@@ -6,7 +6,7 @@ import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
 
 @RunWith(JUnitPlatform::class)
-class HtmlToPlainTextSpec {
+class HtmlToPlainTextTest {
 
     fun `Convert simple html to plain text - simple`() {
         val plainText = getPlainText(simpleHtmlDoc)
