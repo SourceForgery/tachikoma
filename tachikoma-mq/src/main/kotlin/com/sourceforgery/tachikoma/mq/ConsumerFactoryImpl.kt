@@ -20,6 +20,7 @@ import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Clock
 import java.time.Duration
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -127,7 +128,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
             }
     }
 
-    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
+    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Void> {
         val channel = connection
             .createChannel()!!
 
@@ -149,7 +150,9 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
                 var success = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
-                    callback(parsedMessage)
+                    runBlocking {
+                        callback(parsedMessage)
+                    }
                     success = true
                 } catch (e: Exception) {
                     LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
@@ -177,7 +180,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return future
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
         val queue = DeliveryNotificationMessageQueue(authenticationId)
         setupAuthentication(
             authenticationId = authenticationId,
@@ -187,12 +190,12 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return listenOnQueue(queue, callback)
     }
 
-    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: suspend (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
         setupAccount(mailDomain)
         return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
         setupAuthentication(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
@@ -201,7 +204,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return listenOnQueue(IncomingEmailNotificationMessageQueue(authenticationId), callback)
     }
 
-    override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(JobMessageQueue.JOBS) {
             val messageQueue = getRequeueQueueByRequestedExecutionTime(it)
             if (messageQueue == null) {
