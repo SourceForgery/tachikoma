@@ -26,8 +26,9 @@ fun main(args: Array<String>) {
             ?: error("Need to specify env TACHI_TO (multiple addresses possible via RFC822 format)")
     )
 
+    val apiToken = frontendUri.userInfo
     val stub = Clients.builder(frontendUri.withoutPassword().ensureGproto())
-        .addHeader("x-apitoken", frontendUri.userInfo)
+        .addHeader("x-apitoken", apiToken)
         .responseTimeout(Duration.ofDays(365))
         .writeTimeout(Duration.ofDays(365))
         .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)

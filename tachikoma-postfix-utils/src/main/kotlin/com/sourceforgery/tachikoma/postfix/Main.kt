@@ -27,8 +27,9 @@ internal constructor(
     fun run() {
         LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
 
+        val apiToken = tachikomaUrl.userInfo
         val builder = Clients.builder(tachikomaUrl.withoutPassword().ensureGproto())
-            .addHeader("x-apitoken", tachikomaUrl.userInfo)
+            .addHeader("x-apitoken", apiToken)
             .responseTimeout(Duration.ofDays(365))
             .writeTimeout(Duration.ofDays(365))
 

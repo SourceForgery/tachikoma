@@ -22,5 +22,7 @@ class AccountDAOImpl(override val di: DI) : AccountDAO, DIAware {
     override fun save(account: AccountDBO) = database.save(account)
 
     override fun getById(accountId: AccountId) =
-        database.find(AccountDBO::class.java, accountId.accountId)!!
+        requireNotNull(database.find(AccountDBO::class.java, accountId.accountId)) {
+            "Could not find account with id $accountId"
+        }
 }

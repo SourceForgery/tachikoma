@@ -18,8 +18,9 @@ fun main(args: Array<String>) {
         throw IllegalArgumentException("First argument is not an email")
     }
 
+    val apiToken = tachikomaUrl.userInfo
     val stub = Clients.builder(tachikomaUrl.withoutPassword().ensureGproto())
-        .addHeader("x-apitoken", tachikomaUrl.userInfo)
+        .addHeader("x-apitoken", apiToken)
         .build(UserServiceGrpc.UserServiceBlockingStub::class.java)
 
     try {

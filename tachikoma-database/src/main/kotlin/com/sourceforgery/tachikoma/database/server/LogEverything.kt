@@ -1,6 +1,8 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.sourceforgery.tachikoma.logging.InvokeCounter
 import java.time.Duration
 import org.apache.logging.log4j.kotlin.logger
@@ -32,9 +34,7 @@ class LogEverything() : InvokeCounter {
     }
 
     companion object {
-        private val mapper by lazy(LazyThreadSafetyMode.NONE) {
-            ObjectMapper()
-        }
+        private val mapper = jacksonObjectMapper()
         private val LOGGER = logger("sql.log_everything")
     }
 }

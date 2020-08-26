@@ -17,8 +17,9 @@ fun main(args: Array<String>) {
             ?: error("Need to specify env TACHI_BACKEND_URI")
     )
 
+    val apiToken = backendUri.userInfo
     val stub = Clients.builder(backendUri.withoutPassword().ensureGproto())
-        .addHeader("x-apitoken", backendUri.userInfo)
+        .addHeader("x-apitoken", apiToken)
         .responseTimeout(Duration.ofDays(365))
         .writeTimeout(Duration.ofDays(365))
         .build(MTAEmailQueueGrpc.MTAEmailQueueStub::class.java)
