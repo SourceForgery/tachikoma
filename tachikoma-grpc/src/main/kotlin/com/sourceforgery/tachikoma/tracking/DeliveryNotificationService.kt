@@ -51,7 +51,11 @@ internal class DeliveryNotificationService(override val di: DI) : DIAware {
         mailDomain: MailDomain
     ) {
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
-        val deliveryNotificationCallback = { deliveryNotificationMessage: DeliveryNotificationMessage ->
+        val future = mqSequenceFactory.listenForDeliveryNotifications(
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId
+        ) { deliveryNotificationMessage: DeliveryNotificationMessage ->
             val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(deliveryNotificationMessage.emailMessageId))
             if (emailData == null) {
                 LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
@@ -60,12 +64,6 @@ internal class DeliveryNotificationService(override val di: DI) : DIAware {
                 responseObserver.onNext(emailNotification)
             }
         }
-        val future = mqSequenceFactory.listenForDeliveryNotifications(
-            authenticationId = authenticationId,
-            mailDomain = mailDomain,
-            accountId = accountId,
-            callback = deliveryNotificationCallback
-        )
         serverCallStreamObserver
             ?.setOnCancelHandler {
                 future.cancel(true)
