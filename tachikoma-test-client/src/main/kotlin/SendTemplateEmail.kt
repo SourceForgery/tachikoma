@@ -1,31 +1,32 @@
 import com.google.protobuf.Struct
 import com.google.protobuf.Value
 import com.google.protobuf.util.JsonFormat
+import com.linecorp.armeria.client.Clients
+import com.sourceforgery.jersey.uribuilder.ensureGproto
+import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.TemplateBody
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.TemplateEngine
-import io.grpc.ManagedChannelBuilder
-import io.grpc.Metadata
 import io.grpc.StatusRuntimeException
-import io.grpc.stub.MetadataUtils
+import java.net.URI
+import java.time.Duration
 import java.time.Instant
 
-private val APITOKEN_HEADER = Metadata.Key.of("x-apitoken", Metadata.ASCII_STRING_MARSHALLER)
-
 fun main(args: Array<String>) {
-    val metadataAuth = Metadata()
-    metadataAuth.put(APITOKEN_HEADER, System.getenv("FRONTEND_API_TOKEN")!!)
+    val frontendUri = URI.create(
+        System.getenv("TACHI_FRONTEND_URI")
+            ?: error("Need to specify env TACHI_FRONTEND_URI")
+    )
 
-    @Suppress("DEPRECATION")
-    val channel = ManagedChannelBuilder.forAddress("localhost", 8070)
-        .usePlaintext()
-        .intercept(MetadataUtils.newAttachHeadersInterceptor(metadataAuth))
-        .build()
-
-    val stub = MailDeliveryServiceGrpc.newBlockingStub(channel)
+    val apiToken = frontendUri.userInfo
+    val stub = Clients.builder(frontendUri.withoutPassword().ensureGproto())
+        .addHeader("x-apitoken", apiToken)
+        .responseTimeout(Duration.ofDays(365))
+        .writeTimeout(Duration.ofDays(365))
+        .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
     val template = """
     <div class="entry">

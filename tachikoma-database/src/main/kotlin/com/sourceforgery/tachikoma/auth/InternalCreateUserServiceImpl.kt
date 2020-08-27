@@ -12,16 +12,15 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
-import javax.inject.Inject
 import net.bytebuddy.utility.RandomString
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class InternalCreateUserServiceImpl
-@Inject
-private constructor(
-    private val mqManager: MQManager,
-    private val authenticationDAO: AuthenticationDAO,
-    private val accountDAO: AccountDAO
-) : InternalCreateUserService {
+class InternalCreateUserServiceImpl(override val di: DI) : InternalCreateUserService, DIAware {
+    private val mqManager: MQManager by instance()
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val accountDAO: AccountDAO by instance()
 
     private val randomString = RandomString(40)
 

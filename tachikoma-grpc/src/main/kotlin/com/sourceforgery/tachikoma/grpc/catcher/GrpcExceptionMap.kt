@@ -1,25 +1,23 @@
 package com.sourceforgery.tachikoma.grpc.catcher
 
-import com.sourceforgery.tachikoma.config.DebugConfig
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import org.glassfish.hk2.api.IterableProvider
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.allInstances
 
-class GrpcExceptionMap
-@Inject
-private constructor(
-    private val catchers: IterableProvider<GrpcExceptionCatcher<Throwable>>,
-    private val debugConfig: DebugConfig
-) {
+class GrpcExceptionMap(override val di: DI) : DIAware {
+    private val catchers by allInstances<GrpcExceptionCatcher<Throwable>>()
     private val map = ConcurrentHashMap<Class<Throwable>, GrpcExceptionCatcher<Throwable>>()
 
-    private val defaultCatcher = object : GrpcExceptionCatcher<Throwable>(debugConfig, Throwable::class.java) {
+    private val defaultCatcher = object : GrpcExceptionCatcher<Throwable>(Throwable::class.java), DIAware {
+        override val di: DI = this@GrpcExceptionMap.di
+
         override fun logError(t: Throwable) {
-            logger.warn("Exception in gRPC", t)
+            logger.warn(t) { "Exception in gRPC" }
         }
 
         override fun status(t: Throwable): Status {

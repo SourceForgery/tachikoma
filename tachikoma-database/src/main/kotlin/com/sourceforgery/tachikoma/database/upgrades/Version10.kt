@@ -5,6 +5,8 @@ import java.sql.Connection
 import org.intellij.lang.annotations.Language
 
 class Version10 : DatabaseUpgrade {
+    override val newVersion: Int = -10
+
     override fun run(connection: Connection): Int {
         @Language("PostgreSQL")
         val content = """

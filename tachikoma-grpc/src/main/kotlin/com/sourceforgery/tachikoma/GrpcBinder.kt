@@ -25,74 +25,38 @@ import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
 import com.sourceforgery.tachikoma.users.UserService
 import com.sourceforgery.tachikoma.users.UserServiceGrpcImpl
-import io.grpc.BindableService
-import javax.inject.Singleton
-import org.glassfish.hk2.utilities.binding.AbstractBinder
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.singleton
 
-class GrpcBinder : AbstractBinder() {
-    override fun configure() {
-        bindAsContract(MTADeliveryNotifications::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(MTAEmailQueueService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(MailDeliveryService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(DeliveryNotificationService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(BlockedEmailService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(EmailStatusEventService::class.java)
-            .`in`(Singleton::class.java)
+val grpcModule = DI.Module("grpc") {
+    bind<MTADeliveryNotifications>() with singleton { MTADeliveryNotifications(di) }
+    bind<MTAEmailQueueService>() with singleton { MTAEmailQueueService(di) }
+    bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
+    bind<DeliveryNotificationService>() with singleton { DeliveryNotificationService(di) }
+    bind<BlockedEmailService>() with singleton { BlockedEmailService(di) }
+    bind<EmailStatusEventService>() with singleton { EmailStatusEventService(di) }
 
-        bindAsContract(MTADeliveryServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(MTAEmailQueueServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(DeliveryNotificationServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(MailDeliveryServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(BlockedEmailServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(EmailStatusEventServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(IncomingEmailAddressServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(IncomingEmailAddressService::class.java)
-            .`in`(Singleton::class.java)
+    bind<MTADeliveryServiceGrpcImpl>() with singleton { MTADeliveryServiceGrpcImpl(di) }
+    bind<MTAEmailQueueServiceGrpcImpl>() with singleton { MTAEmailQueueServiceGrpcImpl(di) }
+    bind<DeliveryNotificationServiceGrpcImpl>() with singleton { DeliveryNotificationServiceGrpcImpl(di) }
+    bind<MailDeliveryServiceGrpcImpl>() with singleton { MailDeliveryServiceGrpcImpl(di) }
+    bind<BlockedEmailServiceGrpcImpl>() with singleton { BlockedEmailServiceGrpcImpl(di) }
+    bind<EmailStatusEventServiceGrpcImpl>() with singleton { EmailStatusEventServiceGrpcImpl(di) }
+    bind<IncomingEmailAddressServiceGrpcImpl>() with singleton { IncomingEmailAddressServiceGrpcImpl(di) }
+    bind<LoginServiceGrpcImpl>() with singleton { LoginServiceGrpcImpl(di) }
+    bind<UserServiceGrpcImpl>() with singleton { UserServiceGrpcImpl(di) }
 
-        bindAsContract(LoginServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(LoginService::class.java)
-            .`in`(Singleton::class.java)
+    bind<IncomingEmailAddressService>() with singleton { IncomingEmailAddressService(di) }
+    bind<LoginService>() with singleton { LoginService(di) }
+    bind<UserService>() with singleton { UserService(di) }
+    bind<GrpcExceptionMap>() with singleton { GrpcExceptionMap(di) }
 
-        bindAsContract(UserServiceGrpcImpl::class.java)
-            .to(BindableService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(UserService::class.java)
-            .`in`(Singleton::class.java)
+    importOnce(decoderModule)
+    bind<MessageIdFactory>() with singleton { MessageIdFactoryImpl(di) }
+}
 
-        bindAsContract(GrpcExceptionMap::class.java)
-            .`in`(Singleton::class.java)
-
-        bindAsContract(TrackingDecoderImpl::class.java)
-            .to(TrackingDecoder::class.java)
-            .`in`(Singleton::class.java)
-
-        bindAsContract(UnsubscribeDecoderImpl::class.java)
-            .to(UnsubscribeDecoder::class.java)
-            .`in`(Singleton::class.java)
-
-        bindAsContract(MessageIdFactoryImpl::class.java)
-            .to(MessageIdFactory::class.java)
-            .`in`(Singleton::class.java)
-    }
+val decoderModule = DI.Module("decoders") {
+    bind<TrackingDecoder>() with singleton { TrackingDecoderImpl(di) }
+    bind<UnsubscribeDecoder>() with singleton { UnsubscribeDecoderImpl(di) }
 }

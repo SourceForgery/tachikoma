@@ -6,20 +6,19 @@ import io.grpc.Metadata
 import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
-import javax.inject.Inject
-import org.glassfish.hk2.api.MultiException
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class GrpcExceptionInterceptor
-@Inject
-private constructor(
-    private val grpcExceptionCatchers: GrpcExceptionMap
-) : ServerInterceptor {
+internal class GrpcExceptionInterceptor(
+    override val di: DI
+) : ServerInterceptor, DIAware {
+
+    private val grpcExceptionCatchers: GrpcExceptionMap by instance()
 
     private fun <T> runCaught(method: () -> T): T {
         try {
             return method()
-        } catch (e: MultiException) {
-            rethrowAsStatusException(e.cause!!)
         } catch (e: Exception) {
             rethrowAsStatusException(e)
         }

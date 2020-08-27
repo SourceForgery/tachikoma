@@ -9,14 +9,14 @@ import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import io.grpc.stub.StreamObserver
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class BlockedEmailService
-@Inject
-private constructor(
-    private val authenticationDAO: AuthenticationDAO,
-    private val blockedEmailDAO: BlockedEmailDAO
-) {
+internal class BlockedEmailService(override val di: DI) : DIAware {
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val blockedEmailDAO: BlockedEmailDAO by instance()
+
     fun getBlockedEmails(responseObserver: StreamObserver<BlockedEmail>, authenticationId: AuthenticationId) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 

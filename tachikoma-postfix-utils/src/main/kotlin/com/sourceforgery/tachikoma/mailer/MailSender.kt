@@ -5,7 +5,6 @@ import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
 import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
-import io.grpc.Channel
 import io.grpc.stub.StreamObserver
 import java.io.IOException
 import java.io.PrintWriter
@@ -21,10 +20,9 @@ import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
 
 class MailSender(
-    channel: Channel
+    private val stub: MTAEmailQueueGrpc.MTAEmailQueueStub
 ) {
     private lateinit var response: StreamObserver<MTAQueuedNotification>
-    private val stub = MTAEmailQueueGrpc.newStub(channel)
     private val executor = Executors.newCachedThreadPool()
 
     fun start() {

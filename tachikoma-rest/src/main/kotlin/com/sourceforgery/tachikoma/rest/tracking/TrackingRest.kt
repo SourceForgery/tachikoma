@@ -10,6 +10,7 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Produces
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
@@ -21,32 +22,35 @@ import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageClicked
 import com.sourceforgery.tachikoma.mq.MessageOpened
 import com.sourceforgery.tachikoma.rest.RestService
-import com.sourceforgery.tachikoma.rest.RestUtil
+import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import java.util.Base64
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.direct
+import org.kodein.di.instance
 
-internal class TrackingRest
-@Inject
-private constructor(
-    private val trackingDecoder: TrackingDecoder,
-    private val emailDAO: EmailDAO,
-    private val emailStatusEventDAO: EmailStatusEventDAO,
-    private val remoteIP: RemoteIP,
-    private val mqSender: MQSender
-) : RestService {
+internal class TrackingRest(
+    override val di: DI
+) : RestService, DIAware, TachikomaScope by di.direct.instance() {
+    private val trackingDecoder: TrackingDecoder by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val emailStatusEventDAO: EmailStatusEventDAO by instance()
+    private val remoteIP: RemoteIP by instance()
+    private val mqSender: MQSender by instance()
+
     @Get("regex:^/t/(?<trackingData>.*)")
     @Produces("image/gif")
     fun trackOpen(
         @Param("trackingData") trackingDataString: String,
         @Header("User-Agent") @Default("") userAgent: String
-    ): HttpResponse {
-        return if (trackingDataString.endsWith("/1")) {
+    ) = scopedFuture {
+        if (trackingDataString.endsWith("/1")) {
             actuallyTrackOpen(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
-            RestUtil.httpRedirect("/t/$trackingDataString/1")
+            httpRedirect("/t/$trackingDataString/1")
         }
     }
 
@@ -85,11 +89,11 @@ private constructor(
     fun trackClick(
         @Param("trackingData") trackingDataString: String,
         @Header("User-Agent") @Default("") userAgent: String
-    ): HttpResponse {
-        return if (trackingDataString.endsWith("/1")) {
+    ) = scopedFuture {
+        if (trackingDataString.endsWith("/1")) {
             actuallyTrackClick(trackingDataString.removeSuffix("/1"), userAgent)
         } else {
-            RestUtil.httpRedirect("/c/$trackingDataString/1")
+            httpRedirect("/c/$trackingDataString/1")
         }
     }
 
@@ -105,19 +109,21 @@ private constructor(
                     ipAddress = remoteIP.remoteAddress,
                     trackingLink = trackingData.redirectUrl,
                     userAgent = userAgent
-                ))
+                )
+            )
             emailStatusEventDAO.save(emailStatusEvent)
 
             val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
                 .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                 .setEmailMessageId(email.id.emailId)
-                .setMessageClicked(MessageClicked.newBuilder()
-                    .setIpAddress(remoteIP.remoteAddress)
-                    .setClickedUrl(trackingData.redirectUrl)
+                .setMessageClicked(
+                    MessageClicked.newBuilder()
+                        .setIpAddress(remoteIP.remoteAddress)
+                        .setClickedUrl(trackingData.redirectUrl)
                 )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
 
-            return RestUtil.httpRedirect(trackingData.redirectUrl)
+            return httpRedirect(trackingData.redirectUrl)
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
             LOGGER.debug(e) { "Failed to track invalid link $trackingDataString" }

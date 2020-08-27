@@ -5,13 +5,12 @@ import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Clock
 import java.time.Instant
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class JobMessageFactory
-@Inject
-private constructor(
-    private val clock: Clock
-) {
+class JobMessageFactory(override val di: DI) : DIAware {
+    private val clock: Clock by instance()
 
     // Factory to get all the properties set in new jobs
     fun createSendEmailJob(

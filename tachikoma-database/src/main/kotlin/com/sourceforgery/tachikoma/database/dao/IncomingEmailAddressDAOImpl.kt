@@ -3,20 +3,19 @@ package com.sourceforgery.tachikoma.database.dao
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
-import io.ebean.EbeanServer
-import javax.inject.Inject
+import io.ebean.Database
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class IncomingEmailAddressDAOImpl
-@Inject
-private constructor(
-    private val ebeanServer: EbeanServer
-) : IncomingEmailAddressDAO {
+class IncomingEmailAddressDAOImpl(override val di: DI) : IncomingEmailAddressDAO, DIAware {
+    private val database: Database by instance()
 
     override fun save(incomingEmailAddressDBO: IncomingEmailAddressDBO) =
-        ebeanServer.save(incomingEmailAddressDBO)
+        database.save(incomingEmailAddressDBO)
 
     override fun getByEmail(email: Email) =
-        ebeanServer.find(IncomingEmailAddressDBO::class.java)
+        database.find(IncomingEmailAddressDBO::class.java)
             .where()
             .eq("account.mailDomain", email.domain)
             .or()
@@ -28,13 +27,13 @@ private constructor(
             .findOne()
 
     override fun getAll(accountDBO: AccountDBO): List<IncomingEmailAddressDBO> =
-        ebeanServer.find(IncomingEmailAddressDBO::class.java)
+        database.find(IncomingEmailAddressDBO::class.java)
             .where()
             .eq("account", accountDBO)
             .findList()
 
     override fun delete(accountDBO: AccountDBO, localPart: String): Int =
-        ebeanServer.find(IncomingEmailAddressDBO::class.java)
+        database.find(IncomingEmailAddressDBO::class.java)
             .where()
             .eq("account", accountDBO)
             .eq("localPart", localPart)

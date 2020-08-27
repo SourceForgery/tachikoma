@@ -5,6 +5,8 @@ import java.sql.Connection
 import org.intellij.lang.annotations.Language
 
 class Version11 : DatabaseUpgrade {
+    override val newVersion: Int = -11
+
     override fun run(connection: Connection): Int {
         @Language("PostgreSQL")
         val content = """
@@ -18,6 +20,6 @@ class Version11 : DatabaseUpgrade {
 
         DdlRunner(false, javaClass.simpleName)
             .runAll(content, connection)
-        return -11
+        return 11
     }
 }

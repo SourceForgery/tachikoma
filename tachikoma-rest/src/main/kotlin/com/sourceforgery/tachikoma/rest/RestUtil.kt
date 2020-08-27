@@ -5,10 +5,8 @@ import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.common.ResponseHeaders
 
-object RestUtil {
-    fun httpRedirect(redirectUrl: String): HttpResponse {
-        return HttpResponse.of(
-            ResponseHeaders.of(HttpStatus.TEMPORARY_REDIRECT, HttpHeaderNames.LOCATION, redirectUrl)
-        )
-    }
+fun httpRedirect(redirectUrl: String): HttpResponse {
+    return HttpResponse.of(
+        ResponseHeaders.of(HttpStatus.TEMPORARY_REDIRECT, HttpHeaderNames.LOCATION, redirectUrl)
+    )
 }

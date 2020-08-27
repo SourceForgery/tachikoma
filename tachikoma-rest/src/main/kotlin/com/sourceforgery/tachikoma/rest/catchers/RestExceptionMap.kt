@@ -11,16 +11,15 @@ import java.io.StringWriter
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
-import org.glassfish.hk2.api.IterableProvider
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.allInstances
+import org.kodein.di.instance
 
-class RestExceptionMap
-@Inject
-private constructor(
-    private val catchers: IterableProvider<RestExceptionCatcher<Throwable>>,
-    private val debugConfig: DebugConfig
-) {
+class RestExceptionMap(override val di: DI) : DIAware {
+    private val debugConfig: DebugConfig by instance()
+    private val catchers by allInstances<RestExceptionCatcher<Throwable>>()
     private val map = ConcurrentHashMap<Class<Throwable>, RestExceptionCatcher<Throwable>>()
 
     private val defaultCatcher = object : RestExceptionCatcher<Throwable> {

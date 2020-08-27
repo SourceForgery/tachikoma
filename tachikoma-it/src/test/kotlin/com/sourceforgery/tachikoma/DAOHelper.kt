@@ -16,24 +16,24 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
-import io.ebean.EbeanServer
+import io.ebean.Database
 import java.time.Instant
 import java.util.UUID
-import javax.inject.Inject
+import org.apache.commons.lang3.RandomStringUtils
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class DAOHelper
-@Inject
-private constructor(
-    private val ebeanServer: EbeanServer,
-    private val dbObjectMapper: DBObjectMapper
-) {
+class DAOHelper(override val di: DI) : DIAware {
+    private val database: Database by instance()
+    private val dbObjectMapper: DBObjectMapper by instance()
 
     fun createAuthentication(domain: String) =
         createAuthentication(MailDomain(domain))
 
     fun createAuthentication(domain: MailDomain): AuthenticationDBO {
         val accountDBO = AccountDBO(domain)
-        ebeanServer.save(accountDBO)
+        database.save(accountDBO)
 
         val authenticationDBO = AuthenticationDBO(
             login = domain.mailDomain,
@@ -42,7 +42,7 @@ private constructor(
             role = AuthenticationRole.BACKEND,
             account = accountDBO
         )
-        ebeanServer.save(authenticationDBO)
+        database.save(authenticationDBO)
 
         return authenticationDBO
     }
@@ -73,17 +73,17 @@ private constructor(
             mtaQueueId = null,
             metaData = emptyMap()
         )
-        ebeanServer.save(email)
+        database.save(email)
 
         val emailStatusEventDBO = EmailStatusEventDBO(
             emailStatus = emailStatus,
             email = email,
             metaData = StatusEventMetaData()
         )
-        ebeanServer.save(emailStatusEventDBO)
+        database.save(emailStatusEventDBO)
         dateCreated?.also {
             emailStatusEventDBO.dateCreated = it
-            ebeanServer.save(emailStatusEventDBO)
+            database.save(emailStatusEventDBO)
         }
 
         return emailStatusEventDBO
@@ -93,3 +93,5 @@ private constructor(
         val PRINTER = JsonFormat.printer()!!
     }
 }
+
+fun Email.unique() = Email(domain, "localPart+${RandomStringUtils.randomAlphanumeric(10)}")

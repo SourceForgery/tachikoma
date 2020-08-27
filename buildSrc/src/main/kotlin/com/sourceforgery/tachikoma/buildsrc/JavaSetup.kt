@@ -23,7 +23,6 @@ fun Project.javaSetup() {
         val javadoc by tasks.getting(Javadoc::class)
         dependsOn(javadoc)
         from(javadoc.destinationDir)
-        @Suppress("UnstableApiUsage")
         archiveClassifier.set("javadoc")
     }
 
@@ -36,7 +35,6 @@ fun Project.javaSetup() {
 
     val sourceJar by tasks.registering(Jar::class) {
         from(sourceSets["main"].allJava)
-        @Suppress("UnstableApiUsage")
         archiveClassifier.set("source")
     }
 

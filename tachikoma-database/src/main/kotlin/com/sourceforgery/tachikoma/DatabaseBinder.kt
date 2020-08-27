@@ -21,15 +21,12 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
-import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
-import com.sourceforgery.tachikoma.database.server.InvokeCounter
-import com.sourceforgery.tachikoma.database.server.LogEverything
+import com.sourceforgery.tachikoma.database.server.LogEverythingFactory
 import com.sourceforgery.tachikoma.database.server.PostgresqlDataSourceProvider
-import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
 import com.sourceforgery.tachikoma.database.upgrades.Version1
 import com.sourceforgery.tachikoma.database.upgrades.Version10
 import com.sourceforgery.tachikoma.database.upgrades.Version11
@@ -41,98 +38,52 @@ import com.sourceforgery.tachikoma.database.upgrades.Version6
 import com.sourceforgery.tachikoma.database.upgrades.Version7
 import com.sourceforgery.tachikoma.database.upgrades.Version8
 import com.sourceforgery.tachikoma.database.upgrades.Version9
-import com.sourceforgery.tachikoma.hk2.RequestScoped
-import io.ebean.Database
+import com.sourceforgery.tachikoma.kodein.threadLocalLogEverything
+import com.sourceforgery.tachikoma.logging.InvokeCounter
+import com.sourceforgery.tachikoma.logging.InvokeCounterFactory
 import io.ebean.EbeanServer
-import javax.inject.Singleton
-import org.glassfish.hk2.utilities.binding.AbstractBinder
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.provider
+import org.kodein.di.singleton
 
-class DatabaseBinder : AbstractBinder() {
-    override fun configure() {
-        bindFactory(EbeanServerFactory::class.java)
-            .to(EbeanServer::class.java)
-            .to(Database::class.java)
-            .`in`(Singleton::class.java)
-        bindDAO()
-        bindAsContract(LogEverything::class.java)
-            .to(InvokeCounter::class.java)
-            .`in`(RequestScoped::class.java)
-        bindAsContract(DBObjectMapperImpl::class.java)
-            .to(DBObjectMapper::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(PostgresqlDataSourceProvider::class.java)
-            .to(DataSourceProvider::class.java)
-            .`in`(Singleton::class.java)
-            .ranked(-1)
-        bindAsContract(InternalCreateUserServiceImpl::class.java)
-            .to(InternalCreateUserService::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(CreateUsers::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(TransactionManagerImpl::class.java)
-            .to(TransactionManager::class.java)
-            .`in`(Singleton::class.java)
-        bindEbeanHooks()
-        bindDatabaseUpgrades()
-    }
+val databaseModule = DI.Module("database") {
+    bind<EbeanServer>() with singleton { EbeanServerFactory(di).provide() }
 
-    private fun bindDAO() {
-        bindAsContract(AccountDAOImpl::class.java)
-            .to(AccountDAO::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(AuthenticationDAOImpl::class.java)
-            .to(AuthenticationDAO::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(BlockedEmailDAOImpl::class.java)
-            .to(BlockedEmailDAO::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(EmailDAOImpl::class.java)
-            .to(EmailDAO::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(EmailSendTransactionDAOImpl::class.java)
-            .to(EmailSendTransactionDAO::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(EmailStatusEventDAOImpl::class.java)
-            .to(EmailStatusEventDAO::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(IncomingEmailAddressDAOImpl::class.java)
-            .to(IncomingEmailAddressDAO::class.java)
-            .`in`(Singleton::class.java)
-        bindAsContract(IncomingEmailDAOImpl::class.java)
-            .to(IncomingEmailDAO::class.java)
-            .`in`(Singleton::class.java)
-    }
+    importOnce(daoModule)
+    bind<InvokeCounter>() with provider { threadLocalLogEverything.get() ?: error("Not in LogEverything scope") }
+    bind<InvokeCounterFactory>() with singleton { LogEverythingFactory() }
+    bind<DBObjectMapper>() with singleton { DBObjectMapperImpl }
+    bind<DataSourceProvider>() with singleton { PostgresqlDataSourceProvider(di) }
+    bind<InternalCreateUserService>() with singleton { InternalCreateUserServiceImpl(di) }
+    bind<CreateUsers>() with singleton { CreateUsers(di) }
+    bind<TransactionManager>() with singleton { TransactionManagerImpl(di) }
+    importOnce(databaseUpgradesModule)
+}
 
-    private fun bindEbeanHooks() {
-        val ebeanHooks = listOf<Class<EbeanHook>>()
-        for (ebeanHook in ebeanHooks) {
-            bindAsContract(ebeanHook)
-                .to(EbeanHook::class.java)
-                .`in`(Singleton::class.java)
-        }
-    }
+private val daoModule = DI.Module("dao") {
+    bind<AccountDAO>() with singleton { AccountDAOImpl(di) }
+    bind<AuthenticationDAO>() with singleton { AuthenticationDAOImpl(di) }
+    bind<BlockedEmailDAO>() with singleton { BlockedEmailDAOImpl(di) }
+    bind<EmailDAO>() with singleton { EmailDAOImpl(di) }
+    bind<EmailSendTransactionDAO>() with singleton { EmailSendTransactionDAOImpl(di) }
+    bind<EmailStatusEventDAO>() with singleton { EmailStatusEventDAOImpl(di) }
+    bind<IncomingEmailAddressDAO>() with singleton { IncomingEmailAddressDAOImpl(di) }
+    bind<IncomingEmailDAO>() with singleton { IncomingEmailDAOImpl(di) }
+}
 
-    private fun bindDatabaseUpgrades() {
-        // NEVER EVER change order or insert elements anywhere but at the end of this list!!
-        // These classes will be run in order before ebean starts
-        val databaseUpgrades = listOf(
-            Version1::class.java,
-            Version2::class.java,
-            Version3::class.java,
-            Version4::class.java,
-            Version5::class.java,
-            Version6::class.java,
-            Version7::class.java,
-            Version8::class.java,
-            Version9::class.java,
-            Version10::class.java,
-            Version11::class.java
-        )
-        var idx = 0
-        for (databaseUpgrade in databaseUpgrades) {
-            bindAsContract(databaseUpgrade)
-                .to(DatabaseUpgrade::class.java)
-                .ranked(--idx)
-        }
-    }
+private val databaseUpgradesModule = DI.Module("databaseUpgrades") {
+    // NEVER EVER change order or insert elements anywhere but at the end of this list!!
+    // These classes will be run in order before ebean starts
+    bind<Version1>() with provider { Version1() }
+    bind<Version2>() with provider { Version2() }
+    bind<Version3>() with provider { Version3() }
+    bind<Version4>() with provider { Version4() }
+    bind<Version5>() with provider { Version5() }
+    bind<Version6>() with provider { Version6() }
+    bind<Version7>() with provider { Version7() }
+    bind<Version8>() with provider { Version8() }
+    bind<Version9>() with provider { Version9() }
+    bind<Version10>() with provider { Version10() }
+    bind<Version11>() with provider { Version11() }
 }

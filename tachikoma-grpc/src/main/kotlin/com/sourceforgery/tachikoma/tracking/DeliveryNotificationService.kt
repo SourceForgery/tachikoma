@@ -33,17 +33,17 @@ import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class DeliveryNotificationService
-@Inject
-private constructor(
-    private val mqSequenceFactory: MQSequenceFactory,
-    private val emailDAO: EmailDAO,
-    private val grpcExceptionMap: GrpcExceptionMap
-) {
-    fun notificationStream(
+internal class DeliveryNotificationService(override val di: DI) : DIAware {
+    private val mqSequenceFactory: MQSequenceFactory by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val grpcExceptionMap: GrpcExceptionMap by instance()
+
+    suspend fun notificationStream(
         responseObserver: StreamObserver<EmailNotification>,
         request: NotificationStreamParameters,
         authenticationId: AuthenticationId,
@@ -51,7 +51,11 @@ private constructor(
         mailDomain: MailDomain
     ) {
         val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
-        val deliveryNotificationCallback = { deliveryNotificationMessage: DeliveryNotificationMessage ->
+        val future = mqSequenceFactory.listenForDeliveryNotifications(
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId
+        ) { deliveryNotificationMessage: DeliveryNotificationMessage ->
             val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(deliveryNotificationMessage.emailMessageId))
             if (emailData == null) {
                 LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
@@ -60,12 +64,6 @@ private constructor(
                 responseObserver.onNext(emailNotification)
             }
         }
-        val future = mqSequenceFactory.listenForDeliveryNotifications(
-            authenticationId = authenticationId,
-            mailDomain = mailDomain,
-            accountId = accountId,
-            callback = deliveryNotificationCallback
-        )
         serverCallStreamObserver
             ?.setOnCancelHandler {
                 future.cancel(true)

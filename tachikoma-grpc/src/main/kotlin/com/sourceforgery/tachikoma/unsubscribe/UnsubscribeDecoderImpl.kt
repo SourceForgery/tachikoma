@@ -7,14 +7,14 @@ import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.SignedUnsubscribeDa
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import java.util.Base64
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class UnsubscribeDecoderImpl
-@Inject
-private constructor(
-    // TODO Rename to EncryptionConfig ?
-    trackingConfig: TrackingConfig
-) : UnsubscribeDecoder {
+class UnsubscribeDecoderImpl(
+    override val di: DI
+) : UnsubscribeDecoder, DIAware {
+    private val trackingConfig: TrackingConfig by instance()
 
     private val encryptionKey = trackingConfig.linkSignKey
 
@@ -22,7 +22,7 @@ private constructor(
         val decoded = Base64.getUrlDecoder().decode(unsubscribeData)!!
         val signedMessage = SignedUnsubscribeData.parseFrom(decoded)
         val sig = signedMessage.signature
-        if (!sig.toByteArray().contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
+        if (!sig.toByteArray()!!.contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
             randomDelay(LongRange(100, 250)) {
                 throw RuntimeException("Not correct signature")
             }

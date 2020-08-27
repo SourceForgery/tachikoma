@@ -1,26 +1,10 @@
 package com.sourceforgery.tachikoma.startup
 
 import com.sourceforgery.tachikoma.config.Configuration
-import com.sourceforgery.tachikoma.config.DatabaseConfig
-import com.sourceforgery.tachikoma.config.DebugConfig
-import com.sourceforgery.tachikoma.config.WebServerConfig
-import com.sourceforgery.tachikoma.config.WebtokenAuthConfig
-import com.sourceforgery.tachikoma.mq.MqConfig
-import com.sourceforgery.tachikoma.tracking.TrackingConfig
-import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
-import javax.inject.Singleton
-import org.glassfish.hk2.utilities.binding.AbstractBinder
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.singleton
 
-class StartupBinder : AbstractBinder() {
-    override fun configure() {
-        bindAsContract(Configuration::class.java)
-            .to(DatabaseConfig::class.java)
-            .to(DebugConfig::class.java)
-            .to(MqConfig::class.java)
-            .to(TrackingConfig::class.java)
-            .to(UnsubscribeConfig::class.java)
-            .to(WebServerConfig::class.java)
-            .to(WebtokenAuthConfig::class.java)
-            .`in`(Singleton::class.java)
-    }
+val startupModule = DI.Module("startup") {
+    bind<Configuration>() with singleton { Configuration() }
 }

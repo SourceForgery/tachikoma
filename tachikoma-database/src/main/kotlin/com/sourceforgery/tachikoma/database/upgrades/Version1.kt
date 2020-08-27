@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets
 import java.sql.Connection
 
 class Version1 : DatabaseUpgrade {
+    override val newVersion: Int = -1
+
     override fun run(connection: Connection): Int {
         connection
             .createStatement()

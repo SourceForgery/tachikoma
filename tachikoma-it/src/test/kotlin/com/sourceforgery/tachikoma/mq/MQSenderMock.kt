@@ -3,11 +3,10 @@ package com.sourceforgery.tachikoma.mq
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.util.concurrent.LinkedBlockingQueue
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
 
-class MQSenderMock
-@Inject
-private constructor() : MQSender {
+class MQSenderMock(override val di: DI) : MQSender, DIAware {
     val deliveryNotifications = LinkedBlockingQueue<DeliveryNotificationMessage>()
     val jobs = LinkedBlockingQueue<JobMessage>()
     val outgoingEmails = LinkedBlockingQueue<OutgoingEmailMessage>()

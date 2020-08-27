@@ -15,23 +15,22 @@ import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
-import com.sourceforgery.tachikoma.hk2.HK2RequestContext
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Clock
 import java.time.Duration
-import javax.annotation.PreDestroy
-import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-internal class ConsumerFactoryImpl
-@Inject
-private constructor(
-    mqConfig: MqConfig,
-    private val clock: Clock,
-    private val hK2RequestContext: HK2RequestContext
-) : MQSequenceFactory, MQSender, MQManager {
+internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQSender, MQManager, DIAware {
+
+    private val mqConfig: MqConfig by instance()
+    private val clock: Clock by instance()
+
     @Volatile
     private var thread = 0
     private val connection: Connection
@@ -57,8 +56,7 @@ private constructor(
         }
     }
 
-    @PreDestroy
-    private fun close() {
+    fun close() {
         sendChannel.close()
         connection.close()
     }
@@ -130,8 +128,7 @@ private constructor(
             }
     }
 
-    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: (T) -> Unit): ListenableFuture<Void> {
-        val ctx = hK2RequestContext.getContextInstance()
+    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Void> {
         val channel = connection
             .createChannel()!!
 
@@ -153,7 +150,9 @@ private constructor(
                 var success = false
                 try {
                     val parsedMessage = messageQueue.parser(body)
-                    hK2RequestContext.runInScope(ctx) { callback(parsedMessage) }
+                    runBlocking {
+                        callback(parsedMessage)
+                    }
                     success = true
                 } catch (e: Exception) {
                     LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
@@ -181,7 +180,7 @@ private constructor(
         return future
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
         val queue = DeliveryNotificationMessageQueue(authenticationId)
         setupAuthentication(
             authenticationId = authenticationId,
@@ -191,12 +190,12 @@ private constructor(
         return listenOnQueue(queue, callback)
     }
 
-    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: suspend (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
         setupAccount(mailDomain)
         return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
         setupAuthentication(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
@@ -205,7 +204,7 @@ private constructor(
         return listenOnQueue(IncomingEmailNotificationMessageQueue(authenticationId), callback)
     }
 
-    override fun listenForJobs(callback: (JobMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Void> {
         return listenOnQueue(JobMessageQueue.JOBS) {
             val messageQueue = getRequeueQueueByRequestedExecutionTime(it)
             if (messageQueue == null) {

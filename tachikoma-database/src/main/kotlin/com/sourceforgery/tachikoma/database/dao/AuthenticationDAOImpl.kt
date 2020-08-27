@@ -2,42 +2,43 @@ package com.sourceforgery.tachikoma.database.dao
 
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
-import io.ebean.EbeanServer
-import javax.inject.Inject
+import io.ebean.Database
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class AuthenticationDAOImpl
-@Inject
-private constructor(
-    private val ebeanServer: EbeanServer
-) : AuthenticationDAO {
+class AuthenticationDAOImpl(override val di: DI) : AuthenticationDAO, DIAware {
+
+    private val database: Database by instance()
+
     override fun save(authenticationDBO: AuthenticationDBO) =
-        ebeanServer.save(authenticationDBO)
+        database.save(authenticationDBO)
 
     override fun getByUsername(username: String) =
-        ebeanServer
+        database
             .find(AuthenticationDBO::class.java)
             .where()
             .eq("login", username)
             .findOne()
 
     override fun validateApiToken(apiToken: String): AuthenticationDBO? {
-        return ebeanServer.find(AuthenticationDBO::class.java)
+        return database.find(AuthenticationDBO::class.java)
             .where()
             .eq("apiToken", apiToken)
             .findOne()
     }
 
     override fun getById(authenticationId: AuthenticationId) =
-        ebeanServer.find(AuthenticationDBO::class.java, authenticationId.authenticationId)!!
+        database.find(AuthenticationDBO::class.java, authenticationId.authenticationId)!!
 
     override fun getActiveById(authenticationId: AuthenticationId) =
-        ebeanServer.find(AuthenticationDBO::class.java)
+        database.find(AuthenticationDBO::class.java)
             .where()
             .eq("dbId", authenticationId.authenticationId)
             .eq("active", true)
             .findOne()!!
 
     override fun deleteById(authenticationId: AuthenticationId) {
-        ebeanServer.delete(AuthenticationDBO::class.java, authenticationId.authenticationId)
+        database.delete(AuthenticationDBO::class.java, authenticationId.authenticationId)
     }
 }

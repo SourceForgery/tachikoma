@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.database.server
 
+import com.sourceforgery.tachikoma.logging.InvokeCounter
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException

@@ -47,9 +47,9 @@ import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
-import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
+import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
-import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
+import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
@@ -65,7 +65,6 @@ import java.util.StringTokenizer
 import java.util.TreeMap
 import java.util.concurrent.Executors
 import javax.activation.DataHandler
-import javax.inject.Inject
 import javax.mail.Message
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
@@ -78,26 +77,26 @@ import org.jetbrains.annotations.TestOnly
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class MailDeliveryService
-@Inject
-private constructor(
-    private val trackingConfig: TrackingConfig,
-    private val unsubscribeConfig: UnsubscribeConfig,
-    private val dbObjectMapper: DBObjectMapper,
-    private val emailDAO: EmailDAO,
-    private val emailSendTransactionDAO: EmailSendTransactionDAO,
-    private val blockedEmailDAO: BlockedEmailDAO,
-    private val mqSender: MQSender,
-    private val mqSequenceFactory: MQSequenceFactory,
-    private val jobMessageFactory: JobMessageFactory,
-    private val transactionManager: TransactionManager,
-    private val trackingDecoderImpl: TrackingDecoderImpl,
-    private val unsubscribeDecoderImpl: UnsubscribeDecoderImpl,
-    private val incomingEmailDAO: IncomingEmailDAO,
-    private val authenticationDAO: AuthenticationDAO,
-    private val messageIdFactory: MessageIdFactory
-) {
+class MailDeliveryService(override val di: DI) : DIAware {
+    private val trackingConfig: TrackingConfig by instance()
+    private val unsubscribeConfig: UnsubscribeConfig by instance()
+    private val dbObjectMapper: DBObjectMapper by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val emailSendTransactionDAO: EmailSendTransactionDAO by instance()
+    private val blockedEmailDAO: BlockedEmailDAO by instance()
+    private val mqSender: MQSender by instance()
+    private val mqSequenceFactory: MQSequenceFactory by instance()
+    private val jobMessageFactory: JobMessageFactory by instance()
+    private val transactionManager: TransactionManager by instance()
+    private val trackingDecoderImpl: TrackingDecoder by instance()
+    private val unsubscribeDecoderImpl: UnsubscribeDecoder by instance()
+    private val incomingEmailDAO: IncomingEmailDAO by instance()
+    private val authenticationDAO: AuthenticationDAO by instance()
+    private val messageIdFactory: MessageIdFactory by instance()
 
     fun sendEmail(
         request: OutgoingEmail,

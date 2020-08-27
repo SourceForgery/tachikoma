@@ -3,6 +3,8 @@ package com.sourceforgery.tachikoma.database.upgrades
 import java.sql.Connection
 
 class Version5 : DatabaseUpgrade {
+    override val newVersion: Int = -5
+
     override fun run(connection: Connection): Int {
         connection
             .createStatement()

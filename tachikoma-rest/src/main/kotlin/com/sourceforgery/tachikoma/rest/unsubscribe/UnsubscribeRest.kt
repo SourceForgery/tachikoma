@@ -9,6 +9,7 @@ import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -21,32 +22,34 @@ import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
 import com.sourceforgery.tachikoma.rest.RestService
-import com.sourceforgery.tachikoma.rest.RestUtil
+import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import java.time.Clock
 import java.util.Optional
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.direct
+import org.kodein.di.instance
 
-internal class UnsubscribeRest
-@Inject
-private constructor(
-    private val clock: Clock,
-    private val mqSender: MQSender,
-    private val unsubscribeDecoder: UnsubscribeDecoder,
-    private val emailDAO: EmailDAO,
-    private val emailStatusEventDAO: EmailStatusEventDAO,
-    private val blockedEmailDAO: BlockedEmailDAO,
-    private val remoteIP: RemoteIP
-) : RestService {
+internal class UnsubscribeRest(
+    override val di: DI
+) : RestService, DIAware, TachikomaScope by di.direct.instance() {
+    private val clock: Clock by instance()
+    private val mqSender: MQSender by instance()
+    private val unsubscribeDecoder: UnsubscribeDecoder by instance()
+    private val emailDAO: EmailDAO by instance()
+    private val emailStatusEventDAO: EmailStatusEventDAO by instance()
+    private val blockedEmailDAO: BlockedEmailDAO by instance()
+    private val remoteIP: RemoteIP by instance()
 
     @Post("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     @ConsumesGroup(Consumes("multipart/form-data"), Consumes("application/x-www-form-urlencoded"))
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String,
         @Param("List-Unsubscribe") optionalListUnsubscribe: Optional<String>
-    ): HttpResponse {
+    ) = scopedFuture {
         try {
             val listUnsubscribe = optionalListUnsubscribe.orElse(null)
             if (listUnsubscribe != ONE_CLICK_FORM_DATA) {
@@ -57,17 +60,17 @@ private constructor(
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }
             LOGGER.debug(e) { "Failed to unsubscribe $unsubscribeDataString" }
         }
-        return HttpResponse.of(HttpStatus.OK)
+        HttpResponse.of(HttpStatus.OK)
     }
 
     @Get("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String
-    ): HttpResponse {
-        return if (unsubscribeDataString.endsWith("/1")) {
+    ) = scopedFuture {
+        if (unsubscribeDataString.endsWith("/1")) {
             actuallyUnsubscribe(unsubscribeDataString.removeSuffix("/1"))
         } else {
-            RestUtil.httpRedirect("/unsubscribe/$unsubscribeDataString/1")
+            httpRedirect("/unsubscribe/$unsubscribeDataString/1")
         }
     }
 
@@ -78,7 +81,7 @@ private constructor(
             if (redirectUrl.isBlank()) {
                 HttpResponse.of(HttpStatus.OK)
             } else {
-                RestUtil.httpRedirect(redirectUrl)
+                httpRedirect(redirectUrl)
             }
         } catch (e: Exception) {
             LOGGER.warn { "Failed to unsubscribe $unsubscribeDataString with error ${e.message}" }

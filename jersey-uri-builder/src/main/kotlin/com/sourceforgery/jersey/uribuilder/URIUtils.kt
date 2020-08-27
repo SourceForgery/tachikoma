@@ -1,6 +1,7 @@
 package com.sourceforgery.jersey.uribuilder
 
 import java.net.URI
+import org.apache.logging.log4j.kotlin.loggerOf
 
 fun URI.withoutPassword(): URI = JerseyUriBuilder(this)
     .userInfo("REDACTED")
@@ -21,3 +22,15 @@ fun URI.addPort(): URI {
         .port(port)
         .build()
 }
+
+private object URIUtils
+
+private val LOGGER = loggerOf(URIUtils::class.java)
+
+fun URI.ensureGproto(): URI =
+    if (scheme.startsWith("gproto+http")) {
+        this
+    } else {
+        LOGGER.error { "Scheme for ${this.withoutPassword()} is wrong. Scheme must be gproto+http or gproto+https." }
+        JerseyUriBuilder(this).scheme("gproto+$scheme").build()
+    }

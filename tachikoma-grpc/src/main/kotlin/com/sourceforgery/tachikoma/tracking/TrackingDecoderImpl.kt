@@ -6,13 +6,12 @@ import com.sourceforgery.tachikoma.common.randomDelay
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlSignedMessage
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import java.util.Base64
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class TrackingDecoderImpl
-@Inject
-private constructor(
-    trackingConfig: TrackingConfig
-) : TrackingDecoder {
+class TrackingDecoderImpl(override val di: DI) : TrackingDecoder, DIAware {
+    private val trackingConfig: TrackingConfig by instance()
 
     private val encryptionKey = trackingConfig.linkSignKey
 

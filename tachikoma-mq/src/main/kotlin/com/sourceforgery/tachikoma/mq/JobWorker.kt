@@ -1,52 +1,25 @@
 package com.sourceforgery.tachikoma.mq
 
 import com.google.common.util.concurrent.ListenableFuture
-import com.sourceforgery.tachikoma.hk2.HK2RequestContext
+import com.sourceforgery.tachikoma.kodein.withInvokeCounterContext
+import com.sourceforgery.tachikoma.logging.InvokeCounterFactory
 import com.sourceforgery.tachikoma.mq.jobs.JobFactory
-import java.util.concurrent.Executors
-import javax.annotation.PreDestroy
-import javax.inject.Inject
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class JobWorker
-@Inject
-private constructor(
-    private val mqSequenceFactory: MQSequenceFactory,
-    private val jobFactory: JobFactory,
-    private val hK2RequestContext: HK2RequestContext
-) {
+class JobWorker(override val di: DI) : DIAware {
+    private val mqSequenceFactory: MQSequenceFactory by instance()
+    private val jobFactory: JobFactory by instance()
+    private val invokeCounterFactory: InvokeCounterFactory by instance()
     private var future: ListenableFuture<Void>? = null
 
     fun work() {
-        val ctx = hK2RequestContext.createInstance()
-        // Destroy ctx when listener dies
-        hK2RequestContext.runInScope(ctx) { serviceLocator ->
-            future = mqSequenceFactory.listenForJobs {
-                val jobClass = jobFactory.getJobClass(it)
-                val job = serviceLocator.create(jobClass)
-                try {
-                    job.execute(it)
-                } finally {
-                    serviceLocator.preDestroy(job)
-                }
-            }.also {
-                it.addListener(
-                    Runnable {
-                        hK2RequestContext.release(ctx)
-                    },
-                    scopeFinalizer
-                )
+        future = mqSequenceFactory.listenForJobs {
+            withInvokeCounterContext(invokeCounterFactory.create()) {
+                val job = jobFactory.getJobClass(it)
+                job.execute(it)
             }
-        }
-    }
-
-    @PreDestroy
-    private fun preDestroy() {
-        future?.cancel(false)
-    }
-
-    companion object {
-        private val scopeFinalizer = Executors.newSingleThreadExecutor {
-            Thread(it, "WorkerScopeFinalizer")
         }
     }
 }

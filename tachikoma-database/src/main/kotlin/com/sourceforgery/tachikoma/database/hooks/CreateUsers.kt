@@ -7,17 +7,17 @@ import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import io.ebean.EbeanServer
-import javax.inject.Inject
 import org.apache.logging.log4j.kotlin.logger
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
-class CreateUsers
-@Inject
-private constructor(
-    databaseConfig: DatabaseConfig,
-    private val accountDAO: AccountDAO,
-    private val ebeanServer: EbeanServer,
-    private val internalCreateUserService: InternalCreateUserService
-) {
+class CreateUsers(override val di: DI) : DIAware {
+    private val databaseConfig: DatabaseConfig by instance()
+    private val accountDAO: AccountDAO by instance()
+    private val ebeanServer: EbeanServer by instance()
+    private val internalCreateUserService: InternalCreateUserService by instance()
+
     private val mailDomains = databaseConfig.mailDomains
 
     fun createUsers() {

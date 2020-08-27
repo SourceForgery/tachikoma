@@ -4,13 +4,11 @@ apply(plugin = "com.google.osdetector")
 
 dependencies {
     implementation("com.github.jnr:jnr-unixsocket:0.25")
-    implementation("io.grpc:grpc-netty:$grpcVersion")
-    implementation("io.netty:netty-tcnative-boringssl-static:$nettyVersionSsl:$googleNativePrefix")
     implementation("net.sf.expectit:expectit-core:0.9.0")
     implementation("org.apache.logging.log4j:log4j-iostreams:$log4j2Version")
     implementation("com.google.protobuf:protobuf-java:$protocVersion")
-    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.0.0")
     implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
 
     implementation(project(":jersey-uri-builder"))
     implementation(project(":tachikoma-common"))
