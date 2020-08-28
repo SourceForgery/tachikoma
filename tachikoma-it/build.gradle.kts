@@ -17,10 +17,12 @@ dependencies {
     testImplementation("com.opentable.components:otj-pg-embedded:$pgEmbeddedVersion")
     testImplementation("io.ebean:ebean:$ebeanVersion")
     testImplementation("io.grpc:grpc-stub:$grpcVersion")
+    testImplementation("io.mockk:mockk:1.10.0")
     testImplementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
     testImplementation("org.apache.logging.log4j:log4j-jul:$log4j2Version")
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
     testImplementation("com.linecorp.armeria:armeria:$armeriaVersion")
     testImplementation("com.squareup.okhttp3:okhttp:4.4.0")
     testImplementation("org.jsoup:jsoup:1.12.2")
+    testImplementation("com.sun.mail:javax.mail:$javaxMailVersion")
 }

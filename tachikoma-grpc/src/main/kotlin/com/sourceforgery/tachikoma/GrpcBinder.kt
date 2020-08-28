@@ -11,6 +11,7 @@ import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactoryImpl
 import com.sourceforgery.tachikoma.incomingemailaddress.IncomingEmailAddressService
 import com.sourceforgery.tachikoma.incomingemailaddress.IncomingEmailAddressServiceGrpcImpl
+import com.sourceforgery.tachikoma.maildelivery.impl.IncomingEmailService
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryServiceGrpcImpl
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotifications
@@ -33,6 +34,7 @@ val grpcModule = DI.Module("grpc") {
     bind<MTADeliveryNotifications>() with singleton { MTADeliveryNotifications(di) }
     bind<MTAEmailQueueService>() with singleton { MTAEmailQueueService(di) }
     bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
+    bind<IncomingEmailService>() with singleton { IncomingEmailService(di) }
     bind<DeliveryNotificationService>() with singleton { DeliveryNotificationService(di) }
     bind<BlockedEmailService>() with singleton { BlockedEmailService(di) }
     bind<EmailStatusEventService>() with singleton { EmailStatusEventService(di) }
