@@ -7,7 +7,6 @@ dependencies {
     implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
     implementation("com.sun.mail:javax.mail:$javaxMailVersion")
     implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
-    implementation("org.apache.james:apache-mime4j:0.8.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutineVersion")
     implementation("org.jsoup:jsoup:1.12.2")
 

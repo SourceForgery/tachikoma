@@ -19,14 +19,18 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.onlyIf
 import io.grpc.stub.StreamObserver
 import java.io.ByteArrayInputStream
+import java.io.InputStreamReader
+import java.nio.charset.Charset
+import java.nio.charset.UnsupportedCharsetException
+import java.util.Properties
 import java.util.concurrent.Executors
+import javax.activation.DataHandler
+import javax.mail.Multipart
+import javax.mail.Part
+import javax.mail.Session
 import javax.mail.internet.ContentType
-import org.apache.james.mime4j.dom.BinaryBody
-import org.apache.james.mime4j.dom.Body
-import org.apache.james.mime4j.dom.Multipart
-import org.apache.james.mime4j.dom.SingleBody
-import org.apache.james.mime4j.dom.TextBody
-import org.apache.james.mime4j.message.DefaultMessageBuilder
+import javax.mail.internet.MimeBodyPart
+import javax.mail.internet.MimeMessage
 import org.apache.logging.log4j.kotlin.logger
 import org.jsoup.Jsoup
 import org.kodein.di.DI
@@ -47,7 +51,8 @@ class IncomingEmailService(override val di: DI) : DIAware {
 
     private fun IncomingEmailDBO.toGrpc(parameters: IncomingEmailParameters): IncomingEmail {
         val parsedMessage by lazy {
-            DefaultMessageBuilder().parseMessage(ByteArrayInputStream(body))
+            val session = Session.getDefaultInstance(Properties())
+            MimeMessage(session, ByteArrayInputStream(body))
         }
         return IncomingEmail.newBuilder()
             .setIncomingEmailId(id.toGrpc())
@@ -61,11 +66,12 @@ class IncomingEmailService(override val di: DI) : DIAware {
                 includeAttachments(parsedMessage)
             }
             .onlyIf(parameters.includeMessageHeader) {
-                parsedMessage.header.fields
+                parsedMessage.allHeaders
+                    .asSequence()
                     .map {
                         HeaderLine.newBuilder()
                             .setName(it.name)
-                            .setBody(it.body)
+                            .setBody(it.value)
                     }
                     .forEach { addMessageHeader(it) }
             }
@@ -75,26 +81,27 @@ class IncomingEmailService(override val di: DI) : DIAware {
             .build()
     }
 
-    private fun IncomingEmail.Builder.includeAttachments(parsedMessage: org.apache.james.mime4j.dom.Message) {
-        parsedMessage.body.unroll()
-            .map { singleBody ->
+    private fun IncomingEmail.Builder.includeAttachments(parsedMessage: MimeMessage) {
+        parsedMessage.unroll { _, _, _ -> true }
+            .map { (_, singleBody) ->
                 IncomingEmailAttachment.newBuilder()
-                    .setContentType(singleBody.parent.mimeType)
+                    .setContentType(singleBody.contentType)
                     .addAllHeaders(
-                        singleBody.parent.header
+                        singleBody.allHeaders
                             .asSequence()
                             .map {
                                 HeaderLine.newBuilder()
                                     .setName(it.name)
-                                    .setBody(it.body)
+                                    .setBody(it.value)
                                     .build()
                             }.toList()
                     )
-                    .setFileName(singleBody.parent.filename ?: "")
+                    .setFileName(singleBody.fileName ?: "")
                     .apply {
-                        when (singleBody) {
-                            is TextBody -> dataString = singleBody.reader.use { it.readText() }
-                            is BinaryBody -> dataBytes = singleBody.inputStream.use { ByteString.readFrom(it) }
+                        when (val content = singleBody.content) {
+                            is String -> dataString = content
+                            is DataHandler -> dataBytes = content.inputStream.use { ByteString.readFrom(it) }
+                            else -> dataBytes = singleBody.inputStream.use { ByteString.readFrom(it) }
                         }
                     }
                     .build()
@@ -103,60 +110,134 @@ class IncomingEmailService(override val di: DI) : DIAware {
             }
     }
 
-    private fun IncomingEmail.Builder.includeParsedBodies(parsedMessage: org.apache.james.mime4j.dom.Message) {
-        when (val content = parsedMessage.body) {
-            is Multipart -> {
-                val htmlBody = content
-                    .getFirstTextBody(TEXT_HTML)
-                    ?.let { textBody ->
-                        textBody.reader.use { it.readText() }
-                    }
+    private fun Part.charset() =
+        try {
+            ContentType(contentType).getParameter("charset")
+                ?.let { Charset.forName(it) }
+                ?: Charsets.ISO_8859_1
+        } catch (e: UnsupportedCharsetException) {
+            LOGGER.info { "Detected unsupported charset: $contentType" }
+            Charsets.ISO_8859_1
+        }
 
-                val textBody = content
-                    .getFirstTextBody(TEXT_PLAIN)
-                    ?.let { textBody ->
-                        textBody.reader.use { it.readText() }
-                    }
-                    ?: let {
-                        htmlBody?.let {
-                            getPlainText(Jsoup.parse(it))
-                        }
-                    }
-                messageHtmlBody = htmlBody ?: ""
-                messageTextBody = textBody ?: ""
+    private fun Part.text() =
+        when (val content = content) {
+            is String -> content
+            else -> InputStreamReader(inputStream, charset())
+                .use { it.readText() }
+        }
+
+    private fun Multipart.alternatives(): Sequence<Part> {
+        check(isMultipartAlternative) {
+            "For there to be alternatives, it needs to be a 'multipart/alternative' part (it was $contentType) "
+        }
+        return bodyParts
+            .mapNotNull { (_, part) ->
+                part.unroll { _, idx, _ -> idx == 0 }
+                    .firstOrNull()
+                    ?.second
             }
-            is TextBody -> {
-                messageTextBody = content.reader.use { it.readText() }
+    }
+
+    private fun IncomingEmail.Builder.includeParsedBodies(parsedMessage: MimeMessage) {
+
+        val (_, firstPart) = parsedMessage
+            // Only look in 2 places:
+            // * the root part, ie the first
+            // * in "multipart/alternative"
+            .unroll { content, idx, _ -> idx == 0 || content.isMultipartAlternative }
+            .firstOrNull()
+            ?: return
+
+        val (html, text) = if (firstPart is MimeBodyPart) {
+            val parent = firstPart.parent
+                ?.takeIf { it.isMultipartAlternative }
+                ?: let {
+                    (firstPart.parent?.parent as? MimeBodyPart)?.parent
+                }
+                    ?.takeIf { it.isMultipartAlternative }
+            if (parent?.isMultipartAlternative == true) {
+                val alternatives = parent.alternatives()
+                    .toList()
+
+                val messageHtmlBody = alternatives
+                    .mapNotNull { it.firstPart(TEXT_HTML) }
+                    .firstOrNull()
+                    ?.text()
+                    ?: ""
+
+                val messageTextBody = alternatives
+                    .mapNotNull { it.firstPart(TEXT_PLAIN) }
+                    .firstOrNull()
+                    ?.text()
+                    ?: let { messageHtmlBody.stripHtml() }
+                messageHtmlBody to messageTextBody
+            } else {
+                onlyOnePart(firstPart)
             }
-            else -> LOGGER.trace { "Couldn't find anything to put in parsed body for email Incoming Email Id $incomingEmailId" }
+        } else {
+            onlyOnePart(firstPart)
+        }
+        messageHtmlBody = html
+        messageTextBody = text
+    }
+
+    private fun onlyOnePart(firstPart: Part): Pair<String, String> {
+        val contentType = ContentType(firstPart.contentType)
+        val firstPartText = firstPart.text()
+        return if (TEXT_HTML.match(contentType)) {
+            firstPartText to firstPartText.stripHtml()
+        } else if (TEXT_PLAIN.match(contentType)) {
+            "" to firstPartText
+        } else {
+            error("first part MUST be html or text. Error in code.")
+        }
+    }
+
+    private val Multipart.isMultipartAlternative: Boolean
+        get() = MULTIPART_ALTERNATIVE.match(contentType)
+
+    // Only checks this part AND (and only if it's a multipart/related), the sub-root part
+    private fun Part.firstPart(match: ContentType): Part? {
+        if (match.match(contentType)) {
+            return this
+        }
+        val multipart = content.takeIf { MULTIPART_RELATED.match(contentType) } as? Multipart
+            ?: return null
+
+        return multipart
+            .bodyParts
+            .map { (_, part) -> part }
+            .firstOrNull()
+            ?.takeIf { it.contentType.match(match) }
+    }
+
+    private val Multipart.bodyParts
+        get() = (0 until count)
+            .asSequence()
+            .map { it to getBodyPart(it) }
+
+    private fun String.match(contentType: ContentType) =
+        contentType.match(this)
+
+    private suspend fun SequenceScope<Pair<Int, Part>>.recursive(idx: Int, body: Part, selector: (Multipart, Int, Part) -> Boolean) {
+        when (val content = body.content) {
+            is Multipart -> {
+                content.bodyParts
+                    .filter { (idx, part) -> selector(content, idx, part) }
+                    .forEach { (idx, part) ->
+                        recursive(idx, part, selector)
+                    }
+            }
+            else -> yield(idx to body)
         }
     }
 
     /** Recursively get all non-multi-part bodies **/
-    private fun Body.unroll(): Sequence<SingleBody> {
-        suspend fun SequenceScope<SingleBody>.recursive(body: Body) {
-            if (body is Multipart) {
-                for (bodyPart in body.bodyParts) {
-                    recursive(bodyPart.body)
-                }
-            } else if (body is SingleBody) {
-                yield(body)
-            }
+    private fun Part.unroll(selector: (Multipart, Int, Part) -> Boolean): Sequence<Pair<Int, Part>> =
+        sequence {
+            recursive(0, this@unroll, selector)
         }
-
-        return sequence {
-            recursive(this@unroll)
-        }
-    }
-
-    /**
-     * This is NOT recursive and will only look at the first level of bodies.
-     */
-    private fun Body.getFirstTextBody(contentType: ContentType): TextBody? =
-        unroll()
-            .filter { contentType.match(it.parent.mimeType) }
-            .filterIsInstance<TextBody>()
-            .firstOrNull()
 
     fun streamIncomingEmails(
         responseObserver: StreamObserver<IncomingEmail>,
@@ -185,9 +266,13 @@ class IncomingEmailService(override val di: DI) : DIAware {
         }, responseCloser)
     }
 
+    private fun String.stripHtml(): String = getPlainText(Jsoup.parse(this))
+
     companion object {
         private val TEXT_HTML = ContentType("text/html")
         private val TEXT_PLAIN = ContentType("text/plain")
+        private val MULTIPART_ALTERNATIVE = ContentType("multipart/alternative")
+        private val MULTIPART_RELATED = ContentType("multipart/related")
         private val responseCloser = Executors.newCachedThreadPool()
         private val LOGGER = logger()
     }
