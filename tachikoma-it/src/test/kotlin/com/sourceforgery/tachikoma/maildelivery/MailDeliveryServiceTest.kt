@@ -63,7 +63,7 @@ class MailDeliveryServiceTest : DIAware {
     }
 
     @Test
-    fun `Complex email no css inlineing`() {
+    fun `Complex email no css inlining`() {
         val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
         val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expectedNoInlining.html").readText()).html()
         val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", false).html()).html()
