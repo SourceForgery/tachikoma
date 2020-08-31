@@ -5,9 +5,9 @@ import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.grpc.frontend.Attachment
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.HeaderLine
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailAttachment
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.identifiers.AccountId
@@ -21,8 +21,8 @@ import io.grpc.stub.StreamObserver
 import java.io.ByteArrayInputStream
 import java.util.concurrent.Executors
 import javax.mail.internet.ContentType
+import org.apache.james.mime4j.dom.BinaryBody
 import org.apache.james.mime4j.dom.Body
-import org.apache.james.mime4j.dom.Entity
 import org.apache.james.mime4j.dom.Multipart
 import org.apache.james.mime4j.dom.SingleBody
 import org.apache.james.mime4j.dom.TextBody
@@ -77,11 +77,26 @@ class IncomingEmailService(override val di: DI) : DIAware {
 
     private fun IncomingEmail.Builder.includeAttachments(parsedMessage: org.apache.james.mime4j.dom.Message) {
         parsedMessage.body.unroll()
-            .map { textBody ->
-                Attachment.newBuilder()
-                    .setContentType(textBody.parent.mimeType)
-                    .setFileName(textBody.parent.filename ?: "")
-                    .setData(textBody.inputStream.use { ByteString.readFrom(it) })
+            .map { singleBody ->
+                IncomingEmailAttachment.newBuilder()
+                    .setContentType(singleBody.parent.mimeType)
+                    .addAllHeaders(
+                        singleBody.parent.header
+                            .asSequence()
+                            .map {
+                                HeaderLine.newBuilder()
+                                    .setName(it.name)
+                                    .setBody(it.body)
+                                    .build()
+                            }.toList()
+                    )
+                    .setFileName(singleBody.parent.filename ?: "")
+                    .apply {
+                        when (singleBody) {
+                            is TextBody -> dataString = singleBody.reader.use { it.readText() }
+                            is BinaryBody -> dataBytes = singleBody.inputStream.use { ByteString.readFrom(it) }
+                        }
+                    }
                     .build()
             }.forEach {
                 addMessageAttachments(it)
@@ -89,38 +104,39 @@ class IncomingEmailService(override val di: DI) : DIAware {
     }
 
     private fun IncomingEmail.Builder.includeParsedBodies(parsedMessage: org.apache.james.mime4j.dom.Message) {
-        val content = parsedMessage.body
-        if (content is Multipart) {
-            val htmlBody = content.bodyParts
-                .getFirstTextBody(TEXT_HTML)
-                ?.let { textBody ->
-                    textBody.reader.use { it.readText() }
-                }
-
-            val textBody = content.bodyParts
-                .getFirstTextBody(TEXT_PLAIN)
-                ?.let { textBody ->
-                    textBody.reader.use { it.readText() }
-                }
-                ?: let {
-                    htmlBody?.let {
-                        getPlainText(Jsoup.parse(it))
+        when (val content = parsedMessage.body) {
+            is Multipart -> {
+                val htmlBody = content
+                    .getFirstTextBody(TEXT_HTML)
+                    ?.let { textBody ->
+                        textBody.reader.use { it.readText() }
                     }
-                }
-            messageHtmlBody = htmlBody ?: ""
-            messageTextBody = textBody ?: ""
-        } else if (content is TextBody) {
-            messageTextBody = content.reader.use { it.readText() }
-        } else {
-            LOGGER.trace { "Couldn't find anything to put in parsed body for email Incoming Email Id $incomingEmailId" }
+
+                val textBody = content
+                    .getFirstTextBody(TEXT_PLAIN)
+                    ?.let { textBody ->
+                        textBody.reader.use { it.readText() }
+                    }
+                    ?: let {
+                        htmlBody?.let {
+                            getPlainText(Jsoup.parse(it))
+                        }
+                    }
+                messageHtmlBody = htmlBody ?: ""
+                messageTextBody = textBody ?: ""
+            }
+            is TextBody -> {
+                messageTextBody = content.reader.use { it.readText() }
+            }
+            else -> LOGGER.trace { "Couldn't find anything to put in parsed body for email Incoming Email Id $incomingEmailId" }
         }
     }
 
     /** Recursively get all non-multi-part bodies **/
     private fun Body.unroll(): Sequence<SingleBody> {
         suspend fun SequenceScope<SingleBody>.recursive(body: Body) {
-            if (this is Multipart) {
-                for (bodyPart in bodyParts) {
+            if (body is Multipart) {
+                for (bodyPart in body.bodyParts) {
                     recursive(bodyPart.body)
                 }
             } else if (body is SingleBody) {
@@ -136,9 +152,9 @@ class IncomingEmailService(override val di: DI) : DIAware {
     /**
      * This is NOT recursive and will only look at the first level of bodies.
      */
-    private fun List<Entity>.getFirstTextBody(contentType: ContentType): TextBody? =
-        filter { contentType.match(it.mimeType) }
-            .map { it.body }
+    private fun Body.getFirstTextBody(contentType: ContentType): TextBody? =
+        unroll()
+            .filter { contentType.match(it.parent.mimeType) }
             .filterIsInstance<TextBody>()
             .firstOrNull()
 

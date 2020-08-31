@@ -341,7 +341,10 @@ class MailDeliveryService(override val di: DI) : DIAware {
 
         for (attachment in request.attachmentsList) {
             val attachmentBody = MimeBodyPart()
-            attachmentBody.dataHandler = DataHandler(ByteArrayDataSource(attachment.toByteArray(), attachment.contentType))
+            @Suppress("DEPRECATION")
+            val content = attachment.data.toByteArray()
+
+            attachmentBody.dataHandler = DataHandler(ByteArrayDataSource(content, attachment.contentType))
             if (attachment.fileName.isNotBlank()) {
                 attachmentBody.fileName = attachment.fileName
             }

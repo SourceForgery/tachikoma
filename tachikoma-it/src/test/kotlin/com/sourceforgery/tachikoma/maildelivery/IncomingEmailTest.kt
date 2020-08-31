@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.maildelivery
 
-import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.GenericDBO
@@ -20,8 +19,8 @@ import com.sourceforgery.tachikoma.mq.QueueMessageWrap
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.spyk
+import javax.mail.internet.InternetAddress
+import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.kodein.di.DI
@@ -29,9 +28,6 @@ import org.kodein.di.DIAware
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
-import java.nio.charset.Charset
-import javax.mail.internet.InternetAddress
-import kotlin.test.assertEquals
 
 class IncomingEmailTest : DIAware {
     private val incomingEmailDAO: IncomingEmailDAO = mockk()
@@ -50,71 +46,30 @@ class IncomingEmailTest : DIAware {
     }
 
     @Test
-    fun `stream incoming emails`() {
-
+    fun `parse m1001`() {
+        val sample = m1001
         incomingEmailService.streamIncomingEmails(
             responseObserver = observer,
-            parameters = IncomingEmailParameters
-                .newBuilder()
-                .setIncludeMessageAttachments(true)
-                .setIncludeMessageHeader(true)
-                .setIncludeMessageParsedBodies(true)
-                .setIncludeMessageWholeEnvelope(true)
-                .build(),
+            parameters = INCLUDE_ALL,
             accountId = accountId,
             mailDomain = mailDomain,
             authenticationId = authenticationId
         )
 
-        val from = parseEmail(""""Doug Sauder" <doug@example.com>""")
-        val to = parseEmail(""""Jürgen Schmürgen" <schmuergen@example.com>""")
         val subject = "Die Hasen und die Frösche (Microsoft Outlook 00)"
         every {
             incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
         } returns IncomingEmailDBO(
-            body = """
-                |From: "Doug Sauder" <doug@example.com>
-                |To: "Jürgen Schmürgen" <schmuergen@example.com>
-                |Subject: Die Hasen und die Frösche (Microsoft Outlook 00)
-                |Date: Wed, 17 May 2000 19:08:29 -0400
-                |Message-ID: <NDBBIAKOPKHFGPLCODIGIEKBCHAA.doug@example.com>
-                |MIME-Version: 1.0
-                |Content-Type: text/plain;
-                |	charset="iso-8859-1"
-                |Content-Transfer-Encoding: 8bit
-                |X-Priority: 3 (Normal)
-                |X-MSMail-Priority: Normal
-                |X-Mailer: Microsoft Outlook IMO, Build 9.0.2416 (9.0.2910.0)
-                |Importance: Normal
-                |X-MimeOLE: Produced By Microsoft MimeOLE V5.00.2314.1300
-                |
-                |Die Hasen und die Frösche
-                |
-                |Die Hasen klagten einst über ihre mißliche Lage; "wir leben", sprach ein
-                |Redner, "in steter Furcht vor Menschen und Tieren, eine Beute der Hunde, der
-                |Adler, ja fast aller Raubtiere! Unsere stete Angst ist ärger als der Tod
-                |selbst. Auf, laßt uns ein für allemal sterben."
-                |
-                |In einem nahen Teich wollten sie sich nun ersäufen; sie eilten ihm zu;
-                |allein das außerordentliche Getöse und ihre wunderbare Gestalt erschreckte
-                |eine Menge Frösche, die am Ufer saßen, so sehr, daß sie aufs schnellste
-                |untertauchten.
-                |
-                |"Halt", rief nun eben dieser Sprecher, "wir wollen das Ersäufen noch ein
-                |wenig aufschieben, denn auch uns fürchten, wie ihr seht, einige Tiere,
-                |welche also wohl noch unglücklicher sein müssen als wir."
-            """.trimMargin().toByteArray(Charset.forName("ISO-8859-15")),
+            body = sample.envelope,
             account = mockk(),
             fromEmail = from.address,
             fromName = from.name,
             receiverEmail = to.address,
             receiverName = to.name,
             subject = subject
-        ) .also {
+        ).also {
             it.setId(incomingEmailId)
         }
-
-
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
@@ -123,7 +78,85 @@ class IncomingEmailTest : DIAware {
         assertEquals(incomingEmailId.incomingEmailId, mess.incomingEmailId.id)
         assertEquals(1, mess.messageAttachmentsCount)
         assertEquals("", mess.messageHtmlBody)
-        assertEquals("", mess.messageTextBody)
+        assertEquals(sample.plainText, mess.messageTextBody)
+    }
+
+    @Test
+    fun `parse m1005`() {
+        val subject = "Die Hasen und die Frösche (Netscape Messenger 4.7)"
+
+        incomingEmailService.streamIncomingEmails(
+            responseObserver = observer,
+            parameters = INCLUDE_ALL,
+            accountId = accountId,
+            mailDomain = mailDomain,
+            authenticationId = authenticationId
+        )
+        val sample = m1005
+
+        every {
+            incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
+        } returns IncomingEmailDBO(
+            body = sample.envelope,
+            account = mockk(),
+            fromEmail = from.address,
+            fromName = from.name,
+            receiverEmail = to.address,
+            receiverName = to.name,
+            subject = subject
+        ).also {
+            it.setId(incomingEmailId)
+        }
+
+        val mess = processIt(incomingEmailId)
+        assertEquals(subject, mess.subject)
+        assertEmail(to, mess.to)
+        assertEmail(from, mess.from)
+        assertEquals(incomingEmailId.incomingEmailId, mess.incomingEmailId.id)
+        assertEquals(6, mess.messageAttachmentsCount)
+        assertEquals(sample.plainText, mess.messageAttachmentsList[0].dataString.homogenize())
+        assertEquals(sample.htmlText, mess.messageAttachmentsList[1].dataString.homogenize())
+        assertEquals(sample.htmlText, mess.messageHtmlBody.homogenize())
+        assertEquals(sample.plainText, mess.messageTextBody.homogenize())
+    }
+
+    @Test
+    fun `parse m1006`() {
+        val subject = "Die Hasen und die Frösche (Netscape Messenger 4.7)"
+
+        incomingEmailService.streamIncomingEmails(
+            responseObserver = observer,
+            parameters = INCLUDE_ALL,
+            accountId = accountId,
+            mailDomain = mailDomain,
+            authenticationId = authenticationId
+        )
+        val sample = m1006
+
+        every {
+            incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
+        } returns IncomingEmailDBO(
+            body = sample.envelope,
+            account = mockk(),
+            fromEmail = from.address,
+            fromName = from.name,
+            receiverEmail = to.address,
+            receiverName = to.name,
+            subject = subject
+        ).also {
+            it.setId(incomingEmailId)
+        }
+
+        val mess = processIt(incomingEmailId)
+        assertEquals(subject, mess.subject)
+        assertEmail(to, mess.to)
+        assertEmail(from, mess.from)
+        assertEquals(incomingEmailId.incomingEmailId, mess.incomingEmailId.id)
+        assertEquals(6, mess.messageAttachmentsCount)
+        assertEquals(sample.plainText, mess.messageAttachmentsList[0].dataString.homogenize())
+        assertEquals(sample.htmlText, mess.messageAttachmentsList[1].dataString.homogenize())
+        assertEquals(sample.htmlText, mess.messageHtmlBody.homogenize())
+        assertEquals(sample.plainText, mess.messageTextBody.homogenize())
     }
 
     fun assertEmail(first: NamedEmail, second: NamedEmailAddress) {
@@ -142,18 +175,23 @@ class IncomingEmailTest : DIAware {
         return observer.take(10000)
     }
 
-
-
     companion object {
-
         fun parseEmail(email: String): NamedEmail =
             InternetAddress.parse(email)
                 .first()
                 .let { NamedEmail(it.address, it.personal) }
 
+        val INCLUDE_ALL = IncomingEmailParameters
+            .newBuilder()
+            .setIncludeMessageAttachments(true)
+            .setIncludeMessageHeader(true)
+            .setIncludeMessageParsedBodies(true)
+            .setIncludeMessageWholeEnvelope(true)
+            .build()
+
+        private val from = parseEmail(""""Doug Sauder" <doug@example.com>""")
+        private val to = parseEmail(""""Jürgen Schmürgen" <schmuergen@example.com>""")
         private val mailDomain = MailDomain("example.com")
-        private val from = Email("doug@example.com")
-        private val to = NamedEmail("schmuergen@example.com", "Jürgen Schmürgen")
         private val incomingEmailId = IncomingEmailId(667)
         private val authenticationId = AuthenticationId(1)
         private val accountId = AccountId(1)

@@ -206,6 +206,28 @@ message Scheduled {
     google.protobuf.Timestamp scheduled_to = 101;
 }
 
+message HeaderLine {
+    string name = 1;
+    string body = 2;
+}
+
+// Attachments
+message IncomingEmailAttachment {
+    // The data of the attachment
+    oneof data {
+        bytes data_bytes = 1;
+        string data_string = 2;
+    };
+    // The content type of the attachment
+    string content_type = 10;
+
+    repeated HeaderLine headers = 11;
+
+    // Optional
+    // The filename (if any) for this attachment
+    string file_name = 12;
+}
+
 
 // IncomingEmail is an email that is sent to the mail server
 message IncomingEmail {
@@ -233,12 +255,7 @@ message IncomingEmail {
 
     // Optional. It must be explicitly requested.
     // These are all the attachments without exceptions
-    repeated Attachment message_attachments = 305;
-}
-
-message HeaderLine {
-    string name = 1;
-    string body = 2;
+    repeated IncomingEmailAttachment message_attachments = 305;
 }
 
 message IncomingEmailParameters {
