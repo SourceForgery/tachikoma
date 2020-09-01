@@ -129,8 +129,8 @@ class IncomingEmailService(override val di: DI) : DIAware {
     private fun IncomingEmail.Builder.includeParsedBodies(parsedMessage: MimeMessage) {
 
         val allAlternatives = parsedMessage
-            // Only look in 2 places, either:
-            // * the root part, ie the first
+            // Only allows two categories, either:
+            // * the root part, ie the first in every
             // * in "multipart/alternative"
             // Caveat: This actually supports multiparts in multiparts,
             // but I have no idea if the standard does that.
@@ -139,14 +139,12 @@ class IncomingEmailService(override val di: DI) : DIAware {
             .toList()
 
         messageHtmlBody = allAlternatives
-            .mapNotNull { it.firstPart(TEXT_HTML) }
-            .firstOrNull()
+            .firstOrNull { TEXT_HTML.match(it.contentType) }
             ?.text()
             ?: ""
 
         messageTextBody = allAlternatives
-            .mapNotNull { it.firstPart(TEXT_PLAIN) }
-            .firstOrNull()
+            .firstOrNull { TEXT_PLAIN.match(it.contentType) }
             ?.text()
             ?: let { messageHtmlBody.stripHtml() }
     }
@@ -154,33 +152,14 @@ class IncomingEmailService(override val di: DI) : DIAware {
     private val Multipart.isMultipartAlternative: Boolean
         get() = MULTIPART_ALTERNATIVE.match(contentType)
 
-    // Only checks this part AND (and only if it's a multipart/related), the sub-root part
-    private fun Part.firstPart(match: ContentType): Part? {
-        if (match.match(contentType)) {
-            return this
-        }
-        val multipart = content.takeIf { MULTIPART_RELATED.match(contentType) } as? Multipart
-            ?: return null
-
-        return multipart
-            .bodyParts
-            .map { (_, part) -> part }
-            .firstOrNull()
-            ?.takeIf { it.contentType.match(match) }
-    }
-
-    private val Multipart.bodyParts
-        get() = (0 until count)
-            .asSequence()
-            .map { it to getBodyPart(it) }
-
-    private fun String.match(contentType: ContentType) =
-        contentType.match(this)
+    private fun Multipart.bodyPartsWithIndex() = (0 until count)
+        .asSequence()
+        .map { it to getBodyPart(it) }
 
     private suspend fun SequenceScope<Pair<Int, Part>>.recursive(idx: Int, body: Part, pathSelector: (Multipart, Int, Part) -> Boolean) {
         when (val content = body.content) {
             is Multipart -> {
-                content.bodyParts
+                content.bodyPartsWithIndex()
                     .filter { (idx, part) -> pathSelector(content, idx, part) }
                     .forEach { (idx, part) ->
                         recursive(idx, part, pathSelector)
@@ -192,7 +171,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
 
     /** Recursively get all non-multi-part bodies
      * @param pathSelector filters both which paths to go down, and what to collect. Ie, if not accepting multiparts,
-     *  the map will only contain the direct children of the Part-receiver
+     *  the map will only contain the direct children of the Part-receiver.
      * **/
     private fun Part.unroll(pathSelector: (Multipart, Int, Part) -> Boolean): Sequence<Pair<Int, Part>> =
         sequence {
@@ -232,7 +211,6 @@ class IncomingEmailService(override val di: DI) : DIAware {
         private val TEXT_HTML = ContentType("text/html")
         private val TEXT_PLAIN = ContentType("text/plain")
         private val MULTIPART_ALTERNATIVE = ContentType("multipart/alternative")
-        private val MULTIPART_RELATED = ContentType("multipart/related")
         private val responseCloser = Executors.newCachedThreadPool()
         private val LOGGER = logger()
     }
