@@ -134,7 +134,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
             // * in "multipart/alternative"
             // Caveat: This actually supports multiparts in multiparts,
             // but I have no idea if the standard does that.
-            .unroll { content, idx, _ -> idx == 0 || content.isMultipartAlternative }
+            .unroll { parent, idx, _ -> idx == 0 || parent.isMultipartAlternative }
             .map { (_, part) -> part }
             .toList()
 
