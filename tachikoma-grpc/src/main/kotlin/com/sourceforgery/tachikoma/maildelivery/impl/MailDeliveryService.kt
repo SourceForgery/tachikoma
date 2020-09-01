@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.mustachejava.DefaultMustacheFactory
+import com.github.mustachejava.MustacheResolver
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
 import com.sourceforgery.jersey.uribuilder.JerseyUriBuilder
@@ -269,7 +270,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         template: String,
         vararg scopes: HashMap<String, Any>
     ) = StringWriter().use {
-        DefaultMustacheFactory()
+        DefaultMustacheFactory { null }
             .compile(StringReader(template), "html")
             .execute(it, scopes)
         it.toString()
