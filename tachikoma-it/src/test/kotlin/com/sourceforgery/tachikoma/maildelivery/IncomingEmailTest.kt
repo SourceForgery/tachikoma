@@ -4,7 +4,6 @@ import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.GenericDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
-import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
@@ -15,12 +14,14 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.maildelivery.impl.IncomingEmailService
 import com.sourceforgery.tachikoma.mq.IncomingEmailNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
-import com.sourceforgery.tachikoma.mq.QueueMessageWrap
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import javax.mail.internet.InternetAddress
 import kotlin.test.assertEquals
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Test
 import org.kodein.di.DI
@@ -38,7 +39,6 @@ class IncomingEmailTest : DIAware {
     }
     private val incomingEmailService: IncomingEmailService by instance()
     private val mqSequenceFactoryMock: MQSequenceFactoryMock by instance()
-    private val observer = QueueStreamObserver<IncomingEmail>()
 
     @Before
     fun b4() {
@@ -48,13 +48,6 @@ class IncomingEmailTest : DIAware {
     @Test
     fun `parse m1001`() {
         val sample = m1001
-        incomingEmailService.streamIncomingEmails(
-            responseObserver = observer,
-            parameters = INCLUDE_ALL,
-            accountId = accountId,
-            mailDomain = mailDomain,
-            authenticationId = authenticationId
-        )
 
         val subject = "Die Hasen und die Frösche (Microsoft Outlook 00)"
         every {
@@ -85,13 +78,6 @@ class IncomingEmailTest : DIAware {
     fun `parse m1005`() {
         val subject = "Die Hasen und die Frösche (Netscape Messenger 4.7)"
 
-        incomingEmailService.streamIncomingEmails(
-            responseObserver = observer,
-            parameters = INCLUDE_ALL,
-            accountId = accountId,
-            mailDomain = mailDomain,
-            authenticationId = authenticationId
-        )
         val sample = m1005
 
         every {
@@ -124,13 +110,6 @@ class IncomingEmailTest : DIAware {
     fun `parse m1006`() {
         val subject = "Die Hasen und die Frösche (Netscape Messenger 4.7)"
 
-        incomingEmailService.streamIncomingEmails(
-            responseObserver = observer,
-            parameters = INCLUDE_ALL,
-            accountId = accountId,
-            mailDomain = mailDomain,
-            authenticationId = authenticationId
-        )
         val sample = m1006
 
         every {
@@ -162,13 +141,6 @@ class IncomingEmailTest : DIAware {
     fun `parse m2008`() {
         val subject = "Die Hasen und die Frösche (Netscape Messenger 4.7)"
 
-        incomingEmailService.streamIncomingEmails(
-            responseObserver = observer,
-            parameters = INCLUDE_ALL,
-            accountId = accountId,
-            mailDomain = mailDomain,
-            authenticationId = authenticationId
-        )
         val sample = m2008
 
         every {
@@ -203,14 +175,21 @@ class IncomingEmailTest : DIAware {
     }
 
     fun processIt(incomingEmailId: IncomingEmailId): IncomingEmail {
-        mqSequenceFactoryMock.incomingEmails.add(
-            QueueMessageWrap(
+        return runBlocking {
+            mqSequenceFactoryMock.incomingEmails.send(
                 IncomingEmailNotificationMessage.newBuilder()
                     .setIncomingEmailMessageId(incomingEmailId.incomingEmailId)
                     .build()
             )
-        )
-        return observer.take(10000)
+            withTimeout(100000) {
+                incomingEmailService.streamIncomingEmails(
+                    parameters = INCLUDE_ALL,
+                    accountId = accountId,
+                    mailDomain = mailDomain,
+                    authenticationId = authenticationId
+                ).first()
+            }
+        }
     }
 
     companion object {

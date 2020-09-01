@@ -2,9 +2,24 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.google.protobuf.ByteString
 import com.sourceforgery.tachikoma.common.NamedEmail
+import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailDBO
+import com.sourceforgery.tachikoma.database.objects.ReceivedBetween
+import com.sourceforgery.tachikoma.database.objects.ReceiverEmailContains
+import com.sourceforgery.tachikoma.database.objects.ReceiverNameContains
+import com.sourceforgery.tachikoma.database.objects.SenderEmailContains
+import com.sourceforgery.tachikoma.database.objects.SenderNameContains
+import com.sourceforgery.tachikoma.database.objects.SubjectContains
 import com.sourceforgery.tachikoma.database.objects.id
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.CONTAINS_RECEIVER_EMAIL
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.CONTAINS_RECEIVER_NAME
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.CONTAINS_SENDER_EMAIL
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.CONTAINS_SENDER_NAME
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.CONTAINS_SUBJECT
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.FILTER_NOT_SET
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.RECEIVED_WITHIN
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.HeaderLine
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailAttachment
@@ -17,19 +32,21 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.onlyIf
-import io.grpc.stub.StreamObserver
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
+import java.time.Instant
 import java.util.Properties
-import java.util.concurrent.Executors
 import javax.activation.DataHandler
 import javax.mail.Multipart
 import javax.mail.Part
 import javax.mail.Session
 import javax.mail.internet.ContentType
 import javax.mail.internet.MimeMessage
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import org.apache.logging.log4j.kotlin.logger
 import org.jsoup.Jsoup
 import org.kodein.di.DI
@@ -181,31 +198,56 @@ class IncomingEmailService(override val di: DI) : DIAware {
     }
 
     fun streamIncomingEmails(
-        responseObserver: StreamObserver<IncomingEmail>,
         authenticationId: AuthenticationId,
         mailDomain: MailDomain,
         accountId: AccountId,
         parameters: IncomingEmailParameters
-    ) {
-        val future = mqSequenceFactory.listenForIncomingEmails(
+    ): Flow<IncomingEmail> =
+        mqSequenceFactory.listenForIncomingEmails(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
-            accountId = accountId,
-            callback = {
-                val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
-                val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
-                if (email != null) {
-                    val incomingEmail = email.toGrpc(parameters)
-                    responseObserver.onNext(incomingEmail)
-                } else {
-                    LOGGER.warn { "Could not find email with id $incomingEmailId" }
-                }
+            accountId = accountId
+        ).mapNotNull {
+            val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
+            val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
+            if (email != null) {
+                email.toGrpc(parameters)
+            } else {
+                LOGGER.warn { "Could not find email with id $incomingEmailId" }
+                null
             }
+        }
+
+    fun searchIncomingEmails(filter: List<EmailSearchFilter>, accountId: AccountId, parameters: IncomingEmailParameters): Flow<IncomingEmail> {
+        val dbFilter = filter
+            .map { it.convert() }
+        return incomingEmailDAO.searchIncomingEmails(
+            accountId = accountId,
+            filter = dbFilter
         )
-        future.addListener(Runnable {
-            responseObserver.onCompleted()
-        }, responseCloser)
+            .map { it.toGrpc(parameters) }
     }
+
+    fun EmailSearchFilter.convert() =
+        @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
+        when (filterCase) {
+            CONTAINS_SUBJECT -> SubjectContains(containsSubject)
+            CONTAINS_SENDER_NAME -> SenderNameContains(containsSenderName)
+            CONTAINS_SENDER_EMAIL -> SenderEmailContains(containsSenderEmail)
+            CONTAINS_RECEIVER_NAME -> ReceiverNameContains(containsReceiverName)
+            CONTAINS_RECEIVER_EMAIL -> ReceiverEmailContains(containsReceiverEmail)
+            RECEIVED_WITHIN -> ReceivedBetween(
+                after = receivedWithin.after
+                    .takeIf { it.seconds != 0L }
+                    ?.toInstant()
+                    ?: Instant.EPOCH,
+                before = receivedWithin.before
+                    .takeIf { it.seconds != 0L }
+                    ?.toInstant()
+                    ?: Instant.MAX
+            )
+            FILTER_NOT_SET -> error("Must set filter")
+        }
 
     private fun String.stripHtml(): String = getPlainText(Jsoup.parse(this))
 
@@ -213,7 +255,6 @@ class IncomingEmailService(override val di: DI) : DIAware {
         private val TEXT_HTML = ContentType("text/html")
         private val TEXT_PLAIN = ContentType("text/plain")
         private val MULTIPART_ALTERNATIVE = ContentType("multipart/alternative")
-        private val responseCloser = Executors.newCachedThreadPool()
         private val LOGGER = logger()
     }
 }

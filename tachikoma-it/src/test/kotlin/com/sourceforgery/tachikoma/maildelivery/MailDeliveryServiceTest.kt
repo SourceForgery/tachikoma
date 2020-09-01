@@ -18,6 +18,9 @@ import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.testModule
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -95,11 +98,14 @@ class MailDeliveryServiceTest : DIAware {
             )
             .build()
         val responseObserver = QueueStreamObserver<EmailQueueStatus>()
-        mailDeliveryService.sendEmail(
-            request = email,
-            responseObserver = responseObserver,
-            authenticationId = authentication.id
-        )
+        runBlocking {
+            withTimeout(10000) {
+                mailDeliveryService.sendEmail(
+                    request = email,
+                    authenticationId = authentication.id
+                ).first()
+            }
+        }
         val queued = responseObserver.take(500)
         val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
         val boundary = Regex("\tboundary=\"(.*?)\"").find(byEmailId.body!!)!!.groupValues[1]

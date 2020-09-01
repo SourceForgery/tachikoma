@@ -3,16 +3,19 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.coroutines.TachikomaScope
+import com.sourceforgery.tachikoma.exceptions.NotFoundException
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.GetIncomingEmailRequest
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpcKt
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
-import com.sourceforgery.tachikoma.grpc.grpcFuture
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.SearchIncomingEmailsRequest
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
-import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -20,7 +23,7 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.provider
 
-internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliveryServiceGrpc.MailDeliveryServiceImplBase(),
+internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliveryServiceGrpcKt.MailDeliveryServiceCoroutineImplBase(),
     DIAware,
     TachikomaScope by di.direct.instance() {
 
@@ -29,52 +32,67 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliverySe
     private val authentication: () -> Authentication by provider()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 
-    override fun getIncomingEmails(request: Empty, responseObserver: StreamObserver<IncomingEmail>) =
-        streamIncomingEmails(IncomingEmailParameters.getDefaultInstance(), responseObserver)
+    override fun getIncomingEmails(request: Empty): Flow<IncomingEmail> =
+        streamIncomingEmails(IncomingEmailParameters.getDefaultInstance())
 
-    override fun streamIncomingEmails(request: IncomingEmailParameters, responseObserver: StreamObserver<IncomingEmail>) = grpcFuture(responseObserver) {
+    override fun streamIncomingEmails(request: IncomingEmailParameters): Flow<IncomingEmail> = flow {
         try {
             val auth = authentication()
             auth.requireFrontend()
             LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
             incomingEmailService.streamIncomingEmails(
-                responseObserver = responseObserver,
                 authenticationId = auth.authenticationId,
                 mailDomain = auth.mailDomain,
                 accountId = auth.accountId,
                 parameters = request
             )
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
+            throw grpcExceptionMap.findAndConvertAndLog(e)
         }
     }
 
-    override fun getIncomingEmail(request: GetIncomingEmailRequest, responseObserver: StreamObserver<IncomingEmail>) {
+    override suspend fun getIncomingEmail(request: GetIncomingEmailRequest): IncomingEmail {
         try {
             val auth = authentication()
             auth.requireFrontend()
-            incomingEmailService.getIncomingEmail(
+            return incomingEmailService.getIncomingEmail(
                 incomingEmailId = IncomingEmailId(request.incomingEmailId.id),
                 accountId = auth.accountId,
                 parameters = request.parameters
-            )
+            ) ?: throw NotFoundException("No email ${request.incomingEmailId.id} that ${auth.accountId} can access")
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
+            throw grpcExceptionMap.findAndConvertAndLog(e)
         }
     }
 
-    override fun sendEmail(request: OutgoingEmail, responseObserver: StreamObserver<EmailQueueStatus>) = grpcFuture(responseObserver) {
+    override fun searchIncomingEmails(request: SearchIncomingEmailsRequest): Flow<IncomingEmail> = flow {
         try {
             val auth = authentication()
             auth.requireFrontend()
-            mailDeliveryService.sendEmail(
-                request = request,
-                responseObserver = responseObserver,
-                authenticationId = auth.authenticationId
+            emitAll(
+                incomingEmailService.searchIncomingEmails(
+                    filter = request.messageFilterList,
+                    accountId = auth.accountId,
+                    parameters = request.parameters
+                )
             )
-            responseObserver.onCompleted()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
+            throw grpcExceptionMap.findAndConvertAndLog(e)
+        }
+    }
+
+    override fun sendEmail(request: OutgoingEmail): Flow<EmailQueueStatus> = flow {
+        try {
+            val auth = authentication()
+            auth.requireFrontend()
+            emitAll(
+                mailDeliveryService.sendEmail(
+                    request = request,
+                    authenticationId = auth.authenticationId
+                )
+            )
+        } catch (e: Exception) {
+            throw grpcExceptionMap.findAndConvertAndLog(e)
         }
     }
 
