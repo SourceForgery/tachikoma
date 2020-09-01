@@ -169,7 +169,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
         }
     }
 
-    /** Recursively get all non-multi-part bodies
+    /** Recursively get all bodies (if pathSelector allows it)
      * @param pathSelector filters both which paths to go down, and what to collect. Ie, if not accepting multiparts,
      *  the map will only contain the direct children of the Part-receiver.
      * **/
