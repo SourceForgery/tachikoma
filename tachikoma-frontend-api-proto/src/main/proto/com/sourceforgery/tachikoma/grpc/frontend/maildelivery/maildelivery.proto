@@ -96,6 +96,22 @@ message StaticBody {
     string subject = 103;
 }
 
+// Attachments
+message RelatedAttachment {
+    // The data of the attachment
+    bytes data = 101;
+    // The content type of the attachment
+    string content_type = 102;
+    // The content id of the attachment. Use e.g.
+    // <img src="cid:CONTENT_ID"> to reference the attachment in
+    // the html.
+    string content_id = 103;
+
+    // Optional
+    // The filename (if any) for this attachment
+    string file_name = 104;
+}
+
 message OutgoingEmail {
     // Recipients of the email
     repeated EmailRecipient recipients = 101;
@@ -111,6 +127,13 @@ message OutgoingEmail {
     // Optional
     // Reply-to email, must have same domain as from email
     EmailAddress reply_to = 104;
+
+    // Optional - defaults to UTC
+    // Valid (recommended even) is to use e.g.
+    // "America/New_York" or "Europe/Moscow"
+    // but anything accepted by
+    // Java's ZoneId.of(String) is valid, e.g. "Z", "UTC+1"
+    string time_zone = 105;
 
     // Choose one of
     oneof body {
@@ -139,6 +162,11 @@ message OutgoingEmail {
     // Optional
     // Attached to email
     repeated Attachment attachments = 401;
+
+    // Optional
+    // Attached as related parts to the html body.
+    // These are usually images shown when displaying the html body.
+    repeated RelatedAttachment related_attachments = 402;
 
     // Optional
     // Unsubscribe redirect URI

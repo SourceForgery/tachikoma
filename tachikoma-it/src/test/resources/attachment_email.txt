@@ -1,19 +1,21 @@
 Return-Path: bounce-not-really-random1@example.net
-Date: XXXXX
+Date: Mon, 3 Dec 2007 05:15:30 -0500 (EST)
 From: Valid From Email <from@example.com>
 To: Valid Email <foo@example.com>
 Message-ID: <not-really-random1@example.com>
 Subject: Test mail subject
 MIME-Version: 1.0
-Content-Type: multipart/alternative; 
-	boundary="XXXXXX"
+Content-Type: multipart/mixed; boundary=XXXXXX.0
 List-Unsubscribe-Post: List-Unsubscribe=One-Click
 List-Unsubscribe: <mailto:unsub-not-really-random1@example.net>, <https://localhost/unsubscribe/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo>
 X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@example.com
 X-Report-Abuse: You can also report abuse here: https://localhost/abuse/not-really-random1@example.net
 X-Tachikoma-User: 101
 
---XXXXXX
+--XXXXXX.0
+Content-Type: multipart/alternative; boundary=XXXXXX.1
+
+--XXXXXX.1
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -23,21 +25,32 @@ This is a test
 }
 .                =20
 
---XXXXXX
+--XXXXXX.1
+Content-Type: multipart/related; boundary=XXXXXX.2
+
+--XXXXXX.2
 Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-<html><head></head><body>This is a test
-                                      .
-=2E
-}
-.                =20
-<img src=3D"https://localhost/t/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo=
-" height=3D"1" width=3D"1"></body></html>
---XXXXXX
+<html><head></head><body><h1>This is a test</h1>
+<img src=3D"cid:68b12347-e804-48f8-a9d4-86a1d1acfda3"><img src=3D"https://l=
+ocalhost/t/qgYGqgYDCNoEsgYUTvZ8D-6pcCGve1lszODcxOS5HZo" height=3D"1" width=
+=3D"1"></body></html>
+--XXXXXX.2
+Content-Type: image/gif; name=transparent.gif
+Content-Transfer-Encoding: base64
+Content-ID: 68b12347-e804-48f8-a9d4-86a1d1acfda3
+Content-Disposition: attachment; filename=transparent.gif
+
+R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=
+--XXXXXX.2--
+
+--XXXXXX.1--
+
+--XXXXXX.0
 Content-Type: application/pdf; name=NotReally.pdf
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename=NotReally.pdf
 
 dt6J5W7J+3hrduLSGtgij5IQrnc=
---XXXXXX--
+--XXXXXX.0--
