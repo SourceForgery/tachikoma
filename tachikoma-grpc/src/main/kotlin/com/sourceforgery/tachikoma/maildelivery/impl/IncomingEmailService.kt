@@ -156,24 +156,25 @@ class IncomingEmailService(override val di: DI) : DIAware {
         .asSequence()
         .map { it to getBodyPart(it) }
 
+    // Not internal function because Kotlin 1.3.72 w/ coroutine 1.3.6 cannot build it
+    suspend fun SequenceScope<Pair<Int, Part>>.recursive(idx: Int, body: Part, pathSelector: (Multipart, Int, Part) -> Boolean) {
+        when (val content = body.content) {
+            is Multipart -> {
+                content.bodyPartsWithIndex()
+                    .filter { (idx, part) -> pathSelector(content, idx, part) }
+                    .forEach { (idx, part) ->
+                        recursive(idx, part, pathSelector)
+                    }
+            }
+            else -> yield(idx to body)
+        }
+    }
+
     /** Recursively get all bodies (if pathSelector allows it)
      * @param pathSelector filters both which paths to go down, and what to collect. Ie, if not accepting multiparts,
      *  the map will only contain the direct children of the Part-receiver.
      * **/
     private fun Part.unroll(pathSelector: (Multipart, Int, Part) -> Boolean): Sequence<Pair<Int, Part>> {
-        suspend fun SequenceScope<Pair<Int, Part>>.recursive(idx: Int, body: Part, pathSelector: (Multipart, Int, Part) -> Boolean) {
-            when (val content = body.content) {
-                is Multipart -> {
-                    content.bodyPartsWithIndex()
-                        .filter { (idx, part) -> pathSelector(content, idx, part) }
-                        .forEach { (idx, part) ->
-                            recursive(idx, part, pathSelector)
-                        }
-                }
-                else -> yield(idx to body)
-            }
-        }
-
         return sequence {
             recursive(0, this@unroll, pathSelector)
         }
