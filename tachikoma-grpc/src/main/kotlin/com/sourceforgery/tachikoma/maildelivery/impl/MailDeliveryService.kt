@@ -14,7 +14,6 @@ import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailSendTransactionDAO
-import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
@@ -24,28 +23,22 @@ import com.sourceforgery.tachikoma.exceptions.InvalidOrInsufficientCredentialsEx
 import com.sourceforgery.tachikoma.grpc.frontend.emptyToNull
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Queued
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.Rejected
 import com.sourceforgery.tachikoma.grpc.frontend.toEmail
-import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcRejectReason
 import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
-import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
-import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
-import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
-import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
@@ -62,8 +55,6 @@ import java.time.Instant
 import java.util.HashMap
 import java.util.Properties
 import java.util.StringTokenizer
-import java.util.TreeMap
-import java.util.concurrent.Executors
 import javax.activation.DataHandler
 import javax.mail.Message
 import javax.mail.Session
@@ -89,12 +80,10 @@ class MailDeliveryService(override val di: DI) : DIAware {
     private val emailSendTransactionDAO: EmailSendTransactionDAO by instance()
     private val blockedEmailDAO: BlockedEmailDAO by instance()
     private val mqSender: MQSender by instance()
-    private val mqSequenceFactory: MQSequenceFactory by instance()
     private val jobMessageFactory: JobMessageFactory by instance()
     private val transactionManager: TransactionManager by instance()
     private val trackingDecoderImpl: TrackingDecoder by instance()
     private val unsubscribeDecoderImpl: UnsubscribeDecoder by instance()
-    private val incomingEmailDAO: IncomingEmailDAO by instance()
     private val authenticationDAO: AuthenticationDAO by instance()
     private val messageIdFactory: MessageIdFactory by instance()
 
@@ -144,9 +133,10 @@ class MailDeliveryService(override val di: DI) : DIAware {
                 if (blockedReason != null) {
                     responseObserver.onNext(
                         EmailQueueStatus.newBuilder()
-                            .setRejected(Rejected.newBuilder()
-                                .setRejectReason(blockedReason.toGrpcRejectReason())
-                                .build()
+                            .setRejected(
+                                Rejected.newBuilder()
+                                    .setRejectReason(blockedReason.toGrpcRejectReason())
+                                    .build()
                             )
                             .setTransactionId(transaction.id.toGrpcInternal())
                             .setRecipient(recipientEmail.address.toGrpcInternal())
@@ -195,11 +185,13 @@ class MailDeliveryService(override val di: DI) : DIAware {
         }
         val refreshedTransaction = emailSendTransactionDAO.get(transaction.id)!!
         for (emailDBO in refreshedTransaction.emails) {
-            mqSender.queueJob(jobMessageFactory.createSendEmailJob(
-                requestedSendTime = requestedSendTime,
-                emailId = emailDBO.id,
-                mailDomain = auth.account.mailDomain
-            ))
+            mqSender.queueJob(
+                jobMessageFactory.createSendEmailJob(
+                    requestedSendTime = requestedSendTime,
+                    emailId = emailDBO.id,
+                    mailDomain = auth.account.mailDomain
+                )
+            )
 
             responseObserver.onNext(
                 EmailQueueStatus.newBuilder()
@@ -349,7 +341,10 @@ class MailDeliveryService(override val di: DI) : DIAware {
 
         for (attachment in request.attachmentsList) {
             val attachmentBody = MimeBodyPart()
-            attachmentBody.dataHandler = DataHandler(ByteArrayDataSource(attachment.toByteArray(), attachment.contentType))
+            @Suppress("DEPRECATION")
+            val content = attachment.data.toByteArray()
+
+            attachmentBody.dataHandler = DataHandler(ByteArrayDataSource(content, attachment.contentType))
             if (attachment.fileName.isNotBlank()) {
                 attachmentBody.fileName = attachment.fileName
             }
@@ -453,28 +448,25 @@ class MailDeliveryService(override val di: DI) : DIAware {
         return htmlDocument
     }
 
+    private fun MutableMap<String, String>.setCssProperties(props: String) {
+        props.split(";")
+            .filter { it.isNotBlank() }
+            .associateTo(this) { el ->
+                val (selector, prop) = el.split(":")
+                selector.trim() to prop.trim()
+            }
+    }
+
     private fun concatenateProperties(
         oldProps: String,
         newProps: String,
         inlineProps: String
     ): String {
-        val resultingProps = TreeMap<String, String>()
-        oldProps.split(";").filter { it.isNotBlank() }.forEach { el ->
-            val (selector, prop) = el.split(":")
-            resultingProps[selector.trim()] = prop.trim().replace(";", "")
-        }
+        val resultingProps = sortedMapOf<String, String>()
 
-        newProps.split(";").filter { it.isNotBlank() }.forEach { el ->
-            val (selector, prop) = el.split(":")
-            resultingProps[selector.trim()] = prop.trim().replace(";", "")
-        }
-
-        if (inlineProps.isNotBlank()) {
-            inlineProps.split(";").filter { it.isNotBlank() }.forEach { el ->
-                val (selector, prop) = el.split(":")
-                resultingProps[selector.trim()] = prop.trim().replace(";", "")
-            }
-        }
+        resultingProps.setCssProperties(oldProps)
+        resultingProps.setCssProperties(newProps)
+        resultingProps.setCssProperties(inlineProps)
 
         return resultingProps.map { "${it.key}: ${it.value}" }.joinToString("; ")
     }
@@ -551,36 +543,9 @@ class MailDeliveryService(override val di: DI) : DIAware {
         doc.body().appendChild(trackingPixel)
     }
 
-    fun getIncomingEmails(responseObserver: StreamObserver<IncomingEmail>, authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId) {
-        val future = mqSequenceFactory.listenForIncomingEmails(
-            authenticationId = authenticationId,
-            mailDomain = mailDomain,
-            accountId = accountId,
-            callback = {
-                val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
-                val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId)
-                if (email != null) {
-                    val incomingEmail = IncomingEmail.newBuilder()
-                        .setIncomingEmailId(incomingEmailId.toGrpc())
-                        .setSubject(email.subject)
-                        .setTo(NamedEmail(email.receiverEmail, email.receiverName).toGrpc())
-                        .setFrom(NamedEmail(email.fromEmail, email.fromName).toGrpc())
-                        .build()
-                    responseObserver.onNext(incomingEmail)
-                } else {
-                    LOGGER.warn { "Could not find email with id $incomingEmailId" }
-                }
-            }
-        )
-        future.addListener(Runnable {
-            responseObserver.onCompleted()
-        }, responseCloser)
-    }
-
     companion object {
         private val LOGGER = logger()
         private val PRINTER = JsonFormat.printer()!!
-        private val responseCloser = Executors.newCachedThreadPool()
     }
 }
 

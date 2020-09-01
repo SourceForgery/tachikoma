@@ -24,6 +24,7 @@ install:
 
 script:
 - |
+    set -eu
     if ( [ "${TRAVIS_BRANCH:-}" = "master" ] && grep -q ^version=.*-SNAPSHOT gradle.properties )  || [ "${TRAVIS_TAG:-}" != "" ]; then
       docker version
       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin

@@ -35,8 +35,14 @@ fun DependencyHandler.testImplementation(dependencyNotation: Any, configureClosu
 fun DependencyHandler.implementation(dependencyNotation: Any): Dependency =
     add("implementation", dependencyNotation)!!
 
+fun DependencyHandler.implementation(dependencyNotation: Any, configureClosure: ModuleDependency.() -> Unit): Dependency =
+    add("implementation", dependencyNotation, closureOf(configureClosure))
+
 fun DependencyHandler.api(dependencyNotation: Any): Dependency =
     add("api", dependencyNotation)!!
+
+fun DependencyHandler.api(dependencyNotation: Any, configureClosure: ModuleDependency.() -> Unit): Dependency =
+    add("api", dependencyNotation, closureOf(configureClosure))
 
 val Project.sourceSets: org.gradle.api.tasks.SourceSetContainer
     get() =
