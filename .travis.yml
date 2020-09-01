@@ -35,6 +35,7 @@ script:
       ./gradlew -p buildSrc dependencyUpdates
       ./gradlew dependencyUpdates
     fi
+    set +eu
 
 after_failure:
 - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then artifacts upload $(find */build/reports debug_log); fi
