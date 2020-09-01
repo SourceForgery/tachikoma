@@ -29,7 +29,6 @@ import javax.mail.Multipart
 import javax.mail.Part
 import javax.mail.Session
 import javax.mail.internet.ContentType
-import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import org.apache.logging.log4j.kotlin.logger
 import org.jsoup.Jsoup
@@ -127,71 +126,29 @@ class IncomingEmailService(override val di: DI) : DIAware {
                 .use { it.readText() }
         }
 
-    private fun Multipart.alternatives(): Sequence<Part> {
-        check(isMultipartAlternative) {
-            "For there to be alternatives, it needs to be a 'multipart/alternative' part (it was $contentType) "
-        }
-        return bodyParts
-            .mapNotNull { (_, part) ->
-                part.unroll { _, idx, _ -> idx == 0 }
-                    .firstOrNull()
-                    ?.second
-            }
-    }
-
     private fun IncomingEmail.Builder.includeParsedBodies(parsedMessage: MimeMessage) {
 
-        val (_, firstPart) = parsedMessage
-            // Only look in 2 places:
+        val allAlternatives = parsedMessage
+            // Only look in 2 places, either:
             // * the root part, ie the first
             // * in "multipart/alternative"
+            // Caveat: This actually supports multiparts in multiparts,
+            // but I have no idea if the standard does that.
             .unroll { content, idx, _ -> idx == 0 || content.isMultipartAlternative }
+            .map { (_, part) -> part }
+            .toList()
+
+        messageHtmlBody = allAlternatives
+            .mapNotNull { it.firstPart(TEXT_HTML) }
             .firstOrNull()
-            ?: return
+            ?.text()
+            ?: ""
 
-        val (html, text) = if (firstPart is MimeBodyPart) {
-            val parent = firstPart.parent
-                ?.takeIf { it.isMultipartAlternative }
-                ?: let {
-                    (firstPart.parent?.parent as? MimeBodyPart)?.parent
-                }
-                    ?.takeIf { it.isMultipartAlternative }
-            if (parent?.isMultipartAlternative == true) {
-                val alternatives = parent.alternatives()
-                    .toList()
-
-                val messageHtmlBody = alternatives
-                    .mapNotNull { it.firstPart(TEXT_HTML) }
-                    .firstOrNull()
-                    ?.text()
-                    ?: ""
-
-                val messageTextBody = alternatives
-                    .mapNotNull { it.firstPart(TEXT_PLAIN) }
-                    .firstOrNull()
-                    ?.text()
-                    ?: let { messageHtmlBody.stripHtml() }
-                messageHtmlBody to messageTextBody
-            } else {
-                onlyOnePart(firstPart)
-            }
-        } else {
-            onlyOnePart(firstPart)
-        }
-        messageHtmlBody = html
-        messageTextBody = text
-    }
-
-    private fun onlyOnePart(firstPart: Part): Pair<String, String> {
-        val contentType = ContentType(firstPart.contentType)
-        val firstPartText = firstPart.text()
-        return if (TEXT_HTML.match(contentType)) {
-            firstPartText to firstPartText.stripHtml()
-        } else if (TEXT_PLAIN.match(contentType)) {
-            "" to firstPartText
-        } else {
-            error("first part MUST be html or text. Error in code.")
-        }
+        messageTextBody = allAlternatives
+            .mapNotNull { it.firstPart(TEXT_PLAIN) }
+            .firstOrNull()
+            ?.text()
+            ?: let { messageHtmlBody.stripHtml() }
     }
 
     private val Multipart.isMultipartAlternative: Boolean
@@ -220,23 +177,26 @@ class IncomingEmailService(override val di: DI) : DIAware {
     private fun String.match(contentType: ContentType) =
         contentType.match(this)
 
-    private suspend fun SequenceScope<Pair<Int, Part>>.recursive(idx: Int, body: Part, selector: (Multipart, Int, Part) -> Boolean) {
+    private suspend fun SequenceScope<Pair<Int, Part>>.recursive(idx: Int, body: Part, pathSelector: (Multipart, Int, Part) -> Boolean) {
         when (val content = body.content) {
             is Multipart -> {
                 content.bodyParts
-                    .filter { (idx, part) -> selector(content, idx, part) }
+                    .filter { (idx, part) -> pathSelector(content, idx, part) }
                     .forEach { (idx, part) ->
-                        recursive(idx, part, selector)
+                        recursive(idx, part, pathSelector)
                     }
             }
             else -> yield(idx to body)
         }
     }
 
-    /** Recursively get all non-multi-part bodies **/
-    private fun Part.unroll(selector: (Multipart, Int, Part) -> Boolean): Sequence<Pair<Int, Part>> =
+    /** Recursively get all non-multi-part bodies
+     * @param pathSelector filters both which paths to go down, and what to collect. Ie, if not accepting multiparts,
+     *  the map will only contain the direct children of the Part-receiver
+     * **/
+    private fun Part.unroll(pathSelector: (Multipart, Int, Part) -> Boolean): Sequence<Pair<Int, Part>> =
         sequence {
-            recursive(0, this@unroll, selector)
+            recursive(0, this@unroll, pathSelector)
         }
 
     fun streamIncomingEmails(
