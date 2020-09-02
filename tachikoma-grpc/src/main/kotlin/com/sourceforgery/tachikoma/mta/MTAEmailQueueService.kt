@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.mta
 
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
+import com.sourceforgery.tachikoma.common.ExtractEmailMetadata
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -47,6 +48,7 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
     private val blockedEmailDAO: BlockedEmailDAO by instance()
     private val mqSender: MQSender by instance()
     private val incomingEmailAddressDAO: IncomingEmailAddressDAO by instance()
+    private val extractEmailMetadata: ExtractEmailMetadata by instance()
 
     fun getEmails(responseObserver: StreamObserver<EmailMessage>, mailDomain: MailDomain): StreamObserver<MTAQueuedNotification> {
         LOGGER.info { "MTA connected with mail domain $mailDomain " }
@@ -154,15 +156,16 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
             LOGGER.warn { "Received bounce to $recipientEmail" }
             return MailAcceptanceResult.AcceptanceStatus.IGNORED
         } else if (accountTypePair != null) {
-            val fromAddress = InternetAddress(request.from)
-            val fromEmail = Email(fromAddress.address)
             val accountDBO = accountTypePair.first
+
+            val emails = extractEmailMetadata.extract(body)
             val incomingEmailDBO = IncomingEmailDBO(
                 body = body,
-                fromEmail = fromEmail,
-                fromName = fromAddress.personal ?: "",
-                receiverEmail = recipientEmail,
-                receiverName = receiverAddress.personal ?: "",
+                mailFrom = Email(request.from),
+                recipient = Email(request.emailAddress),
+                fromEmails = emails.from,
+                toEmails = emails.to,
+                replyToEmails = emails.replyTo,
                 account = accountDBO,
                 subject = mimeMessage.subject
             )

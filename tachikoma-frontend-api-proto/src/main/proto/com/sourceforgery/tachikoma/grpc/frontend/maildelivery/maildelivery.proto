@@ -256,14 +256,26 @@ message IncomingEmailAttachment {
     string file_name = 12;
 }
 
-
 // IncomingEmail is an email that is sent to the mail server
 message IncomingEmail {
     IncomingEmailId incoming_email_id = 101;
 
-    NamedEmailAddress from = 201;
-    NamedEmailAddress to = 202;
+    NamedEmailAddress mail_from_old = 201 [deprecated = true];
+    NamedEmailAddress recipient_to_old = 202 [deprecated = true];
+    // Subject of the email
     string subject = 203;
+    // The From address in the headers
+    repeated NamedEmailAddress from = 204;
+    // The To address in the headers
+    repeated NamedEmailAddress to = 205;
+    // The Reply-To in the headers
+    repeated NamedEmailAddress reply_to = 206;
+    // MAIL FROM address. This is the previous email address that the email
+    // passed through, e.g. forwarding email or mailing list
+    EmailAddress mail_from = 207;
+    // RCPT TO To address. This is the email address that
+    // the last server tried
+    EmailAddress recipient_to = 208;
 
     // Optional. It must be explicitly requested.
     // This is the header (including the smtp envelope, but excluding body/attachments)
