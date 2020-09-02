@@ -5,8 +5,8 @@ import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.objects.query.QIncomingEmailDBO
 import io.ebean.Database
 import io.ebean.migration.ddl.DdlRunner
+import org.apache.logging.log4j.kotlin.logger
 import java.sql.Connection
-import kotlin.math.absoluteValue
 import org.intellij.lang.annotations.Language
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -39,11 +39,12 @@ class Version12(override val di: DI) : DatabaseUpgrade, EbeanHook, DIAware {
         DdlRunner(false, javaClass.simpleName)
             .runAll(content, connection)
         upgraded = true
-        return newVersion.absoluteValue
+        return newVersion
     }
 
     override fun postStart(database: Database) {
         if (upgraded) {
+            LOGGER.warn { "Running upgrade of incoming emails" }
             QIncomingEmailDBO(database)
                 .findEach {
                     val emails = extractEmailMetadata.extract(it.body)
@@ -53,5 +54,9 @@ class Version12(override val di: DI) : DatabaseUpgrade, EbeanHook, DIAware {
                     database.save(it)
                 }
         }
+    }
+
+    companion object {
+        private val LOGGER = logger()
     }
 }
