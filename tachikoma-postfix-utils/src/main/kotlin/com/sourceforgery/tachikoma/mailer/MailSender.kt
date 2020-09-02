@@ -1,54 +1,65 @@
 package com.sourceforgery.tachikoma.mailer
 
+import com.linecorp.armeria.common.RequestContext
+import com.linecorp.armeria.server.ServiceRequestContext
 import com.sourceforgery.tachikoma.expectit.emptyBuffer
 import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
 import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
+import io.grpc.stub.ClientCallStreamObserver
+import io.grpc.stub.ClientResponseObserver
 import io.grpc.stub.StreamObserver
-import java.io.IOException
-import java.io.PrintWriter
-import java.net.Socket
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.sf.expectit.Expect
 import net.sf.expectit.ExpectBuilder
 import net.sf.expectit.matcher.Matchers.regexp
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
+import java.io.IOException
+import java.io.PrintWriter
+import java.net.Socket
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 
 class MailSender(
     private val stub: MTAEmailQueueGrpc.MTAEmailQueueStub
 ) {
     private lateinit var response: StreamObserver<MTAQueuedNotification>
     private val executor = Executors.newCachedThreadPool()
+    private val scope = GlobalScope
 
     fun start() {
         response = stub.getEmails(fromServerStreamObserver)
         LOGGER.info { "Connecting. Trying to listen for emails" }
     }
 
-    @Throws(IOException::class)
-    fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
+    suspend fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
         LOGGER.info { "Got email: ${emailMessage.emailId}" }
 
         val builder = MTAQueuedNotification.newBuilder()
             .setEmailId(emailMessage.emailId)
         val success = try {
-            Socket("localhost", 25).use { smtpSocket ->
-                IoBuilder.forLogger("smtp.debug")
-                    .setLevel(Level.TRACE)
-                    .buildPrintWriter()!!
-                    .use { os ->
-                        createExpect(os, smtpSocket).use { expect ->
-                            val queueId = ssmtpSendEmail(expect, emailMessage)
-                            builder.queueId = queueId
-                            LOGGER.info { "Successfully send email: ${emailMessage.emailId} with QueueId: $queueId" }
-                            true
+            withContext(Dispatchers.IO) {
+                Socket("localhost", 25).use { smtpSocket ->
+                    IoBuilder.forLogger("smtp.debug")
+                        .setLevel(Level.TRACE)
+                        .buildPrintWriter()!!
+                        .use { os ->
+                            createExpect(os, smtpSocket).use { expect ->
+                                val queueId = ssmtpSendEmail(expect, emailMessage)
+                                builder.queueId = queueId
+                                LOGGER.info { "Successfully send email: ${emailMessage.emailId} with QueueId: $queueId" }
+                                true
+                            }
                         }
-                    }
+                }
             }
         } catch (e: Exception) {
             LOGGER.error(e) { "Failed to send message" }
@@ -105,25 +116,37 @@ class MailSender(
         // quit
     }
 
-    private val fromServerStreamObserver = object : StreamObserver<EmailMessage> {
+    private val fromServerStreamObserver = object : ClientResponseObserver<MTAQueuedNotification, EmailMessage> {
         override fun onError(t: Throwable) {
             if (!Thread.currentThread().isInterrupted) {
-                LOGGER.warn { "Got error from gRPC server with message: ${t.message}" }
-                Thread.sleep(1000)
-                start()
+                scope.launch {
+                    LOGGER.warn { "Got error from gRPC server with message: ${t.message}" }
+                    delay(1000)
+                    start()
+                }
             }
         }
 
         override fun onCompleted() {
-            response.onCompleted()
-            Thread.sleep(1000)
-            start()
+            scope.launch {
+                response.onCompleted()
+                delay(1000)
+                start()
+            }
         }
 
         override fun onNext(value: EmailMessage) {
-            val status = sendEmail(value)
-            response.onNext(status)
-            LOGGER.info { "Send email: ${value.emailId} with status ${status.success} and queueId ${status.queueId}" }
+            scope.launch {
+                val status = sendEmail(value)
+                response.onNext(status)
+                LOGGER.info { "Send email: ${value.emailId} with status ${status.success} and queueId ${status.queueId}" }
+            }
+        }
+
+        override fun beforeStart(requestStream: ClientCallStreamObserver<MTAQueuedNotification>) {
+            requestStream.setOnReadyHandler {
+                LOGGER.info { "MailSender is now connected " }
+            }
         }
     }
 
