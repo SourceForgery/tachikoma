@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.postfix
 
 import com.linecorp.armeria.client.Clients
-import com.sourceforgery.jersey.uribuilder.addPort
 import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.config.Configuration
