@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.database.hooks
 
-import io.ebean.EbeanServer
+import io.ebean.Database
 
-abstract class EbeanHook {
-    open fun postStart(ebeanServer: EbeanServer) {}
+interface EbeanHook {
+    fun postStart(database: Database)
 }

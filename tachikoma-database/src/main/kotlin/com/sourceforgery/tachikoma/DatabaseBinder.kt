@@ -30,6 +30,7 @@ import com.sourceforgery.tachikoma.database.server.PostgresqlDataSourceProvider
 import com.sourceforgery.tachikoma.database.upgrades.Version1
 import com.sourceforgery.tachikoma.database.upgrades.Version10
 import com.sourceforgery.tachikoma.database.upgrades.Version11
+import com.sourceforgery.tachikoma.database.upgrades.Version12
 import com.sourceforgery.tachikoma.database.upgrades.Version2
 import com.sourceforgery.tachikoma.database.upgrades.Version3
 import com.sourceforgery.tachikoma.database.upgrades.Version4
@@ -86,4 +87,5 @@ private val databaseUpgradesModule = DI.Module("databaseUpgrades") {
     bind<Version9>() with provider { Version9() }
     bind<Version10>() with provider { Version10() }
     bind<Version11>() with provider { Version11() }
+    bind<Version12>() with provider { Version12(di) }
 }
