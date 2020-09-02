@@ -8,7 +8,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     applicationName = "tachikoma-webserver"
 
-    baseImage = "ubuntu:19.10"
+    baseImage = "ubuntu:20.04"
     maintainer = "tachikoma@sourceforgery.com"
 
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
