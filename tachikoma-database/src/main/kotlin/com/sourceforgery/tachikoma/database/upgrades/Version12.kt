@@ -22,13 +22,13 @@ class Version12(override val di: DI) : DatabaseUpgrade, EbeanHook, DIAware {
         @Language("PostgreSQL")
         val content = """
             ALTER TABLE e_incoming_email
-            RENAME COLUMN from_email TO mail_from_email;
+            RENAME COLUMN from_email TO mail_from;
             ALTER TABLE e_incoming_email
-                RENAME COLUMN from_name TO mail_from_name;
+                DROP COLUMN from_name;
             ALTER TABLE e_incoming_email
-                RENAME COLUMN receiver_email TO recipient_email;
+                RENAME COLUMN receiver_email TO recipient;
             ALTER TABLE e_incoming_email
-                RENAME COLUMN receiver_name TO recipient_name;
+                DROP COLUMN receiver_name;
                 
             ALTER TABLE e_incoming_email
                 ADD COLUMN from_emails jsonb not null default '[]',
