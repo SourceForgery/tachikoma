@@ -22,7 +22,7 @@ class Version12(override val di: DI) : DatabaseUpgrade, EbeanHook, DIAware {
         @Language("PostgreSQL")
         val content = """
             ALTER TABLE e_incoming_email
-            RENAME COLUMN from_email TO mail_from;
+                RENAME COLUMN from_email TO mail_from;
             ALTER TABLE e_incoming_email
                 DROP COLUMN from_name;
             ALTER TABLE e_incoming_email
