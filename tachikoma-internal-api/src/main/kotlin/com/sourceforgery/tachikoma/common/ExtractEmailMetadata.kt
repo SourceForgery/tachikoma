@@ -31,7 +31,7 @@ class ExtractEmailMetadata(override val di: DI) : DIAware {
             )
         } catch (e: Exception) {
             LOGGER.warn(e) { "Could not parse emails in ${mimeMessage.messageID}" }
-            EmailMetadata(listOf(), listOf(), listOf())
+            EmailMetadata(listOf(), listOf(), listOf(), listOf())
         }
     }
 
