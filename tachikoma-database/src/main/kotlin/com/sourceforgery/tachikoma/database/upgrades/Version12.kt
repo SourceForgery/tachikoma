@@ -5,8 +5,8 @@ import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.objects.query.QIncomingEmailDBO
 import io.ebean.Database
 import io.ebean.migration.ddl.DdlRunner
-import org.apache.logging.log4j.kotlin.logger
 import java.sql.Connection
+import org.apache.logging.log4j.kotlin.logger
 import org.intellij.lang.annotations.Language
 import org.kodein.di.DI
 import org.kodein.di.DIAware
