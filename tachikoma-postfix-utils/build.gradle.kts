@@ -9,6 +9,9 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:$protocVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
+    implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
+    implementation("org.apache.logging.log4j:log4j-jul:$log4j2Version")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
 
     implementation(project(":jersey-uri-builder"))
     implementation(project(":tachikoma-common"))
