@@ -87,5 +87,5 @@ private val databaseUpgradesModule = DI.Module("databaseUpgrades") {
     bind<Version9>() with provider { Version9() }
     bind<Version10>() with provider { Version10() }
     bind<Version11>() with provider { Version11() }
-    bind<Version12>() with provider { Version12(di) }
+    bind<Version12>() with singleton { Version12(di) }
 }
