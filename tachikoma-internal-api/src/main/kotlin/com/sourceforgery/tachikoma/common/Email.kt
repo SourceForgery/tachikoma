@@ -1,5 +1,7 @@
 package com.sourceforgery.tachikoma.common
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 
 class Email {
@@ -9,12 +11,14 @@ class Email {
         this.address = "$localPart@$domain"
     }
 
+    @JsonCreator
     constructor(address: String) {
         this.address = address
         domain = MailDomain(address.substringAfter('@'))
         localPart = address.substringBefore('@')
     }
 
+    @get:JsonValue
     val address: String
     val domain: MailDomain
     val localPart: String
