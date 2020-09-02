@@ -27,19 +27,19 @@ readEnv() {
 url="$(readEnv TACHIKOMA_URL)"
 mailDomainMx="$(readEnv MAIL_DOMAIN_MX)"
 
-tmp1="${url##*@}"
-# Hostname is the tachikoma MX domain
-TACHIKOMA_HOSTNAME="${tmp1%%[/:]*}"
-
-tmp2="${url#*://}"
 # Username is maildomain
+tmp2="${url#*://}"
 MAIL_DOMAIN="${tmp2%%:*}"
 
 echo "@${TACHIKOMA_HOSTNAME} whatever" >/etc/postfix/vmailbox
 
 postconf -e myhostname="${TACHIKOMA_HOSTNAME}"
+postconf -e mydomain="${MAIL_DOMAIN}"
 
-if [ ${mailDomainMx:-false} = true ]; then
+#No local delivery
+postconf -e mydestination=
+
+if [ "${mailDomainMx:-false}" = true ]; then
   # Listen for incoming emails to the main domain (i.e. not just the TACHIKOMA_HOSTNAME)
   postconf -e virtual_mailbox_domains="$MAIL_DOMAIN,$TACHIKOMA_HOSTNAME"
   echo "@$MAIL_DOMAIN whatever" >>/etc/postfix/vmailbox
@@ -51,6 +51,8 @@ fi
 postconf -e "bounce_service_name=discard"
 postconf -e "maximal_backoff_time=14400s"
 postconf -e "maximal_queue_lifetime=3d"
+postconf -e "bounce_queue_lifetime=3d"
+postconf -e "lmtp_destination_recipient_limit=1"
 
 postconf -e virtual_transport=lmtp:unix:tachikoma/incoming_tachikoma
 postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
@@ -68,8 +70,8 @@ if [[ -n "$(find /etc/postfix/certs -iname '*.crt')" && -n "$(find /etc/postfix/
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
 fi
 
-
 # OpenDKIM
+# shellcheck disable=SC2010
 if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q domain; then
   postconf -e milter_protocol=2
   postconf -e milter_default_action=accept
