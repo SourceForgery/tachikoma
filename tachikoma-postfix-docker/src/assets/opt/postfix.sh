@@ -26,26 +26,27 @@ readEnv() {
 
 url="$(readEnv TACHIKOMA_URL)"
 mailDomainMx="$(readEnv MAIL_DOMAIN_MX)"
+hostname="$(readEnv TACHIKOMA_HOSTNAME)"
 
 # Username is maildomain
 tmp2="${url#*://}"
 MAIL_DOMAIN="${tmp2%%:*}"
 
-echo "@${TACHIKOMA_HOSTNAME} whatever" >/etc/postfix/vmailbox
+echo "@${hostname} whatever" >/etc/postfix/vmailbox
 
-postconf -e myhostname="${TACHIKOMA_HOSTNAME}"
+postconf -e myhostname="${hostname}"
 postconf -e mydomain="${MAIL_DOMAIN}"
 
 #No local delivery
 postconf -e mydestination=
 
 if [ "${mailDomainMx:-false}" = true ]; then
-  # Listen for incoming emails to the main domain (i.e. not just the TACHIKOMA_HOSTNAME)
-  postconf -e virtual_mailbox_domains="$MAIL_DOMAIN,$TACHIKOMA_HOSTNAME"
+  # Listen for incoming emails to the main domain (i.e. not just the hostname)
+  postconf -e virtual_mailbox_domains="$MAIL_DOMAIN,$hostname"
   echo "@$MAIL_DOMAIN whatever" >>/etc/postfix/vmailbox
 else
-  # Only listen for incoming unsubscribe/bounce emails (i.e. only listen on TACHIKOMA_HOSTNAME)
-  postconf -e virtual_mailbox_domains="$TACHIKOMA_HOSTNAME"
+  # Only listen for incoming unsubscribe/bounce emails (i.e. only listen on hostname)
+  postconf -e virtual_mailbox_domains="$hostname"
 fi
 
 postconf -e "bounce_service_name=discard"
