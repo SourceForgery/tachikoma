@@ -1,7 +1,5 @@
 package com.sourceforgery.tachikoma.mailer
 
-import com.linecorp.armeria.common.RequestContext
-import com.linecorp.armeria.server.ServiceRequestContext
 import com.sourceforgery.tachikoma.expectit.emptyBuffer
 import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
 import com.sourceforgery.tachikoma.mta.EmailMessage
@@ -10,6 +8,11 @@ import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import io.grpc.stub.ClientCallStreamObserver
 import io.grpc.stub.ClientResponseObserver
 import io.grpc.stub.StreamObserver
+import java.io.PrintWriter
+import java.net.Socket
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -21,12 +24,6 @@ import net.sf.expectit.matcher.Matchers.regexp
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
-import java.io.IOException
-import java.io.PrintWriter
-import java.net.Socket
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
 
 class MailSender(
     private val stub: MTAEmailQueueGrpc.MTAEmailQueueStub
