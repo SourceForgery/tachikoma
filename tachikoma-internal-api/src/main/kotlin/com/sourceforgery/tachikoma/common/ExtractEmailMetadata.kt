@@ -51,5 +51,5 @@ internal constructor(
 internal fun Array<Address>.parseNamedEmails(): List<NamedEmail> =
     asSequence()
         .filterIsInstance<InternetAddress>()
-        .map { NamedEmail(it.address, it.personal) }
+        .map { NamedEmail(it.address, it.personal ?: "") }
         .toList()
