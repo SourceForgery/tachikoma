@@ -143,10 +143,17 @@ To revert to the default post fix behaviour remove the following line from the f
 
 `postconf -e "bounce_service_name=discard"`
 
+Every _incoming_ email with multiple receivers will be split up into
+several identical emails.
+
+```postconf -e "lmtp_destination_recipient_limit=1"```
+
+
 The default retry behaviour has also been altered for deferred email to retry in 14400s (4 hours) instead of 4000s (just over an hour) and it will keep trying
 for three days instead of five. To revert to the default behaviour remove these lines 
 
 ```
 postconf -e "maximal_backoff_time=14400s"
 postconf -e "maximal_queue_lifetime=3d"
+postconf -e "bounce_queue_lifetime=3d"
 ```
