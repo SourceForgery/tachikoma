@@ -35,7 +35,7 @@ class LMTPServer(
                 output.sendLine("250 8BITMIME")
 
                 val from = input
-                    .assertRegex("MAIL FROM: *<(.*)>")
+                    .assertRegex("MAIL FROM: *<(.*)>.*")
                     .groupValues[1]
                     .substringBeforeLast(' ')
                 output.sendLine("250 OK")
