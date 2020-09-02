@@ -41,5 +41,5 @@ fun Project.dockerSetup() {
 
     val dockerTask by tasks.registering() {}
 
-    tasks["assemble"].dependsOn(dockerTask)
+    tasks["build"].dependsOn(dockerTask)
 }
