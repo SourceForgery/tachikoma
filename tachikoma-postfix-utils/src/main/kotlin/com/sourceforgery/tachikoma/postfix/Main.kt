@@ -22,7 +22,7 @@ internal constructor(
     private val configuration: Configuration
 ) {
 
-    private val tachikomaUrl = configuration.tachikomaUrl.addPort()
+    private val tachikomaUrl = configuration.tachikomaUrl
 
     fun run() {
         LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
