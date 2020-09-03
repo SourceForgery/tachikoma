@@ -13,8 +13,8 @@ import java.net.Socket
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,11 +26,11 @@ import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
 
 class MailSender(
-    private val stub: MTAEmailQueueGrpc.MTAEmailQueueStub
+    private val stub: MTAEmailQueueGrpc.MTAEmailQueueStub,
+    private val scope: CoroutineScope
 ) {
     private lateinit var response: StreamObserver<MTAQueuedNotification>
     private val executor = Executors.newCachedThreadPool()
-    private val scope = GlobalScope
 
     fun start() {
         response = stub.getEmails(fromServerStreamObserver)
