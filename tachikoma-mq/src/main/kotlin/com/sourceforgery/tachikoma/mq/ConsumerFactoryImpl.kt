@@ -167,14 +167,14 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return future
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<DeliveryNotificationMessage> {
         val queue = DeliveryNotificationMessageQueue(authenticationId)
         setupAuthentication(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
             accountId = accountId
         )
-        return listenOnQueue(queue, callback)
+        return listenOnQueueFlow(queue)
     }
 
     override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: suspend (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
