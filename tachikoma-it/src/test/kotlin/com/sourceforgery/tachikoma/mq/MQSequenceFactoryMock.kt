@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.runBlocking
@@ -17,14 +18,14 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 
 class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
-    val deliveryNotifications = LinkedBlockingQueue<QueueMessageWrap<DeliveryNotificationMessage>>(1)
+    val deliveryNotifications = Channel<DeliveryNotificationMessage>(UNLIMITED)
     val jobs = LinkedBlockingQueue<QueueMessageWrap<JobMessage>>(1)
     val outgoingEmails = LinkedBlockingQueue<QueueMessageWrap<OutgoingEmailMessage>>(1)
-    val incomingEmails = Channel<IncomingEmailNotificationMessage>(1)
+    val incomingEmails = Channel<IncomingEmailNotificationMessage>(UNLIMITED)
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
-        return listenOnQueue(deliveryNotifications, callback)
-    }
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<DeliveryNotificationMessage> =
+        deliveryNotifications
+            .consumeAsFlow()
 
     private fun <X : Any> listenOnQueue(queue: BlockingQueue<QueueMessageWrap<X>>, callback: suspend (X) -> Unit): SettableFuture<Void> {
         val future = SettableFuture.create<Void>()
