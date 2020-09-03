@@ -193,6 +193,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         }
         val refreshedTransaction = emailSendTransactionDAO.get(transaction.id)!!
         for (emailDBO in refreshedTransaction.emails) {
+            LOGGER.trace { "Queueing Email(${emailDBO.id}) for AccountId(${auth.account}) sending it at $requestedSendTime" }
             mqSender.queueJob(
                 jobMessageFactory.createSendEmailJob(
                     requestedSendTime = requestedSendTime,

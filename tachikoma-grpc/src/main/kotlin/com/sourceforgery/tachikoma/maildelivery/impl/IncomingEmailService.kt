@@ -200,6 +200,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
                 val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
                 if (email != null) {
                     val incomingEmail = email.toGrpc(parameters)
+                    LOGGER.trace { "Sending incoming email ($incomingEmailId) to AccountId ($accountId)" }
                     responseObserver.onNext(incomingEmail)
                 } else {
                     LOGGER.warn { "Could not find email with id $incomingEmailId" }
