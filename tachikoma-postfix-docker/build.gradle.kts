@@ -6,7 +6,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
     dependsOn(tarTask)
     applicationName = "tachikoma-postfix"
 
-    baseImage = "ubuntu:19.10"
+    baseImage = "ubuntu:20.04"
 
     maintainer = "tachikoma@sourceforgery.com"
 
@@ -15,12 +15,15 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
     setEnvironment("PYTHONIOENCODING", "utf-8")
 
-    runCommand("""apt-get update && \
-                  apt-get -y dist-upgrade && \
-                  apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-11-jdk-headless netcat-openbsd net-tools && \
-                  apt-get clean && \
-                  rm -rf /var/cache/apt/ /var/lib/apt/lists/*
-              """)
+    runCommand("""
+        apt-get update &&
+        apt-get -y dist-upgrade &&
+        apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-11-jdk-headless netcat-openbsd net-tools &&
+        apt-get clean &&
+        rm -rf /var/cache/apt/ /var/lib/apt/lists/* &&
+        echo "LANG=C.UTF-8" > /etc/default/locale
+        """.trimMargin().replace('\n', ' ')
+    )
     runCommand("pip3 install --no-cache-dir honcho==1.0.1")
 
     exposePort(25)

@@ -4,6 +4,9 @@ import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.RequestContext
 
-interface RestExceptionCatcher<T : Throwable> {
+/** Only marker interface for kodein. Don't implement this **/
+interface IRestExceptionCatcher
+
+interface RestExceptionCatcher<T : Throwable> : IRestExceptionCatcher {
     fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: T): HttpResponse
 }

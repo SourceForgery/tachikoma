@@ -46,12 +46,27 @@ import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import org.apache.logging.log4j.kotlin.logger
+import org.jetbrains.annotations.TestOnly
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URI
 import java.nio.charset.StandardCharsets
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset.UTC
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.HashMap
 import java.util.Properties
 import java.util.StringTokenizer
@@ -63,19 +78,6 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.launch
-import org.apache.logging.log4j.kotlin.logger
-import org.jetbrains.annotations.TestOnly
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import org.kodein.di.DI
-import org.kodein.di.DIAware
-import org.kodein.di.instance
 
 class MailDeliveryService(override val di: DI) : DIAware {
     private val trackingConfig: TrackingConfig by instance()
@@ -92,14 +94,13 @@ class MailDeliveryService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val messageIdFactory: MessageIdFactory by instance()
     private val tachikomaScope: TachikomaScope by instance()
+    private val clock: Clock by instance()
 
-    fun sendEmail(
+    suspend fun sendEmail(
         request: OutgoingEmail,
         authenticationId: AuthenticationId
-    ): Flow<EmailQueueStatus> {
-        val channel = Channel<EmailQueueStatus>(capacity = UNLIMITED)
-
-        tachikomaScope.launch {
+    ): Flow<EmailQueueStatus> =
+        flow {
             val auth = authenticationDAO.getActiveById(authenticationId)!!
             val fromEmail = request.from.toNamedEmail().address
             if (fromEmail.domain != auth.account.mailDomain) {
@@ -139,7 +140,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                     )
 
                     if (blockedReason != null) {
-                        channel.send(
+                        emit(
                             EmailQueueStatus.newBuilder()
                                 .setRejected(
                                     Rejected.newBuilder()
@@ -177,10 +178,12 @@ class MailDeliveryService(override val di: DI) : DIAware {
                     val pair = when (request.bodyCase) {
                         OutgoingEmail.BodyCase.STATIC -> getStaticBody(
                             request = request,
+                            sendAt = requestedSendTime,
                             emailDBO = emailDBO
                         )
                         OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
                             request = request,
+                            sendAt = requestedSendTime,
                             recipient = recipient,
                             emailDBO = emailDBO
                         )
@@ -193,6 +196,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
             }
             val refreshedTransaction = emailSendTransactionDAO.get(transaction.id)!!
             for (emailDBO in refreshedTransaction.emails) {
+                LOGGER.trace { "Queueing Email(${emailDBO.id}) for AccountId(${auth.account.id}) sending it at $requestedSendTime" }
                 mqSender.queueJob(
                     jobMessageFactory.createSendEmailJob(
                         requestedSendTime = requestedSendTime,
@@ -201,7 +205,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                     )
                 )
 
-                channel.send(
+                emit(
                     EmailQueueStatus.newBuilder()
                         .setEmailId(emailDBO.id.toGrpcInternal())
                         .setQueued(Queued.getDefaultInstance())
@@ -211,13 +215,13 @@ class MailDeliveryService(override val di: DI) : DIAware {
                 )
             }
         }
-        return channel.consumeAsFlow()
-    }
+
 
     private fun getTemplateBody(
         request: OutgoingEmail,
         recipient: EmailRecipient,
-        emailDBO: EmailDBO
+        emailDBO: EmailDBO,
+        sendAt: Instant
     ): Pair<String, String> {
         val template = request.template
         if (template.htmlTemplate.isBlank() && template.plaintextTemplate.isBlank()) {
@@ -240,6 +244,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         val subject = mergeTemplate(template.subject, globalVars, recipientVars)
         return subject to wrapAndPackBody(
             request = request,
+            sendAt = sendAt,
             htmlBody = htmlBody,
             plaintextBody = plaintextBody.emptyToNull(),
             subject = subject,
@@ -249,7 +254,8 @@ class MailDeliveryService(override val di: DI) : DIAware {
 
     private fun getStaticBody(
         request: OutgoingEmail,
-        emailDBO: EmailDBO
+        emailDBO: EmailDBO,
+        sendAt: Instant
     ): Pair<String, String> {
         val static = request.static
         val htmlBody = static.htmlBody.emptyToNull()
@@ -257,6 +263,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
 
         return static.subject to wrapAndPackBody(
             request = request,
+            sendAt = sendAt,
             htmlBody = htmlBody,
             plaintextBody = plaintextBody,
             subject = static.subject,
@@ -279,7 +286,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         template: String,
         vararg scopes: HashMap<String, Any>
     ) = StringWriter().use {
-        DefaultMustacheFactory()
+        DefaultMustacheFactory { null }
             .compile(StringReader(template), "html")
             .execute(it, scopes)
         it.toString()
@@ -287,6 +294,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
 
     private fun wrapAndPackBody(
         request: OutgoingEmail,
+        sendAt: Instant,
         htmlBody: String?,
         plaintextBody: String?,
         subject: String,
@@ -300,6 +308,14 @@ class MailDeliveryService(override val di: DI) : DIAware {
         val message = MimeMessage(session)
         message.setFrom(request.from.toNamedEmail().toAddress())
         message.setSubject(subject, "UTF-8")
+        val sendDate = ZonedDateTime.ofInstant(
+            sendAt.coerceAtLeast(clock.instant()),
+            request.timeZone.takeUnless { request.timeZone.isEmpty() }
+                ?.let { ZoneId.of(it) }
+                ?: UTC
+        )
+        message.setHeader("Date", mailDateFormat.format(sendDate))
+
         message.setRecipients(Message.RecipientType.TO, arrayOf(emailDBO.recipientNamedEmail.toAddress()))
 
         if (request.replyTo.email.isNotBlank()) {
@@ -322,46 +338,62 @@ class MailDeliveryService(override val di: DI) : DIAware {
             message.addHeader(key, value)
         }
 
-        val multipart = MimeMultipart("alternative")
+        val mixed = MimeMultipart("mixed")
 
-        val htmlDoc = parseHTML(
-            htmlBody = htmlBody,
-            plaintextBody = plaintextBody ?: "",
-            inlineCSS = request.inlineCss
-        ).apply {
-            outputSettings()
-                .indentAmount(0)
-                .prettyPrint(false)
+        mixed.addMultipart("alternative") {
+            val htmlDoc = parseHTML(
+                htmlBody = htmlBody,
+                plaintextBody = plaintextBody ?: "",
+                inlineCSS = request.inlineCss
+            ).apply {
+                outputSettings()
+                    .indentAmount(0)
+                    .prettyPrint(false)
+            }
+
+            replaceLinks(htmlDoc, emailDBO.id, unsubscribeUri)
+            injectTrackingPixel(htmlDoc, emailDBO.id)
+
+            val plainText = { getPlainText(htmlDoc) }
+
+            addBodyPart {
+                setContent(plaintextBody ?: plainText(), "text/plain; charset=utf-8")
+                setHeader("Content-Transfer-Encoding", "quoted-printable")
+            }
+
+            addMultipart("related") {
+                addBodyPart {
+                    setContent(htmlDoc.outerHtml(), "text/html; charset=utf-8")
+                    setHeader("Content-Transfer-Encoding", "quoted-printable")
+                }
+
+                for (relatedAttachment in request.relatedAttachmentsList) {
+                    addBodyPart {
+                        require(relatedAttachment.contentId.isNotBlank()) {
+                            "Content id of related attachment cannot be empty"
+                        }
+                        contentID = relatedAttachment.contentId
+                        dataHandler = DataHandler(ByteArrayDataSource(relatedAttachment.data.toByteArray(), relatedAttachment.contentType))
+                        if (relatedAttachment.fileName.isNotBlank()) {
+                            fileName = relatedAttachment.fileName
+                        }
+                    }
+                }
+            }
         }
-
-        replaceLinks(htmlDoc, emailDBO.id, unsubscribeUri)
-        injectTrackingPixel(htmlDoc, emailDBO.id)
-
-        val plaintextPart = MimeBodyPart()
-        val plainText = getPlainText(htmlDoc)
-
-        plaintextPart.setContent(plaintextBody ?: plainText, "text/plain; charset=utf-8")
-        plaintextPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
-        multipart.addBodyPart(plaintextPart)
-
-        val htmlPart = MimeBodyPart()
-        htmlPart.setContent(htmlDoc.outerHtml(), "text/html; charset=utf-8")
-        htmlPart.setHeader("Content-Transfer-Encoding", "quoted-printable")
-        multipart.addBodyPart(htmlPart)
 
         for (attachment in request.attachmentsList) {
-            val attachmentBody = MimeBodyPart()
-            @Suppress("DEPRECATION")
-            val content = attachment.data.toByteArray()
+            mixed.addBodyPart {
+                val content = attachment.data.toByteArray()
 
-            attachmentBody.dataHandler = DataHandler(ByteArrayDataSource(content, attachment.contentType))
-            if (attachment.fileName.isNotBlank()) {
-                attachmentBody.fileName = attachment.fileName
+                dataHandler = DataHandler(ByteArrayDataSource(content, attachment.contentType))
+                if (attachment.fileName.isNotBlank()) {
+                    fileName = attachment.fileName
+                }
             }
-            multipart.addBodyPart(attachmentBody)
         }
 
-        message.setContent(multipart)
+        message.setContent(mixed)
         message.saveChanges()
         message.setHeader("Message-ID", "<${emailDBO.messageId}>")
 
@@ -553,9 +585,24 @@ class MailDeliveryService(override val di: DI) : DIAware {
         doc.body().appendChild(trackingPixel)
     }
 
+    @Suppress("SameParameterValue")
+    private fun MimeMultipart.addMultipart(subtype: String, block: MimeMultipart.() -> Unit) =
+        MimeMultipart(subtype).apply(block)
+            .also { multipart ->
+                addBodyPart {
+                    setContent(multipart)
+                }
+            }
+
+    private fun MimeMultipart.addBodyPart(block: MimeBodyPart.() -> Unit): MimeMultipart {
+        addBodyPart(MimeBodyPart().apply(block))
+        return this
+    }
+
     companion object {
         private val LOGGER = logger()
         private val PRINTER = JsonFormat.printer()!!
+        private val mailDateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss Z (z)")
     }
 }
 

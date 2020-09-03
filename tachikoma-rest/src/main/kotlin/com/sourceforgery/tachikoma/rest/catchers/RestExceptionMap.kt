@@ -19,7 +19,7 @@ import org.kodein.di.instance
 
 class RestExceptionMap(override val di: DI) : DIAware {
     private val debugConfig: DebugConfig by instance()
-    private val catchers by allInstances<RestExceptionCatcher<Throwable>>()
+    private val catchers by allInstances<IRestExceptionCatcher>()
     private val map = ConcurrentHashMap<Class<Throwable>, RestExceptionCatcher<Throwable>>()
 
     private val defaultCatcher = object : RestExceptionCatcher<Throwable> {
@@ -59,7 +59,9 @@ class RestExceptionMap(override val di: DI) : DIAware {
     private fun findClass(key: Class<Throwable>): RestExceptionCatcher<Throwable> {
         var clazz: Class<*> = key
         while (clazz != Object::class.java) {
-            catchers.firstOrNull { getGenerics(it) == clazz }
+            catchers
+                .filterIsInstance<RestExceptionCatcher<Throwable>>()
+                .firstOrNull { getGenerics(it) == clazz }
                 ?.let {
                     return it
                 }

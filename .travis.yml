@@ -29,12 +29,13 @@ script:
       docker version
       echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       export DOCKER_PUSH=true
-      ./gradlew build publish --stacktrace --debug -Dorg.gradle.parallel=false >debug_log
+      ./gradlew build publish --stacktrace -Dorg.gradle.parallel=false
     else
       ./gradlew check
       ./gradlew -p buildSrc dependencyUpdates
       ./gradlew dependencyUpdates
     fi
+    set +eu
 
 after_failure:
 - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then artifacts upload $(find */build/reports debug_log); fi

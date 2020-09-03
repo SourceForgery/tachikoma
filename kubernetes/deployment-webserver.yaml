@@ -18,6 +18,7 @@ spec:
       containers:
       - name: tachikoma-webserver
         image: sourceforgery/tachikoma-webserver:${version}
+        imagePullPolicy: Always
         ports:
         - name: webserver-port
           protocol: TCP

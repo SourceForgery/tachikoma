@@ -70,11 +70,15 @@ class IncomingEmailService(override val di: DI) : DIAware {
             val session = Session.getDefaultInstance(Properties())
             MimeMessage(session, ByteArrayInputStream(body))
         }
+        @Suppress("DEPRECATION")
         return IncomingEmail.newBuilder()
             .setIncomingEmailId(id.toGrpc())
             .setSubject(subject)
-            .setTo(NamedEmail(receiverEmail, receiverName).toGrpc())
-            .setFrom(NamedEmail(fromEmail, fromName).toGrpc())
+            .setMailFromOld(NamedEmail(mailFrom, "").toGrpc())
+            .setRecipientToOld(NamedEmail(recipient, "").toGrpc())
+            .addAllFrom(fromEmails.map { it.toGrpc() })
+            .addAllReplyTo(replyToEmails.map { it.toGrpc() })
+            .addAllTo(toEmails.map { it.toGrpc() })
             .onlyIf(parameters.includeMessageParsedBodies) {
                 includeParsedBodies(parsedMessage)
             }
@@ -211,6 +215,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
             val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
             val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
             if (email != null) {
+                LOGGER.trace { "Sending incoming email ($incomingEmailId) to AccountId ($accountId)" }
                 email.toGrpc(parameters)
             } else {
                 LOGGER.warn { "Could not find email with id $incomingEmailId" }

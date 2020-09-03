@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.postfix
 
 import com.linecorp.armeria.client.Clients
-import com.sourceforgery.jersey.uribuilder.addPort
 import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.config.Configuration
@@ -13,16 +12,26 @@ import com.sourceforgery.tachikoma.syslog.Syslogger
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
 import java.time.Duration
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
 
 class Main
 internal constructor(
-    private val configuration: Configuration
+    configuration: Configuration
 ) {
 
-    private val tachikomaUrl = configuration.tachikomaUrl.addPort()
+    private val tachikomaUrl = configuration.tachikomaUrl
+
+    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, exception ->
+        LOGGER.error(exception) { "Coroutine uncaught exception" }
+    }
+
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob() + coroutineExceptionHandler)
 
     fun run() {
         LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
@@ -33,9 +42,9 @@ internal constructor(
             .responseTimeout(Duration.ofDays(365))
             .writeTimeout(Duration.ofDays(365))
 
-        MailSender(builder.build(MTAEmailQueueGrpc.MTAEmailQueueStub::class.java))
+        MailSender(builder.build(MTAEmailQueueGrpc.MTAEmailQueueStub::class.java), scope)
             .start()
-        val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpc.MTAEmailQueueBlockingStub::class.java))
+        val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpc.MTAEmailQueueBlockingStub::class.java), scope)
         incomingEmail.start()
         Syslogger(builder.build(MTADeliveryNotificationsGrpc.MTADeliveryNotificationsBlockingStub::class.java))
             .blockingSniffer()

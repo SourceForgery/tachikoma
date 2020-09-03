@@ -11,9 +11,17 @@ import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
+abstract class KodeinAvoidingGrpcExceptionCatcher {
+    init {
+        require(this is GrpcExceptionCatcher<*>) {
+            "Must only subclass ${GrpcExceptionCatcher::class.java.name}"
+        }
+    }
+}
+
 abstract class GrpcExceptionCatcher<in T : Throwable>(
     clazz: Class<T>
-) : DIAware {
+) : DIAware, KodeinAvoidingGrpcExceptionCatcher() {
     private val debugConfig: DebugConfig by instance()
 
     protected val logger = logger("grpc.exceptions.${clazz.simpleName.toLowerCase(Locale.US)}")

@@ -5,9 +5,10 @@ import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.ExecutionException
 import kotlinx.coroutines.future.asCompletableFuture
+import org.apache.logging.log4j.kotlin.loggerOf
 
-fun <T> TachikomaScope.grpcFuture(responseObserver: StreamObserver<T>, block: suspend () -> Unit) {
-    scopedAsync(
+fun <T> TachikomaScope.grpcFuture(responseObserver: StreamObserver<T>, block: suspend () -> Unit) =
+    scopedLaunch(
         setup = { _, invokeCounter ->
             (responseObserver as ServerCallStreamObserver<T>).setOnCancelHandler {
                 invokeCounter.dump()
@@ -15,7 +16,8 @@ fun <T> TachikomaScope.grpcFuture(responseObserver: StreamObserver<T>, block: su
         },
         block = block
     )
-}
+
+private val LOGGER = loggerOf(TachikomaScope::class.java)
 
 /**
  * Make a Future<StreamObserver> to release Dispatcher as soon as possible.
@@ -36,7 +38,9 @@ fun <S, T> TachikomaScope.grpcFutureBidi(responseObserver: StreamObserver<S>, bl
         private fun observer() = try {
             realRequestObserver.get()
         } catch (e: ExecutionException) {
-            throw e.cause!!
+            val cause = e.cause!!
+            LOGGER.error(cause) { "Failed to get observer for bidi." }
+            throw cause
         }
 
         override fun onNext(value: T) {

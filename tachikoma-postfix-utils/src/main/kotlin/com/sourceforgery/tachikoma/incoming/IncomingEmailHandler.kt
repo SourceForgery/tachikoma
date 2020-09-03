@@ -6,18 +6,19 @@ import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
 import java.nio.charset.StandardCharsets
 import jnr.unixsocket.UnixServerSocketChannel
 import jnr.unixsocket.UnixSocketAddress
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.apache.logging.log4j.kotlin.logger
 
 class IncomingEmailHandler(
-    private val stub: MTAEmailQueueGrpc.MTAEmailQueueBlockingStub
+    private val stub: MTAEmailQueueGrpc.MTAEmailQueueBlockingStub,
+    private val scope: CoroutineScope
 ) {
 
     fun start(): Job {
-        return GlobalScope.launch(Dispatchers.IO) {
+        return scope.launch(Dispatchers.IO) {
             SOCKET_PATH.delete()
             SOCKET_PATH.deleteOnExit()
             SOCKET_PATH.parentFile.mkdirs()

@@ -8,7 +8,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     applicationName = "tachikoma-webserver"
 
-    baseImage = "ubuntu:19.10"
+    baseImage = "ubuntu:20.04"
     maintainer = "tachikoma@sourceforgery.com"
 
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
@@ -21,7 +21,8 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
         touch /etc/tachikoma/rsyslog/external.conf &&
         ln -s /etc/tachikoma/rsyslog/external.conf /etc/rsyslog.d/external.conf &&
         curl -Ss https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -o /usr/bin/cloud_sql_proxy &&
-        chmod 0755 /usr/bin/cloud_sql_proxy
+        chmod 0755 /usr/bin/cloud_sql_proxy &&
+        echo "LANG=C.UTF-8" > /etc/default/locale
         """.trimIndent().replace('\n', ' ')
     )
 

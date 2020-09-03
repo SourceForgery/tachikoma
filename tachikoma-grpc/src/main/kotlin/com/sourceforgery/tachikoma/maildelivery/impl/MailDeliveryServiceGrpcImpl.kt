@@ -85,6 +85,10 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliverySe
         try {
             val auth = authentication()
             auth.requireFrontend()
+            LOGGER.trace {
+                val recipients = request.recipientsList.joinToString { it.namedEmail.email }
+                "Starting sendEmail from ${request.from.email} to $recipients for AccountId(${auth.accountId})"
+            }
             emitAll(
                 mailDeliveryService.sendEmail(
                     request = request,
@@ -92,6 +96,12 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliverySe
                 )
             )
         } catch (e: Exception) {
+            val convertedException = grpcExceptionMap.findAndConvertAndLog(e)
+            if (LOGGER.delegate.isTraceEnabled) {
+                LOGGER.trace(convertedException) { "Failed to send email" }
+            } else {
+                LOGGER.debug { "Failed to send email" }
+            }
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
     }

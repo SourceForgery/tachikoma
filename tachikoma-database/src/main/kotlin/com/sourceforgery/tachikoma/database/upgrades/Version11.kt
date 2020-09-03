@@ -20,6 +20,6 @@ class Version11 : DatabaseUpgrade {
 
         DdlRunner(false, javaClass.simpleName)
             .runAll(content, connection)
-        return 11
+        return newVersion
     }
 }

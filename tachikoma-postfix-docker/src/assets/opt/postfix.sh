@@ -26,31 +26,34 @@ readEnv() {
 
 url="$(readEnv TACHIKOMA_URL)"
 mailDomainMx="$(readEnv MAIL_DOMAIN_MX)"
+hostname="$(readEnv TACHIKOMA_HOSTNAME)"
 
-tmp1="${url##*@}"
-# Hostname is the tachikoma MX domain
-TACHIKOMA_HOSTNAME="${tmp1%%[/:]*}"
-
-tmp2="${url#*://}"
 # Username is maildomain
+tmp2="${url#*://}"
 MAIL_DOMAIN="${tmp2%%:*}"
 
-echo "@${TACHIKOMA_HOSTNAME} whatever" >/etc/postfix/vmailbox
+echo "@${hostname} whatever" >/etc/postfix/vmailbox
 
-postconf -e myhostname="${TACHIKOMA_HOSTNAME}"
+postconf -e myhostname="${hostname}"
+postconf -e mydomain="${MAIL_DOMAIN}"
 
-if [ ${mailDomainMx:-false} = true ]; then
-  # Listen for incoming emails to the main domain (i.e. not just the TACHIKOMA_HOSTNAME)
-  postconf -e virtual_mailbox_domains="$MAIL_DOMAIN,$TACHIKOMA_HOSTNAME"
+#No local delivery
+postconf -e mydestination=
+
+if [ "${mailDomainMx:-false}" = true ]; then
+  # Listen for incoming emails to the main domain (i.e. not just the hostname)
+  postconf -e virtual_mailbox_domains="$MAIL_DOMAIN,$hostname"
   echo "@$MAIL_DOMAIN whatever" >>/etc/postfix/vmailbox
 else
-  # Only listen for incoming unsubscribe/bounce emails (i.e. only listen on TACHIKOMA_HOSTNAME)
-  postconf -e virtual_mailbox_domains="$TACHIKOMA_HOSTNAME"
+  # Only listen for incoming unsubscribe/bounce emails (i.e. only listen on hostname)
+  postconf -e virtual_mailbox_domains="$hostname"
 fi
 
 postconf -e "bounce_service_name=discard"
 postconf -e "maximal_backoff_time=14400s"
 postconf -e "maximal_queue_lifetime=3d"
+postconf -e "bounce_queue_lifetime=3d"
+postconf -e "lmtp_destination_recipient_limit=1"
 
 postconf -e virtual_transport=lmtp:unix:tachikoma/incoming_tachikoma
 postconf -e virtual_mailbox_maps=hash:/etc/postfix/vmailbox
@@ -68,8 +71,8 @@ if [[ -n "$(find /etc/postfix/certs -iname '*.crt')" && -n "$(find /etc/postfix/
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
 fi
 
-
 # OpenDKIM
+# shellcheck disable=SC2010
 if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q domain; then
   postconf -e milter_protocol=2
   postconf -e milter_default_action=accept
@@ -84,5 +87,12 @@ if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q doma
 fi
 
 service postfix start
+
+# Set correct group on lmtp socket once it exists
+while ! [ -S /var/spool/postfix/tachikoma/incoming_tachikoma ]
+do
+  sleep 0.1
+done
+chgrp postfix /var/spool/postfix/tachikoma/incoming_tachikoma
 
 sleep infinity

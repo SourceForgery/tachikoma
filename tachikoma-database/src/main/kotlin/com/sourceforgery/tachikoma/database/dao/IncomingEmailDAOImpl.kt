@@ -39,10 +39,14 @@ class IncomingEmailDAOImpl(override val di: DI) : IncomingEmailDAO, DIAware {
                     @Suppress("UNUSED_VARIABLE")
                     val allCasesCovered = when (emailSearchFilterQuery) {
                         is SubjectContains -> subject.contains(emailSearchFilterQuery.subject)
-                        is SenderNameContains -> fromName.contains(emailSearchFilterQuery.name)
-                        is SenderEmailContains -> raw("fromEmail LIKE ?", emailSearchFilterQuery.email)
-                        is ReceiverNameContains -> receiverName.contains(emailSearchFilterQuery.name)
-                        is ReceiverEmailContains -> raw("receiverEmail LIKE ?", emailSearchFilterQuery.email)
+                        is SenderNameContains -> fromEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
+                        is SenderEmailContains -> raw("mailFrom = ?", emailSearchFilterQuery.email)
+                            .fromEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
+                        is ReceiverNameContains -> toEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
+                            .replyToEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
+                        is ReceiverEmailContains -> raw("recipient = ?", emailSearchFilterQuery.email)
+                            .toEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
+                            .replyToEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
                         is ReceivedBetween -> dateCreated.between(emailSearchFilterQuery.after, emailSearchFilterQuery.before)
                     }
                 }

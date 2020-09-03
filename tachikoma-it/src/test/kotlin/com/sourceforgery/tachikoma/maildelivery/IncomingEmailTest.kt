@@ -55,10 +55,11 @@ class IncomingEmailTest : DIAware {
         } returns IncomingEmailDBO(
             body = sample.envelope,
             account = mockk(),
-            fromEmail = from.address,
-            fromName = from.name,
-            receiverEmail = to.address,
-            receiverName = to.name,
+            mailFrom = from.address,
+            recipient = to.address,
+            replyToEmails = emptyList(),
+            toEmails = emptyList(),
+            fromEmails = emptyList(),
             subject = subject
         ).also {
             it.setId(incomingEmailId)
@@ -66,8 +67,6 @@ class IncomingEmailTest : DIAware {
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
-        assertEmail(to, mess.to)
-        assertEmail(from, mess.from)
         assertEquals(incomingEmailId.incomingEmailId, mess.incomingEmailId.id)
         assertEquals(1, mess.messageAttachmentsCount)
         assertEquals("", mess.messageHtmlBody)
@@ -85,10 +84,11 @@ class IncomingEmailTest : DIAware {
         } returns IncomingEmailDBO(
             body = sample.envelope,
             account = mockk(),
-            fromEmail = from.address,
-            fromName = from.name,
-            receiverEmail = to.address,
-            receiverName = to.name,
+            mailFrom = from.address,
+            recipient = to.address,
+            replyToEmails = emptyList(),
+            toEmails = emptyList(),
+            fromEmails = emptyList(),
             subject = subject
         ).also {
             it.setId(incomingEmailId)
@@ -96,8 +96,6 @@ class IncomingEmailTest : DIAware {
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
-        assertEmail(to, mess.to)
-        assertEmail(from, mess.from)
         assertEquals(incomingEmailId.incomingEmailId, mess.incomingEmailId.id)
         assertEquals(6, mess.messageAttachmentsCount)
         assertEquals(sample.plainText, mess.messageAttachmentsList[0].dataString.homogenize())
@@ -117,10 +115,11 @@ class IncomingEmailTest : DIAware {
         } returns IncomingEmailDBO(
             body = sample.envelope,
             account = mockk(),
-            fromEmail = from.address,
-            fromName = from.name,
-            receiverEmail = to.address,
-            receiverName = to.name,
+            mailFrom = from.address,
+            recipient = to.address,
+            replyToEmails = emptyList(),
+            toEmails = emptyList(),
+            fromEmails = emptyList(),
             subject = subject
         ).also {
             it.setId(incomingEmailId)
@@ -128,8 +127,6 @@ class IncomingEmailTest : DIAware {
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
-        assertEmail(to, mess.to)
-        assertEmail(from, mess.from)
         assertEquals(incomingEmailId.incomingEmailId, mess.incomingEmailId.id)
         assertEquals(5, mess.messageAttachmentsCount)
         assertEquals(sample.htmlText, mess.messageAttachmentsList[0].dataString.homogenize())
@@ -148,10 +145,11 @@ class IncomingEmailTest : DIAware {
         } returns IncomingEmailDBO(
             body = sample.envelope,
             account = mockk(),
-            fromEmail = from.address,
-            fromName = from.name,
-            receiverEmail = to.address,
-            receiverName = to.name,
+            mailFrom = from.address,
+            recipient = to.address,
+            replyToEmails = emptyList(),
+            toEmails = emptyList(),
+            fromEmails = emptyList(),
             subject = subject
         ).also {
             it.setId(incomingEmailId)
@@ -159,8 +157,6 @@ class IncomingEmailTest : DIAware {
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
-        assertEmail(to, mess.to)
-        assertEmail(from, mess.from)
         assertEquals(incomingEmailId.incomingEmailId, mess.incomingEmailId.id)
         assertEquals(5, mess.messageAttachmentsCount)
         assertEquals(sample.plainText, mess.messageAttachmentsList[0].dataString.homogenize())

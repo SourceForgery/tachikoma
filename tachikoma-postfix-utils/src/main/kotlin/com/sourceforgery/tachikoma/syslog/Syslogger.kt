@@ -34,7 +34,7 @@ class Syslogger(
 
     internal fun parseLine(line: String): DeliveryNotification? {
         val split = line.split(": ", limit = 3)
-        return if (split.size == 3) {
+        return if (split.size == 3 && !line.contains("postfix/lmtp")) {
             val (_, queueId, rest) = split
             val map = splitLine(rest)
 

@@ -53,8 +53,12 @@ the webserver (for e.g. gRPC) at port 8070.
 
 To start the docker (with the Postfix email server), first create a file with the format
 ```properties
+# The url including the backend authentication to the tachikoma webserver
 TACHIKOMA_URL=http://example.com:xxxxxxxxxxxxxxxxxxxx@172.17.0.1:8070/
+# If the mailserver is MX for the domain above (example.com)
 MAIL_DOMAIN_MX=false
+# The hostname of the smtp server. Used both when sending email and receiving them
+TACHIKOMA_HOSTNAME=smtpserver.example.com
 ```
 
 run
@@ -99,12 +103,14 @@ Environment=name=tachikoma-postfix
 Environment=configDir=/opt/example.com
 Environment=mailDomain=EXAMPLE.COM
 Environment=backendApiKey=XXXXXXXXXXXXXXXXX
+Environment=smtpHostname=SMTP.EXAMPLE.COM
 Environment=webserverHost=TACHIKOMA-SERVER.EXAMPLE.COM
 Environment=image=sourceforgery/tachikoma-postfix:VERSION
 
 ExecStartPre=/usr/bin/docker pull ${image}
 ExecStart=/usr/bin/docker run --rm=true -p 25:25 --name=${name} \
   -e MAIL_DOMAIN_MX=false \
+  -e TACHIKOMA_HOSTNAME=${smtpHostname}
   -e TACHIKOMA_URL=https://${mailDomain}:${backendApiKey}@${webserverHost} \
   -v ${configDir}/domainkeys:/etc/opendkim/domainkeys \
   -v ${configDir}/postfix:/var/spool/postfix \
@@ -137,7 +143,17 @@ To revert to the default post fix behaviour remove the following line from the f
 
 `postconf -e "bounce_service_name=discard"`
 
+Every _incoming_ email with multiple receivers will be split up into
+several identical emails.
+
+```postconf -e "lmtp_destination_recipient_limit=1"```
+
+
 The default retry behaviour has also been altered for deferred email to retry in 14400s (4 hours) instead of 4000s (just over an hour) and it will keep trying
 for three days instead of five. To revert to the default behaviour remove these lines 
 
-`postconf -e "maximal_backoff_time=14400s" postconf -e "maximal_queue_lifetime=3d"` 
+```
+postconf -e "maximal_backoff_time=14400s"
+postconf -e "maximal_queue_lifetime=3d"
+postconf -e "bounce_queue_lifetime=3d"
+```

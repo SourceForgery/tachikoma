@@ -1,7 +1,9 @@
 package com.sourceforgery.tachikoma.database.objects
 
 import com.sourceforgery.tachikoma.common.Email
+import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
+import io.ebean.annotation.DbJsonB
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.ManyToOne
@@ -11,13 +13,21 @@ import javax.persistence.Table
 @Entity
 class IncomingEmailDBO(
     @Column
-    val fromEmail: Email,
+    val mailFrom: Email,
     @Column
-    val fromName: String,
+    val recipient: Email,
+
+    // Temporarily writable properties
+    @DbJsonB
     @Column
-    val receiverEmail: Email,
+    var fromEmails: List<NamedEmail>,
+    @DbJsonB
     @Column
-    val receiverName: String,
+    var replyToEmails: List<NamedEmail>,
+    @DbJsonB
+    @Column
+    var toEmails: List<NamedEmail>,
+
     @Column
     val body: ByteArray,
     @ManyToOne
