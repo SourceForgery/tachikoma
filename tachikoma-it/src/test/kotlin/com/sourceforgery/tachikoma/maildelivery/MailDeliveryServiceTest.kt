@@ -5,10 +5,8 @@ import com.sourceforgery.tachikoma.DAOHelper
 import com.sourceforgery.tachikoma.common.Clocker
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.grpc.frontend.Attachment
 import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.RelatedAttachment
@@ -18,6 +16,13 @@ import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.testModule
+import java.nio.charset.StandardCharsets
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+import java.util.Base64
+import javax.mail.internet.cleanUniqueValueMock
+import javax.mail.internet.mockUniqueValue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -33,13 +38,6 @@ import org.kodein.di.DIAware
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
-import java.nio.charset.StandardCharsets
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
-import java.util.Base64
-import javax.mail.internet.cleanUniqueValueMock
-import javax.mail.internet.mockUniqueValue
 
 class MailDeliveryServiceTest : DIAware {
     override val di = DI {
@@ -138,8 +136,7 @@ class MailDeliveryServiceTest : DIAware {
                     .setSubject("Test mail subject")
             )
             .build()
-        val responseObserver = QueueStreamObserver<EmailQueueStatus>()
-        runBlocking {
+        val queued = runBlocking {
             withTimeout(10000) {
                 mailDeliveryService.sendEmail(
                     request = email,
@@ -147,7 +144,6 @@ class MailDeliveryServiceTest : DIAware {
                 ).first()
             }
         }
-        val queued = responseObserver.take(500)
         val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
 
         val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
@@ -157,8 +153,8 @@ class MailDeliveryServiceTest : DIAware {
     }
 
     companion object {
-        val validEmail = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()!!
-        val fromEmail = NamedEmailAddress.newBuilder().setEmail("from@example.com").setName("Valid From Email").build()!!
+        val validEmail: NamedEmailAddress = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()
+        val fromEmail: NamedEmailAddress = NamedEmailAddress.newBuilder().setEmail("from@example.com").setName("Valid From Email").build()
 
         val data = Base64.getDecoder().decode("dt6J5W7J+3hrduLSGtgij5IQrnc=")!!
         val pixel = Base64.getDecoder().decode("R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=")!!

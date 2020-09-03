@@ -9,7 +9,6 @@ import com.sourceforgery.jersey.uribuilder.JerseyUriBuilder
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
-import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.TransactionManager
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
@@ -46,16 +45,6 @@ import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import org.apache.logging.log4j.kotlin.logger
-import org.jetbrains.annotations.TestOnly
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import org.kodein.di.DI
-import org.kodein.di.DIAware
-import org.kodein.di.instance
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
@@ -78,6 +67,16 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import org.apache.logging.log4j.kotlin.logger
+import org.jetbrains.annotations.TestOnly
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.instance
 
 class MailDeliveryService(override val di: DI) : DIAware {
     private val trackingConfig: TrackingConfig by instance()
@@ -93,129 +92,126 @@ class MailDeliveryService(override val di: DI) : DIAware {
     private val unsubscribeDecoderImpl: UnsubscribeDecoder by instance()
     private val authenticationDAO: AuthenticationDAO by instance()
     private val messageIdFactory: MessageIdFactory by instance()
-    private val tachikomaScope: TachikomaScope by instance()
     private val clock: Clock by instance()
 
     suspend fun sendEmail(
         request: OutgoingEmail,
         authenticationId: AuthenticationId
-    ): Flow<EmailQueueStatus> =
-        flow {
-            val auth = authenticationDAO.getActiveById(authenticationId)!!
-            val fromEmail = request.from.toNamedEmail().address
-            if (fromEmail.domain != auth.account.mailDomain) {
-                throw InvalidOrInsufficientCredentialsException("${auth.account.mailDomain} is not allowed to send emails with from domain: ${fromEmail.domain}")
-            }
-
-            val transaction = EmailSendTransactionDBO(
-                jsonRequest = getRequestData(request),
-                fromEmail = fromEmail,
-                authentication = auth,
-                bcc = request.bccList.map { it.toEmail().address },
-                metaData = request.trackingData.metadataMap,
-                tags = request.trackingData.tagsList
-            )
-            val requestedSendTime =
-                if (request.hasSendAt()) {
-                    request.sendAt.toInstant()
-                } else {
-                    Instant.EPOCH
-                }
-
-            transactionManager.coroutineTx {
-                emailSendTransactionDAO.save(transaction)
-
-                for (recipient in request.recipientsList) {
-
-                    val recipientEmail = auth.recipientOverride
-                        ?.let {
-                            NamedEmail(it, "Overridden email")
-                        }
-                        ?: recipient.toNamedEmail()
-
-                    val blockedReason = blockedEmailDAO.getBlockedReason(
-                        accountDBO = auth.account,
-                        recipient = recipientEmail.address,
-                        from = fromEmail
-                    )
-
-                    if (blockedReason != null) {
-                        emit(
-                            EmailQueueStatus.newBuilder()
-                                .setRejected(
-                                    Rejected.newBuilder()
-                                        .setRejectReason(blockedReason.toGrpcRejectReason())
-                                        .build()
-                                )
-                                .setTransactionId(transaction.id.toGrpcInternal())
-                                .setRecipient(recipientEmail.address.toGrpcInternal())
-                                .build()
-                        )
-                        LOGGER.debug { "Email to ${recipientEmail.address} had unsubscribed emails from $fromEmail, hence bounced" }
-                        // Blocked
-                        continue
-                    }
-
-                    val messageId = messageIdFactory.createMessageId(
-                        domain = fromEmail.domain
-                    )
-                    val unsubscribeDomainOverride = unsubscribeConfig.unsubscribeDomainOverride
-                    val autoMailId = if (unsubscribeDomainOverride == null) {
-                        AutoMailId("$messageId")
-                    } else {
-                        AutoMailId("${messageId.localPart}@$unsubscribeDomainOverride")
-                    }
-
-                    val emailDBO = EmailDBO(
-                        recipient = recipientEmail,
-                        transaction = transaction,
-                        messageId = messageId,
-                        metaData = recipient.metadataMap,
-                        autoMailId = autoMailId
-                    )
-                    emailDAO.save(emailDBO)
-
-                    val pair = when (request.bodyCase) {
-                        OutgoingEmail.BodyCase.STATIC -> getStaticBody(
-                            request = request,
-                            sendAt = requestedSendTime,
-                            emailDBO = emailDBO
-                        )
-                        OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
-                            request = request,
-                            sendAt = requestedSendTime,
-                            recipient = recipient,
-                            emailDBO = emailDBO
-                        )
-                        else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
-                    }
-                    emailDBO.subject = pair.first
-                    emailDBO.body = pair.second
-                    emailDAO.save(emailDBO)
-                }
-            }
-            val refreshedTransaction = emailSendTransactionDAO.get(transaction.id)!!
-            for (emailDBO in refreshedTransaction.emails) {
-                LOGGER.trace { "Queueing Email(${emailDBO.id}) for AccountId(${auth.account.id}) sending it at $requestedSendTime" }
-                mqSender.queueJob(
-                    jobMessageFactory.createSendEmailJob(
-                        requestedSendTime = requestedSendTime,
-                        emailId = emailDBO.id,
-                        mailDomain = auth.account.mailDomain
-                    )
-                )
-
-                emit(
-                    EmailQueueStatus.newBuilder()
-                        .setEmailId(emailDBO.id.toGrpcInternal())
-                        .setQueued(Queued.getDefaultInstance())
-                        .setTransactionId(transaction.id.toGrpcInternal())
-                        .setRecipient(emailDBO.recipient.toGrpcInternal())
-                        .build()
-                )
-            }
+    ): Flow<EmailQueueStatus> = flow {
+        val auth = authenticationDAO.getActiveById(authenticationId)!!
+        val fromEmail = request.from.toNamedEmail().address
+        if (fromEmail.domain != auth.account.mailDomain) {
+            throw InvalidOrInsufficientCredentialsException("${auth.account.mailDomain} is not allowed to send emails with from domain: ${fromEmail.domain}")
         }
 
+        val transaction = EmailSendTransactionDBO(
+            jsonRequest = getRequestData(request),
+            fromEmail = fromEmail,
+            authentication = auth,
+            bcc = request.bccList.map { it.toEmail().address },
+            metaData = request.trackingData.metadataMap,
+            tags = request.trackingData.tagsList
+        )
+        val requestedSendTime =
+            if (request.hasSendAt()) {
+                request.sendAt.toInstant()
+            } else {
+                Instant.EPOCH
+            }
+
+        transactionManager.coroutineTx {
+            emailSendTransactionDAO.save(transaction)
+
+            for (recipient in request.recipientsList) {
+
+                val recipientEmail = auth.recipientOverride
+                    ?.let {
+                        NamedEmail(it, "Overridden email")
+                    }
+                    ?: recipient.toNamedEmail()
+
+                val blockedReason = blockedEmailDAO.getBlockedReason(
+                    accountDBO = auth.account,
+                    recipient = recipientEmail.address,
+                    from = fromEmail
+                )
+
+                if (blockedReason != null) {
+                    emit(
+                        EmailQueueStatus.newBuilder()
+                            .setRejected(
+                                Rejected.newBuilder()
+                                    .setRejectReason(blockedReason.toGrpcRejectReason())
+                                    .build()
+                            )
+                            .setTransactionId(transaction.id.toGrpcInternal())
+                            .setRecipient(recipientEmail.address.toGrpcInternal())
+                            .build()
+                    )
+                    LOGGER.debug { "Email to ${recipientEmail.address} had unsubscribed emails from $fromEmail, hence bounced" }
+                    // Blocked
+                    continue
+                }
+
+                val messageId = messageIdFactory.createMessageId(
+                    domain = fromEmail.domain
+                )
+                val unsubscribeDomainOverride = unsubscribeConfig.unsubscribeDomainOverride
+                val autoMailId = if (unsubscribeDomainOverride == null) {
+                    AutoMailId("$messageId")
+                } else {
+                    AutoMailId("${messageId.localPart}@$unsubscribeDomainOverride")
+                }
+
+                val emailDBO = EmailDBO(
+                    recipient = recipientEmail,
+                    transaction = transaction,
+                    messageId = messageId,
+                    metaData = recipient.metadataMap,
+                    autoMailId = autoMailId
+                )
+                emailDAO.save(emailDBO)
+
+                val pair = when (request.bodyCase) {
+                    OutgoingEmail.BodyCase.STATIC -> getStaticBody(
+                        request = request,
+                        sendAt = requestedSendTime,
+                        emailDBO = emailDBO
+                    )
+                    OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
+                        request = request,
+                        sendAt = requestedSendTime,
+                        recipient = recipient,
+                        emailDBO = emailDBO
+                    )
+                    else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
+                }
+                emailDBO.subject = pair.first
+                emailDBO.body = pair.second
+                emailDAO.save(emailDBO)
+            }
+        }
+        val refreshedTransaction = emailSendTransactionDAO.get(transaction.id)!!
+        for (emailDBO in refreshedTransaction.emails) {
+            LOGGER.trace { "Queueing Email(${emailDBO.id}) for AccountId(${auth.account.id}) sending it at $requestedSendTime" }
+            mqSender.queueJob(
+                jobMessageFactory.createSendEmailJob(
+                    requestedSendTime = requestedSendTime,
+                    emailId = emailDBO.id,
+                    mailDomain = auth.account.mailDomain
+                )
+            )
+
+            emit(
+                EmailQueueStatus.newBuilder()
+                    .setEmailId(emailDBO.id.toGrpcInternal())
+                    .setQueued(Queued.getDefaultInstance())
+                    .setTransactionId(transaction.id.toGrpcInternal())
+                    .setRecipient(emailDBO.recipient.toGrpcInternal())
+                    .build()
+            )
+        }
+    }
 
     private fun getTemplateBody(
         request: OutgoingEmail,

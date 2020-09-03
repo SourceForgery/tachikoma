@@ -24,7 +24,10 @@ import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.grpc.frontend.toUserId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
@@ -110,14 +113,12 @@ class UserService(
             .build()
     }
 
-    fun getFrontendUsers(mailDomain: MailDomain, responseObserver: StreamObserver<FrontendUser>) {
+    fun getFrontendUsers(mailDomain: MailDomain): Flow<FrontendUser> =
         accountDAO.getByMailDomain(mailDomain = mailDomain)!!
             .authentications
-            .asSequence()
+            .asFlow()
             .filter { it.role == AuthenticationRole.FRONTEND_ADMIN || it.role == AuthenticationRole.FRONTEND }
             .map { toUser(it) }
-            .forEach { responseObserver.onNext(it) }
-    }
 
     fun removeUser(request: RemoveUserRequest): RemoveUserResponse {
         authenticationDAO.deleteById(request.userToRemove.toAuthenticationId())

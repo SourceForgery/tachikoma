@@ -24,7 +24,9 @@ import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.tracking.toEmailMetrics
-import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
@@ -33,7 +35,7 @@ internal class EmailStatusEventService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val emailStatusEventDAO: EmailStatusEventDAO by instance()
 
-    fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, responseObserver: StreamObserver<EmailNotification>, authenticationId: AuthenticationId) {
+    fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, authenticationId: AuthenticationId): Flow<EmailNotification> {
 
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
@@ -54,18 +56,14 @@ internal class EmailStatusEventService(override val di: DI) : DIAware {
         val includeTrackingData = request.includeTrackingData
         val includeMetricsData = request.includeMetricsData
 
-        emailStatusEventDAO.getEvents(
-                accountId = authenticationDBO.account.id,
-                instant = request.newerThan.toInstant(),
-                recipientEmail = request.recipientEmail.toEmail(),
-                fromEmail = request.fromEmail.toEmail(),
-                events = events
-            )
-            .forEach {
-                responseObserver.onNext(
-                    getEmailNotification(it, includeTrackingData, includeMetricsData)
-                )
-            }
+        return emailStatusEventDAO.getEvents(
+            accountId = authenticationDBO.account.id,
+            instant = request.newerThan.toInstant(),
+            recipientEmail = request.recipientEmail.toEmail(),
+            fromEmail = request.fromEmail.toEmail(),
+            events = events
+        ).asFlow()
+            .map { getEmailNotification(it, includeTrackingData, includeMetricsData) }
     }
 
     private fun getEmailNotification(emailStatusEventDBO: EmailStatusEventDBO, includeTrackingData: Boolean, includeMetricsData: Boolean): EmailNotification {

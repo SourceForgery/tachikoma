@@ -20,7 +20,7 @@ import org.kodein.di.DIAware
 class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
     val deliveryNotifications = Channel<DeliveryNotificationMessage>(UNLIMITED)
     val jobs = LinkedBlockingQueue<QueueMessageWrap<JobMessage>>(1)
-    val outgoingEmails = LinkedBlockingQueue<QueueMessageWrap<OutgoingEmailMessage>>(1)
+    val outgoingEmails = Channel<OutgoingEmailMessage>(UNLIMITED)
     val incomingEmails = Channel<IncomingEmailNotificationMessage>(UNLIMITED)
 
     override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<DeliveryNotificationMessage> =
@@ -50,8 +50,8 @@ class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: suspend (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
-        return listenOnQueue(outgoingEmails, callback)
+    override fun listenForOutgoingEmails(mailDomain: MailDomain): Flow<OutgoingEmailMessage> {
+        return outgoingEmails.consumeAsFlow()
     }
 
     override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<IncomingEmailNotificationMessage> {

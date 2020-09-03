@@ -177,9 +177,9 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return listenOnQueueFlow(queue)
     }
 
-    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: suspend (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForOutgoingEmails(mailDomain: MailDomain): Flow<OutgoingEmailMessage> {
         setupAccount(mailDomain)
-        return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
+        return listenOnQueueFlow(OutgoingEmailsMessageQueue(mailDomain))
     }
 
     override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<IncomingEmailNotificationMessage> {

@@ -12,21 +12,24 @@ import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.mq.MQSenderMock
 import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import com.sourceforgery.tachikoma.mq.OutgoingEmailMessage
-import com.sourceforgery.tachikoma.mq.QueueMessageWrap
 import com.sourceforgery.tachikoma.testModule
 import io.ebean.Database
 import java.time.Clock
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.kodein.di.DI
 import org.kodein.di.direct
@@ -106,26 +109,25 @@ class MTAEmailQueueServiceTest {
     }
 
     fun `Create email test`() {
-        val responseObserver = QueueStreamObserver<EmailMessage>()
+        val requests = Channel<MTAQueuedNotification>()
 
-        mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
+        val notifications = mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
 
-        mqSequenceFactoryMock.outgoingEmails.add(
-            QueueMessageWrap(
-                OutgoingEmailMessage.newBuilder()
-                    .setCreationTimestamp(clock.instant().toTimestamp())
-                    .setEmailId(email.id.emailId)
-                    .build()
-            )
+        mqSequenceFactoryMock.outgoingEmails.offer(
+            OutgoingEmailMessage.newBuilder()
+                .setCreationTimestamp(clock.instant().toTimestamp())
+                .setEmailId(email.id.emailId)
+                .build()
         )
 
-        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
-        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
-
-        assertEquals(1, responseObserver.queue.size)
-        val emailMessage = responseObserver.queue.take().get()
-            ?: throw NullPointerException("Should not be a onComplete event")
-        assertNotNull(responseObserver)
+        val emailMessage = runBlocking {
+            withTimeout(1000L) {
+                notifications.take(1)
+                    .firstOrNull()
+            }
+        }
+        requests.close()
+        assertNotNull(emailMessage)
         assertEquals(emailMessage.body, email.body)
         assertEquals(emailMessage.emailAddress, email.recipient.address)
         assertEquals(emailMessage.emailId, email.id.emailId)
@@ -133,10 +135,10 @@ class MTAEmailQueueServiceTest {
 
     fun `Receive queue message`() {
 
-        val responseObserver = QueueStreamObserver<EmailMessage>()
-        val requestStreamObserver = mtaEmailQueueService.getEmails(responseObserver, authentication.mailDomain)
+        val requests = Channel<MTAQueuedNotification>()
+        mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
 
-        requestStreamObserver.onNext(
+        requests.offer(
             MTAQueuedNotification.newBuilder()
                 .setEmailId(email.id.emailId)
                 .setQueueId("foobarQueueId")
@@ -144,8 +146,8 @@ class MTAEmailQueueServiceTest {
                 .setSuccess(true)
                 .build()
         )
-        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
-        mqSequenceFactoryMock.outgoingEmails.offer(QueueMessageWrap(null), 1, TimeUnit.SECONDS)
+
+        requests.close()
 
         assertEquals(1, mqSenderMock.deliveryNotifications.size)
         database.refresh(email)

@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.tracking
 
 import com.sourceforgery.tachikoma.auth.Authentication
-import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpcKt
@@ -12,15 +11,12 @@ import kotlinx.coroutines.flow.flow
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
-import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class DeliveryNotificationServiceGrpcImpl(
     override val di: DI
-) : DeliveryNotificationServiceGrpcKt.DeliveryNotificationServiceCoroutineImplBase(),
-    DIAware,
-    TachikomaScope by di.direct.instance() {
+) : DeliveryNotificationServiceGrpcKt.DeliveryNotificationServiceCoroutineImplBase(), DIAware {
 
     private val deliveryNotificationService: DeliveryNotificationService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
