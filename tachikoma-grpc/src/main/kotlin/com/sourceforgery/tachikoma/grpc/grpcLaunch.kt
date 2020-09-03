@@ -5,8 +5,14 @@ import io.grpc.stub.ServerCallStreamObserver
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.ExecutionException
 import kotlinx.coroutines.future.asCompletableFuture
+import org.apache.logging.log4j.kotlin.loggerOf
+
+private val LOGGER = loggerOf(TachikomaScope::class.java)
 
 fun <T> TachikomaScope.grpcFuture(responseObserver: StreamObserver<T>, block: suspend () -> Unit) {
+    if (LOGGER.delegate.isTraceEnabled) {
+        LOGGER.trace(Throwable("Starting grpcFuture")) { "Starting grpcFuture" }
+    }
     scopedAsync(
         setup = { _, invokeCounter ->
             (responseObserver as ServerCallStreamObserver<T>).setOnCancelHandler {

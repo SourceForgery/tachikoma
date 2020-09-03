@@ -98,6 +98,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         responseObserver: StreamObserver<EmailQueueStatus>,
         authenticationId: AuthenticationId
     ) {
+        LOGGER.trace { "Starting sendEmail from ${request.from.email} for $authenticationId" }
         val auth = authenticationDAO.getActiveById(authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
         if (fromEmail.domain != auth.account.mailDomain) {
@@ -193,7 +194,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         }
         val refreshedTransaction = emailSendTransactionDAO.get(transaction.id)!!
         for (emailDBO in refreshedTransaction.emails) {
-            LOGGER.trace { "Queueing Email(${emailDBO.id}) for AccountId(${auth.account}) sending it at $requestedSendTime" }
+            LOGGER.trace { "Queueing Email(${emailDBO.id}) for AccountId(${auth.account.id}) sending it at $requestedSendTime" }
             mqSender.queueJob(
                 jobMessageFactory.createSendEmailJob(
                     requestedSendTime = requestedSendTime,
