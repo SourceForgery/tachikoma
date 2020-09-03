@@ -67,6 +67,10 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliverySe
         try {
             val auth = authentication()
             auth.requireFrontend()
+            LOGGER.trace {
+                val recipients = request.recipientsList.joinToString { it.namedEmail.email }
+                "Starting sendEmail from ${request.from.email} to $recipients for AccountId(${auth.accountId})"
+            }
             mailDeliveryService.sendEmail(
                 request = request,
                 responseObserver = responseObserver,

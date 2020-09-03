@@ -98,7 +98,6 @@ class MailDeliveryService(override val di: DI) : DIAware {
         responseObserver: StreamObserver<EmailQueueStatus>,
         authenticationId: AuthenticationId
     ) {
-        LOGGER.trace { "Starting sendEmail from ${request.from.email} for $authenticationId" }
         val auth = authenticationDAO.getActiveById(authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
         if (fromEmail.domain != auth.account.mailDomain) {
