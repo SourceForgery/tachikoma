@@ -78,12 +78,13 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliverySe
             )
             responseObserver.onCompleted()
         } catch (e: Exception) {
+            val convertedException = grpcExceptionMap.findAndConvertAndLog(e)
             if (LOGGER.delegate.isTraceEnabled) {
-                LOGGER.trace(e) { "Failed to send email" }
+                LOGGER.trace(convertedException) { "Failed to send email" }
             } else {
                 LOGGER.debug { "Failed to send email" }
             }
-            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
+            responseObserver.onError(convertedException)
         }
     }
 
