@@ -15,6 +15,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.launch
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -22,6 +23,10 @@ import org.kodein.di.instance
 
 interface TachikomaScope : CoroutineScope {
     fun <T> scopedFuture(block: suspend () -> T): CompletableFuture<T>
+    fun scopedLaunch(
+        setup: (RequestContext, InvokeCounter) -> Unit = { _, _ -> },
+        block: suspend () -> Unit
+    )
     fun <T> scopedAsync(
         setup: (RequestContext, InvokeCounter) -> Unit = { _, _ -> },
         block: suspend () -> T
@@ -51,6 +56,19 @@ class TachikomaScopeImpl(override val di: DI) : CoroutineScope, TachikomaScope, 
                 }
             }
             .asCompletableFuture()
+    }
+
+    override fun scopedLaunch(
+        setup: (RequestContext, InvokeCounter) -> Unit,
+        block: suspend () -> Unit
+    ) {
+        val ctx = RequestContext.current<ServiceRequestContext>()
+        val ic = invokeCounterFactory.create()
+        setup(ctx, ic)
+        withRequestContext(ctx, ic)
+            .launch {
+                block()
+            }
     }
 
     override fun <T> scopedAsync(
