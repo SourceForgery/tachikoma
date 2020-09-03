@@ -19,8 +19,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
                   apt-get -y dist-upgrade && \
                   apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-11-jdk-headless netcat-openbsd net-tools && \
                   apt-get clean && \
-                  rm -rf /var/cache/apt/ /var/lib/apt/lists/* && \
-                  ln -s /usr/share/zoneinfo/UTC /etc/localtime
+                  rm -rf /var/cache/apt/ /var/lib/apt/lists/*
               """)
     runCommand("pip3 install --no-cache-dir honcho==1.0.1")
 
