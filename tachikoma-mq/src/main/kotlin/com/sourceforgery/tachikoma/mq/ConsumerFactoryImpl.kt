@@ -321,7 +321,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
                         channel.basicNack(envelope.deliveryTag, false, false)
                     }
                 } catch (e: Exception) {
-                    LOGGER.warn(e) { "Failed to ACK/NACK error" }
+                    LOGGER.warn(e) { "Was success: $success. Could not ACK/NACK. Will be implicitly NACKed by rabbitmq" }
                 }
             }
         }
