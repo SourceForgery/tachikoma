@@ -10,7 +10,7 @@ import org.kodein.di.DIAware
 import org.kodein.di.allInstances
 
 class GrpcExceptionMap(override val di: DI) : DIAware {
-    private val catchers by allInstances<GrpcExceptionCatcher<Throwable>>()
+    private val catchers by allInstances<KodeinAvoidingGrpcExceptionCatcher>()
     private val map = ConcurrentHashMap<Class<Throwable>, GrpcExceptionCatcher<Throwable>>()
 
     private val defaultCatcher = object : GrpcExceptionCatcher<Throwable>(Throwable::class.java), DIAware {
@@ -40,7 +40,9 @@ class GrpcExceptionMap(override val di: DI) : DIAware {
     private fun findClass(key: Class<Throwable>): GrpcExceptionCatcher<Throwable> {
         var clazz: Class<*> = key
         while (clazz != Object::class.java) {
-            catchers.firstOrNull { getGenerics(it) == clazz }
+            catchers
+                .filterIsInstance<GrpcExceptionCatcher<Throwable>>()
+                .firstOrNull { getGenerics(it) == clazz }
                 ?.let {
                     return it
                 }
