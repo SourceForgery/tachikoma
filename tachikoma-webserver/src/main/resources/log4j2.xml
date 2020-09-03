@@ -18,7 +18,7 @@
             <AppenderRef ref="syslog"/>
             <AppenderRef ref="StdOut"/>
         </Root>
-        <Logger name="com.sourceforgery.tachikoma" level="trace"/>
+        <Logger name="com.sourceforgery.tachikoma" level="debug"/>
         <Logger name="io.netty.handler.ssl.ApplicationProtocolNegotiationHandler" level="error"/>
         <Logger name="io.netty.channel.DefaultChannelPipeline" level="error"/>
         <Logger name="io.ebean" level="warn"/>
