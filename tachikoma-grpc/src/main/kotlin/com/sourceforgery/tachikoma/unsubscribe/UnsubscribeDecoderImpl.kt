@@ -3,9 +3,9 @@ package com.sourceforgery.tachikoma.unsubscribe
 import com.google.protobuf.ByteString
 import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.randomDelay
+import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.SignedUnsubscribeData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
-import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import java.util.Base64
 import org.kodein.di.DI
 import org.kodein.di.DIAware

@@ -1,4 +1,4 @@
-package com.sourceforgery.tachikoma.tracking
+package com.sourceforgery.tachikoma.config
 
 import java.net.URI
 

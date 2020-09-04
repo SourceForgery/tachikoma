@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.database.hooks
 
 import com.sourceforgery.tachikoma.common.AuthenticationRole
 import com.sourceforgery.tachikoma.config.DatabaseConfig
+import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
@@ -14,6 +15,7 @@ import org.kodein.di.instance
 
 class CreateUsers(override val di: DI) : DIAware {
     private val databaseConfig: DatabaseConfig by instance()
+    private val trackingConfig: TrackingConfig by instance()
     private val accountDAO: AccountDAO by instance()
     private val ebeanServer: EbeanServer by instance()
     private val internalCreateUserService: InternalCreateUserService by instance()
@@ -30,13 +32,14 @@ class CreateUsers(override val di: DI) : DIAware {
                             val account = internalCreateUserService.createAccount(mailDomain)
                             LOGGER.error { "Creating new account and authentications for $mailDomain" }
                             val backendAuth = internalCreateUserService.createBackendAuthentication(account)
-                            LOGGER.error { "Creating new backend api with login:password '$mailDomain:${backendAuth.apiToken}'" }
+                            val uri = trackingConfig.baseUrl
+                            LOGGER.error { "Creating new backend api with login:password 'gproto+${uri.scheme}://$mailDomain:${backendAuth.apiToken}@${uri.host}'" }
                             val frontendAuth = internalCreateUserService.createFrontendAuthentication(
                                 account = account,
                                 role = AuthenticationRole.FRONTEND_ADMIN,
                                 addApiToken = true
                             )
-                            LOGGER.error { "Creating new frontend api with login:password '$mailDomain:${frontendAuth.apiToken}'" }
+                            LOGGER.error { "Creating new frontend api with login:password 'gproto+${uri.scheme}://$mailDomain:${frontendAuth.apiToken}@${uri.host}'" }
                             createIncomingEmail(ebeanServer, account)
                         }
                 }

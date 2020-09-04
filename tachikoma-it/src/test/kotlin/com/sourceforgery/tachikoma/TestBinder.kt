@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma
 import com.sourceforgery.tachikoma.common.Clocker
 import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.config.DebugConfig
+import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
@@ -15,7 +16,6 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import com.sourceforgery.tachikoma.mq.TestConsumerFactoryImpl
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
-import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import java.net.URI
 import java.util.UUID

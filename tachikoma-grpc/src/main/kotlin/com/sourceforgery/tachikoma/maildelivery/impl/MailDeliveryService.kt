@@ -9,6 +9,7 @@ import com.sourceforgery.jersey.uribuilder.JerseyUriBuilder
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toInstant
+import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.database.TransactionManager
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
@@ -39,7 +40,6 @@ import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.mq.MQSender
-import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder

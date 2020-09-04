@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.config
 
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MqConfig
-import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import java.net.URI
 

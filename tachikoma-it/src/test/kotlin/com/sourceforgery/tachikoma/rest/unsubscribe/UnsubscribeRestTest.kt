@@ -9,6 +9,7 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.commonModule
+import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
@@ -28,7 +29,6 @@ import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.restModule
 import com.sourceforgery.tachikoma.testModule
-import com.sourceforgery.tachikoma.tracking.TrackingConfig
 import com.sourceforgery.tachikoma.users.UserService
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
