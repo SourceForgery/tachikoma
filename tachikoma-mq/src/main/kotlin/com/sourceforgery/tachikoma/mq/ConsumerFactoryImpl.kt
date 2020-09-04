@@ -18,10 +18,9 @@ import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import java.time.Clock
-import java.time.Duration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -32,6 +31,8 @@ import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.time.Clock
+import java.time.Duration
 
 internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQSender, MQManager, DIAware {
 
@@ -194,24 +195,23 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
     private fun <T> listenOnQueueFlow(messageQueue: MessageQueue<T>): Flow<T> {
         @Suppress("EXPERIMENTAL_API_USAGE")
         return callbackFlow<ByteArray> {
-            withContext(Dispatchers.IO) {
+            val channel = withContext(Dispatchers.IO) {
                 connection
                     .createChannel()
-                    .use { channel ->
-                        val consumer = CallbackConsumer(channel) {
-                            sendBlocking(it)
-                        }
-                        @Suppress("BlockingMethodInNonBlockingContext")
-                        channel.basicConsume(messageQueue.name, false, consumer)
-                        channel.addShutdownListener {
-                            if (it.isInitiatedByApplication) {
-                                this@callbackFlow.cancel()
-                            } else {
-                                (channel as ChannelN).processShutdownSignal(it, true, true)
-                            }
-                        }
-                    }
             }
+            val consumer = CallbackConsumer(channel) {
+                sendBlocking(it)
+            }
+            @Suppress("BlockingMethodInNonBlockingContext")
+            channel.basicConsume(messageQueue.name, false, consumer)
+            channel.addShutdownListener {
+                if (it.isInitiatedByApplication) {
+                    this@callbackFlow.cancel()
+                } else {
+                    (channel as ChannelN).processShutdownSignal(it, true, true)
+                }
+            }
+            awaitClose { channel.close() }
         }.map { messageQueue.parser(it) }
     }
 
