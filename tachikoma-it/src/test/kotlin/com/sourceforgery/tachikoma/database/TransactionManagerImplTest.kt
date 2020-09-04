@@ -21,6 +21,7 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
+@Suppress("RemoveExplicitTypeArguments")
 class TransactionManagerImplTest : DIAware {
 
     override val di = DI {
@@ -60,8 +61,8 @@ class TransactionManagerImplTest : DIAware {
             lateinit var id: AccountId
             assertNull(txManager.inScope)
             assertFailsWith(IllegalStateException::class) {
-                transactionManager.coroutineTx { tx ->
-                    withContext(Dispatchers.IO) {
+                transactionManager.coroutineTx<Nothing> { tx ->
+                    withContext<Nothing>(Dispatchers.IO) {
                         val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                         database.save(accountDBO)
                         id = accountDBO.id
@@ -87,8 +88,8 @@ class TransactionManagerImplTest : DIAware {
             lateinit var id: AccountId
             assertNull(txManager.inScope)
             assertFailsWith(IllegalStateException::class) {
-                transactionManager.coroutineTx { tx ->
-                    withContext(Dispatchers.IO) {
+                transactionManager.coroutineTx<Nothing> { tx ->
+                    withContext<Nothing>(Dispatchers.IO) {
                         val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                         database.save(accountDBO)
                         id = accountDBO.id
@@ -102,7 +103,7 @@ class TransactionManagerImplTest : DIAware {
             }
             assertNull(txManager.inScope)
             assertNull(database.find<AccountDBO>(id))
-            transactionManager.coroutineTx { tx ->
+            transactionManager.coroutineTx {
                 val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                 database.save(accountDBO)
                 id = accountDBO.id
