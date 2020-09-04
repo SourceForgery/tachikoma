@@ -6,7 +6,6 @@ import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
 import com.sourceforgery.tachikoma.grpc.frontend.EmailMetrics
