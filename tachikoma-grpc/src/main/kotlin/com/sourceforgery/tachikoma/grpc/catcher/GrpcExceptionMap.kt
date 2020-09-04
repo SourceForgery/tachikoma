@@ -4,6 +4,7 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
@@ -18,7 +19,11 @@ class GrpcExceptionMap(override val di: DI) : DIAware {
         override val di: DI = this@GrpcExceptionMap.di
 
         override fun logError(t: Throwable) {
-            logger.warn(t) { "Exception in gRPC" }
+            if (t is CancellationException) {
+                logger.info { t.message }
+            } else {
+                logger.warn(t) { t.message }
+            }
         }
 
         override fun status(t: Throwable): Status {
