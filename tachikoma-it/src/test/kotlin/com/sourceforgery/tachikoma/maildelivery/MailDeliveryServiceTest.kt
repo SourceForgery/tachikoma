@@ -5,10 +5,8 @@ import com.sourceforgery.tachikoma.DAOHelper
 import com.sourceforgery.tachikoma.common.Clocker
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.grpc.QueueStreamObserver
 import com.sourceforgery.tachikoma.grpc.frontend.Attachment
 import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.RelatedAttachment
@@ -25,6 +23,9 @@ import java.time.ZoneId
 import java.util.Base64
 import javax.mail.internet.cleanUniqueValueMock
 import javax.mail.internet.mockUniqueValue
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.jsoup.Jsoup
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -135,13 +136,14 @@ class MailDeliveryServiceTest : DIAware {
                     .setSubject("Test mail subject")
             )
             .build()
-        val responseObserver = QueueStreamObserver<EmailQueueStatus>()
-        mailDeliveryService.sendEmail(
-            request = email,
-            responseObserver = responseObserver,
-            authenticationId = authentication.id
-        )
-        val queued = responseObserver.take(500)
+        val queued = runBlocking {
+            withTimeout(10000) {
+                mailDeliveryService.sendEmail(
+                    request = email,
+                    authenticationId = authentication.id
+                ).first()
+            }
+        }
         val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
 
         val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
@@ -151,10 +153,10 @@ class MailDeliveryServiceTest : DIAware {
     }
 
     companion object {
-        val validEmail = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()
-        val fromEmail = NamedEmailAddress.newBuilder().setEmail("from@example.com").setName("Valid From Email").build()
+        val validEmail: NamedEmailAddress = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()
+        val fromEmail: NamedEmailAddress = NamedEmailAddress.newBuilder().setEmail("from@example.com").setName("Valid From Email").build()
 
         val data = Base64.getDecoder().decode("dt6J5W7J+3hrduLSGtgij5IQrnc=")!!
-        val pixel = Base64.getDecoder().decode("R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=")
+        val pixel = Base64.getDecoder().decode("R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI=")!!
     }
 }

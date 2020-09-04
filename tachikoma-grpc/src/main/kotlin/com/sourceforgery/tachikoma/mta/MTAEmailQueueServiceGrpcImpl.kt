@@ -1,47 +1,40 @@
 package com.sourceforgery.tachikoma.mta
 
 import com.sourceforgery.tachikoma.auth.Authentication
-import com.sourceforgery.tachikoma.coroutines.TachikomaScope
-import com.sourceforgery.tachikoma.grpc.NullStreamObserver
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
-import com.sourceforgery.tachikoma.grpc.grpcFuture
-import com.sourceforgery.tachikoma.grpc.grpcFutureBidi
-import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import org.kodein.di.DI
 import org.kodein.di.DIAware
-import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class MTAEmailQueueServiceGrpcImpl(
     override val di: DI
-) : MTAEmailQueueGrpc.MTAEmailQueueImplBase(),
-    DIAware,
-    TachikomaScope by di.direct.instance() {
+) : MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineImplBase(), DIAware {
 
     private val authentication: () -> Authentication by provider()
     private val mtaEmailQueueService: MTAEmailQueueService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 
-    override fun getEmails(responseObserver: StreamObserver<EmailMessage>) = grpcFutureBidi(responseObserver) {
+    override fun getEmails(requests: Flow<MTAQueuedNotification>): Flow<EmailMessage> = flow {
         try {
             val auth = authentication()
             auth.requireBackend()
-            mtaEmailQueueService.getEmails(responseObserver, auth.mailDomain)
+            emitAll(mtaEmailQueueService.getEmails(requests, auth.mailDomain))
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
-            NullStreamObserver<MTAQueuedNotification>()
+            throw grpcExceptionMap.findAndConvertAndLog(e)
         }
     }
 
-    override fun incomingEmail(request: IncomingEmailMessage, responseObserver: StreamObserver<MailAcceptanceResult>) = grpcFuture(responseObserver) {
+    override suspend fun incomingEmail(request: IncomingEmailMessage): MailAcceptanceResult =
         try {
             authentication().requireBackend()
-            val acceptanceResult = mtaEmailQueueService.incomingEmail(request)
-            responseObserver.onNext(MailAcceptanceResult.newBuilder().setAcceptanceStatus(acceptanceResult).build())
-            responseObserver.onCompleted()
+            MailAcceptanceResult.newBuilder()
+                .setAcceptanceStatus(mtaEmailQueueService.incomingEmail(request))
+                .build()
         } catch (e: Exception) {
-            responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
+            throw grpcExceptionMap.findAndConvertAndLog(e)
         }
-    }
 }

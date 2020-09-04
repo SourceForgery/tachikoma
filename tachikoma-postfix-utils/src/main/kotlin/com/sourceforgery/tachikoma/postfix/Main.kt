@@ -8,6 +8,7 @@ import com.sourceforgery.tachikoma.incoming.IncomingEmailHandler
 import com.sourceforgery.tachikoma.mailer.MailSender
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpc
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
+import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.syslog.Syslogger
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
@@ -42,7 +43,7 @@ internal constructor(
             .responseTimeout(Duration.ofDays(365))
             .writeTimeout(Duration.ofDays(365))
 
-        MailSender(builder.build(MTAEmailQueueGrpc.MTAEmailQueueStub::class.java), scope)
+        MailSender(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
             .start()
         val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpc.MTAEmailQueueBlockingStub::class.java), scope)
         incomingEmail.start()

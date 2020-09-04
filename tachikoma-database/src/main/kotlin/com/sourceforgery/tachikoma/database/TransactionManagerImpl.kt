@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.database
 
 import io.ebean.Database
+import io.ebean.Transaction
 import io.ebeaninternal.api.SpiEbeanServer
 import io.ebeaninternal.api.SpiTransaction
 import io.ebeaninternal.server.transaction.TransactionScopeManager
@@ -15,19 +16,19 @@ import org.kodein.di.instance
 class TransactionManagerImpl(override val di: DI) : TransactionManager, DIAware {
     private val database: Database by instance()
 
-    override fun <T> runInTransaction(block: () -> T): T {
+    override fun <T> runInTransaction(block: (Transaction) -> T): T {
         return database.beginTransaction().use { tx ->
-            block().also {
+            block(tx).also {
                 tx.commit()
             }
         }
     }
 
-    override suspend fun <T> coroutineTx(block: suspend () -> T): T {
+    override suspend fun <T> coroutineTx(block: suspend (Transaction) -> T): T {
         val txManager = (database as SpiEbeanServer).transactionManager.scope()
         return database.beginTransaction().use { tx ->
             withContext(CoroutineTransactionScopeManager(txManager)) {
-                block().also {
+                block(tx).also {
                     tx.commit()
                 }
             }
@@ -39,18 +40,22 @@ internal data class TransactionScopeManagerKey(private val scopeManager: Transac
 
 private class CoroutineTransactionScopeManager(
     private val transactionScopeManager: TransactionScopeManager,
-    private val spiTransaction: SpiTransaction = transactionScopeManager.active
-) : ThreadContextElement<SpiTransaction> {
+    private val spiTransaction: SpiTransaction? = transactionScopeManager.active
+) : ThreadContextElement<SpiTransaction?> {
 
     override val key: CoroutineContext.Key<*> = TransactionScopeManagerKey(transactionScopeManager)
 
-    override fun restoreThreadContext(context: CoroutineContext, oldState: SpiTransaction) {
-        transactionScopeManager.set(oldState)
+    override fun restoreThreadContext(context: CoroutineContext, oldState: SpiTransaction?) {
+        if (oldState == null) {
+            transactionScopeManager.clearExternal()
+        } else {
+            transactionScopeManager.replace(oldState)
+        }
     }
 
-    override fun updateThreadContext(context: CoroutineContext): SpiTransaction {
+    override fun updateThreadContext(context: CoroutineContext): SpiTransaction? {
         val oldState = transactionScopeManager.inScope
-        transactionScopeManager.set(spiTransaction)
+        transactionScopeManager.replace(spiTransaction)
         return oldState
     }
 

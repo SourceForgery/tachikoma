@@ -5,7 +5,9 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddress
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
-import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
@@ -25,16 +27,16 @@ internal class IncomingEmailAddressService(override val di: DI) : DIAware {
         incomingEmailAddressDAO.save(incomingEmailAddressDBO)
     }
 
-    fun getIncomingEmailAddresses(responseObserver: StreamObserver<IncomingEmailAddress>, authenticationId: AuthenticationId) {
+    fun getIncomingEmailAddresses(authenticationId: AuthenticationId): Flow<IncomingEmailAddress> {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
-        incomingEmailAddressDAO.getAll(accountDBO = authenticationDBO.account)
-            .forEach {
-                val incomingEmailAddress = IncomingEmailAddress
+        return incomingEmailAddressDAO.getAll(accountDBO = authenticationDBO.account)
+            .asFlow()
+            .map {
+                IncomingEmailAddress
                     .newBuilder()
                     .setLocalPart(it.localPart)
                     .build()
-                responseObserver.onNext(incomingEmailAddress)
             }
     }
 

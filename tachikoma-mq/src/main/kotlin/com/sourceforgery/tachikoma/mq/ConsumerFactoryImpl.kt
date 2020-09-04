@@ -20,7 +20,14 @@ import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import java.time.Clock
 import java.time.Duration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -144,29 +151,9 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
             },
             MoreExecutors.directExecutor()
         )
-        val consumer = object : DefaultConsumer(channel) {
-            override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
-                LOGGER.debug { "Processing message, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
-                var success = false
-                try {
-                    val parsedMessage = messageQueue.parser(body)
-                    runBlocking {
-                        callback(parsedMessage)
-                    }
-                    success = true
-                } catch (e: Exception) {
-                    LOGGER.error(e) { "Got exception, message queue name: ${messageQueue.name}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
-                } finally {
-                    try {
-                        if (success) {
-                            channel.basicAck(envelope.deliveryTag, false)
-                        } else {
-                            channel.basicNack(envelope.deliveryTag, false, false)
-                        }
-                    } catch (e: Exception) {
-                        LOGGER.warn(e) { "Failed to ACK/NACK error" }
-                    }
-                }
+        val consumer = CallbackConsumer(channel) {
+            runBlocking {
+                callback(messageQueue.parser(it))
             }
         }
         channel.basicConsume(messageQueue.name, false, consumer)
@@ -180,28 +167,52 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return future
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (DeliveryNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<DeliveryNotificationMessage> {
         val queue = DeliveryNotificationMessageQueue(authenticationId)
         setupAuthentication(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
             accountId = accountId
         )
-        return listenOnQueue(queue, callback)
+        return listenOnQueueFlow(queue)
     }
 
-    override fun listenForOutgoingEmails(mailDomain: MailDomain, callback: suspend (OutgoingEmailMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForOutgoingEmails(mailDomain: MailDomain): Flow<OutgoingEmailMessage> {
         setupAccount(mailDomain)
-        return listenOnQueue(OutgoingEmailsMessageQueue(mailDomain), callback)
+        return listenOnQueueFlow(OutgoingEmailsMessageQueue(mailDomain))
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId, callback: suspend (IncomingEmailNotificationMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<IncomingEmailNotificationMessage> {
         setupAuthentication(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
             accountId = accountId
         )
-        return listenOnQueue(IncomingEmailNotificationMessageQueue(authenticationId), callback)
+        return listenOnQueueFlow(IncomingEmailNotificationMessageQueue(authenticationId))
+    }
+
+    private fun <T> listenOnQueueFlow(messageQueue: MessageQueue<T>): Flow<T> {
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        return callbackFlow<ByteArray> {
+            withContext(Dispatchers.IO) {
+                connection
+                    .createChannel()
+                    .use { channel ->
+                        val consumer = CallbackConsumer(channel) {
+                            sendBlocking(it)
+                        }
+                        @Suppress("BlockingMethodInNonBlockingContext")
+                        channel.basicConsume(messageQueue.name, false, consumer)
+                        channel.addShutdownListener {
+                            if (it.isInitiatedByApplication) {
+                                this@callbackFlow.cancel()
+                            } else {
+                                (channel as ChannelN).processShutdownSignal(it, true, true)
+                            }
+                        }
+                    }
+            }
+        }.map { messageQueue.parser(it) }
     }
 
     override fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Void> {
@@ -288,6 +299,32 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
             basicProperties,
             notificationMessageClone.toByteArray()
         )
+    }
+
+    private inner class CallbackConsumer(
+        channel: Channel,
+        private val callback: (ByteArray) -> Unit
+    ) : DefaultConsumer(channel) {
+        override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
+            LOGGER.debug { "Processing message, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
+            var success = false
+            try {
+                callback(body)
+                success = true
+            } catch (e: Exception) {
+                LOGGER.error(e) { "Got exception, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
+            } finally {
+                try {
+                    if (success) {
+                        channel.basicAck(envelope.deliveryTag, false)
+                    } else {
+                        channel.basicNack(envelope.deliveryTag, false, false)
+                    }
+                } catch (e: Exception) {
+                    LOGGER.warn(e) { "Was success: $success. Could not ACK/NACK. Will be implicitly NACKed by rabbitmq" }
+                }
+            }
+        }
     }
 
     companion object {

@@ -8,7 +8,9 @@ import com.sourceforgery.tachikoma.grpc.frontend.toEmail
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
-import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
@@ -17,22 +19,19 @@ internal class BlockedEmailService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val blockedEmailDAO: BlockedEmailDAO by instance()
 
-    fun getBlockedEmails(responseObserver: StreamObserver<BlockedEmail>, authenticationId: AuthenticationId) {
+    suspend fun getBlockedEmails(authenticationId: AuthenticationId): Flow<BlockedEmail> {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
-        val blockedEmails = blockedEmailDAO.getBlockedEmails(authenticationDBO.account)
-
-        blockedEmails.forEach {
-
-            val blockedEmail = BlockedEmail
-                .newBuilder()
-                .setFromEmail(it.fromEmail.toGrpcInternal())
-                .setRecipientEmail(it.recipientEmail.toGrpcInternal())
-                .setBlockedReason(it.blockedReason.toGrpc())
-                .build()
-
-            responseObserver.onNext(blockedEmail)
-        }
+        return blockedEmailDAO.getBlockedEmails(authenticationDBO.account)
+            .asFlow()
+            .map {
+                BlockedEmail
+                    .newBuilder()
+                    .setFromEmail(it.fromEmail.toGrpcInternal())
+                    .setRecipientEmail(it.recipientEmail.toGrpcInternal())
+                    .setBlockedReason(it.blockedReason.toGrpc())
+                    .build()
+            }
     }
 
     fun removeBlockedEmail(request: RemoveBlockedEmailRequest, authenticationId: AuthenticationId) {

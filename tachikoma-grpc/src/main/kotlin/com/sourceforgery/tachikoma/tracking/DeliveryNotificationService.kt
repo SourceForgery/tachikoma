@@ -1,13 +1,11 @@
 package com.sourceforgery.tachikoma.tracking
 
-import com.google.common.util.concurrent.ListenableFuture
 import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.id
-import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.ClickedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.DeliveredEvent
 import com.sourceforgery.tachikoma.grpc.frontend.EmailMetrics
@@ -29,10 +27,8 @@ import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.DeliveryNotificationMessage
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
-import io.grpc.stub.ServerCallStreamObserver
-import io.grpc.stub.StreamObserver
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.mapNotNull
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -41,56 +37,28 @@ import org.kodein.di.instance
 internal class DeliveryNotificationService(override val di: DI) : DIAware {
     private val mqSequenceFactory: MQSequenceFactory by instance()
     private val emailDAO: EmailDAO by instance()
-    private val grpcExceptionMap: GrpcExceptionMap by instance()
 
     suspend fun notificationStream(
-        responseObserver: StreamObserver<EmailNotification>,
         request: NotificationStreamParameters,
         authenticationId: AuthenticationId,
         accountId: AccountId,
         mailDomain: MailDomain
-    ) {
-        val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
-        val future = mqSequenceFactory.listenForDeliveryNotifications(
-            authenticationId = authenticationId,
-            mailDomain = mailDomain,
-            accountId = accountId
-        ) { deliveryNotificationMessage: DeliveryNotificationMessage ->
-            val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(deliveryNotificationMessage.emailMessageId))
-            if (emailData == null) {
-                LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
-            } else {
-                val emailNotification = deliveryNotificationMessage.toEmailNotification(emailData, request)
-                responseObserver.onNext(emailNotification)
-            }
-        }
-        serverCallStreamObserver
-            ?.setOnCancelHandler {
-                future.cancel(true)
-            }
-        future.addListener(
-            runnable(serverCallStreamObserver, future, responseObserver),
-            responseCloser
-        )
-    }
-
-    private fun runnable(serverCallStreamObserver: ServerCallStreamObserver<*>?, future: ListenableFuture<Void>, responseObserver: StreamObserver<*>): Runnable {
-        return Runnable {
-            val cancelled = serverCallStreamObserver?.isCancelled ?: true
-            if (!cancelled) {
-                try {
-                    future.get()
-                    responseObserver.onCompleted()
-                } catch (e: ExecutionException) {
-                    responseObserver.onError(grpcExceptionMap.findAndConvertAndLog(e))
-                }
-            }
+    ): Flow<EmailNotification> = mqSequenceFactory.listenForDeliveryNotifications(
+        authenticationId = authenticationId,
+        mailDomain = mailDomain,
+        accountId = accountId
+    ).mapNotNull { deliveryNotificationMessage: DeliveryNotificationMessage ->
+        val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(deliveryNotificationMessage.emailMessageId))
+        if (emailData == null) {
+            LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
+            null
+        } else {
+            deliveryNotificationMessage.toEmailNotification(emailData, request)
         }
     }
 
     companion object {
         private val LOGGER = logger()
-        private val responseCloser = Executors.newCachedThreadPool()
     }
 }
 

@@ -24,16 +24,16 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.MessageHardBounced
 import com.sourceforgery.tachikoma.mq.MessageQueued
 import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
-import io.grpc.Status
-import io.grpc.StatusRuntimeException
-import io.grpc.stub.ServerCallStreamObserver
-import io.grpc.stub.StreamObserver
 import java.time.Clock
 import java.util.Properties
-import java.util.concurrent.Executors
 import javax.mail.Session
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -50,44 +50,17 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
     private val incomingEmailAddressDAO: IncomingEmailAddressDAO by instance()
     private val extractEmailMetadata: ExtractEmailMetadata by instance()
 
-    fun getEmails(responseObserver: StreamObserver<EmailMessage>, mailDomain: MailDomain): StreamObserver<MTAQueuedNotification> {
+    fun getEmails(requests: Flow<MTAQueuedNotification>, mailDomain: MailDomain): Flow<EmailMessage> {
         LOGGER.info { "MTA connected with mail domain $mailDomain " }
-        val serverCallStreamObserver = responseObserver as? ServerCallStreamObserver
-        val future = mqSequenceFactory.listenForOutgoingEmails(mailDomain) {
-            val email = emailDAO.fetchEmailData(EmailId(it.emailId))
-            if (email == null) {
-                LOGGER.warn { "Nothing found when looking trying to send email with id: " + it.emailId }
-            } else {
-                LOGGER.info { "Email with id ${email.id} is about to be sent" }
-                val response = EmailMessage.newBuilder()
-                    .setBody(email.body!!)
-                    .setFrom(email.transaction.fromEmail.address)
-                    .setEmailId(email.id.emailId)
-                    .setEmailAddress(email.recipient.address)
-                    .addAllBcc(email.transaction.bcc)
-                    .build()
-                responseObserver.onNext(response)
-            }
-        }
-        future.addListener(Runnable {
-            val cancelled = serverCallStreamObserver?.isCancelled ?: true
-            if (!cancelled) {
-                responseObserver.onCompleted()
-            }
-        }, responseCloser)
 
-        return object : StreamObserver<MTAQueuedNotification> {
-            override fun onCompleted() {
-                future.cancel(true)
-            }
-
-            override fun onNext(value: MTAQueuedNotification) {
+        GlobalScope.launch {
+            requests.collect { value ->
                 val queueId = value.queueId
                 val emailId = EmailId(value.emailId)
                 val email = emailDAO.getByEmailId(emailId)
                 if (email == null) {
                     LOGGER.warn { "Didn't find id for email with emailId: $emailId" }
-                    return
+                    return@collect
                 }
 
                 if (value.success) {
@@ -131,15 +104,25 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
                     LOGGER.error { "Wasn't able to deliver message with emailId: $emailId" }
                 }
             }
-
-            override fun onError(t: Throwable) {
-                if ((t as? StatusRuntimeException)?.status != Status.CANCELLED) {
-                    // Only log if there's something more interesting than a closed connection
-                    LOGGER.error(t) { "Error in MTAEmailQueueService" }
-                }
-                future.cancel(true)
-            }
         }
+
+        return mqSequenceFactory.listenForOutgoingEmails(mailDomain)
+            .mapNotNull {
+                val email = emailDAO.fetchEmailData(EmailId(it.emailId))
+                if (email == null) {
+                    LOGGER.warn { "Nothing found when looking trying to send email with id: " + it.emailId }
+                    null
+                } else {
+                    LOGGER.info { "Email with id ${email.id} is about to be sent" }
+                    EmailMessage.newBuilder()
+                        .setBody(email.body!!)
+                        .setFrom(email.transaction.fromEmail.address)
+                        .setEmailId(email.id.emailId)
+                        .setEmailAddress(email.recipient.address)
+                        .addAllBcc(email.transaction.bcc)
+                        .build()
+                }
+            }
     }
 
     fun incomingEmail(request: IncomingEmailMessage): MailAcceptanceResult.AcceptanceStatus {
@@ -151,8 +134,8 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
             ?: handleHardBounce(recipientEmail)
             ?: handleNormalEmails(recipientEmail)
 
-        // <> from address means bounce
-        if (request.from == "<>") {
+        // "" from address means bounce
+        if (request.from == "") {
             LOGGER.warn { "Received bounce to $recipientEmail" }
             return MailAcceptanceResult.AcceptanceStatus.IGNORED
         } else if (accountTypePair != null) {
@@ -243,7 +226,6 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
 
     companion object {
         private val LOGGER = logger()
-        private val responseCloser = Executors.newCachedThreadPool()
     }
 }
 

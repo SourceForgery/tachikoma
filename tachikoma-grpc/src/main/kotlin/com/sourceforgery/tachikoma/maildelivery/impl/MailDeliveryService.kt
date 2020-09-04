@@ -45,7 +45,6 @@ import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import io.grpc.stub.StreamObserver
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.io.StringWriter
@@ -68,6 +67,8 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.apache.logging.log4j.kotlin.logger
 import org.jetbrains.annotations.TestOnly
 import org.jsoup.Jsoup
@@ -93,11 +94,10 @@ class MailDeliveryService(override val di: DI) : DIAware {
     private val messageIdFactory: MessageIdFactory by instance()
     private val clock: Clock by instance()
 
-    fun sendEmail(
+    suspend fun sendEmail(
         request: OutgoingEmail,
-        responseObserver: StreamObserver<EmailQueueStatus>,
         authenticationId: AuthenticationId
-    ) {
+    ): Flow<EmailQueueStatus> = flow {
         val auth = authenticationDAO.getActiveById(authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
         if (fromEmail.domain != auth.account.mailDomain) {
@@ -119,7 +119,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                 Instant.EPOCH
             }
 
-        transactionManager.runInTransaction {
+        transactionManager.coroutineTx {
             emailSendTransactionDAO.save(transaction)
 
             for (recipient in request.recipientsList) {
@@ -137,7 +137,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                 )
 
                 if (blockedReason != null) {
-                    responseObserver.onNext(
+                    emit(
                         EmailQueueStatus.newBuilder()
                             .setRejected(
                                 Rejected.newBuilder()
@@ -202,7 +202,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                 )
             )
 
-            responseObserver.onNext(
+            emit(
                 EmailQueueStatus.newBuilder()
                     .setEmailId(emailDBO.id.toGrpcInternal())
                     .setQueued(Queued.getDefaultInstance())

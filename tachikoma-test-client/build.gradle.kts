@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
     implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
     implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-jul:$log4j2Version")

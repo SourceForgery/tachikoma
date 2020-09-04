@@ -22,6 +22,8 @@ service MailDeliveryService {
     rpc StreamIncomingEmails (IncomingEmailParameters) returns (stream IncomingEmail);
 
     rpc GetIncomingEmail (GetIncomingEmailRequest) returns (IncomingEmail);
+
+    rpc SearchIncomingEmails (SearchIncomingEmailsRequest) returns (stream IncomingEmail);
 }
 
 // A recipient
@@ -311,5 +313,26 @@ message IncomingEmailParameters {
 
 message GetIncomingEmailRequest {
     IncomingEmailId incoming_email_id = 1;
+    IncomingEmailParameters parameters = 2;
+}
+
+message TimeSpan {
+    google.protobuf.Timestamp after = 1;
+    google.protobuf.Timestamp before = 2;
+}
+
+message EmailSearchFilter {
+    oneof filter {
+        string contains_subject = 1;
+        string contains_sender_name = 2;
+        string contains_sender_email = 3;
+        string contains_receiver_name = 4;
+        string contains_receiver_email = 5;
+        TimeSpan received_within = 6;
+    }
+}
+
+message SearchIncomingEmailsRequest {
+    repeated EmailSearchFilter message_filter = 1;
     IncomingEmailParameters parameters = 2;
 }
