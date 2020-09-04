@@ -59,7 +59,7 @@ class TransactionManagerImplTest : DIAware {
             val thread = Thread.currentThread()
             lateinit var id: AccountId
             assertNull(txManager.inScope)
-            assertFailsWith(RuntimeException::class) {
+            assertFailsWith(IllegalStateException::class) {
                 transactionManager.coroutineTx { tx ->
                     withContext(Dispatchers.IO) {
                         val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
@@ -69,13 +69,45 @@ class TransactionManagerImplTest : DIAware {
                         assertSame(tx, txManager.inScope)
                         val account = database.find<AccountDBO>(id)
                         assertNotNull(account)
-                        throw RuntimeException()
+                        error("")
                     }
                 }
             }
             assertNull(txManager.inScope)
             val account = database.find<AccountDBO>(id)
             assertNull(account)
+        }
+    }
+
+    @Test
+    fun `aborted transaction and then create new transaction`() {
+        val txManager = (database as SpiEbeanServer).transactionManager.scope()
+        runBlocking {
+            val thread = Thread.currentThread()
+            lateinit var id: AccountId
+            assertNull(txManager.inScope)
+            assertFailsWith(IllegalStateException::class) {
+                transactionManager.coroutineTx { tx ->
+                    withContext(Dispatchers.IO) {
+                        val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
+                        database.save(accountDBO)
+                        id = accountDBO.id
+                        assertNotSame(thread, Thread.currentThread())
+                        assertSame(tx, txManager.inScope)
+                        val account = database.find<AccountDBO>(id)
+                        assertNotNull(account)
+                        error("")
+                    }
+                }
+            }
+            assertNull(txManager.inScope)
+            assertNull(database.find<AccountDBO>(id))
+            transactionManager.coroutineTx { tx ->
+                val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
+                database.save(accountDBO)
+                id = accountDBO.id
+            }
+            assertNotNull(database.find<AccountDBO>(id))
         }
     }
 }
