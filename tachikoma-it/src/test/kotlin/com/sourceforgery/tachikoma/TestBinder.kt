@@ -53,6 +53,7 @@ fun testModule(vararg attributes: TestAttribute) = DI.Module("test") {
         if (TestAttribute.POSTGRESQL in attributes) {
             PostgresqlEmbeddedDataSourceProvider(di)
         } else {
+            @Suppress("USELESS_CAST")
             H2DataSourceProvider(di) as DataSourceProvider
         }
     }
