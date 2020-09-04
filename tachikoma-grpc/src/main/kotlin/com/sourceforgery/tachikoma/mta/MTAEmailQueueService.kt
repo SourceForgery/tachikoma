@@ -134,7 +134,7 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
             ?: handleHardBounce(recipientEmail)
             ?: handleNormalEmails(recipientEmail)
 
-        // <> from address means bounce
+        // "" from address means bounce
         if (request.from == "") {
             LOGGER.warn { "Received bounce to $recipientEmail" }
             return MailAcceptanceResult.AcceptanceStatus.IGNORED
