@@ -44,7 +44,12 @@ class RestExceptionMap(override val di: DI) : DIAware {
     }
 
     fun findCatcher(key: Class<Throwable>): RestExceptionCatcher<Throwable> {
-        return map.computeIfAbsent(key) { findClass(key) }
+        try {
+            return map.computeIfAbsent(key) { findClass(key) }
+        } catch (e: Exception) {
+            LOGGER.error(e) { "Failed to map exception" }
+            throw e
+        }
     }
 
     private fun getGenerics(catcher: RestExceptionCatcher<*>): Type {

@@ -5,6 +5,7 @@ import io.grpc.StatusRuntimeException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
+import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.allInstances
@@ -27,9 +28,14 @@ class GrpcExceptionMap(override val di: DI) : DIAware {
     }
 
     fun findCatcher(key: Throwable): GrpcExceptionCatcher<Throwable> {
-        @Suppress("UNCHECKED_CAST")
-        val clazz = key::class.java as Class<Throwable>
-        return map.computeIfAbsent(clazz) { findClass(clazz) }
+        try {
+            @Suppress("UNCHECKED_CAST")
+            val clazz = key::class.java as Class<Throwable>
+            return map.computeIfAbsent(clazz) { findClass(clazz) }
+        } catch (e: Exception) {
+            LOGGER.error(e) { "Failed to map exception" }
+            throw e
+        }
     }
 
     private fun getGenerics(catcher: GrpcExceptionCatcher<*>): Type {
@@ -55,5 +61,9 @@ class GrpcExceptionMap(override val di: DI) : DIAware {
         val catcher = findCatcher(t)
         catcher.logError(t)
         return catcher.toException(t)
+    }
+
+    companion object {
+        private val LOGGER = logger()
     }
 }
