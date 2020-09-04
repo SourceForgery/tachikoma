@@ -42,6 +42,7 @@ class MailSender(
             stub.getEmails(channel.receiveAsFlow())
                 .catch {
                     LOGGER.warn { "Got error from gRPC server with message: ${it.message}" }
+                    start()
                     throw it
                 }
                 .collect {
@@ -49,6 +50,7 @@ class MailSender(
                     LOGGER.info { "Sent email: ${it.emailId} with status ${status.success} and queueId ${status.queueId}" }
                     channel.offer(status)
                 }
+            start()
         }
     }
 
