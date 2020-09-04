@@ -6,7 +6,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpcKt
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
@@ -22,22 +22,23 @@ internal class DeliveryNotificationServiceGrpcImpl(
     private val grpcExceptionMap: GrpcExceptionMap by instance()
     private val authentication: () -> Authentication by provider()
 
-    @Suppress("EXPERIMENTAL_API_USAGE")
-    override fun notificationStream(request: NotificationStreamParameters) = flow<Flow<EmailNotification>> {
+    override fun notificationStream(request: NotificationStreamParameters): Flow<EmailNotification> = flow {
         try {
             val auth = authentication()
             auth.requireFrontend()
             LOGGER.info { "Connected, user ${auth.authenticationId} getting delivery notifications from ${auth.mailDomain}" }
-            deliveryNotificationService.notificationStream(
-                request = request,
-                authenticationId = auth.authenticationId,
-                mailDomain = auth.mailDomain,
-                accountId = auth.accountId
+            emitAll(
+                deliveryNotificationService.notificationStream(
+                    request = request,
+                    authenticationId = auth.authenticationId,
+                    mailDomain = auth.mailDomain,
+                    accountId = auth.accountId
+                )
             )
         } catch (e: Exception) {
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
-    }.flattenConcat()
+    }
 
     companion object {
         private val LOGGER = logger()
