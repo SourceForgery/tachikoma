@@ -10,10 +10,11 @@ import java.net.Socket
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
+import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -38,19 +39,23 @@ class MailSender(
 
     fun start() {
         scope.launch {
-            LOGGER.info { "Connecting. Trying to listen for emails" }
-            stub.getEmails(channel.receiveAsFlow())
-                .catch {
-                    LOGGER.warn { "Got error from gRPC server with message: ${it.message}" }
-                    start()
-                    throw it
+            while (true) {
+                LOGGER.info { "Connecting. Trying to listen for emails" }
+                try {
+                    stub.getEmails(channel.receiveAsFlow())
+                        .collect {
+                            val status = sendEmail(it)
+                            LOGGER.info { "Sent email: ${it.emailId} with status ${status.success} and queueId ${status.queueId}" }
+                            channel.offer(status)
+                        }
+                } catch (e: Exception) {
+                    LOGGER.warn { "Got error from gRPC server with message: ${e.message}" }
+                    delay(1000)
                 }
-                .collect {
-                    val status = sendEmail(it)
-                    LOGGER.info { "Sent email: ${it.emailId} with status ${status.success} and queueId ${status.queueId}" }
-                    channel.offer(status)
-                }
-            start()
+            }
+        }.invokeOnCompletion {
+            LOGGER.fatal { "MailSender died. Killing process" }
+            exitProcess(1)
         }
     }
 
