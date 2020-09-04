@@ -38,7 +38,6 @@ import org.kodein.di.instance
 internal class DeliveryNotificationService(override val di: DI) : DIAware {
     private val mqSequenceFactory: MQSequenceFactory by instance()
     private val emailDAO: EmailDAO by instance()
-    private val grpcExceptionMap: GrpcExceptionMap by instance()
 
     suspend fun notificationStream(
         request: NotificationStreamParameters,
