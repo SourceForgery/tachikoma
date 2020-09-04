@@ -36,11 +36,13 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliverySe
         val auth = authentication()
         auth.requireFrontend()
         LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
-        incomingEmailService.streamIncomingEmails(
-            authenticationId = auth.authenticationId,
-            mailDomain = auth.mailDomain,
-            accountId = auth.accountId,
-            parameters = request
+        emitAll(
+            incomingEmailService.streamIncomingEmails(
+                authenticationId = auth.authenticationId,
+                mailDomain = auth.mailDomain,
+                accountId = auth.accountId,
+                parameters = request
+            )
         )
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 

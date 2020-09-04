@@ -6,6 +6,7 @@ import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.incomingemailaddress.IncomingEmailAddressServiceGrpcKt
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -33,7 +34,7 @@ internal class IncomingEmailAddressServiceGrpcImpl(
     override fun getIncomingEmailAddresses(request: Empty) = flow<IncomingEmailAddress> {
         val auth = authentication()
         auth.requireFrontendAdmin(auth.mailDomain)
-        incomingEmailAddressService.getIncomingEmailAddresses(auth.authenticationId)
+        emitAll(incomingEmailAddressService.getIncomingEmailAddresses(auth.authenticationId))
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
     override suspend fun deleteIncomingEmailAddress(request: IncomingEmailAddress): Empty =
