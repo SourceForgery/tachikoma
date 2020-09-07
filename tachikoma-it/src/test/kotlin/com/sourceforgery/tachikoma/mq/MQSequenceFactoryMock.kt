@@ -61,4 +61,6 @@ class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
     companion object {
         private val executorService: ExecutorService = Executors.newCachedThreadPool()
     }
+
+    override fun alive() = true
 }

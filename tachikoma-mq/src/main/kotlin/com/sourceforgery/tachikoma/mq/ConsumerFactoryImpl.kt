@@ -327,6 +327,8 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         }
     }
 
+    override fun alive() = connection.isOpen
+
     companion object {
         val LOGGER = logger()
 
