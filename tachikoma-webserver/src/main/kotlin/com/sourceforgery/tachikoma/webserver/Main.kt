@@ -52,7 +52,7 @@ class WebServerStarter(override val di: DI) : DIAware {
 
         // Order matters!
         val serverBuilder = Server.builder()
-            .serviceUnder("/health", healthService)
+            .service("/health", healthService)
             .accessLogWriter(AccessLogWriter.combined(), true)
 
         for (restService in restServices) {

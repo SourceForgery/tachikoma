@@ -120,7 +120,7 @@ stringData:
       mode    http
       option  httplog
       option  dontlognull
-      monitor-uri /api/alive
+      monitor-uri /health
       timeout connect 5000
       timeout client  50000
       timeout server  50000
@@ -153,7 +153,7 @@ stringData:
     backend backend
       balance roundrobin
       option httpchk
-      http-check send meth GET uri https://tachikoma/api/alive
+      http-check send meth GET uri https://tachikoma/health
       server server1 tachikoma-webserver-svc.default.svc.cluster.local:443 ssl verify none alpn h2 check check-alpn http/1.1
       redirect scheme https if !{ ssl_fc }
 
