@@ -1,4 +1,4 @@
-apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tachikoma-webserver
@@ -16,54 +16,189 @@ spec:
         app: tachikoma-webserver
     spec:
       containers:
-      - name: tachikoma-webserver
-        image: sourceforgery/tachikoma-webserver:${version}
-        imagePullPolicy: Always
-        ports:
-        - name: webserver-port
-          protocol: TCP
-          containerPort: 8443
-        volumeMounts:
-        - name: webserver-config
-          mountPath: "/etc/tachikoma/config/"
-          readOnly: true
-        - name: webserver-cert
-          mountPath: "/etc/tachikoma/cert/"
-          readOnly: true
-        - name: webserver-rsyslog
-          mountPath: "/etc/tachikoma/rsyslog/"
-          readOnly: true
-        env:
-        - name: TACHIKOMA_CONFIG
-          value: "/etc/tachikoma/config/tachikoma.properties"
-        - name: SSL_CERT_CHAIN_FILE
-          value: "/etc/tachikoma/cert/server.crt"
-        - name: SSL_CERT_KEY_FILE
-          value: "/etc/tachikoma/cert/server.key"
+        - name: tachikoma-webserver
+          image: sourceforgery/tachikoma-webserver:${version}
+          imagePullPolicy: Always
+          ports:
+            - name: webserver-port
+              protocol: TCP
+              containerPort: 8443
+          volumeMounts:
+            - name: webserver-config
+              mountPath: "/etc/tachikoma/config/"
+              readOnly: true
+            - name: webserver-rsyslog
+              mountPath: "/etc/tachikoma/rsyslog/"
+              readOnly: true
+          env:
+            - name: TACHIKOMA_CONFIG
+              value: "/etc/tachikoma/config/tachikoma.properties"
+            - name: SSL_CERT_CHAIN_FILE
+              value: "/etc/ssl/snakeoil.crt"
+            - name: SSL_CERT_KEY_FILE
+              value: "/etc/ssl/snakeoil.key"
       volumes:
-      - name: webserver-config
-        secret:
-          secretName: tachikoma-webserver-config
-      - name: webserver-cert
-        secret:
-          secretName: tachikoma-webserver-cert
-      - name: webserver-rsyslog
-        secret:
-          secretName: tachikoma-webserver-rsyslog
+        - name: webserver-config
+          secret:
+            secretName: tachikoma-webserver-config
+        - name: webserver-rsyslog
+          secret:
+            secretName: tachikoma-webserver-rsyslog
 ---
 kind: Service
 apiVersion: v1
 metadata:
   name: tachikoma-loadbalancer
   labels:
-    app: tachikoma-webserver
+    appName: "tachikoma-haproxy"
 spec:
   selector:
-    app: tachikoma-webserver
+    app: tachikoma-haproxy
   type: LoadBalancer
   externalTrafficPolicy: Local
   ports:
-  - name: http
-    protocol: TCP
-    port: 443
-    targetPort: 8443
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "tachikoma-webserver-svc"
+  labels:
+    app: "tachikoma"
+    appName: "tachikoma"
+spec:
+  selector:
+    # Selects all PODs that have these labels
+    app: "tachikoma-webserver"
+  type: NodePort
+  ports:
+    - name: http2
+      protocol: TCP
+      port: 443
+      targetPort: 8443
+---
+apiVersion: v1
+# Secret only because of missing stringData in ConfigMap
+kind: Secret
+metadata:
+  name: tachikoma-haproxy-config
+stringData:
+  haproxy.cfg: |+
+    global
+      log stdout format raw daemon debug
+      # debug
+      chroot /var/lib/haproxy
+      # stats socket /var/run/haproxy/admin.sock mode 660 level admin
+      # stats timeout 30s
+      user haproxy
+      group haproxy
+
+      # Default SSL material locations
+      ca-base /etc/ssl/certs
+      crt-base /etc/ssl/private
+
+      # generated 2020-03-20, Mozilla Guideline v5.4, HAProxy 2.1, OpenSSL 1.1.1d, intermediate configuration
+      # https://ssl-config.mozilla.org/#server=haproxy&version=2.1&config=intermediate&openssl=1.1.1d&guideline=5.4
+      ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+      ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+      ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+
+      ssl-default-server-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+      ssl-default-server-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+      ssl-default-server-options no-sslv3 no-tlsv10 no-tlsv11 no-tls-tickets
+
+    defaults
+      log     global
+      mode    http
+      option  httplog
+      option  dontlognull
+      monitor-uri /api/alive
+      timeout connect 5000
+      timeout client  50000
+      timeout server  50000
+      # errorfile 400 /usr/local/etc/haproxy/errors/400.http
+      # errorfile 403 /usr/local/etc/haproxy/errors/403.http
+      # errorfile 408 /usr/local/etc/haproxy/errors/408.http
+      # errorfile 500 /usr/local/etc/haproxy/errors/500.http
+      # errorfile 502 /usr/local/etc/haproxy/errors/502.http
+      # errorfile 503 /usr/local/etc/haproxy/errors/503.http
+      # errorfile 504 /usr/local/etc/haproxy/errors/504.http
+
+    frontend web
+      bind :80
+      bind :443 ssl alpn h2,http/1.1,grpc-exp crt /etc/tachikoma/cert/tls.pem
+
+      capture request header X-Forwarded-For len 50
+      capture request header User-Agent len 200
+      capture request header Referer len 200
+      log-format "%ci %b/%s %Tr ms %B bytes %{+Q}hrl %ST %{+Q}r"
+
+      http-request set-header X-Forwarded-Port %[dst_port]
+      http-request add-header X-Forwarded-Proto https if { ssl_fc }
+
+      option forwardfor
+      use_backend backend
+
+      # HSTS (63072000 seconds)
+      http-response set-header Strict-Transport-Security max-age=63072000
+
+    backend backend
+      balance roundrobin
+      option httpchk
+      http-check send meth GET uri https://tachikoma/api/alive
+      server server1 tachikoma-webserver-svc.default.svc.cluster.local:443 ssl verify none alpn h2 check check-alpn http/1.1
+      redirect scheme https if !{ ssl_fc }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tachikoma-haproxy
+  labels:
+    app: tachikoma-haproxy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tachikoma-haproxy
+  revisionHistoryLimit: 2
+  template:
+    metadata:
+      labels:
+        app: tachikoma-haproxy
+    spec:
+      containers:
+        - name: tachikoma-haproxy
+          command: [ "/bin/sh" ]
+          args: [ "-c", "useradd --no-create-home haproxy && mkdir /var/lib/haproxy && haproxy -f /usr/local/etc/haproxy/haproxy.cfg" ]
+          image: "haproxy:2.2.2"
+          imagePullPolicy: Always
+          ports:
+            - name: haproxy-https
+              protocol: TCP
+              containerPort: 443
+            - name: haproxy-http
+              protocol: TCP
+              containerPort: 80
+          volumeMounts:
+            - name: cert
+              mountPath: "/etc/tachikoma/cert/"
+              readOnly: true
+            - name: config
+              mountPath: "/usr/local/etc/haproxy/"
+              readOnly: true
+      volumes:
+        - name: cert
+          secret:
+            secretName: tachikoma-webserver-cert
+        - name: config
+          secret:
+            secretName: tachikoma-haproxy-config
