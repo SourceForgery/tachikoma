@@ -80,6 +80,7 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 
+@Suppress("EXPERIMENTAL_API_USAGE")
 class MailDeliveryService(override val di: DI) : DIAware {
     private val trackingConfig: TrackingConfig by instance()
     private val unsubscribeConfig: UnsubscribeConfig by instance()

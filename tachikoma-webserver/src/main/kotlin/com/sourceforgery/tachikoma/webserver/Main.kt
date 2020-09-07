@@ -5,6 +5,7 @@ import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.Server
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
+import com.linecorp.armeria.server.healthcheck.HealthChecker
 import com.linecorp.armeria.server.logging.AccessLogWriter
 import com.sourceforgery.tachikoma.commonModule
 import com.sourceforgery.tachikoma.config.WebServerConfig
@@ -14,6 +15,7 @@ import com.sourceforgery.tachikoma.databaseModule
 import com.sourceforgery.tachikoma.grpcModule
 import com.sourceforgery.tachikoma.kodein.withInvokeCounter
 import com.sourceforgery.tachikoma.mq.JobWorker
+import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.mqModule
 import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.restModule
@@ -21,6 +23,7 @@ import com.sourceforgery.tachikoma.startup.startupModule
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
+import io.ebean.Database
 import io.grpc.BindableService
 import io.grpc.ServerInterceptors
 import io.netty.util.internal.logging.InternalLoggerFactory
@@ -45,10 +48,18 @@ class WebServerStarter(override val di: DI) : DIAware {
     private val webServerConfig: WebServerConfig by instance()
     private val jobWorker: JobWorker by instance()
     private val createUsers: CreateUsers by instance()
+    private val mqSequenceFactory: MQSequenceFactory by instance()
+    private val database: Database by instance()
 
     private fun startServerInBackground(): CompletableFuture<Void> {
 
-        val healthService = HealthCheckService.of()
+        val healthService = HealthCheckService.builder()
+            .checkers(
+                HealthChecker { mqSequenceFactory.alive() },
+                HealthChecker { database.sqlQuery("SELECT 1").findOne() != null }
+            )
+            .longPolling(0)
+            .build()
 
         // Order matters!
         val serverBuilder = Server.builder()
