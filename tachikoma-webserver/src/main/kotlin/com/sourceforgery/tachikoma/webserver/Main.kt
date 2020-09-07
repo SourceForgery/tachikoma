@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.webserver
 import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
 import com.linecorp.armeria.server.Server
+import com.linecorp.armeria.server.ServiceRequestContext
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
 import com.linecorp.armeria.server.healthcheck.HealthChecker
@@ -62,9 +63,18 @@ class WebServerStarter(override val di: DI) : DIAware {
             .build()
 
         // Order matters!
+        val combined = AccessLogWriter.combined()
         val serverBuilder = Server.builder()
             .service("/health", healthService)
-            .accessLogWriter(AccessLogWriter.combined(), true)
+            .accessLogWriter(
+                AccessLogWriter { requestLog ->
+                    val path = (requestLog.context() as ServiceRequestContext).path()
+                    if (path != "/health") {
+                        combined.log(requestLog)
+                    }
+                },
+                true
+            )
 
         for (restService in restServices) {
             serverBuilder.annotatedService("/", restService, exceptionHandler)
