@@ -67,8 +67,10 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.mail.util.ByteArrayDataSource
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.channelFlow
 import org.apache.logging.log4j.kotlin.logger
 import org.jetbrains.annotations.TestOnly
 import org.jsoup.Jsoup
@@ -97,7 +99,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
     suspend fun sendEmail(
         request: OutgoingEmail,
         authenticationId: AuthenticationId
-    ): Flow<EmailQueueStatus> = flow {
+    ): Flow<EmailQueueStatus> = channelFlow {
         val auth = authenticationDAO.getActiveById(authenticationId)!!
         val fromEmail = request.from.toNamedEmail().address
         if (fromEmail.domain != auth.account.mailDomain) {
@@ -137,7 +139,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                 )
 
                 if (blockedReason != null) {
-                    emit(
+                    send(
                         EmailQueueStatus.newBuilder()
                             .setRejected(
                                 Rejected.newBuilder()
@@ -202,7 +204,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                 )
             )
 
-            emit(
+            send(
                 EmailQueueStatus.newBuilder()
                     .setEmailId(emailDBO.id.toGrpcInternal())
                     .setQueued(Queued.getDefaultInstance())
@@ -211,7 +213,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                     .build()
             )
         }
-    }
+    }.buffer(UNLIMITED)
 
     private fun getTemplateBody(
         request: OutgoingEmail,
