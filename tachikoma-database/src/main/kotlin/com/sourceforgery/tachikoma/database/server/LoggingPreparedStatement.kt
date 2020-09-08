@@ -11,12 +11,12 @@ import org.intellij.lang.annotations.MagicConstant
 internal class LoggingPreparedStatement(
     private val preparedStatement: PreparedStatement,
     private val sql: String,
-    private val counter: InvokeCounter
+    private val counter: () -> InvokeCounter
 ) : PreparedStatement by preparedStatement {
 
     private fun inc(sql: String?, started: Long) {
         try {
-            counter.inc(sql, System.currentTimeMillis() - started)
+            counter().inc(sql, System.currentTimeMillis() - started)
         } catch (e: Exception) {
             if ("Not inside a request scope" !in (e.message ?: "")) {
                 LOGGER.warn(e) { "Unexpected error when logging" }

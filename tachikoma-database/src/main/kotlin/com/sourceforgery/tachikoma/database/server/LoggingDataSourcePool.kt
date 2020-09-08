@@ -7,7 +7,7 @@ import java.sql.SQLException
 
 internal class LoggingDataSourcePool(
     private val originalDataSourcePool: DataSourcePool,
-    private val counter: InvokeCounter
+    private val counter: () -> InvokeCounter
 ) : DataSourcePool by originalDataSourcePool {
 
     @Throws(SQLException::class)

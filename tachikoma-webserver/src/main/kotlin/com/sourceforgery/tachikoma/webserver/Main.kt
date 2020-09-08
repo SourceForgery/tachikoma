@@ -22,6 +22,7 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.restModule
 import com.sourceforgery.tachikoma.startup.startupModule
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
+import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.Database
@@ -51,6 +52,7 @@ class WebServerStarter(override val di: DI) : DIAware {
     private val createUsers: CreateUsers by instance()
     private val mqSequenceFactory: MQSequenceFactory by instance()
     private val database: Database by instance()
+    private val requestScoped: HttpRequestScopedDecorator by instance()
 
     private fun startServerInBackground(): CompletableFuture<Void> {
 
@@ -88,6 +90,7 @@ class WebServerStarter(override val di: DI) : DIAware {
 
         return serverBuilder
             // Grpc must be last
+            .decorator(requestScoped)
             .serviceUnder("/", grpcService)
             .apply {
                 if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {

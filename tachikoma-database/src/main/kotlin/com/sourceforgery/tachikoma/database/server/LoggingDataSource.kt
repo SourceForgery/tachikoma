@@ -7,7 +7,7 @@ import javax.sql.DataSource
 
 internal open class LoggingDataSource(
     private val originalDataSource: DataSource,
-    private val counter: InvokeCounter
+    private val counter: () -> InvokeCounter
 ) : DataSource by originalDataSource {
 
     @Throws(SQLException::class)

@@ -9,7 +9,7 @@ import java.sql.Statement
 
 internal class LoggingConnection(
     private val realConnection: Connection,
-    private val counter: InvokeCounter
+    private val counter: () -> InvokeCounter
 ) : Connection by realConnection {
 
     @Throws(SQLException::class)
@@ -18,7 +18,7 @@ internal class LoggingConnection(
         try {
             return realConnection.createStatement()
         } finally {
-            counter.inc("createStatement", System.currentTimeMillis() - millis)
+            counter().inc("createStatement", System.currentTimeMillis() - millis)
         }
     }
 
@@ -37,7 +37,7 @@ internal class LoggingConnection(
         try {
             return realConnection.prepareCall(sql)
         } finally {
-            counter.inc(sql, System.currentTimeMillis() - millis)
+            counter().inc(sql, System.currentTimeMillis() - millis)
         }
     }
 
@@ -47,7 +47,7 @@ internal class LoggingConnection(
         try {
             return realConnection.nativeSQL(sql)
         } finally {
-            counter.inc(sql, System.currentTimeMillis() - millis)
+            counter().inc(sql, System.currentTimeMillis() - millis)
         }
     }
 
@@ -57,7 +57,7 @@ internal class LoggingConnection(
         try {
             return realConnection.createStatement(resultSetType, resultSetConcurrency)
         } finally {
-            counter.inc("createStatement", System.currentTimeMillis() - millis)
+            counter().inc("createStatement", System.currentTimeMillis() - millis)
         }
     }
 
@@ -76,7 +76,7 @@ internal class LoggingConnection(
         try {
             return realConnection.prepareCall(sql, resultSetType, resultSetConcurrency)
         } finally {
-            counter.inc(sql, System.currentTimeMillis() - millis)
+            counter().inc(sql, System.currentTimeMillis() - millis)
         }
     }
 
@@ -91,7 +91,7 @@ internal class LoggingConnection(
         try {
             return realConnection.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability)
         } finally {
-            counter.inc(sql, System.currentTimeMillis() - millis)
+            counter().inc(sql, System.currentTimeMillis() - millis)
         }
     }
 
