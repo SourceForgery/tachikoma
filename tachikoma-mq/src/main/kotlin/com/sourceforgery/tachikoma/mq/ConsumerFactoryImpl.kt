@@ -307,23 +307,16 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
     ) : DefaultConsumer(channel) {
         override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
             LOGGER.debug { "Processing message, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
-            var success = false
-            try {
+            runCatching {
                 callback(body)
-                success = true
-            } catch (e: Exception) {
-                LOGGER.error(e) { "Got exception, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
-            } finally {
-                try {
-                    if (success) {
-                        channel.basicAck(envelope.deliveryTag, false)
-                    } else {
-                        channel.basicNack(envelope.deliveryTag, false, false)
-                    }
-                } catch (e: Exception) {
-                    LOGGER.warn(e) { "Was success: $success. Could not ACK/NACK. Will be implicitly NACKed by rabbitmq" }
-                }
             }
+                .onSuccess {
+                    channel.basicAck(envelope.deliveryTag, false)
+                }
+                .onFailure { e ->
+                    LOGGER.error(e) { "Got exception, consumer tag: $consumerTag" }
+                    channel.basicNack(envelope.deliveryTag, false, false)
+                }
         }
     }
 
@@ -335,7 +328,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         val SORTED_DELAYED_JOB_QUEUE = JobMessageQueue
             .values()
             .asSequence()
-            .filterNot { it == JobMessageQueue.JOBS }
+            .filter { it.nextDestination == JobMessageQueue.JOBS }
             .sortedByDescending { it.delay }
             .toList()
     }
