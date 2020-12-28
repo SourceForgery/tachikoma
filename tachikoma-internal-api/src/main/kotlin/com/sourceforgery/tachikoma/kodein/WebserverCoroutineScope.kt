@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.kodein
 
 import com.linecorp.armeria.common.RequestContext
-import com.sourceforgery.tachikoma.logging.InvokeCounter
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asContextElement
@@ -15,11 +14,11 @@ import kotlinx.coroutines.withContext
 private class RequestContextAwareCoroutineScope(
     coroutineContext: CoroutineContext,
     requestContext: RequestContext?,
-    invokeCounter: InvokeCounter
+    databaseSessionContext: DatabaseSessionContext
 ) : CoroutineScope {
     override val coroutineContext: CoroutineContext =
         coroutineContext +
-            threadLocalLogEverything.asContextElement(invokeCounter)
+            threadLocalDatabaseSessionScope.asContextElement(databaseSessionContext)
                 .let {
                     if (requestContext != null) {
                         it + threadLocalRequestContext.asContextElement(requestContext)
@@ -33,37 +32,32 @@ private class RequestContextAwareCoroutineScope(
  * Augments the coroutine context of the scope to include the thread local RequestContext.
  * Kodein will just work inside this scope.
  */
-fun CoroutineScope.withRequestContext(requestContext: RequestContext?, invokeCounter: InvokeCounter): CoroutineScope {
-    return RequestContextAwareCoroutineScope(this.coroutineContext, requestContext, invokeCounter)
+fun CoroutineScope.withRequestContext(requestContext: RequestContext?, databaseSessionContext: DatabaseSessionContext): CoroutineScope {
+    return RequestContextAwareCoroutineScope(this.coroutineContext, requestContext, databaseSessionContext)
 }
 
-/**
- * Augments the coroutine context of the scope to include the thread local RequestContext.
- * Kodein will just work inside this scope.
- */
-// operator fun CoroutineScope.plus(requestContext: RequestContext?, invokeCounter: InvokeCounter): CoroutineScope {
-//     return RequestContextAwareCoroutineScope(this.coroutineContext, requestContext, invokeCounter)
-// }
-
 val threadLocalRequestContext: ThreadLocal<RequestContext> = ThreadLocal()
-val threadLocalLogEverything: ThreadLocal<InvokeCounter> = ThreadLocal()
+val threadLocalDatabaseSessionScope: ThreadLocal<DatabaseSessionContext> = ThreadLocal()
 
-suspend fun <T> withInvokeCounterContext(invokeCounter: InvokeCounter, block: suspend () -> T): T =
+suspend fun <T> withNewDatabaseSessionScopeCtx(block: suspend () -> T): T {
+    val databaseSessionContext = DatabaseSessionContext()
     try {
-        withContext(threadLocalLogEverything.asContextElement()) {
+        return withContext(threadLocalDatabaseSessionScope.asContextElement(databaseSessionContext)) {
             block()
         }
     } finally {
-        invokeCounter.dump()
+        DatabaseSessionKodeinScope.getRegistry(databaseSessionContext).close()
     }
+}
 
-fun <T> withInvokeCounter(invokeCounter: InvokeCounter, block: () -> T): T {
-    val old = threadLocalLogEverything.get()
-    threadLocalLogEverything.set(invokeCounter)
+fun <T> withNewDatabaseSessionScope(block: () -> T): T {
+    val old = threadLocalDatabaseSessionScope.get()
+    val databaseSessionContext = DatabaseSessionContext()
+    threadLocalDatabaseSessionScope.set(databaseSessionContext)
     try {
         return block()
     } finally {
-        threadLocalLogEverything.set(old)
-        invokeCounter.dump()
+        threadLocalDatabaseSessionScope.set(old)
+        DatabaseSessionKodeinScope.getRegistry(databaseSessionContext).close()
     }
 }

@@ -33,5 +33,13 @@ class Email {
         return address == other.address
     }
 
+    fun validateEmail() {
+        EMAIL_VALIDATOR.matchEntire(address)
+    }
+
     override fun hashCode() = address.hashCode()
+
+    companion object {
+        val EMAIL_VALIDATOR = Regex("([%a-zåäö0-9!#$&'*+-/=?^_`{|}~]+)@([-a-zåäö0-9.]+\\.[a-zåäö]{2,})", RegexOption.IGNORE_CASE)
+    }
 }

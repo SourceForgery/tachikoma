@@ -1,5 +1,4 @@
 applyKotlin()
-apply(plugin = "application")
 
 dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
@@ -16,34 +15,3 @@ dependencies {
     implementation("com.sun.mail:javax.mail:$javaxMailVersion")
     implementation(project(":jersey-uri-builder"))
 }
-
-val applicationMainClassName = "TracerKt"
-extensions.configure<JavaApplication>("application") {
-    mainClassName = applicationMainClassName
-}
-
-val fatJar by tasks.registering(Jar::class) {
-    manifest {
-        attributes.putAll(
-            mapOf(
-                "Implementation-Title" to "Tachikoma ESP Webserver",
-                "Implementation-Version" to archiveVersion.get(),
-                "Main-Class" to applicationMainClassName
-            )
-        )
-    }
-    duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
-    archiveBaseName.set(project.name + "-all")
-    configurations["runtimeClasspath"].forEach {
-        from(
-            if (it.isDirectory) {
-                it
-            } else {
-                zipTree(it)
-            }
-        )
-    }
-    with(tasks["jar"] as CopySpec)
-}
-
-tasks["assemble"].dependsOn(fatJar)

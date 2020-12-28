@@ -2,6 +2,8 @@ package com.sourceforgery.tachikoma.coroutines
 
 import com.linecorp.armeria.common.RequestContext
 import com.linecorp.armeria.server.ServiceRequestContext
+import com.sourceforgery.tachikoma.kodein.DatabaseSessionContext
+import com.sourceforgery.tachikoma.kodein.DatabaseSessionKodeinScope
 import com.sourceforgery.tachikoma.kodein.withRequestContext
 import com.sourceforgery.tachikoma.logging.InvokeCounterFactory
 import java.util.concurrent.CompletableFuture
@@ -35,13 +37,13 @@ class TachikomaScopeImpl(override val di: DI) : CoroutineScope, TachikomaScope, 
 
     override fun <T> scopedFuture(block: suspend () -> T): CompletableFuture<T> {
         val ctx = RequestContext.current<ServiceRequestContext>()
-        val ic = invokeCounterFactory.create()
-        return withRequestContext(ctx, ic)
+        val databaseSessionContext = DatabaseSessionContext()
+        return withRequestContext(ctx, databaseSessionContext)
             .async {
                 try {
                     block()
                 } finally {
-                    ic.dump()
+                    DatabaseSessionKodeinScope.getRegistry(databaseSessionContext).close()
                 }
             }
             .asCompletableFuture()

@@ -8,6 +8,7 @@ import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactoryMock
+import com.sourceforgery.tachikoma.kodein.DatabaseSessionKodeinScope
 import com.sourceforgery.tachikoma.logging.InvokeCounter
 import com.sourceforgery.tachikoma.mq.MQManager
 import com.sourceforgery.tachikoma.mq.MQSender
@@ -21,7 +22,7 @@ import java.net.URI
 import java.util.UUID
 import org.kodein.di.DI
 import org.kodein.di.bind
-import org.kodein.di.instance
+import org.kodein.di.scoped
 import org.kodein.di.singleton
 
 fun testModule(vararg attributes: TestAttribute) = DI.Module("test") {
@@ -39,15 +40,12 @@ fun testModule(vararg attributes: TestAttribute) = DI.Module("test") {
 
     bind<MessageIdFactory>() with singleton { MessageIdFactoryMock() }
 
-    bind<InvokeCounter>(overrides = true) with instance(
+    bind<InvokeCounter>(overrides = true) with scoped(DatabaseSessionKodeinScope).singleton {
         object : InvokeCounter {
             override fun inc(sql: String?, millis: Long) {
             }
-
-            override fun dump() {
-            }
         }
-    )
+    }
 
     bind<DataSourceProvider>(overrides = true) with singleton {
         if (TestAttribute.POSTGRESQL in attributes) {
