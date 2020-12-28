@@ -5,7 +5,7 @@ dependencies {
     implementation("com.google.guava:guava:$guavaVersion")
     implementation("com.linecorp.armeria:armeria:$armeriaVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutineVersion")
-    implementation("com.sun.mail:javax.mail:$javaxMailVersion")
+    implementation("com.sun.mail:jakarta.mail:$jakartaMailVersion")
 
     api(project(":tachikoma-common"))
     api(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))

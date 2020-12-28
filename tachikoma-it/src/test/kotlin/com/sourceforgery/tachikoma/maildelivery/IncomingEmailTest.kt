@@ -17,7 +17,7 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import javax.mail.internet.InternetAddress
+import jakarta.mail.internet.InternetAddress
 import kotlin.test.assertEquals
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking

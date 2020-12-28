@@ -16,13 +16,13 @@ import com.sourceforgery.tachikoma.grpc.frontend.toNamedEmail
 import com.sourceforgery.tachikoma.maildelivery.impl.MailDeliveryService
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.testModule
+import jakarta.mail.internet.cleanUniqueValueMock
+import jakarta.mail.internet.mockUniqueValue
 import java.nio.charset.StandardCharsets
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Base64
-import javax.mail.internet.cleanUniqueValueMock
-import javax.mail.internet.mockUniqueValue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
