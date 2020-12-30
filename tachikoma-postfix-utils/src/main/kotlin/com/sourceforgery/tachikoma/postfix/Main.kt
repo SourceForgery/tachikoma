@@ -6,13 +6,13 @@ import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.incoming.IncomingEmailHandler
 import com.sourceforgery.tachikoma.mailer.MailSender
-import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpc
-import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpc
+import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
-import com.sourceforgery.tachikoma.syslog.Syslogger
+import com.sourceforgery.tachikoma.syslog.SyslogSniffer
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
 import java.time.Duration
+import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,10 +45,11 @@ internal constructor(
 
         MailSender(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
             .start()
-        val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpc.MTAEmailQueueBlockingStub::class.java), scope)
+        val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
         incomingEmail.start()
-        Syslogger(builder.build(MTADeliveryNotificationsGrpc.MTADeliveryNotificationsBlockingStub::class.java))
+        SyslogSniffer(builder.build(MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub::class.java))
             .blockingSniffer()
+        exitProcess(1)
     }
 
     companion object {
