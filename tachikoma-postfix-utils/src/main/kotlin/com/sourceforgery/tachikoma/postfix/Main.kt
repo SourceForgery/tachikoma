@@ -43,13 +43,17 @@ internal constructor(
             .responseTimeout(Duration.ofDays(365))
             .writeTimeout(Duration.ofDays(365))
 
-        MailSender(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
-            .start()
-        val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
-        incomingEmail.start()
-        SyslogSniffer(builder.build(MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub::class.java))
-            .blockingSniffer()
-        exitProcess(1)
+        runCatching {
+            MailSender(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
+                .start()
+            val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
+            incomingEmail.start()
+            SyslogSniffer(builder.build(MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub::class.java))
+                .blockingSniffer()
+        }.onFailure {
+            LOGGER.fatal(it) { "Syslog sniffer died. Dying with it." }
+            exitProcess(1)
+        }
     }
 
     companion object {
