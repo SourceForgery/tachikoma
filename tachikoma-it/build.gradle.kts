@@ -24,5 +24,5 @@ dependencies {
     testImplementation("com.linecorp.armeria:armeria:$armeriaVersion")
     testImplementation("com.squareup.okhttp3:okhttp:4.4.0")
     testImplementation("org.jsoup:jsoup:1.12.2")
-    testImplementation("com.sun.mail:javax.mail:$javaxMailVersion")
+    testImplementation("com.sun.mail:jakarta.mail:$jakartaMailVersion")
 }

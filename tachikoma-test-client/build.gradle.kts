@@ -13,7 +13,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-jul:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
-    implementation("com.sun.mail:javax.mail:$javaxMailVersion")
+    implementation("com.sun.mail:jakarta.mail:$jakartaMailVersion")
     implementation(project(":jersey-uri-builder"))
 }
 

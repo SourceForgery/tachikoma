@@ -1,12 +1,12 @@
 package com.sourceforgery.tachikoma.common
 
+import jakarta.mail.Address
+import jakarta.mail.Message
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 import java.io.ByteArrayInputStream
 import java.util.Properties
-import javax.mail.Address
-import javax.mail.Message
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware

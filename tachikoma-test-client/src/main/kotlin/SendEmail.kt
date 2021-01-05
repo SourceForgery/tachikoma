@@ -7,10 +7,10 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.StaticBody
+import jakarta.mail.internet.InternetAddress
 import java.net.URI
 import java.time.Duration
 import java.time.Instant
-import javax.mail.internet.InternetAddress
 
 fun main(args: Array<String>) {
     val frontendUri = URI.create(

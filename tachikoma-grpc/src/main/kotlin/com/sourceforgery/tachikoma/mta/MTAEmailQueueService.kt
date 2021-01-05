@@ -24,11 +24,11 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.MessageHardBounced
 import com.sourceforgery.tachikoma.mq.MessageQueued
 import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 import java.time.Clock
 import java.util.Properties
-import javax.mail.Session
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect

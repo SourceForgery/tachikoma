@@ -1,4 +1,4 @@
-package javax.mail.internet
+package jakarta.mail.internet
 
 import io.mockk.clearStaticMockk
 import io.mockk.every
