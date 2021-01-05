@@ -1,3 +1,4 @@
+import com.google.protobuf.Timestamp
 import com.google.protobuf.util.JsonFormat
 import com.linecorp.armeria.client.Clients
 import com.sourceforgery.jersey.uribuilder.ensureGproto
@@ -78,19 +79,20 @@ fun main(args: Array<String>) {
                 .setHtmlBody(mailBody)
                 .setSubject("Application for öåäöäåöäåöåäöäå 日本." + Instant.now())
         )
+        .setSendAt(Instant.now().plusSeconds(60).toTimestamp())
         .addAllRecipients(to.map {
             EmailRecipient.newBuilder()
                 .setNamedEmail(
                     NamedEmailAddress.newBuilder()
                         .setEmail(it.address)
-                        .setName(it.personal)
+                        .setName(it.personal ?: "")
                 )
                 .build()
         })
         .setFrom(
             NamedEmailAddress.newBuilder()
                 .setEmail(from.address)
-                .setName(from.personal)
+                .setName(from.personal ?: "")
         )
         .build()
 
@@ -103,3 +105,9 @@ fun main(args: Array<String>) {
     }
     System.err.println("Send complete")
 }
+
+fun Instant.toTimestamp() =
+    Timestamp.newBuilder()
+        .setSeconds(this.epochSecond)
+        .setNanos(this.nano)
+        .build()

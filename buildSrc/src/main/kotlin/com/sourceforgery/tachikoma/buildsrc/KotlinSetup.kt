@@ -50,6 +50,9 @@ fun Project.kotlinSetup() {
         verbose.set(true)
         android.set(false)
         ignoreFailures.set(false)
+        filter {
+            exclude { "/generated/" in it.file.path }
+        }
         disabledRules.set(listOf("final-newline"))
     }
 

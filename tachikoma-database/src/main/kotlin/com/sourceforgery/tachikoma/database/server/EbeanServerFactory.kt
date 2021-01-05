@@ -18,10 +18,11 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.allInstances
 import org.kodein.di.instance
+import org.kodein.di.provider
 
 class EbeanServerFactory(override val di: DI) : DIAware {
     private val databaseConfig: DatabaseConfig by instance()
-    private val counter: InvokeCounter by instance()
+    private val counter by provider<InvokeCounter>()
     private val dbObjectMapper: DBObjectMapper by instance()
     private val ebeanHooks by allInstances<EbeanHook>()
     private val databaseUpgrades by allInstances<DatabaseUpgrade>()

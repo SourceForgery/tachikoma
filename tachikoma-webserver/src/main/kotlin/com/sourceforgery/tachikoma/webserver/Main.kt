@@ -11,10 +11,9 @@ import com.linecorp.armeria.server.logging.AccessLogWriter
 import com.sourceforgery.tachikoma.commonModule
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
-import com.sourceforgery.tachikoma.database.server.LogNothing
 import com.sourceforgery.tachikoma.databaseModule
 import com.sourceforgery.tachikoma.grpcModule
-import com.sourceforgery.tachikoma.kodein.withInvokeCounter
+import com.sourceforgery.tachikoma.kodein.withNewDatabaseSessionScope
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.mqModule
@@ -22,6 +21,7 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.restModule
 import com.sourceforgery.tachikoma.startup.startupModule
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
+import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.Database
@@ -39,7 +39,9 @@ import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.allInstances
+import org.kodein.di.bind
 import org.kodein.di.instance
+import org.kodein.di.singleton
 
 class WebServerStarter(override val di: DI) : DIAware {
     private val exceptionHandler: RestExceptionHandlerFunction by instance()
@@ -51,6 +53,7 @@ class WebServerStarter(override val di: DI) : DIAware {
     private val createUsers: CreateUsers by instance()
     private val mqSequenceFactory: MQSequenceFactory by instance()
     private val database: Database by instance()
+    private val requestScoped: HttpRequestScopedDecorator by instance()
 
     private fun startServerInBackground(): CompletableFuture<Void> {
 
@@ -80,7 +83,9 @@ class WebServerStarter(override val di: DI) : DIAware {
             serverBuilder.annotatedService("/", restService, exceptionHandler)
         }
 
-        val grpcServiceBuilder = GrpcService.builder().supportedSerializationFormats(GrpcSerializationFormats.values())
+        val grpcServiceBuilder = GrpcService.builder()
+            .supportedSerializationFormats(GrpcSerializationFormats.values())
+            .useBlockingTaskExecutor(true)
         for (grpcService in grpcServices) {
             grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, exceptionInterceptor))
         }
@@ -88,6 +93,7 @@ class WebServerStarter(override val di: DI) : DIAware {
 
         return serverBuilder
             // Grpc must be last
+            .decorator(requestScoped)
             .serviceUnder("/", grpcService)
             .apply {
                 if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
@@ -120,7 +126,7 @@ class WebServerStarter(override val di: DI) : DIAware {
     }
 
     private fun startDatabase() {
-        withInvokeCounter(LogNothing) {
+        withNewDatabaseSessionScope {
             createUsers.createUsers()
         }
     }
@@ -144,6 +150,7 @@ fun main(vararg args: String) {
         importOnce(grpcModule)
         importOnce(databaseModule)
         importOnce(webModule)
+        bind<HttpRequestScopedDecorator>() with singleton { HttpRequestScopedDecorator(di) }
     }
     WebServerStarter(kodein).start()
 }

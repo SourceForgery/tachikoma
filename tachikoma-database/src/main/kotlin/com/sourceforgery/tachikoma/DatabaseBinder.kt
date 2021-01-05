@@ -25,7 +25,7 @@ import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import com.sourceforgery.tachikoma.database.server.EbeanServerFactory
-import com.sourceforgery.tachikoma.database.server.LogEverythingFactory
+import com.sourceforgery.tachikoma.database.server.LogEverything
 import com.sourceforgery.tachikoma.database.server.PostgresqlDataSourceProvider
 import com.sourceforgery.tachikoma.database.upgrades.Version1
 import com.sourceforgery.tachikoma.database.upgrades.Version10
@@ -39,21 +39,23 @@ import com.sourceforgery.tachikoma.database.upgrades.Version6
 import com.sourceforgery.tachikoma.database.upgrades.Version7
 import com.sourceforgery.tachikoma.database.upgrades.Version8
 import com.sourceforgery.tachikoma.database.upgrades.Version9
-import com.sourceforgery.tachikoma.kodein.threadLocalLogEverything
+import com.sourceforgery.tachikoma.kodein.DatabaseSessionKodeinScope
+import com.sourceforgery.tachikoma.kodein.threadLocalDatabaseSessionScope
 import com.sourceforgery.tachikoma.logging.InvokeCounter
-import com.sourceforgery.tachikoma.logging.InvokeCounterFactory
 import io.ebean.EbeanServer
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.provider
+import org.kodein.di.registerContextFinder
+import org.kodein.di.scoped
 import org.kodein.di.singleton
 
 val databaseModule = DI.Module("database") {
     bind<EbeanServer>() with singleton { EbeanServerFactory(di).provide() }
 
     importOnce(daoModule)
-    bind<InvokeCounter>() with provider { threadLocalLogEverything.get() ?: error("Not in LogEverything scope") }
-    bind<InvokeCounterFactory>() with singleton { LogEverythingFactory() }
+    bind<InvokeCounter>() with scoped(DatabaseSessionKodeinScope).singleton { LogEverything() }
+    registerContextFinder { threadLocalDatabaseSessionScope.get() ?: error("Not in Database Session scope") }
     bind<DBObjectMapper>() with singleton { DBObjectMapperImpl }
     bind<DataSourceProvider>() with singleton { PostgresqlDataSourceProvider(di) }
     bind<InternalCreateUserService>() with singleton { InternalCreateUserServiceImpl(di) }
