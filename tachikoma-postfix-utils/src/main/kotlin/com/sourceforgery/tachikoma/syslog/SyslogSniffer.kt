@@ -95,7 +95,7 @@ class SyslogSniffer(
 
     companion object {
         private val delivererDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        private val LOGGER = logger()
+        internal val LOGGER = logger()
     }
 }
 
@@ -103,7 +103,12 @@ internal fun parseLine(line: String): DeliveryNotification? {
     val split = syslogLineSplitter.splitToList(line)
     return if (split.size == 3 && !line.contains("postfix/lmtp")) {
         val (_, queueId, rest) = split
-        val map = splitLineToMap(rest)
+        val map = try {
+            splitLineToMap(rest)
+        } catch (e: Exception) {
+            SyslogSniffer.LOGGER.error(e) { "Failed to parse line $line" }
+            return null
+        }
 
         map["dsn"]?.let { dsn ->
             map["to"]?.let { originalRecipient ->
