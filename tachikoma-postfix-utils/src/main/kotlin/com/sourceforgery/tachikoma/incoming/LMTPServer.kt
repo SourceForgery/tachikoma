@@ -13,10 +13,10 @@ import org.apache.logging.log4j.kotlin.logger
 
 class LMTPServer(
     private val socket: Socket,
-    private val param: (String, String, String) -> MailAcceptanceResult
+    private val param: suspend (String, String, String) -> MailAcceptanceResult
 ) {
 
-    fun receiveMail() {
+    suspend fun receiveMail() {
         try {
             socket.use { lmtpSocket ->
 

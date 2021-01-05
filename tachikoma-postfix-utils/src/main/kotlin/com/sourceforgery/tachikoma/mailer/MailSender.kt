@@ -45,7 +45,7 @@ class MailSender(
                     stub.getEmails(channel.receiveAsFlow())
                         .collect {
                             val status = sendEmail(it)
-                            LOGGER.info { "Sent email: ${it.emailId} with status ${status.success} and queueId ${status.queueId}" }
+                            LOGGER.info { "Queued email: ${it.emailId} for delivery with status ${status.success} and queueId ${status.queueId}" }
                             channel.offer(status)
                         }
                 } catch (e: Exception) {
@@ -74,7 +74,7 @@ class MailSender(
                             createExpect(os, smtpSocket).use { expect ->
                                 val queueId = ssmtpSendEmail(expect, emailMessage)
                                 builder.queueId = queueId
-                                LOGGER.info { "Successfully send email: ${emailMessage.emailId} with QueueId: $queueId" }
+                                LOGGER.debug { "Successfully queued email: ${emailMessage.emailId} with QueueId: $queueId" }
                                 true
                             }
                         }

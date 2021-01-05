@@ -16,11 +16,11 @@ internal class MTADeliveryServiceGrpcImpl(
     private val mtaDeliveryNotifications: MTADeliveryNotifications by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 
-    override suspend fun setDeliveryStatus(request: DeliveryNotification) =
+    override suspend fun setDeliveryStatus(request: DeliveryNotification): Empty =
         try {
             authentication().requireBackend()
             mtaDeliveryNotifications.setDeliveryStatus(request)
-            Empty.getDefaultInstance()!!
+            Empty.getDefaultInstance()
         } catch (e: Exception) {
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
