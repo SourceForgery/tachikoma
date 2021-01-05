@@ -150,7 +150,7 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
                 toEmails = emails.to,
                 replyToEmails = emails.replyTo,
                 account = accountDBO,
-                subject = mimeMessage.subject
+                subject = mimeMessage.subject ?: ""
             )
             incomingEmailDAO.save(incomingEmailDBO)
             if (accountTypePair.second == IncomingEmailType.NORMAL) {
