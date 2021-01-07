@@ -4,7 +4,7 @@ import java.net.URI
 val kotlinVersion = "1.3.61"
 dependencies {
     implementation("co.riiid:gradle-github-plugin:0.4.2")
-    implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.11")
+    implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.13")
     implementation("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4") {
         exclude(group = "nekohtml", module = "xercesMinimal")
     }

@@ -51,13 +51,10 @@ allprojects {
                 }
             }
             force(
-                "com.google.code.gson:gson:$gsonVersion",
                 "com.google.guava:guava:$guavaVersion",
-                "com.google.errorprone:error_prone_annotations:2.3.3",
-                "net.bytebuddy:byte-buddy:$bytebuddyVersion",
                 "commons-io:commons-io:2.6",
                 "commons-logging:commons-logging:1.2",
-                "org.codehaus.mojo:animal-sniffer-annotations:1.18",
+                "javax.annotation:javax.annotation-api:1.3.2",
                 "org.postgresql:postgresql:$postgresqlDriverVersion",
                 "org.slf4j:slf4j-api:1.7.29"
             )
