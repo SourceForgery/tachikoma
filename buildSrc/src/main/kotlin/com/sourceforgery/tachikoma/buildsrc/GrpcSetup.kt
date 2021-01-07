@@ -66,7 +66,7 @@ fun Project.grpcSetup() {
                 artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
             }
             id("grpckt") {
-                artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk7@jarn"
+                artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk7@jar"
             }
             id("lint") {
                 path = downloadProtocLint.outputFile.absolutePath
