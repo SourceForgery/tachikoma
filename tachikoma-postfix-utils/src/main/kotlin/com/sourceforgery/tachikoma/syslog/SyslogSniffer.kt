@@ -130,8 +130,13 @@ internal fun parseLine(line: String): DeliveryNotification? {
 
 @Suppress("UnstableApiUsage")
 private fun splitLineToMap(rest: String): Map<String, String> =
-    lineSplitter.split(rest)
-        .filterKeys { it.isNotBlank() }
+    lineSplitter.splitToList(rest)
+        .asSequence()
+        // Must exist and must NOT be first character
+        .filter { it.indexOf('=') > 0 }
+        .associate {
+            it.substringBefore("=", "") to it.substringAfter("=", "")
+        }
 
 private val syslogLineSplitter = Splitter
     .on(": ")
@@ -142,7 +147,6 @@ private val syslogLineSplitter = Splitter
 private val lineSplitter = Splitter
     .on(", ")
     .trimResults()
-    .withKeyValueSeparator('=')
 
 private object DeliveryNotificationConverter : FileObjectQueue.Converter<DeliveryNotification> {
     override fun from(bytes: ByteArray): DeliveryNotification =
