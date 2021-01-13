@@ -42,6 +42,7 @@ internal constructor(
             .addHeader("x-apitoken", apiToken)
             .responseTimeout(Duration.ofDays(365))
             .writeTimeout(Duration.ofDays(365))
+            .maxResponseLength(0)
 
         runCatching {
             MailSender(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
