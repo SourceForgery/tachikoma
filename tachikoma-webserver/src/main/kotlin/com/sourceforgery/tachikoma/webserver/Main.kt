@@ -27,6 +27,7 @@ import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.Database
 import io.grpc.BindableService
 import io.grpc.ServerInterceptors
+import io.netty.channel.ChannelOption
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
 import java.io.File
@@ -92,6 +93,7 @@ class WebServerStarter(override val di: DI) : DIAware {
         val grpcService = grpcServiceBuilder.build()
 
         return serverBuilder
+            .childChannelOption(ChannelOption.SO_KEEPALIVE, true)
             // Grpc must be last
             .decorator(requestScoped)
             .serviceUnder("/", grpcService)
