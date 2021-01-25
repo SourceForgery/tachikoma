@@ -34,7 +34,8 @@ fun main(args: Array<String>) {
         .writeTimeout(Duration.ofDays(365))
         .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
-    val mailBody = """
+    val mailBody =
+        """
     |<body>
     |    <center>
     |        <!-- HEADER LOGO BLOCK -->
@@ -80,15 +81,17 @@ fun main(args: Array<String>) {
                 .setSubject("Application for öåäöäåöäåöåäöäå 日本." + Instant.now())
         )
         .setSendAt(Instant.now().plusSeconds(60).toTimestamp())
-        .addAllRecipients(to.map {
-            EmailRecipient.newBuilder()
-                .setNamedEmail(
-                    NamedEmailAddress.newBuilder()
-                        .setEmail(it.address)
-                        .setName(it.personal ?: "")
-                )
-                .build()
-        })
+        .addAllRecipients(
+            to.map {
+                EmailRecipient.newBuilder()
+                    .setNamedEmail(
+                        NamedEmailAddress.newBuilder()
+                            .setEmail(it.address)
+                            .setName(it.personal ?: "")
+                    )
+                    .build()
+            }
+        )
         .setFrom(
             NamedEmailAddress.newBuilder()
                 .setEmail(from.address)

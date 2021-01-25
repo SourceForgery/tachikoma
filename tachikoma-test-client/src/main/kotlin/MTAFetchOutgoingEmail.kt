@@ -4,12 +4,12 @@ import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
-import java.net.URI
-import java.time.Duration
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.runBlocking
+import java.net.URI
+import java.time.Duration
 
 fun main(args: Array<String>) {
     val backendUri = URI.create(
@@ -36,9 +36,9 @@ fun main(args: Array<String>) {
             }
         }
         runBlocking {
-        stub.getEmails(requests)
-            .take(1)
-            .collect { System.err.println("Got email: " + JsonFormat.printer().print(it)) }
+            stub.getEmails(requests)
+                .take(1)
+                .collect { System.err.println("Got email: " + JsonFormat.printer().print(it)) }
         }
     } catch (e: Exception) {
         e.printStackTrace()

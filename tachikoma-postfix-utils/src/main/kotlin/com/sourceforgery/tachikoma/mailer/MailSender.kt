@@ -5,15 +5,10 @@ import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
 import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
-import java.io.PrintWriter
-import java.net.Socket
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
-import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.BUFFERED
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -25,13 +20,19 @@ import net.sf.expectit.matcher.Matchers.regexp
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
+import java.io.PrintWriter
+import java.net.Socket
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
+import kotlin.system.exitProcess
 
 class MailSender(
     private val stub: MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub,
     private val scope: CoroutineScope
 ) : AutoCloseable {
     private val executor = Executors.newCachedThreadPool()
-    private val channel = Channel<MTAQueuedNotification>()
+    private val channel = Channel<MTAQueuedNotification>(BUFFERED)
 
     override fun close() {
         channel.close()

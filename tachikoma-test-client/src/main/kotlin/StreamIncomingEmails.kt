@@ -4,10 +4,10 @@ import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpcKt
-import java.net.URI
-import java.time.Duration
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
+import java.net.URI
+import java.time.Duration
 
 fun main(args: Array<String>) {
     val frontendUri = URI.create(
@@ -24,16 +24,17 @@ fun main(args: Array<String>) {
 
     try {
         runBlocking {
-            stub.streamIncomingEmails(IncomingEmailParameters
-                .newBuilder()
-                .setIncludeMessageAttachments(true)
-                .setIncludeMessageHeader(true)
-                .setIncludeMessageParsedBodies(true)
-                .setIncludeMessageWholeEnvelope(true)
-                .build()
+            stub.streamIncomingEmails(
+                IncomingEmailParameters
+                    .newBuilder()
+                    .setIncludeMessageAttachments(true)
+                    .setIncludeMessageHeader(true)
+                    .setIncludeMessageParsedBodies(true)
+                    .setIncludeMessageWholeEnvelope(true)
+                    .build()
             ).collect {
-                    System.err.println("Got email: " + JsonFormat.printer().print(it))
-                }
+                System.err.println("Got email: " + JsonFormat.printer().print(it))
+            }
             System.err.println("On complete called!")
         }
     } catch (e: Exception) {

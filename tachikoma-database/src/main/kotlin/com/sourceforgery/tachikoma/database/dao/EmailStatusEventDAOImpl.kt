@@ -5,10 +5,10 @@ import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import io.ebean.Database
-import java.time.Instant
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.time.Instant
 
 class EmailStatusEventDAOImpl(override val di: DI) : EmailStatusEventDAO, DIAware {
     private val database: Database by instance()

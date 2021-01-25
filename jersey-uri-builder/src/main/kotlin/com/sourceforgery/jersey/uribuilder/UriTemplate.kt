@@ -329,11 +329,15 @@ class UriTemplate {
      */
     fun createURI(values: Map<String, String>): String {
         val sb = StringBuilder()
-        resolveTemplate(normalizedTemplate, sb, object : TemplateValueStrategy {
-            override fun valueFor(templateVariable: String, matchedGroup: String): String? {
-                return values[templateVariable]
+        resolveTemplate(
+            normalizedTemplate,
+            sb,
+            object : TemplateValueStrategy {
+                override fun valueFor(templateVariable: String, matchedGroup: String): String? {
+                    return values[templateVariable]
+                }
             }
-        })
+        )
         return sb.toString()
     }
 
@@ -769,9 +773,11 @@ class UriTemplate {
                 }
             }
 
-            return createURIWithStringValues(scheme, authority,
+            return createURIWithStringValues(
+                scheme, authority,
                 userInfo, host, port, path, query, fragment,
-                stringValues, encode, encodeSlashInPath)
+                stringValues, encode, encodeSlashInPath
+            )
         }
 
         /**
@@ -886,7 +892,8 @@ class UriTemplate {
                 fragment,
                 stringValues,
                 encode,
-                encodeSlashInPath)
+                encodeSlashInPath
+            )
         }
 
         /**
@@ -927,7 +934,8 @@ class UriTemplate {
 
             val mapValues = HashMap<String, Any>()
             return createURIWithStringValues(
-                scheme, authority, userInfo, host, port, path, query, fragment, values, encode, encodeSlashInPath, mapValues)
+                scheme, authority, userInfo, host, port, path, query, fragment, values, encode, encodeSlashInPath, mapValues
+            )
         }
 
         private fun createURIWithStringValues(
@@ -949,8 +957,15 @@ class UriTemplate {
             var offset = 0
 
             if (scheme != null) {
-                offset = createUriComponent(UriComponent.Type.SCHEME, scheme, values,
-                    offset, false, mapValues, sb)
+                offset = createUriComponent(
+                    UriComponent.Type.SCHEME,
+                    scheme,
+                    values,
+                    offset,
+                    false,
+                    mapValues,
+                    sb
+                )
                 sb.append(':')
             }
 
@@ -960,28 +975,56 @@ class UriTemplate {
                 sb.append("//")
 
                 if (notEmpty(userInfo)) {
-                    offset = createUriComponent(UriComponent.Type.USER_INFO, userInfo!!, values,
-                        offset, encode, mapValues, sb)
+                    offset = createUriComponent(
+                        UriComponent.Type.USER_INFO,
+                        userInfo!!,
+                        values,
+                        offset,
+                        encode,
+                        mapValues,
+                        sb
+                    )
                     sb.append('@')
                 }
 
                 if (notEmpty(host)) {
                     // TODO check IPv6 address
-                    offset = createUriComponent(UriComponent.Type.HOST, host!!, values,
-                        offset, encode, mapValues, sb)
+                    offset = createUriComponent(
+                        UriComponent.Type.HOST,
+                        host!!,
+                        values,
+                        offset,
+                        encode,
+                        mapValues,
+                        sb
+                    )
                 }
 
                 if (notEmpty(port)) {
                     sb.append(':')
-                    offset = createUriComponent(UriComponent.Type.PORT, port!!, values,
-                        offset, false, mapValues, sb)
+                    offset = createUriComponent(
+                        UriComponent.Type.PORT,
+                        port!!,
+                        values,
+                        offset,
+                        false,
+                        mapValues,
+                        sb
+                    )
                 }
             } else if (notEmpty(authority)) {
                 hasAuthority = true
                 sb.append("//")
 
-                offset = createUriComponent(UriComponent.Type.AUTHORITY, authority!!, values,
-                    offset, encode, mapValues, sb)
+                offset = createUriComponent(
+                    UriComponent.Type.AUTHORITY,
+                    authority!!,
+                    values,
+                    offset,
+                    encode,
+                    mapValues,
+                    sb
+                )
             }
 
             if (notEmpty(path) || notEmpty(query) || notEmpty(fragment)) {
@@ -994,20 +1037,41 @@ class UriTemplate {
                     // path template values are treated as path segments unless encodeSlashInPath is false.
                     val t = if (encodeSlashInPath) UriComponent.Type.PATH_SEGMENT else UriComponent.Type.PATH
 
-                    offset = createUriComponent(t, path!!, values,
-                        offset, encode, mapValues, sb)
+                    offset = createUriComponent(
+                        t,
+                        path!!,
+                        values,
+                        offset,
+                        encode,
+                        mapValues,
+                        sb
+                    )
                 }
 
                 if (notEmpty(query)) {
                     sb.append('?')
-                    offset = createUriComponent(UriComponent.Type.QUERY_PARAM, query!!, values,
-                        offset, encode, mapValues, sb)
+                    offset = createUriComponent(
+                        UriComponent.Type.QUERY_PARAM,
+                        query!!,
+                        values,
+                        offset,
+                        encode,
+                        mapValues,
+                        sb
+                    )
                 }
 
                 if (notEmpty(fragment)) {
                     sb.append('#')
-                    createUriComponent(UriComponent.Type.FRAGMENT, fragment!!, values,
-                        offset, encode, mapValues, sb)
+                    createUriComponent(
+                        UriComponent.Type.FRAGMENT,
+                        fragment!!,
+                        values,
+                        offset,
+                        encode,
+                        mapValues,
+                        sb
+                    )
                 }
             }
             return sb.toString()
@@ -1048,7 +1112,8 @@ class UriTemplate {
                     }
                     if (value == null) {
                         throw IllegalArgumentException(
-                            String.format("The template variable '%s' has no value", templateVariable))
+                            String.format("The template variable '%s' has no value", templateVariable)
+                        )
                     }
                     return if (encode) {
                         UriComponent.encode(value.toString(), componentType)
@@ -1091,30 +1156,36 @@ class UriTemplate {
             val normalizedTemplate = UriTemplateParser(template).getNormalizedTemplate()
 
             val sb = StringBuilder()
-            resolveTemplate(normalizedTemplate, sb, object : TemplateValueStrategy {
-                override fun valueFor(templateVariable: String, matchedGroup: String): String? {
+            resolveTemplate(
+                normalizedTemplate,
+                sb,
+                object : TemplateValueStrategy {
+                    override fun valueFor(templateVariable: String, matchedGroup: String): String? {
 
-                    var value: Any? = mapValues[templateVariable]
+                        var value: Any? = mapValues[templateVariable]
 
-                    if (value != null) {
-                        if (encode) {
-                            value = UriComponent.encode(value.toString(), type)
+                        if (value != null) {
+                            if (encode) {
+                                value = UriComponent.encode(value.toString(), type)
+                            } else {
+                                value = UriComponent.contextualEncode(value.toString(), type)
+                            }
+                            return value.toString()
                         } else {
-                            value = UriComponent.contextualEncode(value.toString(), type)
-                        }
-                        return value.toString()
-                    } else {
-                        if (mapValues.containsKey(templateVariable)) {
-                            throw IllegalArgumentException(
-                                String.format("The value associated of the template value map for key '%s' is 'null'.",
-                                    templateVariable)
-                            )
-                        }
+                            if (mapValues.containsKey(templateVariable)) {
+                                throw IllegalArgumentException(
+                                    String.format(
+                                        "The value associated of the template value map for key '%s' is 'null'.",
+                                        templateVariable
+                                    )
+                                )
+                            }
 
-                        return matchedGroup
+                            return matchedGroup
+                        }
                     }
                 }
-            })
+            )
 
             return sb.toString()
         }

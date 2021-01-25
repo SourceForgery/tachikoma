@@ -547,8 +547,12 @@ private constructor(
         path.setLength(0)
         path.append(newPath)
 
-        val newQuery = UriTemplate.resolveTemplateValues(UriComponent.Type.QUERY_PARAM, query.toString(), encode,
-            templateValues)
+        val newQuery = UriTemplate.resolveTemplateValues(
+            UriComponent.Type.QUERY_PARAM,
+            query.toString(),
+            encode,
+            templateValues
+        )
         query.setLength(0)
         query.append(newQuery)
 
@@ -583,8 +587,10 @@ private constructor(
         // Encode matrix parameters on current path segment
         encodeMatrix()
 
-        var encodedSegments = encode(segments,
-            if (isSegment) UriComponent.Type.PATH_SEGMENT else UriComponent.Type.PATH)
+        var encodedSegments = encode(
+            segments,
+            if (isSegment) UriComponent.Type.PATH_SEGMENT else UriComponent.Type.PATH
+        )
 
         val pathEndsInSlash = path.length > 0 && path[path.length - 1] == '/'
         val segmentStartsWithSlash = encodedSegments[0] == '/'

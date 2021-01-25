@@ -4,11 +4,11 @@ import com.sourceforgery.tachikoma.config.DatabaseConfig
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourceConfig
-import java.sql.Connection
-import java.util.HashMap
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.sql.Connection
+import java.util.HashMap
 
 class PostgresqlDataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
     private val databaseConfig: DatabaseConfig by instance()

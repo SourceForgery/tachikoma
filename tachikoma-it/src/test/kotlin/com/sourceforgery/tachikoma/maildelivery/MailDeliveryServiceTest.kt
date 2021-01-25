@@ -18,11 +18,6 @@ import com.sourceforgery.tachikoma.mq.JobMessageFactory
 import com.sourceforgery.tachikoma.testModule
 import jakarta.mail.internet.cleanUniqueValueMock
 import jakarta.mail.internet.mockUniqueValue
-import java.nio.charset.StandardCharsets
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
-import java.util.Base64
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -38,6 +33,11 @@ import org.kodein.di.DIAware
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
+import java.nio.charset.StandardCharsets
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+import java.util.Base64
 
 class MailDeliveryServiceTest : DIAware {
     override val di = DI {
@@ -128,10 +128,12 @@ class MailDeliveryServiceTest : DIAware {
                             |"""
                         .trimMargin()
                 )
-                    .setHtmlBody("""
+                    .setHtmlBody(
+                        """
                         <h1>This is a test</h1>
                         <img src="cid:68b12347-e804-48f8-a9d4-86a1d1acfda3">
-                    """.trimIndent())
+                        """.trimIndent()
+                    )
 
                     .setSubject("Test mail subject")
             )

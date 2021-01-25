@@ -30,10 +30,6 @@ import io.grpc.ServerInterceptors
 import io.netty.channel.ChannelOption
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
-import java.io.File
-import java.time.Duration
-import java.util.concurrent.CompletableFuture
-import kotlin.system.exitProcess
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
@@ -43,6 +39,10 @@ import org.kodein.di.allInstances
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
+import java.io.File
+import java.time.Duration
+import java.util.concurrent.CompletableFuture
+import kotlin.system.exitProcess
 
 class WebServerStarter(override val di: DI) : DIAware {
     private val exceptionHandler: RestExceptionHandlerFunction by instance()

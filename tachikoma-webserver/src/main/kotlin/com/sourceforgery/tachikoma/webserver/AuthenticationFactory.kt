@@ -20,14 +20,14 @@ import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import io.netty.util.AsciiString
-import java.util.Base64
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import org.kodein.di.provider
+import java.util.Base64
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 
 class AuthenticationFactory(override val di: DI) : DIAware {
     private val httpHeaders by provider<HttpHeaders>()

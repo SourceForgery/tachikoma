@@ -5,13 +5,13 @@ import io.ebean.Transaction
 import io.ebeaninternal.api.SpiEbeanServer
 import io.ebeaninternal.api.SpiTransaction
 import io.ebeaninternal.server.transaction.TransactionScopeManager
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 class TransactionManagerImpl(override val di: DI) : TransactionManager, DIAware {
     private val database: Database by instance()

@@ -27,8 +27,6 @@ import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
-import java.time.Clock
-import java.util.Properties
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -38,6 +36,8 @@ import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.time.Clock
+import java.util.Properties
 
 class MTAEmailQueueService(override val di: DI) : DIAware {
     private val clock: Clock by instance()

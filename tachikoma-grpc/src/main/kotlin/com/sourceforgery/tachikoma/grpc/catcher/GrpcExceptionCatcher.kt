@@ -4,12 +4,12 @@ import com.sourceforgery.tachikoma.config.DebugConfig
 import io.grpc.Metadata
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import java.io.PrintWriter
-import java.io.StringWriter
-import java.util.Locale
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.util.Locale
 
 abstract class KodeinAvoidingGrpcExceptionCatcher {
     init {

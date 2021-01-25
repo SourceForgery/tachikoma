@@ -18,7 +18,6 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import jakarta.mail.internet.InternetAddress
-import kotlin.test.assertEquals
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -29,6 +28,7 @@ import org.kodein.di.DIAware
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
+import kotlin.test.assertEquals
 
 class IncomingEmailTest : DIAware {
     private val incomingEmailDAO: IncomingEmailDAO = mockk()

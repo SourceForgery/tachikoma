@@ -2,9 +2,9 @@ package com.sourceforgery.tachikoma.mq
 
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
-import java.util.concurrent.LinkedBlockingQueue
 import org.kodein.di.DI
 import org.kodein.di.DIAware
+import java.util.concurrent.LinkedBlockingQueue
 
 class MQSenderMock(override val di: DI) : MQSender, DIAware {
     val deliveryNotifications = LinkedBlockingQueue<DeliveryNotificationMessage>()

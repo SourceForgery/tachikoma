@@ -10,7 +10,8 @@ import com.sourceforgery.tachikoma.rest.catchers.RestExceptionCatcher
 import io.grpc.Status
 import org.kodein.di.DI
 
-class InvalidOrInsufficientCredentialsCatcher(override val di: DI) : GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(InvalidOrInsufficientCredentialsException::class.java),
+class InvalidOrInsufficientCredentialsCatcher(override val di: DI) :
+    GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(InvalidOrInsufficientCredentialsException::class.java),
     RestExceptionCatcher<InvalidOrInsufficientCredentialsException> {
 
     override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: InvalidOrInsufficientCredentialsException) =

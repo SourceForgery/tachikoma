@@ -7,11 +7,11 @@ import com.sourceforgery.tachikoma.testModule
 import io.ebean.Database
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebeaninternal.server.core.DefaultServer
-import kotlin.test.assertTrue
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import kotlin.test.assertTrue
 
 class StartupTest : DIAware {
     override val di = DI {

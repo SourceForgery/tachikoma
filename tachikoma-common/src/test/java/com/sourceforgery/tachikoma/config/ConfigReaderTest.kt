@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.config
 
+import org.junit.Test
 import java.net.URI
 import kotlin.test.assertEquals
-import org.junit.Test
 
 class ConfigReaderTest {
     @Test

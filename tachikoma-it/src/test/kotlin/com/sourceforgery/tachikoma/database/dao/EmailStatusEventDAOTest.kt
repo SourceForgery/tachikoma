@@ -5,13 +5,13 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.testModule
-import java.time.Clock
-import java.time.temporal.ChronoUnit
-import kotlin.test.assertEquals
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.time.Clock
+import java.time.temporal.ChronoUnit
+import kotlin.test.assertEquals
 
 class EmailStatusEventDAOTest : DIAware {
     override val di = DI {

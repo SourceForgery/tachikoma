@@ -1,9 +1,9 @@
 package com.sourceforgery.tachikoma.maildelivery
 
-import kotlin.test.assertEquals
 import org.jsoup.Jsoup
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
+import kotlin.test.assertEquals
 
 @RunWith(JUnitPlatform::class)
 class HtmlToPlainTextTest {
@@ -64,7 +64,8 @@ class HtmlToPlainTextTest {
 """
         )
 
-        val simpleHtmlText = """
+        val simpleHtmlText =
+            """
 HELLO
 
 Lorem ipsum dolor sit amet, phasellus gravida. Class risus turpis enim euismod

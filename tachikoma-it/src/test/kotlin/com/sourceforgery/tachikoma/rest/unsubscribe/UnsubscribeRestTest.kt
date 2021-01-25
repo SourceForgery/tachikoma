@@ -33,14 +33,6 @@ import com.sourceforgery.tachikoma.users.UserService
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.EbeanServer
-import java.net.URI
-import java.time.Duration
-import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.test.fail
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -54,6 +46,14 @@ import org.kodein.di.allInstances
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
+import java.net.URI
+import java.time.Duration
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class UnsubscribeRestTest : DIAware {
 
@@ -65,11 +65,13 @@ class UnsubscribeRestTest : DIAware {
         importOnce(testModule(), allowOverride = true)
         bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
         bind<UserService>() with singleton { UserService(di) }
-        bind<TrackingConfig>() with instance(object : TrackingConfig {
-            override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd".toByteArray()
-            override val baseUrl: URI
-                get() = URI.create("http://localhost:${server.activeLocalPort()}/")
-        })
+        bind<TrackingConfig>() with instance(
+            object : TrackingConfig {
+                override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd".toByteArray()
+                override val baseUrl: URI
+                    get() = URI.create("http://localhost:${server.activeLocalPort()}/")
+            }
+        )
     }
 
     val userService: UserService by instance()

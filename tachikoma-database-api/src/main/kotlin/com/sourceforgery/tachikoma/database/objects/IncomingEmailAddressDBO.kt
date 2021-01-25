@@ -6,9 +6,12 @@ import javax.persistence.ManyToOne
 import javax.persistence.Table
 import javax.persistence.UniqueConstraint
 
-@Table(name = "e_incoming_email_address", uniqueConstraints = [
-    UniqueConstraint(columnNames = ["local_part", "account_id"])
-])
+@Table(
+    name = "e_incoming_email_address",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["local_part", "account_id"])
+    ]
+)
 @Entity
 class IncomingEmailAddressDBO(
     @Column

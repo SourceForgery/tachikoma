@@ -6,8 +6,6 @@ import com.sourceforgery.tachikoma.kodein.DatabaseSessionContext
 import com.sourceforgery.tachikoma.kodein.DatabaseSessionKodeinScope
 import com.sourceforgery.tachikoma.kodein.withRequestContext
 import com.sourceforgery.tachikoma.logging.InvokeCounterFactory
-import java.util.concurrent.CompletableFuture
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +17,8 @@ import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.util.concurrent.CompletableFuture
+import kotlin.coroutines.CoroutineContext
 
 interface TachikomaScope : CoroutineScope {
     fun <T> scopedFuture(block: suspend () -> T): CompletableFuture<T>

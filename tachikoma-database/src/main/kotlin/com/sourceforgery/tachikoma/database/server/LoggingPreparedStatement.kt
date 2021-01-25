@@ -1,12 +1,12 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.sourceforgery.tachikoma.logging.InvokeCounter
+import org.apache.logging.log4j.kotlin.logger
+import org.intellij.lang.annotations.MagicConstant
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import org.apache.logging.log4j.kotlin.logger
-import org.intellij.lang.annotations.MagicConstant
 
 internal class LoggingPreparedStatement(
     private val preparedStatement: PreparedStatement,

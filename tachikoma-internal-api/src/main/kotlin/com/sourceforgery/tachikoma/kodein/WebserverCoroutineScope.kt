@@ -1,10 +1,10 @@
 package com.sourceforgery.tachikoma.kodein
 
 import com.linecorp.armeria.common.RequestContext
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Coroutine scope in which kodein will correctly supply the thread local RequestContext.

@@ -304,7 +304,8 @@ object UriComponent {
                     codePoint == '%'.toInt() &&
                     offset + 2 < s.length &&
                     isHexCharacter(s[offset + 1]) &&
-                    isHexCharacter(s[offset + 2])) {
+                    isHexCharacter(s[offset + 2])
+                ) {
                     sb?.append('%')?.append(s[offset + 1])?.append(s[offset + 2])
                     offset += 2
                     offset += Character.charCount(codePoint)
@@ -565,8 +566,10 @@ object UriComponent {
         try {
             val equals = param.indexOf('=')
             if (equals > 0) {
-                params.put(if (decodeNames) URLDecoder.decode(param.substring(0, equals), "UTF-8") else param.substring(0, equals),
-                    if (decodeValues) URLDecoder.decode(param.substring(equals + 1), "UTF-8") else param.substring(equals + 1))
+                params.put(
+                    if (decodeNames) URLDecoder.decode(param.substring(0, equals), "UTF-8") else param.substring(0, equals),
+                    if (decodeValues) URLDecoder.decode(param.substring(equals + 1), "UTF-8") else param.substring(equals + 1)
+                )
             } else if (equals == 0) {
                 // no key declared, ignore
             } else if (param.length > 0) {
@@ -650,8 +653,16 @@ object UriComponent {
     fun decodePathSegment(segments: MutableList<PathSegment>, segment: String, decode: Boolean) {
         val colon = segment.indexOf(';')
         if (colon != -1) {
-            segments.add(PathSegment(if (colon == 0) "" else segment.substring(0, colon), decode, decodeMatrix(segment,
-                decode)))
+            segments.add(
+                PathSegment(
+                    if (colon == 0) "" else segment.substring(0, colon),
+                    decode,
+                    decodeMatrix(
+                        segment,
+                        decode
+                    )
+                )
+            )
         } else {
             segments.add(PathSegment(segment, decode))
         }
@@ -691,12 +702,14 @@ object UriComponent {
     private fun decodeMatrixParam(params: Multimap<String, String>, param: String, decode: Boolean) {
         val equals = param.indexOf('=')
         if (equals > 0) {
-            params.put(decode(param.substring(0, equals), UriComponent.Type.MATRIX_PARAM),
+            params.put(
+                decode(param.substring(0, equals), UriComponent.Type.MATRIX_PARAM),
                 if (decode)
                     decode(param.substring(equals + 1), UriComponent.Type.MATRIX_PARAM)
                 else
                     param
-                        .substring(equals + 1))
+                        .substring(equals + 1)
+            )
         } else if (equals == 0) {
             // no key declared, ignore
         } else if (param.length > 0) {

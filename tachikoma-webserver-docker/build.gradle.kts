@@ -15,7 +15,8 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     runCommand("apt-get update && apt-get -y --no-install-recommends install curl rsyslog rsyslog-gnutls less nvi openjdk-11-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*")
 
-    runCommand("""
+    runCommand(
+        """
         mkdir -p /etc/tachikoma/rsyslog/ &&
         chown -R syslog:syslog /etc/tachikoma/rsyslog/ &&
         touch /etc/tachikoma/rsyslog/external.conf &&
@@ -31,10 +32,12 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     defaultCommand(listOf("/start.sh"))
 
-    runCommand("""
+    runCommand(
+        """
         sed -r "/(KLogPermitNonKernelFacility|imklog)/d" -i /etc/rsyslog.conf &&
         sed -r "s/\\|(.*)xconsole\$/\\1console/" -i /etc/rsyslog.d/50-default.conf
-    """.trimIndent().replace('\n', ' '))
+        """.trimIndent().replace('\n', ' ')
+    )
 
     addFile(file("src/assets/"))
 
@@ -47,7 +50,8 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     runCommand("chmod a+x /opt/tachikoma-webserver/bin/tachikoma-webserver")
 
-    runCommand("""
+    runCommand(
+        """
         useradd webserver &&
         mkdir -p /var/log/tachikoma &&
         chown webserver:root /var/log/tachikoma

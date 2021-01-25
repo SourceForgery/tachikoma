@@ -1,13 +1,13 @@
 package com.sourceforgery.tachikoma.config
 
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 import java.io.IOException
 import java.util.Properties
 import java.util.UUID
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.kotlin.logger
 
 private fun <T> convert(clazz: Class<T>, stringValue: String): T {
     return try {
@@ -40,13 +40,13 @@ private fun <T> valueOf(clazz: Class<T>, stringValue: String): T {
 private const val REALLY_BAD_KEY = "really_really_poor_dev_encryption_key"
 
 inline fun <reified R, reified T> readConfig(propertyName: String, default: T): ReadOnlyProperty<R, T> =
-        ConfigReader(propertyName, default, T::class.java)
+    ConfigReader(propertyName, default, T::class.java)
 
 inline fun <reified T> getEnvironment(
     environmentKey: String,
     defaultValue: String? = null
 ): ReadOnlyProperty<Any, T> =
-        EnvGetter(environmentKey, defaultValue, T::class.java)
+    EnvGetter(environmentKey, defaultValue, T::class.java)
 
 class EnvGetter<T>(
     private val environmentKey: String,
@@ -59,8 +59,8 @@ class EnvGetter<T>(
     private fun readValue(): T {
         if (!set) {
             val stringValue = System.getenv(environmentKey)
-                    ?: defaultValue
-                    ?: throw IllegalArgumentException("Didn't find any environment variable $environmentKey")
+                ?: defaultValue
+                ?: throw IllegalArgumentException("Didn't find any environment variable $environmentKey")
             data = convert(clazz, stringValue)
             set = true
         }
@@ -85,9 +85,9 @@ class ReadListConfig<R, T2>(
     defaultValue: List<T2>,
     private val listClazz: Class<T2>
 ) : ConfigReader<R, List<T2>>(
-        propertyName = propertyName,
-        defaultValue = defaultValue,
-        clazz = List::class.java as Class<List<T2>>
+    propertyName = propertyName,
+    defaultValue = defaultValue,
+    clazz = List::class.java as Class<List<T2>>
 ) {
     override fun <T> readConfig(configKey: String): T {
         return ConfigData.getProperty(configKey, defaultValue) {
@@ -101,18 +101,18 @@ class EncryptionConfig<R, T>(
     defaultValue: T,
     clazz: Class<T>
 ) : ConfigReader<R, T>(
-        propertyName = propertyName,
-        defaultValue = defaultValue,
-        clazz = clazz
+    propertyName = propertyName,
+    defaultValue = defaultValue,
+    clazz = clazz
 ) {
     override fun readValue(property: KProperty<*>) =
-            super.readValue(property)
-                    .also {
-                        if (it == defaultValue) {
-                            LogManager.getLogger("change_dev_key")
-                                    .error("You're using a DEV key for ${property.name}/$propertyName. Do NOT use in production!!")
-                        }
-                    }
+        super.readValue(property)
+            .also {
+                if (it == defaultValue) {
+                    LogManager.getLogger("change_dev_key")
+                        .error("You're using a DEV key for ${property.name}/$propertyName. Do NOT use in production!!")
+                }
+            }
 }
 
 open class ConfigReader<R, T>(
@@ -150,18 +150,18 @@ private object ConfigData {
 
     init {
         val configFile = (
-                System.getProperty("tachikomaConfig")
-                        ?: System.getenv("TACHIKOMA_CONFIG")
-                )
-                ?.let {
-                    File(it)
-                }
+            System.getProperty("tachikomaConfig")
+                ?: System.getenv("TACHIKOMA_CONFIG")
+            )
+            ?.let {
+                File(it)
+            }
         if (configFile == null) {
             LOGGER.error { "No config file defined via System property tachikomaConfig nor environment variable TACHIKOMA_CONFIG. Could work, but probably isn't what you want" }
         } else {
             try {
                 configFile.reader()
-                        .use { properties.load(it) }
+                    .use { properties.load(it) }
                 LOGGER.info("Read config from '$configFile'")
             } catch (e: IOException) {
                 LOGGER.info { "Couldn't find '$configFile'" }
@@ -170,9 +170,10 @@ private object ConfigData {
     }
 
     fun <T> getProperty(key: String, default: T, converter: (String) -> T): T =
-            (System.getenv(key)
-                    ?: properties.getProperty(key)
-                    )
-                    ?.let { converter(it) }
-                    ?: default
+        (
+            System.getenv(key)
+                ?: properties.getProperty(key)
+            )
+            ?.let { converter(it) }
+            ?: default
 }

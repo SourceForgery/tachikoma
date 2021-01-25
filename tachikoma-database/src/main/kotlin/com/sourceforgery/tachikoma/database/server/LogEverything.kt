@@ -2,9 +2,9 @@ package com.sourceforgery.tachikoma.database.server
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.sourceforgery.tachikoma.logging.InvokeCounter
-import java.time.Duration
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.bindings.ScopeCloseable
+import java.time.Duration
 
 class LogEverything() : InvokeCounter, ScopeCloseable {
 

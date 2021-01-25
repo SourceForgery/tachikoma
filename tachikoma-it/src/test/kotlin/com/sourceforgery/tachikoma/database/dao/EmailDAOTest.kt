@@ -18,14 +18,14 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.testModule
 import io.ebean.Database
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.Before
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class EmailDAOTest : DIAware {
     override val di = DI {
