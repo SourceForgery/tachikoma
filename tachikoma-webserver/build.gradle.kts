@@ -21,8 +21,24 @@ rootProject.extensions.configure<co.riiid.gradle.GithubExtension>("github") {
     addAssets("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")
 }
 
+val startClass = "com.sourceforgery.tachikoma.webserver.MainKt"
+
 extensions.configure<JavaApplication>("application") {
-    mainClassName = "com.sourceforgery.tachikoma.webserver.MainKt"
+    mainClass.set(startClass)
+}
+
+val runLocalServer by tasks.creating(type = JavaExec::class) {
+    description = "Development"
+    dependsOn("assemble")
+    afterEvaluate {
+        main = startClass
+        classpath = project.sourceSets["main"].runtimeClasspath
+        jvmArgs(
+            listOf(
+                "-DtachikomaConfig=${System.getProperty("user.home")}/.tachikoma.properties"
+            )
+        )
+    }
 }
 
 tasks.getByPath(":githubRelease").dependsOn(tasks[ApplicationPlugin.TASK_DIST_TAR_NAME])
