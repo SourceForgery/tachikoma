@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 import java.net.URI
 import java.time.Duration
 
-fun main(args: Array<String>) {
+fun main() {
     val backendUri = URI.create(
         System.getenv("TACHI_BACKEND_URI")
             ?: error("Need to specify env TACHI_BACKEND_URI")

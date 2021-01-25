@@ -87,8 +87,8 @@ class AuthenticationFactory(override val di: DI) : DIAware {
         val webtokenHeader = httpHeaders()[WEBTOKEN_HEADER]
             ?: return null
         val splitToken = webtokenHeader.split(
-            delimiters = *charArrayOf('.'),
-            limit = 2
+            limit = 2,
+            delimiters = charArrayOf('.')
         )
         if (splitToken.size != 2) {
             return null

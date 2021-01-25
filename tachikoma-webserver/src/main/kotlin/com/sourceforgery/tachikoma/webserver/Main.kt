@@ -71,7 +71,7 @@ class WebServerStarter(override val di: DI) : DIAware {
         val serverBuilder = Server.builder()
             .service("/health", healthService)
             .accessLogWriter(
-                AccessLogWriter { requestLog ->
+                { requestLog ->
                     val path = (requestLog.context() as ServiceRequestContext).path()
                     if (path != "/health") {
                         combined.log(requestLog)
@@ -139,7 +139,7 @@ class WebServerStarter(override val di: DI) : DIAware {
 }
 
 @Suppress("unused")
-fun main(vararg args: String) {
+fun main() {
     InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
     System.setOut(IoBuilder.forLogger("System.sout").setLevel(Level.WARN).buildPrintStream())
     System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())

@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import java.net.URI
 import java.time.Duration
 
-fun main(args: Array<String>) {
+fun main() {
     val frontendUri = URI.create(
         System.getenv("TACHI_FRONTEND_URI")
             ?: error("Need to specify env TACHI_FRONTEND_URI")

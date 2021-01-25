@@ -73,7 +73,7 @@ internal constructor(
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)
     System.setOut(IoBuilder.forLogger("System.sout").setLevel(Level.WARN).buildPrintStream())
     System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())
