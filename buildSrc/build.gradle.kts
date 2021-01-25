@@ -15,7 +15,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("org.junit.platform:junit-platform-gradle-plugin:1.2.0")
     implementation("se.transmode.gradle:gradle-docker:1.2-youcruit-9")
-    implementation("org.jetbrains.dokka:dokka-gradle-plugin:1.4.20")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.27.0")
 }
 
