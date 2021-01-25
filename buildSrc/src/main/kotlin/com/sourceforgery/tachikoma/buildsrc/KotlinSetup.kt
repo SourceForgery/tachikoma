@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import sourceSets
 import testImplementation
+import java.io.File
 
 @Suppress("UnstableApiUsage")
 fun Project.kotlinSetup() {
@@ -38,8 +39,8 @@ fun Project.kotlinSetup() {
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
-            languageVersion = "1.3"
-            apiVersion = "1.3"
+            languageVersion = "1.4"
+            apiVersion = "1.4"
             jvmTarget = "11"
             freeCompilerArgs = listOf("-Xjsr305=strict", "-Xjvm-default=enable")
         }
@@ -56,9 +57,8 @@ fun Project.kotlinSetup() {
         disabledRules.set(listOf("final-newline"))
     }
 
-    val dokka by tasks.getting(DokkaTask::class) {
-        outputFormat = "html"
-        outputDirectory = "$buildDir/javadoc"
+    val dokkaHtml by tasks.getting(DokkaTask::class) {
+        outputDirectory.set(File(buildDir, "javadoc"))
     }
 
     val sourceJar by tasks.registering(Jar::class) {
@@ -69,8 +69,8 @@ fun Project.kotlinSetup() {
     assemble.dependsOn(sourceJar)
 
     val dokkaJar by tasks.registering(Jar::class) {
-        dependsOn(dokka)
-        from(dokka.outputDirectory)
+        dependsOn(dokkaHtml)
+        from(dokkaHtml.outputDirectory)
         archiveClassifier.set("javadoc")
     }
     assemble.dependsOn(dokkaJar)

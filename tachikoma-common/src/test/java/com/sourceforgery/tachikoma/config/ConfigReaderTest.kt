@@ -7,6 +7,7 @@ import kotlin.test.assertEquals
 class ConfigReaderTest {
     @Test
     fun `Config file test`() {
+        @Suppress("DEPRECATION")
         val file = createTempFile()
         file.deleteOnExit()
         file.writeText(

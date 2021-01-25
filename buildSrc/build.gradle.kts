@@ -15,7 +15,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("org.junit.platform:junit-platform-gradle-plugin:1.2.0")
     implementation("se.transmode.gradle:gradle-docker:1.2-youcruit-9")
-    implementation("org.jetbrains.dokka:dokka-gradle-plugin:0.10.1")
+    implementation("org.jetbrains.dokka:dokka-gradle-plugin:1.4.20")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.27.0")
 }
 
@@ -23,7 +23,9 @@ configurations.all {
     resolutionStrategy {
         failOnVersionConflict()
         force(
-            "org.apache.httpcomponents:httpclient:4.5.11",
+            "com.fasterxml.jackson.core:jackson-databind:2.11.1",
+            "com.fasterxml.jackson.core:jackson-core:2.11.1",
+            "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.11.1",
             "com.google.guava:guava:28.2-jre",
             "org.slf4j:slf4j-api:1.7.30",
             "commons-logging:commons-logging:1.2",
@@ -34,10 +36,12 @@ configurations.all {
             "org.codehaus.plexus:plexus-utils:3.3.0",
             "com.google.gradle:osdetector-gradle-plugin:1.6.2",
             "org.codehaus.groovy.modules.http-builder:http-builder:0.7.2",
+            "org.apache.httpcomponents:httpclient:4.5.11",
             "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
             "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion",
             "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion",
-            "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2"
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.4.2"
         )
     }
 }
