@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.mta
 
+import com.linecorp.armeria.server.ServiceRequestContext
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.ExtractEmailMetadata
@@ -28,6 +29,7 @@ import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
@@ -53,8 +55,12 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
     fun getEmails(requests: Flow<MTAQueuedNotification>, mailDomain: MailDomain): Flow<EmailMessage> {
         LOGGER.info { "MTA connected with mail domain $mailDomain " }
 
-        GlobalScope.launch {
+        val blockingDispatcher = ServiceRequestContext.current().blockingTaskExecutor().asCoroutineDispatcher()
+        GlobalScope.launch(blockingDispatcher) {
             requests.collect { value ->
+                if (value == MTAQueuedNotification.getDefaultInstance()) {
+                    return@collect
+                }
                 val queueId = value.queueId
                 val emailId = EmailId(value.emailId)
                 val email = emailDAO.getByEmailId(emailId)
