@@ -1,5 +1,3 @@
-@file:Suppress("UnusedImport")
-
 package com.sourceforgery.tachikoma.syslog
 
 import com.google.common.base.Splitter
@@ -101,6 +99,7 @@ class SyslogSniffer(
 
 internal fun parseLine(line: String): DeliveryNotification? {
     val split = syslogLineSplitter.splitToList(line)
+    SyslogSniffer.LOGGER.trace { "[[[[$line]]]] (${split.size})" }
     return if (split.size == 3 && !line.contains("postfix/lmtp")) {
         val (_, queueId, rest) = split
         val map = try {
