@@ -10,17 +10,17 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Semaphore
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 import java.io.OutputStream
 import java.io.RandomAccessFile
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
 
 class SyslogSniffer(
     private val stub: MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub
 ) {
-    private val semaphore = Semaphore(1)
+    private val notificationQueue = LinkedBlockingQueue<DeliveryNotification>()
 
     private val tape = FileObjectQueue<DeliveryNotification>(
         File("/var/spool/postfix/tachikoma/notification_queue"),
@@ -32,8 +32,18 @@ class SyslogSniffer(
         start = CoroutineStart.LAZY
     ) {
         while (true) {
-            semaphore.acquire()
             runDeliverer()
+            saveAll()
+        }
+    }
+
+    private fun saveAll() {
+        synchronized(tape) {
+            generateSequence(notificationQueue.take()) {
+                notificationQueue.poll()
+            }.forEach {
+                tape.add(it)
+            }
         }
     }
 
@@ -82,11 +92,7 @@ class SyslogSniffer(
                         if (notification != null) {
                             LOGGER.debug { ">>>>$line<<<<" }
                             synchronized(tape) {
-                                tape.add(notification)
-                            }
-                            // We don't care if it was already released
-                            runCatching {
-                                semaphore.release()
+                                notificationQueue.add(notification)
                             }
                         }
                         // >>>>Jan 18 22:55:46 1c7326acd8e5 postfix/smtp[249]: 2D61E2A03: to=<test@example.com>, relay=none, delay=30, delays=0.01/0/30/0, dsn=4.4.1, status=deferred (connect to example.com[93.184.216.34]:25: Connection timed out)<<<<
