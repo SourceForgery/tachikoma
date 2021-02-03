@@ -12,7 +12,7 @@ import javax.persistence.Table
 /**
  * This is one account (sender) with it's multiple users
  * Could be called "company" or "organization" responsible for one email domain
-  */
+ */
 class AccountDBO(
     // This is the domain allowed in the from field
     @Column(unique = true)

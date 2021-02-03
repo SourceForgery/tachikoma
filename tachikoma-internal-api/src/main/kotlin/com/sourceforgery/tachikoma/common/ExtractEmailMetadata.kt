@@ -5,11 +5,11 @@ import jakarta.mail.Message
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
-import java.io.ByteArrayInputStream
-import java.util.Properties
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
+import java.io.ByteArrayInputStream
+import java.util.Properties
 
 class ExtractEmailMetadata(override val di: DI) : DIAware {
     fun extract(message: ByteArray): EmailMetadata {

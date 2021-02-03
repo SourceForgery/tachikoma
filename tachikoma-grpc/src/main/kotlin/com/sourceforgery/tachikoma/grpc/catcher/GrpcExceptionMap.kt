@@ -2,14 +2,14 @@ package com.sourceforgery.tachikoma.grpc.catcher
 
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
-import java.util.concurrent.CancellationException
-import java.util.concurrent.ConcurrentHashMap
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.allInstances
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ConcurrentHashMap
 
 class GrpcExceptionMap(override val di: DI) : DIAware {
     private val catchers by allInstances<KodeinAvoidingGrpcExceptionCatcher>()

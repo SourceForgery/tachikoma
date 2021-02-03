@@ -1,21 +1,23 @@
-import com.google.protobuf.util.JsonFormat
+
 import com.linecorp.armeria.client.Clients
 import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.runBlocking
 import java.net.URI
 import java.time.Duration
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.runBlocking
 
-fun main(args: Array<String>) {
+fun main() {
     val backendUri = URI.create(
         System.getenv("TACHI_BACKEND_URI")
             ?: error("Need to specify env TACHI_BACKEND_URI")
     )
+
+    val channel = Channel<MTAQueuedNotification>()
 
     val apiToken = backendUri.userInfo
     val stub = Clients.builder(backendUri.withoutPassword().ensureGproto())
@@ -25,20 +27,19 @@ fun main(args: Array<String>) {
         .build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java)
 
     try {
-        val requests = flow {
-            for (i in 1..4) {
-                emit(
-                    MTAQueuedNotification.newBuilder()
-                        .setQueueId("12345A$i")
-                        .setSuccess(true)
-                        .build()
-                )
-            }
-        }
         runBlocking {
-        stub.getEmails(requests)
-            .take(1)
-            .collect { System.err.println("Got email: " + JsonFormat.printer().print(it)) }
+            stub.getEmails(channel.receiveAsFlow())
+                .collect {
+                    // System.err.println("Got email: " + JsonFormat.printer().print(it))
+                    for (i in 1..4) {
+                        channel.offer(
+                            MTAQueuedNotification.newBuilder()
+                                .setQueueId("12345A$i")
+                                .setSuccess(true)
+                                .build()
+                        )
+                    }
+                }
         }
     } catch (e: Exception) {
         e.printStackTrace()

@@ -10,8 +10,6 @@ import io.ebean.config.EncryptKeyManager
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourcePool
-import java.sql.DriverManager
-import javax.sql.DataSource
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.kodein.di.DI
@@ -19,6 +17,8 @@ import org.kodein.di.DIAware
 import org.kodein.di.allInstances
 import org.kodein.di.instance
 import org.kodein.di.provider
+import java.sql.DriverManager
+import javax.sql.DataSource
 
 class EbeanServerFactory(override val di: DI) : DIAware {
     private val databaseConfig: DatabaseConfig by instance()

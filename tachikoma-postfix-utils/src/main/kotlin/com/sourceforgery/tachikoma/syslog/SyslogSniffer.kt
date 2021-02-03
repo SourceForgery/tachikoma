@@ -4,10 +4,6 @@ import com.google.common.base.Splitter
 import com.sourceforgery.tachikoma.mta.DeliveryNotification
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpcKt
 import com.squareup.tape.FileObjectQueue
-import java.io.File
-import java.io.OutputStream
-import java.io.RandomAccessFile
-import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -16,6 +12,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import org.apache.logging.log4j.kotlin.logger
+import java.io.File
+import java.io.OutputStream
+import java.io.RandomAccessFile
+import java.util.concurrent.Executors
 
 class SyslogSniffer(
     private val stub: MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub

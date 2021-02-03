@@ -14,17 +14,16 @@ import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.registering
 import org.gradle.kotlin.dsl.withType
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import sourceSets
 import testImplementation
+import java.io.File
 
 @Suppress("UnstableApiUsage")
 fun Project.kotlinSetup() {
     apply(plugin = "kotlin")
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
-    apply(plugin = "org.jetbrains.dokka")
 
     dependencies {
         implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutineVersion"))
@@ -38,8 +37,8 @@ fun Project.kotlinSetup() {
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
-            languageVersion = "1.3"
-            apiVersion = "1.3"
+            languageVersion = "1.4"
+            apiVersion = "1.4"
             jvmTarget = "11"
             freeCompilerArgs = listOf("-Xjsr305=strict", "-Xjvm-default=enable")
         }
@@ -56,24 +55,12 @@ fun Project.kotlinSetup() {
         disabledRules.set(listOf("final-newline"))
     }
 
-    val dokka by tasks.getting(DokkaTask::class) {
-        outputFormat = "html"
-        outputDirectory = "$buildDir/javadoc"
-    }
-
     val sourceJar by tasks.registering(Jar::class) {
         from(sourceSets["main"].allJava)
         archiveClassifier.set("source")
     }
     val assemble by tasks
     assemble.dependsOn(sourceJar)
-
-    val dokkaJar by tasks.registering(Jar::class) {
-        dependsOn(dokka)
-        from(dokka.outputDirectory)
-        archiveClassifier.set("javadoc")
-    }
-    assemble.dependsOn(dokkaJar)
 
     val checkDuplicateClasses by tasks.registering(CheckDuplicateClassesTask::class)
 

@@ -5,12 +5,12 @@ import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.objects.query.QIncomingEmailDBO
 import io.ebean.Database
 import io.ebean.migration.ddl.DdlRunner
-import java.sql.Connection
 import org.apache.logging.log4j.kotlin.logger
 import org.intellij.lang.annotations.Language
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.sql.Connection
 
 class Version12(override val di: DI) : DatabaseUpgrade, EbeanHook, DIAware {
     override val newVersion: Int = -12
@@ -20,7 +20,8 @@ class Version12(override val di: DI) : DatabaseUpgrade, EbeanHook, DIAware {
 
     override fun run(connection: Connection): Int {
         @Language("PostgreSQL")
-        val content = """
+        val content =
+            """
             ALTER TABLE e_incoming_email
                 RENAME COLUMN from_email TO mail_from;
             ALTER TABLE e_incoming_email
@@ -34,7 +35,7 @@ class Version12(override val di: DI) : DatabaseUpgrade, EbeanHook, DIAware {
                 ADD COLUMN from_emails jsonb not null default '[]',
                 ADD COLUMN reply_to_emails jsonb not null default '[]',
                 ADD COLUMN to_emails jsonb not null default '[]';
-        """.trimIndent()
+            """.trimIndent()
 
         DdlRunner(false, javaClass.simpleName)
             .runAll(content, connection)

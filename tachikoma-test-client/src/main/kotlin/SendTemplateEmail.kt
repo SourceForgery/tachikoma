@@ -15,7 +15,7 @@ import java.net.URI
 import java.time.Duration
 import java.time.Instant
 
-fun main(args: Array<String>) {
+fun main() {
     val frontendUri = URI.create(
         System.getenv("TACHI_FRONTEND_URI")
             ?: error("Need to specify env TACHI_FRONTEND_URI")
@@ -28,7 +28,8 @@ fun main(args: Array<String>) {
         .writeTimeout(Duration.ofDays(365))
         .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
-    val template = """
+    val template =
+        """
     <div class="entry">
         <h1>{{title}}</h1>
         <div class="body">
@@ -65,16 +66,18 @@ fun main(args: Array<String>) {
                 .setGlobalVars(globalVars)
                 .setSubject("Test email " + Instant.now())
         )
-        .addRecipients(EmailRecipient.newBuilder()
-            .setNamedEmail(
-                NamedEmailAddress.newBuilder()
-                    .setEmail("test@example.com")
-                    .setName("This won't work")
-            )
+        .addRecipients(
+            EmailRecipient.newBuilder()
+                .setNamedEmail(
+                    NamedEmailAddress.newBuilder()
+                        .setEmail("test@example.com")
+                        .setName("This won't work")
+                )
         )
-        .setFrom(NamedEmailAddress.newBuilder()
-            .setEmail("test@example.com")
-            .setName("This won't work")
+        .setFrom(
+            NamedEmailAddress.newBuilder()
+                .setEmail("test@example.com")
+                .setName("This won't work")
         )
         .build()
 

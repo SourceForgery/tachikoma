@@ -24,7 +24,8 @@ fun main(args: Array<String>) {
         .build(UserServiceGrpc.UserServiceBlockingStub::class.java)
 
     try {
-        val response = stub.addFrontendUser(AddUserRequest.newBuilder()
+        val response = stub.addFrontendUser(
+            AddUserRequest.newBuilder()
                 .apply {
                     passwordAuth = PasswordAuth.newBuilder().apply {
                         login = email.substringBefore('@')

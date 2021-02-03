@@ -3,7 +3,6 @@ package com.sourceforgery.tachikoma.incoming
 import com.google.protobuf.ByteString
 import com.sourceforgery.tachikoma.mta.IncomingEmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
-import java.nio.charset.StandardCharsets
 import jnr.unixsocket.UnixServerSocketChannel
 import jnr.unixsocket.UnixSocketAddress
 import kotlinx.coroutines.CoroutineScope
@@ -11,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.apache.logging.log4j.kotlin.logger
+import java.nio.charset.StandardCharsets
 
 class IncomingEmailHandler(
     private val stub: MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub,

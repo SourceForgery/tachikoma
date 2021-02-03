@@ -17,12 +17,12 @@ import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.Database
-import java.time.Instant
-import java.util.UUID
 import org.apache.commons.lang3.RandomStringUtils
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.time.Instant
+import java.util.UUID
 
 class DAOHelper(override val di: DI) : DIAware {
     private val database: Database by instance()

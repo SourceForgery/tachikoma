@@ -21,13 +21,13 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import com.sourceforgery.tachikoma.testModule
 import io.ebean.Database
-import java.util.Collections
-import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.util.Collections
+import kotlin.test.assertEquals
 
 class BlockedEmailDAOTest : DIAware {
     override val di: DI = DI {

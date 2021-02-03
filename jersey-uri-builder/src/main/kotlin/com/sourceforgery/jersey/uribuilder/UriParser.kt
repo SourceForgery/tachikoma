@@ -190,7 +190,8 @@ internal constructor(private val input: String) {
 
                 // test IPv6 or regular expressions in the template params
             } else if ((!isIp || squareBracketsCount == 0) && curlyBracketsCount == 0 &&
-                delimiters != null && delimiters.indexOf(c) >= 0) {
+                delimiters != null && delimiters.indexOf(c) >= 0
+            ) {
                 return if (sb.isEmpty()) null else sb.toString()
             } else {
                 sb.append(c)

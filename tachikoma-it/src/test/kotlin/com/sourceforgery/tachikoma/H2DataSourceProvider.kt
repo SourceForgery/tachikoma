@@ -4,10 +4,10 @@ import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.h2.H2Platform
 import io.ebean.datasource.DataSourceConfig
-import java.sql.Connection
-import java.util.UUID
 import org.kodein.di.DI
 import org.kodein.di.DIAware
+import java.sql.Connection
+import java.util.UUID
 
 class H2DataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
     override fun provide(serverConfig: ServerConfig) {

@@ -1,9 +1,9 @@
 package com.sourceforgery.tachikoma.syslog
 
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.fail
-import org.junit.Test
 
 class SyslogSnifferTest {
     @Test

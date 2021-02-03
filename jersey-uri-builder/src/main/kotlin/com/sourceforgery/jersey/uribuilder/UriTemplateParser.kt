@@ -158,8 +158,9 @@ constructor(
         try {
             pattern = Pattern.compile(regex.toString())
         } catch (ex: PatternSyntaxException) {
-            throw IllegalArgumentException("Invalid syntax for the template expression '" +
-                regex + "'",
+            throw IllegalArgumentException(
+                "Invalid syntax for the template expression '" +
+                    regex + "'",
                 ex
             )
         }
@@ -344,7 +345,8 @@ constructor(
 
                     names.add(subName)
                     groupCounts.add(
-                        if (first) 5 else 3)
+                        if (first) 5 else 3
+                    )
                     first = false
                 }
 

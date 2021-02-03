@@ -13,11 +13,11 @@ import com.sourceforgery.tachikoma.mq.MQSender
 import com.sourceforgery.tachikoma.mq.MessageDelivered
 import com.sourceforgery.tachikoma.mq.MessageHardBounced
 import com.sourceforgery.tachikoma.mq.MessageSoftBounced
-import java.time.Clock
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.time.Clock
 
 internal class MTADeliveryNotifications(override val di: DI) : DIAware {
     private val emailDAO: EmailDAO by instance()

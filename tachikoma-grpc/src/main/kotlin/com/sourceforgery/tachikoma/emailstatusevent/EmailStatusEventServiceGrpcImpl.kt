@@ -17,7 +17,7 @@ internal class EmailStatusEventServiceGrpcImpl(
     override val di: DI
 ) : EmailStatusEventServiceGrpcKt.EmailStatusEventServiceCoroutineImplBase(), DIAware {
 
-private val authentication: () -> Authentication by provider()
+    private val authentication: () -> Authentication by provider()
     private val emailStatsEventService: EmailStatusEventService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 

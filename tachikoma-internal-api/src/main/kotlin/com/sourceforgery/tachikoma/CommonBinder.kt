@@ -5,10 +5,10 @@ import com.sourceforgery.tachikoma.common.ExtractEmailMetadata
 import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.coroutines.TachikomaScopeImpl
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
-import java.time.Clock
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.singleton
+import java.time.Clock
 
 val commonModule = DI.Module("common") {
     bind<Clock>() with singleton { Clocker() }

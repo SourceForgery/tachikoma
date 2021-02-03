@@ -1,8 +1,8 @@
 package com.sourceforgery.jersey.uribuilder
 
+import org.junit.Test
 import java.net.URI
 import kotlin.test.assertEquals
-import org.junit.Test
 
 class URIUtilTest {
     @Test

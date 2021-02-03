@@ -3,12 +3,12 @@ package com.sourceforgery.tachikoma.unsubscribe
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.testModule
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class UnsubscribeDecoderTest : DIAware {
     override val di = DI {

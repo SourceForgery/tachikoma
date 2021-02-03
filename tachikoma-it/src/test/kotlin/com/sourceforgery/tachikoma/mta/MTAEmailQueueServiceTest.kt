@@ -20,10 +20,6 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import com.sourceforgery.tachikoma.mq.OutgoingEmailMessage
 import com.sourceforgery.tachikoma.testModule
 import io.ebean.Database
-import java.time.Clock
-import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -34,6 +30,10 @@ import org.junit.Before
 import org.kodein.di.DI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import java.time.Clock
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class MTAEmailQueueServiceTest {
     lateinit var di: DI

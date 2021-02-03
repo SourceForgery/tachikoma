@@ -9,10 +9,10 @@ import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.toRole
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import java.util.Base64
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.util.Base64
 
 class LoginService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()

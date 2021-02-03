@@ -38,12 +38,6 @@ import jakarta.mail.Part
 import jakarta.mail.Session
 import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.MimeMessage
-import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
-import java.nio.charset.Charset
-import java.nio.charset.UnsupportedCharsetException
-import java.time.Instant
-import java.util.Properties
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -52,6 +46,12 @@ import org.jsoup.Jsoup
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.io.ByteArrayInputStream
+import java.io.InputStreamReader
+import java.nio.charset.Charset
+import java.nio.charset.UnsupportedCharsetException
+import java.time.Instant
+import java.util.Properties
 
 class IncomingEmailService(override val di: DI) : DIAware {
     private val incomingEmailDAO: IncomingEmailDAO by instance()
@@ -143,8 +143,9 @@ class IncomingEmailService(override val di: DI) : DIAware {
     private fun Part.text() =
         when (val content = content) {
             is String -> content
-            else -> InputStreamReader(inputStream, charset())
-                .use { it.readText() }
+            else ->
+                InputStreamReader(inputStream, charset())
+                    .use { it.readText() }
         }
 
     private fun IncomingEmail.Builder.includeParsedBodies(parsedMessage: MimeMessage) {

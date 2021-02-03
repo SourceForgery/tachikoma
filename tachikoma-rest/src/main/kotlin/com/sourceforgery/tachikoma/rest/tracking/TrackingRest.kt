@@ -25,12 +25,12 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.httpRedirect
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.tracking.TrackingDecoder
-import java.util.Base64
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.direct
 import org.kodein.di.instance
+import java.util.Base64
 
 internal class TrackingRest(
     override val di: DI

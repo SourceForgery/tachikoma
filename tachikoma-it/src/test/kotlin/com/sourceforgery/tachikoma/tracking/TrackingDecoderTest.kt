@@ -3,12 +3,12 @@ package com.sourceforgery.tachikoma.tracking
 import com.sourceforgery.tachikoma.grpc.frontend.EmailId
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.testModule
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class TrackingDecoderTest : DIAware {
     override val di = DI {

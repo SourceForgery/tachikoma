@@ -18,12 +18,12 @@ import com.sourceforgery.tachikoma.mq.MQSequenceFactoryMock
 import com.sourceforgery.tachikoma.mq.TestConsumerFactoryImpl
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueService
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeConfig
-import java.net.URI
-import java.util.UUID
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.scoped
 import org.kodein.di.singleton
+import java.net.URI
+import java.util.UUID
 
 fun testModule(vararg attributes: TestAttribute) = DI.Module("test") {
     importOnce(databaseModule)

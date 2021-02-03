@@ -5,14 +5,8 @@ import com.sourceforgery.tachikoma.expectit.expectNoSmtpError
 import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
-import java.io.PrintWriter
-import java.net.Socket
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
-import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -25,6 +19,12 @@ import net.sf.expectit.matcher.Matchers.regexp
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
+import java.io.PrintWriter
+import java.net.Socket
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
+import kotlin.system.exitProcess
 
 class MailSender(
     private val stub: MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub,
@@ -35,9 +35,21 @@ class MailSender(
 
     override fun close() {
         channel.close()
+        executor.shutdown()
     }
 
     fun start() {
+        scope.launch {
+            // Keep-alive
+            while (true) {
+                try {
+                    channel.offer(MTAQueuedNotification.getDefaultInstance())
+                    delay(30000)
+                } catch (e: Exception) {
+                    LOGGER.warn(e) { "Keep-alive failed" }
+                }
+            }
+        }
         scope.launch {
             while (true) {
                 LOGGER.info { "Connecting. Trying to listen for emails" }
@@ -59,13 +71,14 @@ class MailSender(
         }
     }
 
+    @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
         LOGGER.info { "Got email: ${emailMessage.emailId}" }
 
         val builder = MTAQueuedNotification.newBuilder()
             .setEmailId(emailMessage.emailId)
         val success = try {
-            withContext(Dispatchers.IO) {
+            withContext(executor.asCoroutineDispatcher()) {
                 Socket("localhost", 25).use { smtpSocket ->
                     IoBuilder.forLogger("smtp.debug")
                         .setLevel(Level.TRACE)

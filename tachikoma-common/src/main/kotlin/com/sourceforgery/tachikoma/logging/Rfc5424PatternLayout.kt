@@ -1,13 +1,5 @@
 package com.sourceforgery.tachikoma.logging
 
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.util.HashMap
-import java.util.TreeMap
-import java.util.regex.Matcher
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LoggingException
 import org.apache.logging.log4j.core.Layout
@@ -41,6 +33,14 @@ import org.apache.logging.log4j.message.StructuredDataMessage
 import org.apache.logging.log4j.util.ProcessIdUtil
 import org.apache.logging.log4j.util.StringBuilders
 import org.apache.logging.log4j.util.Strings
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.HashMap
+import java.util.TreeMap
+import java.util.regex.Matcher
 
 @Suppress("unused")
 @Plugin(name = "Rfc5424PatternLayout", category = Node.CATEGORY, elementType = Layout.ELEMENT_TYPE, printObject = true)
@@ -156,8 +156,10 @@ private constructor(
                         val formatters = fieldParser.parse(value)
                         sdParams[key1] = formatters
                     }
-                    val fieldFormatter = FieldFormatter(sdParams,
-                        loggerField.discardIfAllFieldsAreEmpty)
+                    val fieldFormatter = FieldFormatter(
+                        sdParams,
+                        loggerField.discardIfAllFieldsAreEmpty
+                    )
                     sdIdMap[key.toString()] = fieldFormatter
                 }
             }
@@ -253,11 +255,13 @@ private constructor(
     }
 
     private fun appendAppName(buffer: StringBuilder) {
-        buffer.append(when {
-            appName != null -> appName
-            configName != null -> configName
-            else -> "-"
-        })
+        buffer.append(
+            when {
+                appName != null -> appName
+                configName != null -> configName
+                else -> "-"
+            }
+        )
     }
 
     private fun appendProcessId(buffer: StringBuilder) {
@@ -267,11 +271,13 @@ private constructor(
     private fun appendMessageId(buffer: StringBuilder, message: Message) {
         val isStructured = message is StructuredDataMessage
         val type = if (isStructured) (message as StructuredDataMessage).type else null
-        buffer.append(when {
-            type != null -> type
-            messageId != null -> messageId
-            else -> "-"
-        })
+        buffer.append(
+            when {
+                type != null -> type
+                messageId != null -> messageId
+                else -> "-"
+            }
+        )
     }
 
     private fun appendMessage(buffer: StringBuilder, event: LogEvent) {

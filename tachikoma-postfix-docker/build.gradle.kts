@@ -15,7 +15,8 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
     setEnvironment("PYTHONIOENCODING", "utf-8")
 
-    runCommand("""
+    runCommand(
+        """
         apt-get update &&
         apt-get -y dist-upgrade &&
         apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-11-jdk-headless netcat-openbsd net-tools &&
@@ -32,7 +33,8 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
 
     defaultCommand(listOf("/usr/local/bin/honcho", "start", "-f", "Procfile"))
 
-    runCommand("""
+    runCommand(
+        """
         mkfifo /opt/maillog_pipe && chown syslog:postfix /opt/maillog_pipe &&
         mkdir -p /var/spool/postfix/tachikoma/ &&
 
@@ -44,7 +46,11 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
         useradd tachikoma -d /opt &&
 
         chown postfix:tachikoma /var/spool/postfix/tachikoma/ && chmod 0770 /var/spool/postfix/tachikoma/
-        """.trimIndent().replace('\n', ' '))
+        """.trimIndent().replace(
+            '\n',
+            ' '
+        )
+    )
 
     addFiles(tarTask.outputs.files) {
         it.replace(

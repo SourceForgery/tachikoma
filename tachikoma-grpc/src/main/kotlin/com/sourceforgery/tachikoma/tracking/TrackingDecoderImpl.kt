@@ -6,10 +6,10 @@ import com.sourceforgery.tachikoma.common.randomDelay
 import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlSignedMessage
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
-import java.util.Base64
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
+import java.util.Base64
 
 class TrackingDecoderImpl(override val di: DI) : TrackingDecoder, DIAware {
     private val trackingConfig: TrackingConfig by instance()

@@ -1,7 +1,7 @@
 package com.sourceforgery.jersey.uribuilder
 
-import java.net.URI
 import org.apache.logging.log4j.kotlin.loggerOf
+import java.net.URI
 
 fun URI.withoutPassword(): URI = JerseyUriBuilder(this)
     .userInfo("REDACTED")

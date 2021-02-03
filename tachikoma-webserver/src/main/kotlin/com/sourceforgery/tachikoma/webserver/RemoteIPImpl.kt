@@ -4,10 +4,10 @@ import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.RequestContext
 import com.sourceforgery.tachikoma.tracking.RemoteIP
 import io.netty.util.AsciiString
-import java.net.InetSocketAddress
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.provider
+import java.net.InetSocketAddress
 
 class RemoteIPImpl(override val di: DI) : RemoteIP, DIAware {
     private val httpHeaders: () -> HttpHeaders by provider()

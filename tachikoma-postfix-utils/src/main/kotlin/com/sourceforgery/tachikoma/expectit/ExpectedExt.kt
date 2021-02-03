@@ -1,11 +1,11 @@
 package com.sourceforgery.tachikoma.expectit
 
-import java.util.regex.Pattern
 import net.sf.expectit.Expect
 import net.sf.expectit.ExpectIOException
 import net.sf.expectit.Result
 import net.sf.expectit.matcher.Matcher
 import net.sf.expectit.matcher.Matchers.regexp
+import java.util.regex.Pattern
 
 fun Expect.expectNoSmtpError(pattern: String): Result =
     interact().`when`(regexpLine("^([45][0-9][0-9] .*)")).then { r -> throw ExpectIOException("Error", r.input) }
