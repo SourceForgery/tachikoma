@@ -39,14 +39,16 @@ class SyslogSniffer(
 
     private suspend fun runDeliverer() {
         runCatching {
-            for (notification in generateSequence { tape.peek() }) {
+            for (notification in generateSequence { synchronized(tape) { tape.peek() } }) {
                 runCatching {
                     stub.setDeliveryStatus(notification)
                 }.recover {
                     delay(1000)
                     stub.setDeliveryStatus(notification)
                 }.onSuccess {
-                    tape.remove()
+                    synchronized(tape) {
+                        tape.remove()
+                    }
                 }.onFailure {
                     LOGGER.error { "Failed to send notification $notification because of '${it.message}'. Will retry!" }
                 }.getOrThrow()
@@ -54,8 +56,10 @@ class SyslogSniffer(
             LOGGER.debug { "Successfully delivered all notifications in queue" }
         }.onFailure {
             LOGGER.debug(it) { "Failed to process whole queue." }
-            if (tape.size() > 20) {
-                LOGGER.error { "DeliveryNotification queue is filling up. ${tape.size()} messages in queue now." }
+            synchronized(tape) {
+                if (tape.size() > 20) {
+                    LOGGER.error { "DeliveryNotification queue is filling up. ${tape.size()} messages in queue now." }
+                }
             }
             delay(30000)
         }
@@ -74,9 +78,12 @@ class SyslogSniffer(
                         val line = pipe.readLine()
                             ?: error("End of file? This is a socket, so that should not happen!")
                         val notification = parseLine(line)
+
                         if (notification != null) {
                             LOGGER.debug { ">>>>$line<<<<" }
-                            tape.add(notification)
+                            synchronized(tape) {
+                                tape.add(notification)
+                            }
                             // We don't care if it was already released
                             runCatching {
                                 semaphore.release()
