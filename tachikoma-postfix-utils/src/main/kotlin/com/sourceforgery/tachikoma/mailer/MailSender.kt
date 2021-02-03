@@ -6,9 +6,8 @@ import com.sourceforgery.tachikoma.mta.EmailMessage
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.BUFFERED
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -32,13 +31,25 @@ class MailSender(
     private val scope: CoroutineScope
 ) : AutoCloseable {
     private val executor = Executors.newCachedThreadPool()
-    private val channel = Channel<MTAQueuedNotification>(BUFFERED)
+    private val channel = Channel<MTAQueuedNotification>()
 
     override fun close() {
         channel.close()
+        executor.shutdown()
     }
 
     fun start() {
+        scope.launch {
+            // Keep-alive
+            while (true) {
+                try {
+                    channel.offer(MTAQueuedNotification.getDefaultInstance())
+                    delay(30000)
+                } catch (e: Exception) {
+                    LOGGER.warn(e) { "Keep-alive failed" }
+                }
+            }
+        }
         scope.launch {
             while (true) {
                 LOGGER.info { "Connecting. Trying to listen for emails" }
@@ -60,13 +71,14 @@ class MailSender(
         }
     }
 
+    @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
         LOGGER.info { "Got email: ${emailMessage.emailId}" }
 
         val builder = MTAQueuedNotification.newBuilder()
             .setEmailId(emailMessage.emailId)
         val success = try {
-            withContext(Dispatchers.IO) {
+            withContext(executor.asCoroutineDispatcher()) {
                 Socket("localhost", 25).use { smtpSocket ->
                     IoBuilder.forLogger("smtp.debug")
                         .setLevel(Level.TRACE)
