@@ -10,17 +10,17 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Semaphore
 import org.apache.logging.log4j.kotlin.logger
 import java.io.File
 import java.io.OutputStream
 import java.io.RandomAccessFile
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
 
 class SyslogSniffer(
     private val stub: MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub
 ) {
-    private val semaphore = Semaphore(1)
+    private val notificationQueue = LinkedBlockingQueue<DeliveryNotification>()
 
     private val tape = FileObjectQueue<DeliveryNotification>(
         File("/var/spool/postfix/tachikoma/notification_queue"),
@@ -32,21 +32,33 @@ class SyslogSniffer(
         start = CoroutineStart.LAZY
     ) {
         while (true) {
-            semaphore.acquire()
             runDeliverer()
+            saveAll()
+        }
+    }
+
+    private fun saveAll() {
+        synchronized(tape) {
+            generateSequence(notificationQueue.take()) {
+                notificationQueue.poll()
+            }.forEach {
+                tape.add(it)
+            }
         }
     }
 
     private suspend fun runDeliverer() {
         runCatching {
-            for (notification in generateSequence { tape.peek() }) {
+            for (notification in generateSequence { synchronized(tape) { tape.peek() } }) {
                 runCatching {
                     stub.setDeliveryStatus(notification)
                 }.recover {
                     delay(1000)
                     stub.setDeliveryStatus(notification)
                 }.onSuccess {
-                    tape.remove()
+                    synchronized(tape) {
+                        tape.remove()
+                    }
                 }.onFailure {
                     LOGGER.error { "Failed to send notification $notification because of '${it.message}'. Will retry!" }
                 }.getOrThrow()
@@ -54,8 +66,10 @@ class SyslogSniffer(
             LOGGER.debug { "Successfully delivered all notifications in queue" }
         }.onFailure {
             LOGGER.debug(it) { "Failed to process whole queue." }
-            if (tape.size() > 20) {
-                LOGGER.error { "DeliveryNotification queue is filling up. ${tape.size()} messages in queue now." }
+            synchronized(tape) {
+                if (tape.size() > 20) {
+                    LOGGER.error { "DeliveryNotification queue is filling up. ${tape.size()} messages in queue now." }
+                }
             }
             delay(30000)
         }
@@ -74,12 +88,11 @@ class SyslogSniffer(
                         val line = pipe.readLine()
                             ?: error("End of file? This is a socket, so that should not happen!")
                         val notification = parseLine(line)
+
                         if (notification != null) {
                             LOGGER.debug { ">>>>$line<<<<" }
-                            tape.add(notification)
-                            // We don't care if it was already released
-                            runCatching {
-                                semaphore.release()
+                            synchronized(tape) {
+                                notificationQueue.add(notification)
                             }
                         }
                         // >>>>Jan 18 22:55:46 1c7326acd8e5 postfix/smtp[249]: 2D61E2A03: to=<test@example.com>, relay=none, delay=30, delays=0.01/0/30/0, dsn=4.4.1, status=deferred (connect to example.com[93.184.216.34]:25: Connection timed out)<<<<
