@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.maildelivery
 
 import org.jsoup.Jsoup
+import org.junit.jupiter.api.Test
 import org.junit.platform.runner.JUnitPlatform
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -8,6 +9,7 @@ import kotlin.test.assertEquals
 @RunWith(JUnitPlatform::class)
 class HtmlToPlainTextTest {
 
+    @Test
     fun `Convert simple html to plain text - simple`() {
         val plainText = getPlainText(simpleHtmlDoc)
 
