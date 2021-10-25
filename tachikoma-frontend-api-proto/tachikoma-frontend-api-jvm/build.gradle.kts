@@ -21,7 +21,3 @@ rootProject.publishing {
         }
     }
 }
-
-bintray {
-    addPublications("TachikomaFrontendApiJvm")
-}

@@ -1,8 +1,6 @@
 package com.sourceforgery.tachikoma.buildsrc
 
 import co.riiid.gradle.GithubExtension
-import com.jfrog.bintray.gradle.BintrayExtension
-import com.jfrog.bintray.gradle.BintrayExtension.PackageConfig
 import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
@@ -15,13 +13,12 @@ fun Project.releaseSetup() {
     apply(plugin = "co.riiid.gradle")
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
-    apply(plugin = "com.jfrog.bintray")
 
-    val travisTag = System.getenv("TRAVIS_TAG") ?: ""
+    val circleTag = System.getenv("CIRCLE_TAG") ?: ""
 
     val publishTask = tasks.getByName("publish")
 
-    if (travisTag.isNotEmpty()) {
+    if (circleTag.isNotEmpty()) {
         // Only activate when we"re building a tag (release)
         if (System.getenv("GITHUB_API_TOKEN") == null) {
             error("GITHUB_API_TOKEN not set")
@@ -35,13 +32,13 @@ fun Project.releaseSetup() {
         owner = "SourceForgery"
         repo = "tachikoma"
         token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
-        tagName = travisTag
+        tagName = circleTag
         targetCommitish = "master"
         name = "v${project.version}"
     }
 
 
-    val currentBranch = System.getenv("TRAVIS_BRANCH")
+    val currentBranch = System.getenv("CIRCLE_BRANCH")
         ?: let {
             FileRepository(File(project.rootDir, ".git")).use {
                 it.branch
@@ -49,27 +46,9 @@ fun Project.releaseSetup() {
         }
     val dockerPushRelease = when {
         currentBranch == "master" && System.getenv("DOCKER_PUSH")?.toBoolean() == true -> true
-        travisTag.isNotEmpty() -> true
+        circleTag.isNotEmpty() -> true
         else -> false
     }
 
     rootProject.extensions.extraProperties["dockerPush"] = dockerPushRelease
-
-    extensions.getByType<BintrayExtension>().apply {
-        publish = true
-        setPublications()
-        user = System.getenv("BINTRAY_USER")
-        key = System.getenv("BINTRAY_KEY")
-        pkg(closureOf<PackageConfig> {
-            repo = "Tachikoma"
-            name = "tachikoma"
-        })
-    }
-
-
-    subprojects {
-        if (travisTag.isNotEmpty()) {
-            publishTask.finalizedBy("bintrayUpload")
-        }
-    }
 }

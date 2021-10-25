@@ -19,7 +19,3 @@ rootProject.publishing {
         }
     }
 }
-
-bintray {
-    addPublications("ProtobufAnnotationsJvm")
-}

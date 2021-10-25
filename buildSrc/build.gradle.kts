@@ -5,9 +5,6 @@ val kotlinVersion = embeddedKotlinVersion
 dependencies {
     implementation("co.riiid:gradle-github-plugin:0.4.2")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.13")
-    implementation("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4") {
-        exclude(group = "nekohtml", module = "xercesMinimal")
-    }
     implementation("org.jlleitschuh.gradle:ktlint-gradle:9.4.1")
     implementation("io.ebean:ebean-gradle-plugin:12.1.12")
     implementation("net.researchgate:gradle-release:2.8.1")

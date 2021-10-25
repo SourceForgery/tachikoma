@@ -1,5 +1,4 @@
 import co.riiid.gradle.GithubExtension
-import com.jfrog.bintray.gradle.BintrayExtension
 import com.sourceforgery.tachikoma.buildsrc.DuplicateClassesExtension
 import com.sourceforgery.tachikoma.buildsrc.dockerSetup
 import com.sourceforgery.tachikoma.buildsrc.grpcSetup
@@ -47,16 +46,6 @@ fun DependencyHandler.api(dependencyNotation: Any, configureClosure: ModuleDepen
 val Project.sourceSets: org.gradle.api.tasks.SourceSetContainer
     get() =
         (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("sourceSets") as org.gradle.api.tasks.SourceSetContainer
-
-fun BintrayExtension.addPublications(vararg additionalPublications: String) {
-    setPublications(*(publications + additionalPublications))
-}
-
-fun Project.bintray(block: BintrayExtension.() -> Unit) {
-    rootProject.extensions.configure<BintrayExtension>("bintray") {
-        block()
-    }
-}
 
 val googleNativePrefix = OperatingSystem.current().nativePrefix
     .replace("amd64", "x86_64")
