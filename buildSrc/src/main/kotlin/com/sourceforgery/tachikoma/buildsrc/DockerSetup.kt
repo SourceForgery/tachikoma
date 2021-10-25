@@ -42,4 +42,5 @@ fun Project.dockerSetup() {
     val dockerTask by tasks.registering() {}
 
     tasks["build"].dependsOn(dockerTask)
+    rootProject.tasks["publish"].dependsOn(dockerTask)
 }
