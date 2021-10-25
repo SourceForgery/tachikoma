@@ -29,6 +29,7 @@ import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
+import com.sourceforgery.tachikoma.maildelivery.extractBodyFromPlaintextEmail
 import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.onlyIf
@@ -70,6 +71,9 @@ class IncomingEmailService(override val di: DI) : DIAware {
             val session = Session.getDefaultInstance(Properties())
             MimeMessage(session, ByteArrayInputStream(body))
         }
+        val parseBodies by lazy {
+            includeParsedBodies(parsedMessage)
+        }
         @Suppress("DEPRECATION")
         return IncomingEmail.newBuilder()
             .setIncomingEmailId(id.toGrpc())
@@ -80,7 +84,8 @@ class IncomingEmailService(override val di: DI) : DIAware {
             .addAllReplyTo(replyToEmails.map { it.toGrpc() })
             .addAllTo(toEmails.map { it.toGrpc() })
             .onlyIf(parameters.includeMessageParsedBodies) {
-                includeParsedBodies(parsedMessage)
+                messageHtmlBody = parseBodies.first
+                messageTextBody = parseBodies.second
             }
             .onlyIf(parameters.includeMessageAttachments) {
                 includeAttachments(parsedMessage)
@@ -97,6 +102,9 @@ class IncomingEmailService(override val di: DI) : DIAware {
             }
             .onlyIf(parameters.includeMessageWholeEnvelope) {
                 messageWholeEnvelope = ByteString.copyFrom(body)
+            }
+            .onlyIf(parameters.includeExtractedMessageFromReplyChain) {
+                extractedTextMessageFromReplyChain = extractBodyFromPlaintextEmail(parseBodies.second, recipient)
             }
             .build()
     }
@@ -148,7 +156,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
                     .use { it.readText() }
         }
 
-    private fun IncomingEmail.Builder.includeParsedBodies(parsedMessage: MimeMessage) {
+    private fun includeParsedBodies(parsedMessage: MimeMessage): Pair<String, String> {
 
         val allAlternatives = parsedMessage
             // Only allows two categories, either:
@@ -160,15 +168,16 @@ class IncomingEmailService(override val di: DI) : DIAware {
             .map { (_, part) -> part }
             .toList()
 
-        messageHtmlBody = allAlternatives
+        val messageHtmlBody = allAlternatives
             .firstOrNull { TEXT_HTML.match(it.contentType) }
             ?.text()
             ?: ""
 
-        messageTextBody = allAlternatives
+        val messageTextBody = allAlternatives
             .firstOrNull { TEXT_PLAIN.match(it.contentType) }
             ?.text()
             ?: let { messageHtmlBody.stripHtml() }
+        return messageHtmlBody to messageTextBody
     }
 
     private val Multipart.isMultipartAlternative: Boolean
@@ -179,7 +188,11 @@ class IncomingEmailService(override val di: DI) : DIAware {
         .map { it to getBodyPart(it) }
 
     // Not internal function because Kotlin 1.3.72 w/ coroutine 1.3.6 cannot build it
-    suspend fun SequenceScope<Pair<Int, Part>>.recursive(idx: Int, body: Part, pathSelector: (Multipart, Int, Part) -> Boolean) {
+    suspend fun SequenceScope<Pair<Int, Part>>.recursive(
+        idx: Int,
+        body: Part,
+        pathSelector: (Multipart, Int, Part) -> Boolean
+    ) {
         when (val content = body.content) {
             is Multipart -> {
                 content.bodyPartsWithIndex()
@@ -224,7 +237,11 @@ class IncomingEmailService(override val di: DI) : DIAware {
             }
         }
 
-    fun searchIncomingEmails(filter: List<EmailSearchFilter>, accountId: AccountId, parameters: IncomingEmailParameters): Flow<IncomingEmail> {
+    fun searchIncomingEmails(
+        filter: List<EmailSearchFilter>,
+        accountId: AccountId,
+        parameters: IncomingEmailParameters
+    ): Flow<IncomingEmail> {
         val dbFilter = filter
             .map { it.convert() }
         return incomingEmailDAO.searchIncomingEmails(

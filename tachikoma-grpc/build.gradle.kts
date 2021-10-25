@@ -1,5 +1,8 @@
 applyKotlin()
 
+evaluationDependsOn(":tachikoma-backend-api-proto")
+evaluationDependsOn(":tachikoma-frontend-api-proto")
+
 dependencies {
     implementation("com.github.spullara.mustache.java:compiler:0.9.6")
     implementation("com.google.protobuf:protobuf-java-util:$protocVersion")

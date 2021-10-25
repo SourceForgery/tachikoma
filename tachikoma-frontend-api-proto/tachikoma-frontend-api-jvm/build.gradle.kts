@@ -2,6 +2,8 @@ import com.google.protobuf.gradle.protobuf
 
 applyGrpc()
 
+evaluationDependsOn(":tachikoma-frontend-api-proto")
+
 dependencies {
     protobuf(project(":tachikoma-frontend-api-proto"))
 }

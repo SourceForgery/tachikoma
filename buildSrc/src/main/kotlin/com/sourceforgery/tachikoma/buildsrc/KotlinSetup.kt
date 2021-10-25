@@ -40,7 +40,12 @@ fun Project.kotlinSetup() {
             languageVersion = "1.4"
             apiVersion = "1.4"
             jvmTarget = "11"
-            freeCompilerArgs = listOf("-Xjsr305=strict", "-Xjvm-default=enable")
+            freeCompilerArgs = listOf(
+                "-java-parameters",
+                "-Xjsr305=strict",
+                "-Xjvm-default=enable",
+                "-Xopt-in=kotlin.RequiresOptIn"
+            )
         }
     }
 

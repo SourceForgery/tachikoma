@@ -298,6 +298,14 @@ message IncomingEmail {
     // Optional. It must be explicitly requested.
     // These are all the attachments without exceptions
     repeated IncomingEmailAttachment message_attachments = 305;
+
+    // Optional. It must be explicitly requested.
+    // This is a best effort attempt at removing everything but
+    // the latest reply in an email reply-chain. Ie remove
+    // everything below the reply-to. This is not an exact science
+    // and very prone to problems with different languages and unusual
+    // email clients.
+    string extracted_text_message_from_reply_chain = 306;
 }
 
 message IncomingEmailParameters {
@@ -309,6 +317,8 @@ message IncomingEmailParameters {
     bool include_message_whole_envelope = 3;
     // Includes message_attachments in replies
     bool include_message_attachments = 4;
+    // Includes extracted_message_from_reply_chain in replies
+    bool include_extracted_message_from_reply_chain = 5;
 }
 
 message GetIncomingEmailRequest {
