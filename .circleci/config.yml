@@ -41,7 +41,7 @@ jobs:
           path: ~/test-results
       - store_artifacts:
           path: ~/test-results/junit
-  deploy:
+  release:
     docker:
       - image: circleci/openjdk:11-jdk
     working_directory: ~/repo
@@ -83,7 +83,7 @@ workflows:
               only: /.*/
             tags:
               ignore: /.*/
-      - deploy:
+      - release:
           filters:
             tags:
               only:
