@@ -1,0 +1,91 @@
+# Java Gradle CircleCI 2.0 configuration file
+# See: https://circleci.com/docs/2.0/language-java/
+version: 2
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  test:
+    docker:
+      - image: circleci/openjdk:11-jdk
+    working_directory: ~/repo
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle.kts" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run: |
+          ./gradlew dependencies
+          ./gradlew assemble
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle.kts" }}
+      - run: |
+          ./gradlew check
+          ./gradlew -p buildSrc dependencyUpdates
+          ./gradlew dependencyUpdates
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+  deploy:
+    docker:
+      - image: circleci/openjdk:11-jdk
+    working_directory: ~/repo
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+    steps:
+      - setup_remote_docker:
+          version: 19.03.13
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle.kts" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: |
+          ./gradlew dependencies
+          ./gradlew assemble
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle.kts" }}
+      - run: |
+          set -eu
+          docker version
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+          export DOCKER_PUSH=true
+          ./gradlew build publish --stacktrace
+
+workflows:
+  version: 2
+  perform_ci:
+    jobs:
+      - test:
+          filters:
+            branches:
+              only: /.*/
+      - deploy:
+          filters:
+            tags:
+              only:
+                - /^[0-9].*/
+                - test-tag
+            branches:
+              ignore: /.*/
