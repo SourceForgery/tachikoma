@@ -71,7 +71,7 @@ jobs:
           docker version
           echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
           export DOCKER_PUSH=true
-          ./gradlew build publish --stacktrace
+          ./gradlew assemble publish --stacktrace
 
 workflows:
   version: 2
@@ -81,11 +81,12 @@ workflows:
           filters:
             branches:
               only: /.*/
+            tags:
+              ignore: /.*/
       - deploy:
           filters:
             tags:
               only:
                 - /^[0-9].*/
-                - test-tag
             branches:
               ignore: /.*/
