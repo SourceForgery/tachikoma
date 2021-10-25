@@ -50,7 +50,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven { url = URI("https://plugins.gradle.org/m2/") }
-    maven { url = URI("https://dl.bintray.com/youcruit/YouCruit") }
+    maven { url = URI("https://youcruit.jfrog.io/artifactory/youcruit") }
 }
 
 @Suppress("UnstableApiUsage")
