@@ -5,6 +5,7 @@ import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.getByType
+import publishing
 import java.io.File
 
 fun Project.releaseSetup() {
@@ -24,7 +25,6 @@ fun Project.releaseSetup() {
         }
         println("Trying to build release")
         publishTask.finalizedBy("githubRelease")
-
     }
 
     extensions.getByType<GithubExtension>().apply {
@@ -47,6 +47,18 @@ fun Project.releaseSetup() {
         currentBranch == "master" && System.getenv("DOCKER_PUSH")?.toBoolean() == true -> true
         currentTag.isNotEmpty() -> true
         else -> false
+    }
+
+    publishing {
+        repositories {
+            maven {
+                url = uri("https://youcruit.jfrog.io/artifactory/youcruit")
+                credentials {
+                    username = System.getenv("ARTIFACTORY_USERNAME") ?: "tachikoma"
+                    password = System.getenv("ARTIFACTORY_PASSWORD") ?: "xxxx"
+                }
+            }
+        }
     }
 
     rootProject.extensions.extraProperties["dockerPush"] = dockerPushRelease
