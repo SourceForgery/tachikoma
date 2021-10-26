@@ -4,7 +4,6 @@ import co.riiid.gradle.GithubExtension
 import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.closureOf
 import org.gradle.kotlin.dsl.getByType
 import java.io.File
 
@@ -14,12 +13,12 @@ fun Project.releaseSetup() {
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
 
-    val circleTag = System.getenv("CIRCLE_TAG") ?: ""
+    val currentTag = System.getenv("CIRCLE_TAG") ?: ""
 
     val publishTask = tasks.getByName("publish")
 
-    if (circleTag.isNotEmpty()) {
-        // Only activate when we"re building a tag (release)
+    if (currentTag.isNotEmpty()) {
+        // Only activate when we're building a tag (release)
         if (System.getenv("GITHUB_API_TOKEN") == null) {
             error("GITHUB_API_TOKEN not set")
         }
@@ -32,7 +31,7 @@ fun Project.releaseSetup() {
         owner = "SourceForgery"
         repo = "tachikoma"
         token = System.getenv("GITHUB_API_TOKEN") ?: "xx"
-        tagName = circleTag
+        tagName = currentTag
         targetCommitish = "master"
         name = "v${project.version}"
     }
@@ -46,7 +45,7 @@ fun Project.releaseSetup() {
         }
     val dockerPushRelease = when {
         currentBranch == "master" && System.getenv("DOCKER_PUSH")?.toBoolean() == true -> true
-        circleTag.isNotEmpty() -> true
+        currentTag.isNotEmpty() -> true
         else -> false
     }
 
