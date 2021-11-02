@@ -109,7 +109,7 @@ fun main() {
     System.err.println("Send complete")
 }
 
-fun Instant.toTimestamp() =
+fun Instant.toTimestamp(): Timestamp =
     Timestamp.newBuilder()
         .setSeconds(this.epochSecond)
         .setNanos(this.nano)
