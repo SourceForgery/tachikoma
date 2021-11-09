@@ -38,7 +38,7 @@ internal class DeliveryNotificationService(override val di: DI) : DIAware {
     private val mqSequenceFactory: MQSequenceFactory by instance()
     private val emailDAO: EmailDAO by instance()
 
-    suspend fun notificationStream(
+    fun notificationStream(
         request: NotificationStreamParameters,
         authenticationId: AuthenticationId,
         accountId: AccountId,
