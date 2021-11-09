@@ -16,6 +16,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.HardBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.MessageId
 import com.sourceforgery.tachikoma.grpc.frontend.OpenedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.QueuedEvent
+import com.sourceforgery.tachikoma.grpc.frontend.ReportedAbuseEvent
 import com.sourceforgery.tachikoma.grpc.frontend.SentEmailTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.SoftBouncedEvent
 import com.sourceforgery.tachikoma.grpc.frontend.UnsubscribedEvent
@@ -146,6 +147,9 @@ private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: 
         }
         DeliveryNotificationMessage.NotificationDataCase.MESSAGE_QUEUED -> {
             queuedEvent = QueuedEvent.getDefaultInstance()
+        }
+        DeliveryNotificationMessage.NotificationDataCase.MESSAGE_REPORTED_ABUSE -> {
+            reportedAbuseEvent = ReportedAbuseEvent.getDefaultInstance()
         }
         DeliveryNotificationMessage.NotificationDataCase.NOTIFICATIONDATA_NOT_SET -> {
             // Skipping obviously bad message

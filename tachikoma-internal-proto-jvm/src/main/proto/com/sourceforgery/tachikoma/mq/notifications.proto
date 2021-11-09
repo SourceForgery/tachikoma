@@ -18,6 +18,7 @@ message DeliveryNotificationMessage {
         MessageClicked message_clicked = 205;
         MessageUnsubscribed message_unsubscribed = 206;
         MessageQueued message_queued = 207;
+        MessageReportedAbuse message_reported_abuse = 208;
     }
 }
 
@@ -51,4 +52,8 @@ message MessageClicked {
 
 // This represents a single email that has been delivered to MTA (mail is being sent)
 message MessageQueued {
+}
+
+// This represents a single email that has been reported as abuse by the recipient
+message MessageReportedAbuse {
 }
