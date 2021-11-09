@@ -17,6 +17,8 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.project
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import protocVersion
 import sourceSets
 import java.io.File
@@ -26,6 +28,20 @@ fun Project.grpcSetup() {
     apply(plugin = "com.google.protobuf")
     apply(plugin = "kotlin")
     javaSetup()
+
+    tasks.withType<KotlinCompile>().configureEach {
+        kotlinOptions {
+            languageVersion = "1.4"
+            apiVersion = "1.4"
+            jvmTarget = "11"
+            freeCompilerArgs = listOf(
+                "-java-parameters",
+                "-Xjsr305=strict",
+                "-Xjvm-default=enable",
+                "-Xopt-in=kotlin.RequiresOptIn"
+            )
+        }
+    }
 
     val downloadProtocLint: DownloadFileTask = rootProject.tasks.findByName("downloadProtocLint") as? DownloadFileTask
         ?: rootProject.tasks.create("downloadProtocLint", DownloadFileTask::class.java) {
