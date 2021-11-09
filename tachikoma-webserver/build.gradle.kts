@@ -12,6 +12,7 @@ dependencies {
     implementation("io.ebean:ebean:$ebeanVersion")
     implementation("com.linecorp.armeria:armeria:$armeriaVersion")
     implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
+    implementation("com.linecorp.armeria:armeria-kotlin:$armeriaVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-iostreams:$log4j2Version")
