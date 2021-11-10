@@ -75,6 +75,32 @@ docker run --name postfix -it --rm -h tachikoma-postfix \
   sourceforgery/tachikoma-postfix:0.0.54
 ```
 
+**Publish and deploying from other docker repository**
+
+To avoid having to merge a lot of manual tagging and editing set
+the `snapshotDockerRepo` property and run the task `publishSnapshot`.
+This will tag and push the docker image to a different docker repository and
+also set this repository in the deployment yaml file
+(`build/kubernetes/deployment-webserver.yaml`).
+It's also possible to change the version in the docker tag by setting
+`snapshotDockerVersion` (e.g. `-PsnapshotDockerVersion=0.0.0-my-special-version`)
+
+For example
+```bash
+./gradlew publishSnapshot -PsnapshotDockerRepo=gcr.io/my-staging/ -PsnapshotDockerVersion=test1
+```
+
+will tag and push the following images:
+```
+gcr.io/my-staging/tachikoma-webserver:test1
+gcr.io/my-staging/tachikoma-postfix:test1
+```
+
+and the following will deploy it to your kubernetes environment.
+```
+kubectl apply -f build/kubernetes/deployment-webserver.yaml
+```
+
 **Recommendations**
 * Add the function ```gw () { $(git rev-parse --show-toplevel)/gradlew "$@" }``` to avoid having to do ```../../../gradlew```
 * Only run ```gradlew build```. ```gradlew clean build``` should not be necessary and slows down development a *lot*.

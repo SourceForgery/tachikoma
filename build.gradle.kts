@@ -5,14 +5,23 @@ applyRelease()
 val replaceVersion by tasks.registering(Copy::class) {
     from("kubernetes") {
         include("**/*.yaml")
-        expand(mutableMapOf("version" to project.version))
+        val snapshotDockerRepo: String? by project
+        val snapshotDockerVersion: String? by project
+
+        val replacements = mutableMapOf(
+            "version" to (snapshotDockerVersion ?: project.version),
+            "dockerRepository" to (snapshotDockerRepo?.trimEnd('/') ?: "sourceforgery")
+        )
+        expand(replacements)
     }
     into("$buildDir/kubernetes/")
     includeEmptyDirs = false
 }
 
 tasks["assemble"].dependsOn(replaceVersion)
-
+val publishSnapshot by tasks.registering {
+    dependsOn(replaceVersion)
+}
 rootProject.tasks["githubRelease"].dependsOn(replaceVersion)
 
 extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
