@@ -17,7 +17,6 @@ val replaceVersion by tasks.registering(Copy::class) {
             "dockerRepository" to (snapshotDockerRepo?.trimEnd('/') ?: "sourceforgery"),
             "currentTime" to Clock.systemUTC().instant().toString()
         )
-        System.err.println(replacements)
         expand(replacements)
     }
     into("$buildDir/kubernetes/")

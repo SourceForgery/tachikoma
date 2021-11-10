@@ -48,7 +48,6 @@ import kotlinx.html.textArea
 import kotlinx.html.textInput
 import kotlinx.html.title
 import kotlinx.html.tr
-import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
@@ -62,17 +61,38 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
     private val transactionManager: TransactionManager by instance()
     private val incomingEmailDAO: IncomingEmailDAO by instance()
 
+    @Get("/abuse")
+    @Produces("text/html; charset=utf-8")
+    fun getPage(): String = getPage(null)
+
     @Get("/abuse/{abuseEmailId}")
     @Produces("text/html; charset=utf-8")
-    fun getPage(@Param("abuseEmailId") abuseEmailId: AutoMailId): String {
-        return renderPage(
+    fun getPage(@Param("abuseEmailId") abuseEmailId: AutoMailId?): String =
+        renderPage(
             mailId = abuseEmailId,
             info = null,
             reporterName = null,
             reporterEmail = null,
             error = null,
         )
-    }
+
+    @Post("/abuse/{ignored}")
+    @ConsumesGroup(
+        Consumes("multipart/form-data"),
+        Consumes("application/x-www-form-urlencoded")
+    )
+    suspend fun abuseReport(
+        @Param("ignored") ignored: String,
+        @Param("abuseEmailId") mailId: AutoMailId,
+        @Param("info") info: String,
+        @Param("reporterName") reporterNameOpt: Optional<String>,
+        @Param("reporterEmail") reporterEmailOpt: Optional<Email>,
+    ) = abuseReport(
+        mailId = mailId,
+        info = info,
+        reporterNameOpt = reporterNameOpt,
+        reporterEmailOpt = reporterEmailOpt
+    )
 
     @Post("/abuse")
     @ConsumesGroup(
@@ -260,9 +280,5 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
             }
         }
         return htmlDoc.finalize()
-    }
-
-    companion object {
-        private val LOGGER = logger()
     }
 }
