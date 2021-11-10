@@ -3,7 +3,9 @@ import java.net.URI
 
 val kotlinVersion = embeddedKotlinVersion
 dependencies {
-    implementation("co.riiid:gradle-github-plugin:0.4.2")
+    implementation("co.riiid:gradle-github-plugin:0.4.2") {
+        exclude(group = "xerces", module = "xercesImpl")
+    }
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.13")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:9.4.1")
     implementation("io.ebean:ebean-gradle-plugin:12.1.12")
