@@ -5,11 +5,12 @@ import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.common.MediaType
 import com.linecorp.armeria.server.annotation.Consumes
 import com.linecorp.armeria.server.annotation.ConsumesGroup
+import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
+import com.linecorp.armeria.server.annotation.Produces
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
-import com.sourceforgery.tachikoma.common.ExtractEmailMetadata
 import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.TransactionManager
@@ -31,6 +32,8 @@ import jakarta.mail.Message
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.html.FormMethod.post
 import kotlinx.html.body
 import kotlinx.html.form
@@ -58,9 +61,20 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
     private val emailStatusEventDAO: EmailStatusEventDAO by instance()
     private val transactionManager: TransactionManager by instance()
     private val incomingEmailDAO: IncomingEmailDAO by instance()
-    private val extractEmailMetadata: ExtractEmailMetadata by instance()
 
-    @Post("regex:^/abuse")
+    @Get("/abuse/{abuseEmailId}")
+    @Produces("text/html; charset=utf-8")
+    fun getPage(@Param("abuseEmailId") abuseEmailId: AutoMailId): String {
+        return renderPage(
+            mailId = abuseEmailId,
+            info = null,
+            reporterName = null,
+            reporterEmail = null,
+            error = null,
+        )
+    }
+
+    @Post("/abuse")
     @ConsumesGroup(
         Consumes("multipart/form-data"),
         Consumes("application/x-www-form-urlencoded")
@@ -70,12 +84,12 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
         @Param("info") info: String,
         @Param("reporterName") reporterNameOpt: Optional<String>,
         @Param("reporterEmail") reporterEmailOpt: Optional<Email>,
-    ): HttpResponse {
+    ): HttpResponse = withContext(Dispatchers.IO) {
         val reporterName = reporterNameOpt.orElse("Anonymous")
         val reporterEmail = reporterEmailOpt.orElse(null)
 
         val reportedEmail = emailDAO.getByAutoMailId(mailId)
-            ?: return HttpResponse.of(
+            ?: return@withContext HttpResponse.of(
                 HttpStatus.NOT_FOUND,
                 MediaType.PLAIN_TEXT_UTF_8,
                 renderPage(
@@ -87,7 +101,7 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
                 )
             )
         sendAbuseReport(reportedEmail, mailId, reporterName, reporterEmail, info)
-        return HttpResponse.of(
+        HttpResponse.of(
             HttpStatus.OK,
             MediaType.HTML_UTF_8,
             renderPage(
