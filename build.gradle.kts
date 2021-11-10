@@ -1,8 +1,12 @@
+import java.time.Clock
+
 apply(plugin = "com.github.ben-manes.versions")
 
 applyRelease()
 
 val replaceVersion by tasks.registering(Copy::class) {
+    // Always regenerate yaml
+    outputs.upToDateWhen { false }
     from("kubernetes") {
         include("**/*.yaml")
         val snapshotDockerRepo: String? by project
@@ -10,8 +14,10 @@ val replaceVersion by tasks.registering(Copy::class) {
 
         val replacements = mutableMapOf(
             "version" to (snapshotDockerVersion ?: project.version),
-            "dockerRepository" to (snapshotDockerRepo?.trimEnd('/') ?: "sourceforgery")
+            "dockerRepository" to (snapshotDockerRepo?.trimEnd('/') ?: "sourceforgery"),
+            "currentTime" to Clock.systemUTC().instant().toString()
         )
+        System.err.println(replacements)
         expand(replacements)
     }
     into("$buildDir/kubernetes/")
