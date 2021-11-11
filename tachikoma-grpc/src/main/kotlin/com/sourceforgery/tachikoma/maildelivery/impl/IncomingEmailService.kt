@@ -25,6 +25,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailAttachment
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
+import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
@@ -80,6 +81,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
             .setSubject(subject)
             .setMailFromOld(NamedEmail(mailFrom, "").toGrpc())
             .setRecipientToOld(NamedEmail(recipient, "").toGrpc())
+            .setRecipientTo(recipient.toGrpcInternal())
             .addAllFrom(fromEmails.map { it.toGrpc() })
             .addAllReplyTo(replyToEmails.map { it.toGrpc() })
             .addAllTo(toEmails.map { it.toGrpc() })
