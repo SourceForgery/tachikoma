@@ -51,7 +51,6 @@ import kotlinx.html.tr
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
-import java.util.Optional
 import java.util.Properties
 
 class AbuseReportingService(override val di: DI) : RestService, DIAware {
@@ -85,8 +84,8 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
         @Param("ignored") ignored: String,
         @Param("abuseEmailId") mailId: AutoMailId,
         @Param("info") info: String,
-        @Param("reporterName") reporterNameOpt: Optional<String>,
-        @Param("reporterEmail") reporterEmailOpt: Optional<Email>,
+        @Param("reporterName") reporterNameOpt: String,
+        @Param("reporterEmail") reporterEmailOpt: String,
     ) = abuseReport(
         mailId = mailId,
         info = info,
@@ -102,21 +101,22 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
     suspend fun abuseReport(
         @Param("abuseEmailId") mailId: AutoMailId,
         @Param("info") info: String,
-        @Param("reporterName") reporterNameOpt: Optional<String>,
-        @Param("reporterEmail") reporterEmailOpt: Optional<Email>,
+        @Param("reporterName") reporterNameOpt: String,
+        @Param("reporterEmail") reporterEmailOpt: String,
     ): HttpResponse = withContext(Dispatchers.IO) {
-        val reporterName = reporterNameOpt.orElse("Anonymous")
-        val reporterEmail = reporterEmailOpt.orElse(null)
+        val reporterName = reporterNameOpt.ifEmpty { "Anonymous" }
+        val reporterEmail = reporterEmailOpt.ifEmpty { null }
+            ?.let { Email(it) }
 
         val reportedEmail = emailDAO.getByAutoMailId(mailId)
             ?: return@withContext HttpResponse.of(
                 HttpStatus.NOT_FOUND,
-                MediaType.PLAIN_TEXT_UTF_8,
+                MediaType.HTML_UTF_8,
                 renderPage(
                     mailId,
                     info,
-                    reporterNameOpt.orElse(null),
-                    reporterEmailOpt.orElse(null),
+                    reporterName,
+                    reporterEmail,
                     "No email with id $mailId has been sent from this system. Please double-check and send an email to abuse@${mailId.mailDomain} if the data was correct"
                 )
             )
