@@ -132,7 +132,9 @@ class MailSender(
             .expectNoSmtpError("^354 ")
         expect.expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
         // Every line that starts with a dot must have it 'escaped' with an extra dot
-        val preProcessedBody = emailMessage.body.replace(Regex("^\\."), "..")
+        val preProcessedBody = emailMessage.body
+            .replace(Regex("\n\\."), "..")
+            .replace(Regex("^\\."), "..")
         val queueId = expect.send(preProcessedBody)
             .sendLine(".")
             .expectNoSmtpError("^250 .* queued as (.*)$")
