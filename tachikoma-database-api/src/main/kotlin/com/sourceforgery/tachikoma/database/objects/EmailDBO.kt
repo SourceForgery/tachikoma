@@ -16,8 +16,7 @@ import javax.persistence.Table
 @Entity
 @Table(name = "e_email")
 // Represents a single email to one recipient
-class EmailDBO
-constructor(
+class EmailDBO(
     @Column
     val recipient: Email,
     @Column
@@ -33,14 +32,13 @@ constructor(
     @Column
     var mtaQueueId: String? = null,
     @DbJsonB
-    val metaData: Map<String, String>
-) : GenericDBO() {
-
+    val metaData: Map<String, String>,
     @Column(columnDefinition = "TEXT")
     // TODO should this be a string or a byte array?
-    var body: String? = null
+    var body: String? = null,
     @Column(columnDefinition = "TEXT")
     var subject: String? = null
+) : GenericDBO() {
 
     @OneToMany
     val emailStatusEvents: List<EmailStatusEventDBO> = ArrayList()

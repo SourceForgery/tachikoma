@@ -22,6 +22,7 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-jul:$log4j2Version")
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
     testImplementation("com.linecorp.armeria:armeria:$armeriaVersion")
+    testImplementation("com.linecorp.armeria:armeria-kotlin:$armeriaVersion")
     testImplementation("com.squareup.okhttp3:okhttp:4.4.0")
     testImplementation("org.jsoup:jsoup:1.12.2")
     testImplementation("com.sun.mail:jakarta.mail:$jakartaMailVersion")

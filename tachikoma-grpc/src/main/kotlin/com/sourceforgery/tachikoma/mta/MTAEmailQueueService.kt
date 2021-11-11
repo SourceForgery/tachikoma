@@ -53,7 +53,7 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
     private val extractEmailMetadata: ExtractEmailMetadata by instance()
 
     fun getEmails(requests: Flow<MTAQueuedNotification>, mailDomain: MailDomain): Flow<EmailMessage> {
-        LOGGER.info { "MTA connected with mail domain $mailDomain " }
+        LOGGER.info { "MTA connected with mail domain $mailDomain" }
 
         val blockingDispatcher = ServiceRequestContext.current().blockingTaskExecutor().asCoroutineDispatcher()
         GlobalScope.launch(blockingDispatcher) {

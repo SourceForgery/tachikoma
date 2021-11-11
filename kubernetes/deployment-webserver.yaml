@@ -4,6 +4,8 @@ metadata:
   name: tachikoma-webserver
   labels:
     app: tachikoma-webserver
+  annotations:
+    buildTime: "${currentTime}"
 spec:
   replicas: 2
   selector:
@@ -14,10 +16,12 @@ spec:
     metadata:
       labels:
         app: tachikoma-webserver
+      annotations:
+        buildTime: "${currentTime}"
     spec:
       containers:
         - name: tachikoma-webserver
-          image: sourceforgery/tachikoma-webserver:${version}
+          image: ${dockerRepository}/tachikoma-webserver:${version}
           imagePullPolicy: Always
           ports:
             - name: webserver-port

@@ -50,6 +50,7 @@ message EmailNotification {
         ClickedEvent clicked_event = 206;
         UnsubscribedEvent unsubscribed_event = 207;
         SpamEvent spam_event = 208;
+        ReportedAbuseEvent reported_abuse_event = 209;
     }
     // Email tracking data
     // Optional depending on parameters for the rpc method
@@ -154,6 +155,10 @@ message UnsubscribedEvent {
 
 // Message has been marked as spam
 message SpamEvent {
+}
+
+// Message has been reported as abuse
+message ReportedAbuseEvent {
 }
 
 // Attachments

@@ -7,12 +7,14 @@ import com.sourceforgery.tachikoma.buildsrc.kotlinSetup
 import com.sourceforgery.tachikoma.buildsrc.releaseSetup
 import groovy.lang.Closure
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.internal.Cast
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.kotlin.dsl.closureOf
@@ -96,6 +98,25 @@ fun DockerTask.addFiles(sources: Iterable<File>, renamer: (String) -> String) {
             from(project.toTree(source))
         }
     })
+}
+
+fun Task.recurseTasks(): Sequence<Task> = sequence {
+    suspend fun SequenceScope<Task>.recurse(t: Task) {
+        yield(t)
+        val tasks = t.dependsOn
+            .map {
+                if (it is TaskProvider<*>) {
+                    it.get()
+                } else {
+                    it
+                }
+            }
+            .filterIsInstance<Task>()
+        for (it in tasks) {
+            recurse(it)
+        }
+    }
+    recurse(this@recurseTasks)
 }
 
 fun Project.applyJava() = javaSetup()
