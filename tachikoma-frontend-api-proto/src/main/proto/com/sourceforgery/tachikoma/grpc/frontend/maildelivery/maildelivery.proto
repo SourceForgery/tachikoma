@@ -268,7 +268,8 @@ message IncomingEmail {
     string subject = 203;
     // The From address in the headers
     repeated NamedEmailAddress from = 204;
-    // The To address in the headers
+    // The To address in the headers. Only useful for sending, debugging and
+    // possibly spam detection. Look at recipient_to for everything else.
     repeated NamedEmailAddress to = 205;
     // The Reply-To in the headers
     repeated NamedEmailAddress reply_to = 206;
@@ -276,7 +277,8 @@ message IncomingEmail {
     // passed through, e.g. forwarding email or mailing list
     EmailAddress mail_from = 207;
     // RCPT TO To address. This is the email address that
-    // the last server tried
+    // the last server tried. This is most likely what you want
+    // to look at when deciding where the email is supposed to go.
     EmailAddress recipient_to = 208;
 
     // Optional. It must be explicitly requested.
