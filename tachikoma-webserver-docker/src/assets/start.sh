@@ -26,7 +26,7 @@ then
    -structured_logs \
    -log_debug_stdout=true \
    -credential_file=$configDir/cloudsql_credentials.json \
-   -instances="$(cat $configDir/cloudsql_instances)" | logger -s || true
+   -instances="$(cat $configDir/cloudsql_instances)" || true
   do
     sleep 10
   done &
