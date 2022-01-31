@@ -1,4 +1,4 @@
-Tachikoma ESP [![Build Status](https://travis-ci.org/SourceForgery/tachikoma.svg?branch=master)](https://travis-ci.org/SourceForgery/tachikoma)
+Tachikoma ESP [![Build Status](https://circleci.com/gh/SourceForgery/tachikoma/tree/master.svg?style=svg)](https://circleci.com/gh/SourceForgery/tachikoma/tree/master)
 =============
 
 This will be an Email Service Provider Software suitable for use with large amounts of transactional
