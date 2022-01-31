@@ -23,7 +23,8 @@ then
   fi
 
   while /usr/bin/cloud_sql_proxy \
-   -verbose=false \
+   -structured_logs \
+   -log_debug_stdout=true \
    -credential_file=$configDir/cloudsql_credentials.json \
    -instances="$(cat $configDir/cloudsql_instances)" | logger -s || true
   do
