@@ -99,6 +99,7 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             "4.0.0", // Generic soft bounce
             "4.1.0", // Rate limited
             "4.2.0", // Temporarily deferred due to user complaints (SPAM?)
+            "4.2.2", // Mailbox is full
             "4.3.2", // Less used. System is shutting down/going offline
             "4.4.1", // Connection busy
             "4.4.2", // Network connection issue
