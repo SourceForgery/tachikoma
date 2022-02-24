@@ -81,7 +81,7 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
         Consumes("application/x-www-form-urlencoded")
     )
     suspend fun abuseReport(
-        @Param("ignored") ignored: String,
+        @Suppress("UNUSED_PARAMETER") @Param("ignored") ignored: String,
         @Param("abuseEmailId") mailId: AutoMailId,
         @Param("info") info: String,
         @Param("reporterName") reporterNameOpt: String,

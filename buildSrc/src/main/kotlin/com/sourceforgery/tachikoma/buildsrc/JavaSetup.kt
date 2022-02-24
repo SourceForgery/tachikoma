@@ -26,11 +26,9 @@ fun Project.javaSetup() {
         archiveClassifier.set("javadoc")
     }
 
-    if (JavaVersion.current().isJava8Compatible()) {
-        tasks.withType(Javadoc::class.java) {
-            val opts = options as StandardJavadocDocletOptions
-            opts.addStringOption("Xdoclint:none", "-quiet")
-        }
+    tasks.withType(Javadoc::class.java) {
+        val opts = options as StandardJavadocDocletOptions
+        opts.addStringOption("Xdoclint:none", "-quiet")
     }
 
     val sourceJar by tasks.registering(Jar::class) {

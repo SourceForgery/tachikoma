@@ -252,7 +252,7 @@ constructor(
                     val c1 = s[i + 1]
                     val c2 = s[i + 2]
                     if (UriComponent.isHexCharacter(c1) && UriComponent.isHexCharacter(c2)) {
-                        regex.append("%").append(HEX_TO_UPPERCASE_REGEX[c1.toInt()]).append(HEX_TO_UPPERCASE_REGEX[c2.toInt()])
+                        regex.append("%").append(HEX_TO_UPPERCASE_REGEX[c1.code]).append(HEX_TO_UPPERCASE_REGEX[c2.code])
                         i += 2
                     }
                 } else {
@@ -453,7 +453,7 @@ constructor(
                 var c = 'a'
                 while (c <= 'f') {
                     // initialize table values: table[a] = ([aA]) ...
-                    table[c.toInt()] = "[" + c + (c - 'a' + 'A'.toInt()).toChar() + "]"
+                    table[c.code] = "[" + c + (c - 'a' + 'A'.code).toChar() + "]"
                     c++
                 }
             }
@@ -461,7 +461,7 @@ constructor(
             var c = 'A'
             while (c <= 'F') {
                 // initialize table values: table[A] = ([aA]) ...
-                table[c.toInt()] = "[" + (c - 'A' + 'a'.toInt()).toChar() + c + "]"
+                table[c.code] = "[" + (c - 'A' + 'a'.code).toChar() + c + "]"
                 c++
             }
             table

@@ -71,7 +71,7 @@ fun main() {
     |        <a href="*|UNSUB|*">Unsubscribe from list</a>
     |    </center>
     |</body>
-    """.trimMargin()
+        """.trimMargin()
 
     val outgoingEmail = OutgoingEmail.newBuilder()
         .setUnsubscribeRedirectUri("https://google.com/?q=unsubscribed")

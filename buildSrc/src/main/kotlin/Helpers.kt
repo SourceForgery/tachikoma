@@ -88,18 +88,6 @@ fun Project.toTree(it: File): FileTree {
     }
 }
 
-fun DockerTask.addFiles(sources: Iterable<File>, renamer: (String) -> String) {
-    addFile(delegateClosureOfHack<CopySpec> {
-        includeEmptyDirs = false
-        eachFile(delegateClosureOf<FileCopyDetails> {
-            path = renamer(path)
-        })
-        for (source in sources) {
-            from(project.toTree(source))
-        }
-    })
-}
-
 fun Task.recurseTasks(): Sequence<Task> = sequence {
     suspend fun SequenceScope<Task>.recurse(t: Task) {
         yield(t)

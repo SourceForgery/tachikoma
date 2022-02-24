@@ -28,6 +28,7 @@ import com.sourceforgery.tachikoma.mq.MessageUnsubscribed
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +57,7 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
         LOGGER.info { "MTA connected with mail domain $mailDomain" }
 
         val blockingDispatcher = ServiceRequestContext.current().blockingTaskExecutor().asCoroutineDispatcher()
+        @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(blockingDispatcher) {
             requests.collect { value ->
                 if (value == MTAQueuedNotification.getDefaultInstance()) {

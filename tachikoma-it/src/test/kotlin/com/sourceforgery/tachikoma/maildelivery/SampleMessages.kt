@@ -23,7 +23,7 @@ class SampleMessage(
 val m1001 = SampleMessage(
     envelope = "m1001.txt",
     plainText =
-        """
+    """
         |Die Hasen und die Frösche
         |
         |Die Hasen klagten einst über ihre mißliche Lage; "wir leben", sprach ein
@@ -39,14 +39,14 @@ val m1001 = SampleMessage(
         |"Halt", rief nun eben dieser Sprecher, "wir wollen das Ersäufen noch ein
         |wenig aufschieben, denn auch uns fürchten, wie ihr seht, einige Tiere,
         |welche also wohl noch unglücklicher sein müssen als wir."
-        """.trimMargin(),
+    """.trimMargin(),
     htmlText = ""
 )
 
 val m1005 = SampleMessage(
     envelope = "m1005.txt",
     plainText =
-        """
+    """
             |[blue ball]
             |
             |Die Hasen und die Frösche
@@ -68,10 +68,10 @@ val m1005 = SampleMessage(
             |[Image]
             |
             |
-            """.trimMargin(),
+    """.trimMargin(),
 
     htmlText =
-        """
+    """
             |<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
             |<html>
             |<img SRC="cid:part1.39235FC5.E71D8178@example.com" ALT="blue ball" height=27 width=27><b></b>
@@ -91,13 +91,13 @@ val m1005 = SampleMessage(
             |<p><img SRC="cid:part2.39235FC5.E71D8178@example.com" height=27 width=27>
             |<br>&nbsp;
             |<br>&nbsp;</html>
-        """.trimMargin()
+    """.trimMargin()
 )
 
 val m1006 = SampleMessage(
     envelope = "m1006.txt",
     plainText =
-        """
+    """
         |Die Hasen und die Frösche 
         |
         |Die Hasen klagten einst über ihre mißliche Lage; "wir leben", sprach ein
@@ -114,7 +114,7 @@ val m1006 = SampleMessage(
         |wohl noch unglücklicher sein müssen als wir."
     """.trimMargin(),
     htmlText =
-        """
+    """
         |<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
         |<html>
         |<img SRC="cid:part1.39236103.1B697A54@example.com" ALT="blue ball" height=27 width=27><b></b>
@@ -138,7 +138,7 @@ val m1006 = SampleMessage(
 val m2008 = SampleMessage(
     envelope = "m2008.txt",
     plainText =
-        """
+    """
         |Die Hasen und die Frösche
         |
         |Die Hasen klagten einst über ihre mißliche Lage; "wir leben", sprach ein Redner, "in steter Furcht vor Menschen und Tieren, eine Beute der Hunde, der Adler, ja fast aller Raubtiere! Unsere stete Angst ist ärger als der Tod selbst. Auf, laßt uns ein für allemal sterben." 

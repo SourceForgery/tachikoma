@@ -4,11 +4,9 @@ val tarTask = tasks.getByPath(":tachikoma-postfix-utils:${ApplicationPlugin.TASK
 
 val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.DockerTask::class) {
     dependsOn(tarTask)
-    applicationName = "tachikoma-postfix"
-
-    baseImage = "ubuntu:20.04"
-
-    maintainer = "tachikoma@sourceforgery.com"
+    applicationName.set("tachikoma-postfix")
+    tagVersion.set(project.provider { project.version.toString() })
+    baseImage.set("ubuntu:20.04")
 
     workingDir("/opt")
 
@@ -63,7 +61,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
 
     addInstruction("HEALTHCHECK", "CMD netstat -lnt | grep -q :::25 || exit 1")
 
-    push = rootProject.extensions.extraProperties["dockerPush"] as Boolean
+    push.set(rootProject.provider { rootProject.extensions.extraProperties["dockerPush"] as Boolean })
 }
 
 tasks["dockerTask"].dependsOn(postfixDocker)

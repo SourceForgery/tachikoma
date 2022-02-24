@@ -7,7 +7,7 @@ import com.sourceforgery.tachikoma.database.auth.InternalCreateUserService
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.IncomingEmailAddressDBO
-import io.ebean.EbeanServer
+import io.ebean.Database
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -17,7 +17,7 @@ class CreateUsers(override val di: DI) : DIAware {
     private val databaseConfig: DatabaseConfig by instance()
     private val trackingConfig: TrackingConfig by instance()
     private val accountDAO: AccountDAO by instance()
-    private val ebeanServer: EbeanServer by instance()
+    private val ebeanServer: Database by instance()
     private val internalCreateUserService: InternalCreateUserService by instance()
 
     private val mailDomains = databaseConfig.mailDomains
@@ -47,7 +47,7 @@ class CreateUsers(override val di: DI) : DIAware {
             }
     }
 
-    private fun createIncomingEmail(ebeanServer: EbeanServer, account: AccountDBO) {
+    private fun createIncomingEmail(ebeanServer: Database, account: AccountDBO) {
         val incomingAddress = IncomingEmailAddressDBO(
             localPart = "",
             account = account

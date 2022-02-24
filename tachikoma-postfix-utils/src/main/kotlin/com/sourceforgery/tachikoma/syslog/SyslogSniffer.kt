@@ -5,6 +5,7 @@ import com.sourceforgery.tachikoma.mta.DeliveryNotification
 import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpcKt
 import com.squareup.tape.FileObjectQueue
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -27,6 +28,7 @@ class SyslogSniffer(
         DeliveryNotificationConverter
     )
 
+    @OptIn(DelicateCoroutinesApi::class)
     private val deliverer = GlobalScope.launch(
         context = delivererDispatcher,
         start = CoroutineStart.LAZY

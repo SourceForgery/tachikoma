@@ -5,6 +5,7 @@ import kotlinVersion
 import kotlinCoroutineVersion
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Jar
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.get
@@ -31,14 +32,14 @@ fun Project.kotlinSetup() {
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 
         testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-        testImplementation("org.junit.platform:junit-platform-runner:1.1.0")
-        testImplementation("org.junit.jupiter:junit-jupiter-engine:5.1.0")
+        testImplementation("org.junit.platform:junit-platform-runner:1.8.2")
+        testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
     }
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
-            languageVersion = "1.4"
-            apiVersion = "1.4"
+            languageVersion = "1.6"
+            apiVersion = "1.6"
             jvmTarget = "11"
             freeCompilerArgs = listOf(
                 "-java-parameters",
@@ -58,6 +59,7 @@ fun Project.kotlinSetup() {
             exclude { "/generated/" in it.file.path }
         }
         disabledRules.set(listOf("final-newline"))
+        version.set("0.44.0")
     }
 
     val sourceJar by tasks.registering(Jar::class) {

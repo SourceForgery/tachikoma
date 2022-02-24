@@ -15,7 +15,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.toFrontendRole
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.testModule
 import com.sourceforgery.tachikoma.users.UserService
-import io.ebean.EbeanServer
+import io.ebean.Database
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -37,7 +37,7 @@ class UserServiceTest : DIAware {
 
     val userService: UserService by instance()
     val authenticationDAO: AuthenticationDAO by instance()
-    val ebeanServer: EbeanServer by instance()
+    val ebeanServer: Database by instance()
 
     fun createAuthentication(domain: String): AuthenticationDBO {
         val accountDBO = AccountDBO(MailDomain(domain))

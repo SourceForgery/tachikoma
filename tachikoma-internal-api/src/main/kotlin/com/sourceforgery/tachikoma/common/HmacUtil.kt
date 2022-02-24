@@ -11,7 +11,7 @@ object HmacUtil {
         var diff = a.length xor b.length
         var i = 0
         while (i < a.length && i < b.length) {
-            diff = diff or (a[i].toInt() xor b[i].toInt())
+            diff = diff or (a[i].code xor b[i].code)
             i++
         }
         return diff == 0

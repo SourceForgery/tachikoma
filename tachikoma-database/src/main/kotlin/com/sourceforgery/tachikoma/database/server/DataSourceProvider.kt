@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.database.server
 
-import io.ebean.config.ServerConfig
+import io.ebean.config.DatabaseConfig
 
 interface DataSourceProvider {
-    fun provide(serverConfig: ServerConfig)
+    fun provide(serverConfig: DatabaseConfig)
 }

@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,7 +42,7 @@ class MailSender(
             // Keep-alive
             while (true) {
                 try {
-                    channel.offer(MTAQueuedNotification.getDefaultInstance())
+                    channel.send(MTAQueuedNotification.getDefaultInstance())
                     delay(30000)
                 } catch (e: Exception) {
                     LOGGER.warn(e) { "Keep-alive failed" }
@@ -58,7 +57,7 @@ class MailSender(
                         .collect {
                             val status = sendEmail(it)
                             LOGGER.info { "Queued email: ${it.emailId} for delivery with status ${status.success} and queueId ${status.queueId}" }
-                            channel.offer(status)
+                            channel.send(status)
                         }
                 } catch (e: Exception) {
                     LOGGER.warn { "Got error from gRPC server with message: ${e.message}" }

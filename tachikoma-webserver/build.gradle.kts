@@ -32,7 +32,7 @@ val runLocalServer by tasks.creating(type = JavaExec::class) {
     description = "Development"
     dependsOn("assemble")
     afterEvaluate {
-        main = startClass
+        mainClass.set(startClass)
         classpath = project.sourceSets["main"].runtimeClasspath
         jvmArgs(
             listOf(

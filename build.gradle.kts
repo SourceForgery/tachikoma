@@ -65,12 +65,15 @@ allprojects {
                 }
             }
             force(
+                "com.google.errorprone:error_prone_annotations:2.9.0",
+                "net.bytebuddy:byte-buddy:$bytebuddyVersion",
                 "com.google.guava:guava:$guavaVersion",
                 "commons-io:commons-io:2.6",
                 "commons-logging:commons-logging:1.2",
                 "javax.annotation:javax.annotation-api:1.3.2",
                 "org.postgresql:postgresql:$postgresqlDriverVersion",
-                "org.slf4j:slf4j-api:1.7.29"
+                "com.google.code.gson:gson:2.8.9",
+                "org.slf4j:slf4j-api:1.7.29",
             )
         }
     }
@@ -86,7 +89,6 @@ allprojects {
 
     repositories {
         mavenLocal()
-        jcenter()
         mavenCentral()
     }
 

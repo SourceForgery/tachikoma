@@ -2,9 +2,9 @@ package com.sourceforgery.tachikoma.database.objects
 
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.identifiers.EmailStatusId
-import io.ebean.annotation.CreatedTimestamp
 import io.ebean.annotation.DbJson
 import io.ebean.annotation.Index
+import io.ebean.annotation.WhenCreated
 import io.ebean.bean.EntityBean
 import java.time.Instant
 import javax.persistence.CascadeType
@@ -16,7 +16,6 @@ import javax.persistence.Id
 import javax.persistence.ManyToOne
 import javax.persistence.SequenceGenerator
 import javax.persistence.Table
-import javax.persistence.Transient
 
 @Table(name = "e_email_status")
 @Entity
@@ -35,12 +34,11 @@ class EmailStatusEventDBO(
     @SequenceGenerator(name = "unique_status_event_id_seq", sequenceName = "unique_status_event_id_seq", allocationSize = 1)
     internal var dbId: Long? = null
 
-    @field:CreatedTimestamp
+    @WhenCreated
     var dateCreated: Instant? = null
 
     @Suppress("CAST_NEVER_SUCCEEDS")
     val new: Boolean
-        @Transient
         get() = (this as EntityBean)._ebean_getIntercept().isNew
 }
 

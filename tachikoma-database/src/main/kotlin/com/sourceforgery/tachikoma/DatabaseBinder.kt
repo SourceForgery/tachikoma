@@ -42,7 +42,7 @@ import com.sourceforgery.tachikoma.database.upgrades.Version9
 import com.sourceforgery.tachikoma.kodein.DatabaseSessionKodeinScope
 import com.sourceforgery.tachikoma.kodein.threadLocalDatabaseSessionScope
 import com.sourceforgery.tachikoma.logging.InvokeCounter
-import io.ebean.EbeanServer
+import io.ebean.Database
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.provider
@@ -51,7 +51,7 @@ import org.kodein.di.scoped
 import org.kodein.di.singleton
 
 val databaseModule = DI.Module("database") {
-    bind<EbeanServer>() with singleton { EbeanServerFactory(di).provide() }
+    bind<Database>() with singleton { EbeanServerFactory(di).provide() }
 
     importOnce(daoModule)
     bind<InvokeCounter>() with scoped(DatabaseSessionKodeinScope).singleton { LogEverything() }

@@ -25,12 +25,12 @@ class TransactionManagerImpl(override val di: DI) : TransactionManager, DIAware 
     }
 
     override suspend fun <T> coroutineTx(block: suspend (Transaction) -> T): T {
-        val txManager = (database as SpiEbeanServer).transactionManager.scope()
+        val txManager = (database as SpiEbeanServer).transactionManager().scope()
         return database.beginTransaction().use { tx ->
             withContext(CoroutineTransactionScopeManager(txManager)) {
-                block(tx).also {
-                    tx.commit()
-                }
+                block(tx)
+            }.also {
+                tx.commit()
             }
         }
     }
@@ -40,23 +40,27 @@ internal data class TransactionScopeManagerKey(private val scopeManager: Transac
 
 private class CoroutineTransactionScopeManager(
     private val transactionScopeManager: TransactionScopeManager,
-    private val spiTransaction: SpiTransaction? = transactionScopeManager.active
+    private val spiTransaction: SpiTransaction? = transactionScopeManager.active()
 ) : ThreadContextElement<SpiTransaction?> {
 
     override val key: CoroutineContext.Key<*> = TransactionScopeManagerKey(transactionScopeManager)
 
     override fun restoreThreadContext(context: CoroutineContext, oldState: SpiTransaction?) {
+        setWithNull(oldState)
+    }
+
+    override fun updateThreadContext(context: CoroutineContext): SpiTransaction? {
+        val oldState = transactionScopeManager.inScope()
+        setWithNull(spiTransaction)
+        return oldState
+    }
+
+    private fun setWithNull(oldState: SpiTransaction?) {
         if (oldState == null) {
             transactionScopeManager.clearExternal()
         } else {
             transactionScopeManager.replace(oldState)
         }
-    }
-
-    override fun updateThreadContext(context: CoroutineContext): SpiTransaction? {
-        val oldState = transactionScopeManager.inScope
-        transactionScopeManager.replace(spiTransaction)
-        return oldState
     }
 
     // this method is overridden to perform value comparison (==) on key

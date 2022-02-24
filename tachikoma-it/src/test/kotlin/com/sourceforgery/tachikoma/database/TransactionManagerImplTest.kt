@@ -21,7 +21,6 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 
-@Suppress("RemoveExplicitTypeArguments")
 class TransactionManagerImplTest : DIAware {
 
     override val di = DI {
@@ -33,21 +32,21 @@ class TransactionManagerImplTest : DIAware {
 
     @Test
     fun `clean transaction`() {
-        val txManager = (database as SpiEbeanServer).transactionManager.scope()
+        val txManager = (database as SpiEbeanServer).transactionManager().scope()
         runBlocking {
             val thread = Thread.currentThread()
             lateinit var id: AccountId
-            assertNull(txManager.inScope)
+            assertNull(txManager.inScope())
             transactionManager.coroutineTx { tx ->
                 withContext(Dispatchers.IO) {
                     val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                     database.save(accountDBO)
                     id = accountDBO.id
                     assertNotSame(thread, Thread.currentThread())
-                    assertSame(tx, txManager.inScope)
+                    assertSame(tx, txManager.inScope())
                 }
             }
-            assertNull(txManager.inScope)
+            assertNull(txManager.inScope())
             val account = database.find<AccountDBO>(id)
             assertNotNull(account)
         }
@@ -55,26 +54,26 @@ class TransactionManagerImplTest : DIAware {
 
     @Test
     fun `aborted transaction`() {
-        val txManager = (database as SpiEbeanServer).transactionManager.scope()
+        val txManager = (database as SpiEbeanServer).transactionManager().scope()
         runBlocking {
             val thread = Thread.currentThread()
             lateinit var id: AccountId
-            assertNull(txManager.inScope)
-            assertFailsWith(IllegalStateException::class) {
-                transactionManager.coroutineTx<Nothing> { tx ->
-                    withContext<Nothing>(Dispatchers.IO) {
+            assertNull(txManager.inScope())
+            assertFailsWith(AbortException::class) {
+                transactionManager.coroutineTx { tx ->
+                    withContext(Dispatchers.IO) {
                         val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                         database.save(accountDBO)
                         id = accountDBO.id
                         assertNotSame(thread, Thread.currentThread())
-                        assertSame(tx, txManager.inScope)
+                        assertSame(tx, txManager.inScope())
                         val account = database.find<AccountDBO>(id)
                         assertNotNull(account)
-                        error("")
+                        throw AbortException()
                     }
                 }
             }
-            assertNull(txManager.inScope)
+            assertNull(txManager.inScope())
             val account = database.find<AccountDBO>(id)
             assertNull(account)
         }
@@ -82,26 +81,26 @@ class TransactionManagerImplTest : DIAware {
 
     @Test
     fun `aborted transaction and then create new transaction`() {
-        val txManager = (database as SpiEbeanServer).transactionManager.scope()
+        val txManager = (database as SpiEbeanServer).transactionManager().scope()
         runBlocking {
             val thread = Thread.currentThread()
             lateinit var id: AccountId
-            assertNull(txManager.inScope)
-            assertFailsWith(IllegalStateException::class) {
-                transactionManager.coroutineTx<Nothing> { tx ->
-                    withContext<Nothing>(Dispatchers.IO) {
+            assertNull(txManager.inScope())
+            assertFailsWith(AbortException::class) {
+                transactionManager.coroutineTx { tx ->
+                    withContext(Dispatchers.IO) {
                         val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                         database.save(accountDBO)
                         id = accountDBO.id
                         assertNotSame(thread, Thread.currentThread())
-                        assertSame(tx, txManager.inScope)
+                        assertSame(tx, txManager.inScope())
                         val account = database.find<AccountDBO>(id)
                         assertNotNull(account)
-                        error("")
+                        throw AbortException()
                     }
                 }
             }
-            assertNull(txManager.inScope)
+            assertNull(txManager.inScope())
             assertNull(database.find<AccountDBO>(id))
             transactionManager.coroutineTx {
                 val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
@@ -111,4 +110,6 @@ class TransactionManagerImplTest : DIAware {
             assertNotNull(database.find<AccountDBO>(id))
         }
     }
+
+    private class AbortException : RuntimeException()
 }

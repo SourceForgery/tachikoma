@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.database.upgrades
 
-import io.ebean.migration.ddl.DdlRunner
+import io.ebean.ddlrunner.DdlRunner
 import java.nio.charset.StandardCharsets
 import java.sql.Connection
 

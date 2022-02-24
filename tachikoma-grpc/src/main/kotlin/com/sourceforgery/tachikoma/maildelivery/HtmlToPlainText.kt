@@ -13,7 +13,6 @@ private const val maxWidth = 80
  * plain-text. That is divergent from the general goal of jsoup's .text() methods, which is to get clean data from a
  * scrape.
  * @author Jonathan Hedley, jonathan@hedley.net
-
  * Format an Element to plain-text
  * @param element the root element to format
  * @return formatted text
@@ -43,7 +42,7 @@ private class FormattingVisitor : NodeVisitor {
 
     // hit when all of the node's children (if any) have been visited
     override fun tail(node: Node, depth: Int) {
-        val name = node.nodeName()!!
+        val name = node.nodeName()
         when (name) {
             "br", "dd", "dt", "p", "h1", "h2", "h3", "h4", "h5" ->
                 append("\n")

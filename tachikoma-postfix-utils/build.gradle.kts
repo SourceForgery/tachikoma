@@ -19,11 +19,11 @@ dependencies {
     implementation(project(":tachikoma-common"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
 
-    testImplementation("io.mockk:mockk:1.10.0")
+    testImplementation("io.mockk:mockk:1.12.2")
 }
 
 extensions.configure<JavaApplication>("application") {
-    mainClassName = "com.sourceforgery.tachikoma.postfix.MainKt"
+    mainClass.set("com.sourceforgery.tachikoma.postfix.MainKt")
 }
 
 rootProject.extensions.configure<co.riiid.gradle.GithubExtension> {

@@ -21,7 +21,6 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
@@ -136,11 +135,11 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
             }
     }
 
-    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Void> {
+    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Unit> {
         val channel = connection
             .createChannel()!!
 
-        val future = SettableFuture.create<Void>()
+        val future = SettableFuture.create<Unit>()
         future.addListener(
             Runnable {
                 LOGGER.info("Closing channel")
@@ -200,7 +199,9 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
                     .createChannel()
             }
             val consumer = CallbackConsumer(channel) {
-                sendBlocking(it)
+                runBlocking {
+                    send(it)
+                }
             }
             @Suppress("BlockingMethodInNonBlockingContext")
             channel.basicConsume(messageQueue.name, false, consumer)
@@ -215,7 +216,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         }.map { messageQueue.parser(it) }
     }
 
-    override fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Unit> {
         return listenOnQueue(JobMessageQueue.JOBS) {
             val messageQueue = getRequeueQueueByRequestedExecutionTime(it)
             if (messageQueue == null) {

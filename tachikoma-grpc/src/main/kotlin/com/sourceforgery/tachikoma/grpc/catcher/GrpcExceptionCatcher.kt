@@ -24,7 +24,7 @@ abstract class GrpcExceptionCatcher<in T : Throwable>(
 ) : DIAware, KodeinAvoidingGrpcExceptionCatcher() {
     private val debugConfig: DebugConfig by instance()
 
-    protected val logger = logger("grpc.exceptions.${clazz.simpleName.toLowerCase(Locale.US)}")
+    protected val logger = logger("grpc.exceptions.${clazz.simpleName.lowercase(Locale.US)}")
 
     abstract fun status(t: T): Status
 
