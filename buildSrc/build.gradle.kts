@@ -1,5 +1,4 @@
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import java.net.URI
 
 val kotlinVersion = "1.6.10"
 dependencies {
@@ -48,7 +47,7 @@ configurations.all {
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url = URI("https://plugins.gradle.org/m2/") }
+    gradlePluginPortal()
 }
 
 @Suppress("UnstableApiUsage")
