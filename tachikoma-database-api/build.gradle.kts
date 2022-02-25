@@ -1,8 +1,10 @@
 import io.ebean.gradle.EnhancePluginExtension
 
-applyKotlin()
-apply(plugin = "io.ebean")
-apply(plugin = "kotlin-kapt")
+plugins {
+    id("tachikoma.kotlin")
+    id("io.ebean")
+    id("kotlin-kapt")
+}
 
 dependencies {
     add("kapt", "io.ebean:kotlin-querybean-generator:$querybeanVersion")

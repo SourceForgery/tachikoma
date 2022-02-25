@@ -1,5 +1,7 @@
-applyKotlin()
-apply(plugin = "application")
+plugins {
+    id("tachikoma.kotlin")
+    id("application")
+}
 
 dependencies {
     implementation(project(":tachikoma-grpc"))

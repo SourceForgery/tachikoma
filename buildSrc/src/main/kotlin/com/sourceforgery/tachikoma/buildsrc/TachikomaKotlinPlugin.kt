@@ -3,15 +3,14 @@ package com.sourceforgery.tachikoma.buildsrc
 import implementation
 import kotlinVersion
 import kotlinCoroutineVersion
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Jar
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.getValue
-import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.registering
 import org.gradle.kotlin.dsl.withType
@@ -19,10 +18,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import sourceSets
 import testImplementation
-import java.io.File
 
 @Suppress("UnstableApiUsage")
-fun Project.kotlinSetup() {
+class TachikomaKotlinPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.kotlinSetup()
+    }
+}
+
+private fun Project.kotlinSetup() {
     apply(plugin = "kotlin")
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 

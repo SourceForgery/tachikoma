@@ -1,4 +1,6 @@
-applyKotlin()
+plugins {
+    id("tachikoma.kotlin")
+}
 
 dependencies {
     implementation("io.ebean:ebean-annotation:$ebeanAnnotationVersion")

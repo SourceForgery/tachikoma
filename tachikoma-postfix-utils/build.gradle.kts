@@ -1,6 +1,8 @@
-applyKotlin()
-apply(plugin = "application")
-apply(plugin = "com.google.osdetector")
+plugins {
+    id("tachikoma.kotlin")
+    id("application")
+    id("com.google.osdetector")
+}
 
 dependencies {
     implementation("com.github.jnr:jnr-unixsocket:0.25")

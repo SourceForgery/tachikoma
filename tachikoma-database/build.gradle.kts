@@ -1,4 +1,6 @@
-applyKotlin()
+plugins {
+    id("tachikoma.kotlin")
+}
 
 dependencies {
     api(project(":tachikoma-internal-api"))

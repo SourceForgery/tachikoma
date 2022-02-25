@@ -1,1 +1,4 @@
-applyGrpc()
+plugins {
+    id("tachikoma.grpc")
+}
+

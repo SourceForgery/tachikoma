@@ -1,7 +1,9 @@
-applyJava()
+plugins {
+    id("tachikoma.java")
+}
 
 sourceSets {
-    "main" {
+    main {
         resources {
             srcDir("src/main/proto")
         }

@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.buildsrc
 
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.get
@@ -11,7 +12,13 @@ import se.transmode.gradle.plugins.docker.DockerTask
 import java.io.File
 import java.net.URL
 
-fun Project.dockerSetup() {
+class TachikomaDockerPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.dockerSetup()
+    }
+}
+
+private fun Project.dockerSetup() {
     apply(plugin = "base")
     apply(plugin = "docker")
 

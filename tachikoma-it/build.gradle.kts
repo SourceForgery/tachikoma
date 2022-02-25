@@ -1,4 +1,6 @@
-applyKotlin()
+plugins {
+    id("tachikoma.kotlin")
+}
 
 System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")
 

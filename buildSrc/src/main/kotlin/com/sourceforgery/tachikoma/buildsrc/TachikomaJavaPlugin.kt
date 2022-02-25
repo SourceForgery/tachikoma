@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.buildsrc
 
-import org.gradle.api.JavaVersion
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
@@ -14,7 +14,13 @@ import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.registering
 import sourceSets
 
-fun Project.javaSetup() {
+class TachikomaJavaPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.javaSetup()
+    }
+}
+
+private fun Project.javaSetup() {
     apply(plugin = "java-library")
 
     val assemble by tasks.getting

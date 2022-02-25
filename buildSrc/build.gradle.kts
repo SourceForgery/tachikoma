@@ -78,5 +78,25 @@ gradlePlugin {
             id = "docker"
             implementationClass = "se.transmode.gradle.plugins.docker.DockerPlugin"
         }
+        register("tachikoma.docker") {
+            id = "tachikoma.docker"
+            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaDockerPlugin"
+        }
+        register("tachikoma.grpc") {
+            id = "tachikoma.grpc"
+            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaGrpcPlugin"
+        }
+        register("tachikoma.java") {
+            id = "tachikoma.java"
+            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaJavaPlugin"
+        }
+        register("tachikoma.kotlin") {
+            id = "tachikoma.kotlin"
+            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaKotlinPlugin"
+        }
+        register("tachikoma.release") {
+            id = "tachikoma.release"
+            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaReleasePlugin"
+        }
     }
 }

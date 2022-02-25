@@ -1,4 +1,6 @@
-applyKotlin()
+plugins {
+    id("tachikoma.kotlin")
+}
 
 evaluationDependsOn(":tachikoma-backend-api-proto")
 evaluationDependsOn(":tachikoma-frontend-api-proto")

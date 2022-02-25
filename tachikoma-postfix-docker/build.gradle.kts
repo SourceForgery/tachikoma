@@ -1,4 +1,6 @@
-applyDocker()
+plugins {
+    id("tachikoma.docker")
+}
 
 val tarTask = tasks.getByPath(":tachikoma-postfix-utils:${ApplicationPlugin.TASK_DIST_TAR_NAME}")
 

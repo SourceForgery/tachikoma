@@ -1,4 +1,6 @@
-applyDocker()
+plugins {
+    id("tachikoma.docker")
+}
 
 val tarTask = project(":tachikoma-webserver")
     .tasks[ApplicationPlugin.TASK_DIST_TAR_NAME]

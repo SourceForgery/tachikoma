@@ -1,8 +1,9 @@
 import java.time.Clock
 
-apply(plugin = "com.github.ben-manes.versions")
-
-applyRelease()
+plugins {
+    id("com.github.ben-manes.versions")
+    id("tachikoma.release")
+}
 
 val replaceVersion by tasks.registering(Copy::class) {
     // Always regenerate yaml
