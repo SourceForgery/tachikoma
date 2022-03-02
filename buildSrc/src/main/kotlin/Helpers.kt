@@ -1,25 +1,16 @@
 import co.riiid.gradle.GithubExtension
 import com.sourceforgery.tachikoma.buildsrc.DuplicateClassesExtension
-import com.sourceforgery.tachikoma.buildsrc.dockerSetup
-import com.sourceforgery.tachikoma.buildsrc.grpcSetup
-import com.sourceforgery.tachikoma.buildsrc.javaSetup
-import com.sourceforgery.tachikoma.buildsrc.kotlinSetup
-import com.sourceforgery.tachikoma.buildsrc.releaseSetup
 import groovy.lang.Closure
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.dsl.DependencyHandler
-import org.gradle.api.file.CopySpec
-import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.internal.Cast
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.kotlin.dsl.closureOf
-import org.gradle.kotlin.dsl.delegateClosureOf
-import se.transmode.gradle.plugins.docker.DockerTask
 import java.io.File
 import java.util.TreeSet
 
@@ -88,18 +79,6 @@ fun Project.toTree(it: File): FileTree {
     }
 }
 
-fun DockerTask.addFiles(sources: Iterable<File>, renamer: (String) -> String) {
-    addFile(delegateClosureOfHack<CopySpec> {
-        includeEmptyDirs = false
-        eachFile(delegateClosureOf<FileCopyDetails> {
-            path = renamer(path)
-        })
-        for (source in sources) {
-            from(project.toTree(source))
-        }
-    })
-}
-
 fun Task.recurseTasks(): Sequence<Task> = sequence {
     suspend fun SequenceScope<Task>.recurse(t: Task) {
         yield(t)
@@ -119,8 +98,3 @@ fun Task.recurseTasks(): Sequence<Task> = sequence {
     recurse(this@recurseTasks)
 }
 
-fun Project.applyJava() = javaSetup()
-fun Project.applyKotlin() = kotlinSetup()
-fun Project.applyRelease() = releaseSetup()
-fun Project.applyGrpc() = grpcSetup()
-fun Project.applyDocker() = dockerSetup()

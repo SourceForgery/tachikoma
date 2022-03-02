@@ -1,4 +1,6 @@
-applyJava()
+plugins {
+    id("tachikoma.java")
+}
 
 dependencies {
     implementation("com.google.code.findbugs:jsr305:$jsr305Version")

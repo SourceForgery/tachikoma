@@ -555,7 +555,6 @@ class MailDeliveryService(override val di: DI) : DIAware {
         val links = doc.select("a[href]")
         for (link in links) {
             val originalUri = link.attr("href")
-                ?: ""
             if (originalUri == "*|UNSUB|*") {
                 link.attr("href", unsubscribeUri.toString())
             } else if (originalUri.startsWith("http://") || originalUri.startsWith("https://")) {

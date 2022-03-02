@@ -18,7 +18,7 @@ class LogEverything() : InvokeCounter, ScopeCloseable {
 
     fun dump() {
         if (LOGGER.delegate.isWarnEnabled) {
-            val totalMilliseconds = loggedQueries.asSequence().sumBy { it.value.toInt() }
+            val totalMilliseconds = loggedQueries.asSequence().sumOf { it.value.toInt() }
             if (totalMilliseconds > slowThreshold.toMillis()) {
                 LOGGER.warn { "Slow req: ${mapper.writeValueAsString(loggedQueries)}" }
             }

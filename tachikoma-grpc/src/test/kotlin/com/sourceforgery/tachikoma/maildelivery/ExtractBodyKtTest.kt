@@ -1,13 +1,9 @@
-package com.youcruit.micro.email
+package com.sourceforgery.tachikoma.maildelivery
 
 import com.sourceforgery.tachikoma.common.Email
-import com.sourceforgery.tachikoma.maildelivery.extractBodyFromPlaintextEmail
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.platform.runner.JUnitPlatform
-import org.junit.runner.RunWith
 
-@RunWith(JUnitPlatform::class)
 class ExtractBodyKtTest {
 
     @Test
@@ -38,7 +34,7 @@ class ExtractBodyKtTest {
             |> Lorem ispum
             |> Lorem ipsum
             |>
-        """.trimMargin()
+            """.trimMargin()
         assertEquals(
             """
                 |Has done the following!

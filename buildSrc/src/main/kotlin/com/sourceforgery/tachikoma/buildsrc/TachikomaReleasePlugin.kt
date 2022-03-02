@@ -2,13 +2,20 @@ package com.sourceforgery.tachikoma.buildsrc
 
 import co.riiid.gradle.GithubExtension
 import org.eclipse.jgit.internal.storage.file.FileRepository
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.getByType
 import publishing
 import java.io.File
 
-fun Project.releaseSetup() {
+class TachikomaReleasePlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.releaseSetup()
+    }
+}
+
+private fun Project.releaseSetup() {
     apply(plugin = "net.researchgate.release")
     apply(plugin = "co.riiid.gradle")
     apply(plugin = "java-library")

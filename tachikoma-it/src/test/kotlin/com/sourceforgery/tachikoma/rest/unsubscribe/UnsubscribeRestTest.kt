@@ -32,7 +32,7 @@ import com.sourceforgery.tachikoma.testModule
 import com.sourceforgery.tachikoma.users.UserService
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
-import io.ebean.EbeanServer
+import io.ebean.Database
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -76,7 +76,7 @@ class UnsubscribeRestTest : DIAware {
 
     val userService: UserService by instance()
     val authenticationDAO: AuthenticationDAO by instance()
-    val ebeanServer: EbeanServer by instance()
+    val ebeanServer: Database by instance()
     val mailDeliveryService: MailDeliveryService by instance()
     val blockedEmailDAO: BlockedEmailDAO by instance()
     val restServices: List<RestService> by allInstances()

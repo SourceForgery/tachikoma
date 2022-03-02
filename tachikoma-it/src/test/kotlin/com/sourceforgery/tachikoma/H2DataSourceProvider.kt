@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
-import io.ebean.config.ServerConfig
+import io.ebean.config.DatabaseConfig
 import io.ebean.config.dbplatform.h2.H2Platform
 import io.ebean.datasource.DataSourceConfig
 import org.kodein.di.DI
@@ -10,7 +10,7 @@ import java.sql.Connection
 import java.util.UUID
 
 class H2DataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
-    override fun provide(serverConfig: ServerConfig) {
+    override fun provide(serverConfig: DatabaseConfig) {
         val dataSourceConfig = DataSourceConfig()
         dataSourceConfig.heartbeatSql = "select 1"
         dataSourceConfig.isAutoCommit = false

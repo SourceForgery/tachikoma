@@ -125,7 +125,8 @@ class MailDeliveryServiceTest : DIAware {
                             |.
                             |}
                             |.                 ${""}
-                            |"""
+                            |
+                    """
                         .trimMargin()
                 )
                     .setHtmlBody(
@@ -134,7 +135,6 @@ class MailDeliveryServiceTest : DIAware {
                         <img src="cid:68b12347-e804-48f8-a9d4-86a1d1acfda3">
                         """.trimIndent()
                     )
-
                     .setSubject("Test mail subject")
             )
             .build()

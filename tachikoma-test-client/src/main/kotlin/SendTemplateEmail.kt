@@ -43,7 +43,7 @@ fun main() {
             </ul>
         </div>
     </div>
-"""
+        """
 
     val mailTitle = Value.newBuilder().setStringValue("This is a magic title!").build()
     val mailBody = Value.newBuilder().setStringValue("This is a magic mail body!").build()

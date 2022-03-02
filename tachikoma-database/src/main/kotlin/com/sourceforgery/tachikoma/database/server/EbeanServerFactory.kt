@@ -4,10 +4,10 @@ import com.sourceforgery.tachikoma.config.DatabaseConfig
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.upgrades.DatabaseUpgrade
 import com.sourceforgery.tachikoma.logging.InvokeCounter
-import io.ebean.EbeanServer
+import io.ebean.Database
+import io.ebean.DatabaseFactory
 import io.ebean.config.EncryptKey
 import io.ebean.config.EncryptKeyManager
-import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourcePool
 import org.apache.logging.log4j.Level
@@ -28,7 +28,7 @@ class EbeanServerFactory(override val di: DI) : DIAware {
     private val databaseUpgrades by allInstances<DatabaseUpgrade>()
     private val dataSourceProvider: DataSourceProvider by instance()
 
-    private inner class WrappedServerConfig : ServerConfig() {
+    private inner class WrappedServerConfig : io.ebean.config.DatabaseConfig() {
         override fun setDataSource(originalDataSource: DataSource?) {
             if (this.databasePlatform is PostgresPlatform) {
                 // Only do database upgrade on postgresql
@@ -75,7 +75,7 @@ class EbeanServerFactory(override val di: DI) : DIAware {
         }
     }
 
-    fun provide(): EbeanServer {
+    fun provide(): Database {
         DriverManager.setLogWriter(IoBuilder.forLogger("DriverManager").setLevel(Level.DEBUG).buildPrintWriter())
 
         val serverConfig = WrappedServerConfig()
@@ -89,7 +89,7 @@ class EbeanServerFactory(override val di: DI) : DIAware {
         serverConfig.lazyLoadBatchSize = 100
         dataSourceProvider.provide(serverConfig)
 
-        val ebeanServer = io.ebean.EbeanServerFactory.create(serverConfig)
+        val ebeanServer = DatabaseFactory.create(serverConfig)
         ebeanHooks
             .forEach {
                 it.postStart(ebeanServer)

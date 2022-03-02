@@ -1,4 +1,6 @@
-applyKotlin()
+plugins {
+    id("tachikoma.kotlin")
+}
 
 dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")

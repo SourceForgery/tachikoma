@@ -1,4 +1,6 @@
-applyDocker()
+plugins {
+    id("tachikoma.docker")
+}
 
 val tarTask = project(":tachikoma-webserver")
     .tasks[ApplicationPlugin.TASK_DIST_TAR_NAME]
@@ -6,10 +8,9 @@ val tarTask = project(":tachikoma-webserver")
 val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.DockerTask::class) {
     dependsOn(tarTask)
 
-    applicationName = "tachikoma-webserver"
+    applicationName.set("tachikoma-webserver")
 
-    baseImage = "ubuntu:20.04"
-    maintainer = "tachikoma@sourceforgery.com"
+    baseImage.set("ubuntu:20.04")
 
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
 
@@ -58,7 +59,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
         """.trimIndent().replace('\n', ' ')
     )
 
-    push = rootProject.extensions.extraProperties["dockerPush"] as Boolean
+    push.set(rootProject.provider { rootProject.extensions.extraProperties["dockerPush"] as Boolean })
 }
 
 tasks["dockerTask"].dependsOn(webserverDocker)

@@ -4,7 +4,7 @@ import com.sourceforgery.tachikoma.common.ExtractEmailMetadata
 import com.sourceforgery.tachikoma.database.hooks.EbeanHook
 import com.sourceforgery.tachikoma.database.objects.query.QIncomingEmailDBO
 import io.ebean.Database
-import io.ebean.migration.ddl.DdlRunner
+import io.ebean.ddlrunner.DdlRunner
 import org.apache.logging.log4j.kotlin.logger
 import org.intellij.lang.annotations.Language
 import org.kodein.di.DI

@@ -10,7 +10,7 @@ import org.kodein.di.instance
 class JobWorker(override val di: DI) : DIAware {
     private val mqSequenceFactory: MQSequenceFactory by instance()
     private val jobFactory: JobFactory by instance()
-    private var future: ListenableFuture<Void>? = null
+    private var future: ListenableFuture<Unit>? = null
 
     fun work() {
         future = mqSequenceFactory.listenForJobs {

@@ -27,8 +27,8 @@ class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
         deliveryNotifications
             .consumeAsFlow()
 
-    private fun <X : Any> listenOnQueue(queue: BlockingQueue<QueueMessageWrap<X>>, callback: suspend (X) -> Unit): SettableFuture<Void> {
-        val future = SettableFuture.create<Void>()
+    private fun <X : Any> listenOnQueue(queue: BlockingQueue<QueueMessageWrap<X>>, callback: suspend (X) -> Unit): SettableFuture<Unit> {
+        val future = SettableFuture.create<Unit>()
         executorService.execute {
             generateSequence {
                 queue.take().value
@@ -37,16 +37,16 @@ class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
                     callback(it)
                 }
             }
-            future.set(null)
+            future.set(Unit)
         }
         return future
     }
 
-    override fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Void> {
+    override fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Unit> {
         return listenOnQueue(jobs, callback)
     }
 
-    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Void> {
+    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Unit> {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 

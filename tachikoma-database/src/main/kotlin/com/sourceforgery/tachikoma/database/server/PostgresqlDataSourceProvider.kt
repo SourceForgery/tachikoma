@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.sourceforgery.tachikoma.config.DatabaseConfig
-import io.ebean.config.ServerConfig
 import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourceConfig
 import org.kodein.di.DI
@@ -13,7 +12,7 @@ import java.util.HashMap
 class PostgresqlDataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
     private val databaseConfig: DatabaseConfig by instance()
 
-    override fun provide(serverConfig: ServerConfig) {
+    override fun provide(serverConfig: io.ebean.config.DatabaseConfig) {
         if (databaseConfig.sqlUrl.scheme != "postgres") {
             throw IllegalArgumentException("Not a postgres database")
         }

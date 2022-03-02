@@ -1,12 +1,9 @@
 package com.sourceforgery.tachikoma.maildelivery
 
 import org.jsoup.Jsoup
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.platform.runner.JUnitPlatform
-import org.junit.runner.RunWith
-import kotlin.test.assertEquals
 
-@RunWith(JUnitPlatform::class)
 class HtmlToPlainTextTest {
 
     @Test
@@ -63,30 +60,32 @@ class HtmlToPlainTextTest {
 
 
 <img src="http://example.com:8070/t/qgYGqgYDCNodsgYUXZxYoaar0iLOs-QkYTYkuZMv3HM" height="1" width="1"></body></simpleHtmlDoc>
-"""
+            """
         )
 
         val simpleHtmlText =
             """
-HELLO
-
-Lorem ipsum dolor sit amet, phasellus gravida. Class risus turpis enim euismod
-pulvinar
-
-Eget tellus gravida, nec wisi non vehicula placerat tristique, mauris nibh
-ante adipiscing, est libero donec netusexample.com
-<http://example.com:8070/c/qgYuqgYDCNodsgYlaHR0cDovL2xtZ3RmeS5jb20vP3E9Z2F5K3Bvcm4rc3Rhci8jIbIGFBfuwijStNj52X5FXoBTZVHzg9F6>
- Ante nunc est, ante sed eros iaculis eget, mauris venenatis nulla, auctor
-blandit elementum, phasellus dignissim.
-
-Ab magna mauris. Litora sollicitudin et aliquet neque urna volutpat
-<http://example.com:8070/c/qgYuqgYDCNodsgYlaHR0cDovL2xtZ3RmeS5jb20vP3E9Z2F5K3Bvcm4rc3Rhci8jIbIGFBfuwijStNj52X5FXoBTZVHzg9F6>
-
- Commodo sagittis at, a purus vitae, lectus tempus consectetuer assumenda sit
-elit, purus a sit
- Lorem ipsum is a pseudo-Latin text used in web design,  経意責家方家閉討店暖育田庁載社転線宇
- ÅÄÖ
- 税理投関懲北用年戦日投人
-"""
+            
+            HELLO
+            
+            Lorem ipsum dolor sit amet, phasellus gravida. Class risus turpis enim euismod
+            pulvinar
+            
+            Eget tellus gravida, nec wisi non vehicula placerat tristique, mauris nibh
+            ante adipiscing, est libero donec netusexample.com
+            <http://example.com:8070/c/qgYuqgYDCNodsgYlaHR0cDovL2xtZ3RmeS5jb20vP3E9Z2F5K3Bvcm4rc3Rhci8jIbIGFBfuwijStNj52X5FXoBTZVHzg9F6>
+             Ante nunc est, ante sed eros iaculis eget, mauris venenatis nulla, auctor
+            blandit elementum, phasellus dignissim.
+            
+            Ab magna mauris. Litora sollicitudin et aliquet neque urna volutpat
+            <http://example.com:8070/c/qgYuqgYDCNodsgYlaHR0cDovL2xtZ3RmeS5jb20vP3E9Z2F5K3Bvcm4rc3Rhci8jIbIGFBfuwijStNj52X5FXoBTZVHzg9F6>
+            
+             Commodo sagittis at, a purus vitae, lectus tempus consectetuer assumenda sit
+            elit, purus a sit
+             Lorem ipsum is a pseudo-Latin text used in web design,  経意責家方家閉討店暖育田庁載社転線宇
+             ÅÄÖ
+             税理投関懲北用年戦日投人
+            
+            """.trimIndent()
     }
 }

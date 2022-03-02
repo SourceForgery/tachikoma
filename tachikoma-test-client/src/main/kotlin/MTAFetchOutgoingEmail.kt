@@ -32,7 +32,7 @@ fun main() {
                 .collect {
                     // System.err.println("Got email: " + JsonFormat.printer().print(it))
                     for (i in 1..4) {
-                        channel.offer(
+                        channel.send(
                             MTAQueuedNotification.newBuilder()
                                 .setQueueId("12345A$i")
                                 .setSuccess(true)

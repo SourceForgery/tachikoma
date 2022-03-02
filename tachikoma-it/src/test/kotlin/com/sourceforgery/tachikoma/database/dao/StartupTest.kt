@@ -22,7 +22,7 @@ class StartupTest : DIAware {
 
     @Test
     fun `Test upgrade scripts`() {
-        val platform = (database as DefaultServer).databasePlatform
+        val platform = (database as DefaultServer).config().databasePlatform
         assertTrue(platform is PostgresPlatform, "platform is $platform")
         database.find<EmailDBO>().findList()
     }

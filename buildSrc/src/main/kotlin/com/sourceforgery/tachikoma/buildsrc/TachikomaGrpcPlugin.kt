@@ -11,28 +11,33 @@ import grpcVersion
 import implementation
 import jakartaAnnotationsVersion
 import kotlinCoroutineVersion
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.project
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import protocVersion
-import sourceSets
 import java.io.File
 import java.net.URL
 
-fun Project.grpcSetup() {
+class TachikomaGrpcPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.grpcSetup()
+    }
+}
+
+private fun Project.grpcSetup() {
     apply(plugin = "com.google.protobuf")
     apply(plugin = "kotlin")
-    javaSetup()
+    apply(plugin = "tachikoma.java")
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
-            languageVersion = "1.4"
-            apiVersion = "1.4"
+            languageVersion = "1.6"
+            apiVersion = "1.6"
             jvmTarget = "11"
             freeCompilerArgs = listOf(
                 "-java-parameters",
@@ -63,13 +68,13 @@ fun Project.grpcSetup() {
     }
 
 
-    sourceSets {
-        "main" {
-            resources {
-                srcDir("src/main/proto")
-            }
-        }
-    }
+    // sourceSets {
+    //     "main" {
+    //         resources {
+    //             srcDir("src/main/proto")
+    //         }
+    //     }
+    // }
 
     protobuf {
         protoc {

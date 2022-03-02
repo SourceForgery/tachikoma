@@ -154,7 +154,7 @@ open class CheckDuplicateClassesTask : DefaultTask(), VerificationTask {
     }
 
     companion object {
-        private val ignoredExtensions = setOf("exe", "gz", "tar")
+        private val ignoredExtensions = setOf("exe", "gz", "tar", "bin")
 
         fun buildMessageWithConflictingClasses(duplicateFiles: Multimap<String, String>): String {
             val conflictingClasses = MultimapBuilder.hashKeys().treeSetValues().build<String, String>()

@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.buildsrc
 
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.existing
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.provideDelegate
@@ -12,7 +12,13 @@ import se.transmode.gradle.plugins.docker.DockerTask
 import java.io.File
 import java.net.URL
 
-fun Project.dockerSetup() {
+class TachikomaDockerPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.dockerSetup()
+    }
+}
+
+private fun Project.dockerSetup() {
     apply(plugin = "base")
     apply(plugin = "docker")
 
@@ -52,9 +58,10 @@ fun Project.dockerSetup() {
             // without running lots of commands that are as slow as running the actual task
             false
         }
-        val repo =
+        val repo by lazy {
             requireNotNull(snapshotDockerRepo) { "Need to have snapshotDockerRepo set to a repo (e.g. -DsnapshotDockerRepo=gcr.io/tachikoma-staging/ that will be used in the deployment yaml" }
                 .trimEnd('/')
+        }
         val snapshotDockerVersion: String? by project
 
         // Make sure that all images are tagged

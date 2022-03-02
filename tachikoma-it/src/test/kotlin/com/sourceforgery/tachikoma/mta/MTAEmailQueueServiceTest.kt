@@ -108,12 +108,12 @@ class MTAEmailQueueServiceTest {
         return authenticationDBO
     }
 
-    fun `Create email test`() {
+    fun `Create email test`() = runBlocking {
         val requests = Channel<MTAQueuedNotification>()
 
         val notifications = mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
 
-        mqSequenceFactoryMock.outgoingEmails.offer(
+        mqSequenceFactoryMock.outgoingEmails.send(
             OutgoingEmailMessage.newBuilder()
                 .setCreationTimestamp(clock.instant().toTimestamp())
                 .setEmailId(email.id.emailId)
@@ -133,12 +133,12 @@ class MTAEmailQueueServiceTest {
         assertEquals(emailMessage.emailId, email.id.emailId)
     }
 
-    fun `Receive queue message`() {
+    fun `Receive queue message`() = runBlocking {
 
         val requests = Channel<MTAQueuedNotification>()
         mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
 
-        requests.offer(
+        requests.send(
             MTAQueuedNotification.newBuilder()
                 .setEmailId(email.id.emailId)
                 .setQueueId("foobarQueueId")

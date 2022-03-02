@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface MQSequenceFactory {
     fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<DeliveryNotificationMessage>
-    fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Void>
-    fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Void>
+    fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Unit>
+    fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Unit>
     fun listenForOutgoingEmails(mailDomain: MailDomain): Flow<OutgoingEmailMessage>
     fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<IncomingEmailNotificationMessage>
     fun alive(): Boolean

@@ -182,7 +182,7 @@ object UriComponent {
 
         for (i in 0 until s.length) {
             val c = s[i]
-            if (c.toInt() < 0x80 && c != '%' && !table[c.toInt()] || c.toInt() >= 0x80) {
+            if (c.code < 0x80 && c != '%' && !table[c.code] || c.code >= 0x80) {
                 if (!template || c != '{' && c != '}') {
                     return i
                 }
@@ -287,9 +287,9 @@ object UriComponent {
             } else {
                 if (template) {
                     var leavingTemplateParam = false
-                    if (codePoint == '{'.toInt()) {
+                    if (codePoint == '{'.code) {
                         insideTemplateParam = true
-                    } else if (codePoint == '}'.toInt()) {
+                    } else if (codePoint == '}'.code) {
                         insideTemplateParam = false
                         leavingTemplateParam = true
                     }
@@ -301,7 +301,7 @@ object UriComponent {
                 }
 
                 if (contextualEncode &&
-                    codePoint == '%'.toInt() &&
+                    codePoint == '%'.code &&
                     offset + 2 < s.length &&
                     isHexCharacter(s[offset + 1]) &&
                     isHexCharacter(s[offset + 2])
@@ -318,10 +318,10 @@ object UriComponent {
                 }
 
                 if (codePoint < 0x80) {
-                    if (codePoint == ' '.toInt() && t == Type.QUERY_PARAM) {
+                    if (codePoint == ' '.code && t == Type.QUERY_PARAM) {
                         sb.append('+')
                     } else {
-                        appendPercentEncodedOctet(sb, codePoint.toChar().toInt())
+                        appendPercentEncodedOctet(sb, codePoint.toChar().code)
                     }
                 } else {
                     appendUTF8EncodedCharacter(sb, codePoint)
@@ -360,36 +360,36 @@ object UriComponent {
         tables[Type.AUTHORITY.ordinal] = initEncodingTable(UNRESERVED + SUB_DELIMS + listOf(":", "@"))
 
         val pathSegment = initEncodingTable(UNRESERVED + SUB_DELIMS + listOf(":", "@"))
-        pathSegment[';'.toInt()] = false
+        pathSegment[';'.code] = false
         tables[Type.PATH_SEGMENT.ordinal] = pathSegment
 
         val matrixParam = initEncodingTable(UNRESERVED + SUB_DELIMS + listOf(":", "@"))
-        matrixParam['='.toInt()] = false
-        pathSegment[';'.toInt()] = false
+        matrixParam['='.code] = false
+        pathSegment[';'.code] = false
         tables[Type.MATRIX_PARAM.ordinal] = matrixParam
 
         tables[Type.PATH.ordinal] = initEncodingTable(UNRESERVED + SUB_DELIMS + listOf(":", "@", "/"))
 
         val query = initEncodingTable(UNRESERVED + SUB_DELIMS + listOf(":", "@", "/"))
-        query['!'.toInt()] = false
-        query['*'.toInt()] = false
-        query['\''.toInt()] = false
-        query['('.toInt()] = false
-        query[')'.toInt()] = false
-        query[';'.toInt()] = false
-        query[':'.toInt()] = false
-        query['@'.toInt()] = false
-        query['$'.toInt()] = false
-        query[','.toInt()] = false
-        query['/'.toInt()] = false
-        query['?'.toInt()] = false
+        query['!'.code] = false
+        query['*'.code] = false
+        query['\''.code] = false
+        query['('.code] = false
+        query[')'.code] = false
+        query[';'.code] = false
+        query[':'.code] = false
+        query['@'.code] = false
+        query['$'.code] = false
+        query[','.code] = false
+        query['/'.code] = false
+        query['?'.code] = false
         tables[Type.QUERY.ordinal] = query
 
         val queryParam = query.copyOf()
         tables[Type.QUERY_PARAM.ordinal] = queryParam
-        queryParam['='.toInt()] = false
-        queryParam['+'.toInt()] = false
-        queryParam['&'.toInt()] = false
+        queryParam['='.code] = false
+        queryParam['+'.code] = false
+        queryParam['&'.code] = false
 
         tables[Type.QUERY_PARAM_SPACE_ENCODED.ordinal] = tables[Type.QUERY_PARAM.ordinal]
 
@@ -401,10 +401,10 @@ object UriComponent {
         val table = BooleanArray(0x80)
         for (range in allowed) {
             if (range.length == 1) {
-                table[range[0].toInt()] = true
+                table[range[0].code] = true
             } else if (range.length == 3 && range[1] == '-') {
-                var i = range[0].toInt()
-                while (i <= range[2].toInt()) {
+                var i = range[0].code
+                while (i <= range[2].code) {
                     table[i] = true
                     i++
                 }
@@ -476,8 +476,8 @@ object UriComponent {
         }
 
         when (t) {
-            UriComponent.Type.HOST -> return decodeHost(s, n)
-            UriComponent.Type.QUERY_PARAM -> return decodeQueryParam(s, n)
+            Type.HOST -> return decodeHost(s, n)
+            Type.QUERY_PARAM -> return decodeQueryParam(s, n)
             else -> return decode(s, n)
         }
     }
@@ -703,9 +703,9 @@ object UriComponent {
         val equals = param.indexOf('=')
         if (equals > 0) {
             params.put(
-                decode(param.substring(0, equals), UriComponent.Type.MATRIX_PARAM),
+                decode(param.substring(0, equals), Type.MATRIX_PARAM),
                 if (decode)
-                    decode(param.substring(equals + 1), UriComponent.Type.MATRIX_PARAM)
+                    decode(param.substring(equals + 1), Type.MATRIX_PARAM)
                 else
                     param
                         .substring(equals + 1)
@@ -713,7 +713,7 @@ object UriComponent {
         } else if (equals == 0) {
             // no key declared, ignore
         } else if (param.length > 0) {
-            params.put(decode(param, UriComponent.Type.MATRIX_PARAM), "")
+            params.put(decode(param, Type.MATRIX_PARAM), "")
         }
     }
 
@@ -837,7 +837,7 @@ object UriComponent {
         // If there is only one octet and is an ASCII character
         if (bb.limit() == 1 && bb.get(0).toInt() and 0xFF < 0x80) {
             // Octet can be appended directly
-            sb.append(bb.get(0).toChar())
+            sb.append(bb.get(0).toInt().toChar())
             return i + 2
         } else {
             //
@@ -862,27 +862,27 @@ object UriComponent {
         run {
             var c = '0'
             while (c <= '9') {
-                table[c.toInt()] = c - '0'
+                table[c.code] = c - '0'
                 c++
             }
         }
         run {
             var c = 'A'
             while (c <= 'F') {
-                table[c.toInt()] = c - 'A' + 10
+                table[c.code] = c - 'A' + 10
                 c++
             }
         }
         var c = 'a'
         while (c <= 'f') {
-            table[c.toInt()] = c - 'a' + 10
+            table[c.code] = c - 'a' + 10
             c++
         }
         return table
     }
 
     private fun decodeHex(c: Char): Int {
-        return if (c.toInt() < 128) HEX_TABLE[c.toInt()] else -1
+        return if (c.code < 128) HEX_TABLE[c.code] else -1
     }
 
     /**
@@ -892,7 +892,7 @@ object UriComponent {
      * @return The is `c` is a hexadecimal character (e.g. 0, 5, a, A, f, ...)
      */
     fun isHexCharacter(c: Char): Boolean {
-        return c.toInt() < 128 && HEX_TABLE[c.toInt()] != -1
+        return c.code < 128 && HEX_TABLE[c.code] != -1
     }
 
     /**

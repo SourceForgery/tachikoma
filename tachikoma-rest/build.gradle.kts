@@ -1,4 +1,6 @@
-applyKotlin()
+plugins {
+    id("tachikoma.kotlin")
+}
 
 dependencies {
     implementation("com.linecorp.armeria:armeria:$armeriaVersion")

@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.database.objects
 
-import io.ebean.annotation.CreatedTimestamp
-import io.ebean.annotation.UpdatedTimestamp
+import io.ebean.annotation.WhenCreated
+import io.ebean.annotation.WhenModified
 import io.ebean.bean.EntityBean
 import java.time.Instant
 import javax.persistence.Column
@@ -10,7 +10,6 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.MappedSuperclass
 import javax.persistence.SequenceGenerator
-import javax.persistence.Transient
 import javax.persistence.Version
 
 @MappedSuperclass
@@ -24,12 +23,11 @@ abstract class GenericDBO {
 
     @field:Version
     var version: Long = 0L
-    @field:CreatedTimestamp
+    @WhenCreated
     var dateCreated: Instant? = null
-    @field:UpdatedTimestamp
+    @WhenModified
     var lastUpdated: Instant? = null
 
     val new: Boolean
-        @Transient
         get() = (this as EntityBean)._ebean_getIntercept().isNew
 }
