@@ -103,6 +103,8 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             "4.3.2", // Less used. System is shutting down/going offline
             "4.4.1", // Connection busy
             "4.4.2", // Network connection issue
+            "4.4.3", // Temporary I suppose?
+            "4.7.0", // Temporary failure. Could be auth (Exchange) or just snafu (Gmail)
             "4.7.1" // Temporarily deferred due to user complaints (SPAM?)
         )
         private val LOGGER = logger()
