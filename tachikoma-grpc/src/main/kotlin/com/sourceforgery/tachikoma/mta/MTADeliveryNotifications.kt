@@ -57,6 +57,8 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
                 "5." -> {
                     if (!hardBounceList.contains(request.status)) {
                         LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it HARD_BOUNCED anyway" }
+                    } else if (request.status == "5.7.26") {
+                        LOGGER.fatal { "Email sending broken for messageId = ${email.messageId}. Sending server does not fulfill DMARC requirements! Change your DMARC policy to QURANTINE or NONE immediately and start debugging!" }
                     }
                     notificationMessageBuilder.messageHardBounced = MessageHardBounced.getDefaultInstance()
                     EmailStatus.HARD_BOUNCED
