@@ -1,7 +1,3 @@
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.getValue
-import org.gradle.kotlin.dsl.provideDelegate
-import org.gradle.kotlin.dsl.registering
 import recurseTasks
 import se.transmode.gradle.plugins.docker.DockerTask
 import java.io.File

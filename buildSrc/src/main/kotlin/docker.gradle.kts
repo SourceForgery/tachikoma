@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
-import org.gradle.kotlin.dsl.get
 import se.transmode.gradle.plugins.docker.DockerPluginExtension
 import se.transmode.gradle.plugins.docker.DockerTask
 
 val docker = project.extensions.create<DockerPluginExtension>("docker")
 
-project.plugins.withType(ApplicationPlugin::class).configureEach {
+project.plugins.withType<ApplicationPlugin> {
     tasks.register("distDocker", DockerTask::class.java) {
         val distTar = tasks[ApplicationPlugin.TASK_DIST_TAR_NAME] as AbstractArchiveTask
         dependsOn(distTar)

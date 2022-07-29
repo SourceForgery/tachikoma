@@ -22,6 +22,6 @@ rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.Gith
 }
 
 tasks["assemble"].dependsOn(zipProtoc)
-rootProject.tasks["githubRelease"].apply {
+rootProject.tasks.named("githubRelease") {
     dependsOn(zipProtoc)
 }

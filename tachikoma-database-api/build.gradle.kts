@@ -17,6 +17,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 }
 
-extensions.getByType(EnhancePluginExtension::class.java).apply {
+extensions.configure<EnhancePluginExtension> {
     debugLevel = 0
 }

@@ -5,13 +5,6 @@ import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
 import com.sourceforgery.tachikoma.buildsrc.DownloadFileTask
 import com.sourceforgery.tachikoma.buildsrc.fixUglyCode
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.project
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.net.URL
@@ -22,7 +15,7 @@ plugins {
     id("tachikoma-java")
 }
 
-tasks.withType<KotlinCompile>().configureEach {
+tasks.withType<KotlinCompile> {
     kotlinOptions {
         languageVersion = "1.6"
         apiVersion = "1.6"

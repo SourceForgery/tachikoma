@@ -1,4 +1,5 @@
 import com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension
+import org.gradle.plugins.ide.idea.model.IdeaModel
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.time.Clock
@@ -87,15 +88,6 @@ allprojects {
         }
     }
 
-    apply(plugin = "idea")
-
-    extensions.getByType<org.gradle.plugins.ide.idea.model.IdeaModel>().apply {
-        module {
-            outputDir = file("build/idea-out")
-            testOutputDir = file("build/idea-testout")
-        }
-    }
-
     repositories {
         mavenLocal()
         mavenCentral()
@@ -104,7 +96,7 @@ allprojects {
     tasks.withType<JavaCompile> {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
-        options.apply {
+        options {
             isWarnings = true
         }
     }

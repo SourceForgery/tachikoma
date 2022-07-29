@@ -1,15 +1,5 @@
 import com.sourceforgery.tachikoma.buildsrc.CheckDuplicateClassesTask
-import org.gradle.api.Plugin
-import org.gradle.api.Project
 import org.gradle.api.tasks.bundling.Jar
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.getValue
-import org.gradle.kotlin.dsl.provideDelegate
-import org.gradle.kotlin.dsl.registering
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
@@ -28,7 +18,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
 }
 
-tasks.withType<KotlinCompile>().configureEach {
+tasks.withType<KotlinCompile> {
     kotlinOptions {
         languageVersion = "1.6"
         apiVersion = "1.6"
@@ -42,7 +32,7 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
-extensions.getByType<KtlintExtension>().apply {
+extensions.configure<KtlintExtension> {
     debug.set(false)
     verbose.set(true)
     android.set(false)
@@ -58,9 +48,12 @@ val sourceJar by tasks.registering(Jar::class) {
     from(sourceSets["main"].allJava)
     archiveClassifier.set("source")
 }
-val assemble by tasks
-assemble.dependsOn(sourceJar)
+tasks.assemble {
+    dependsOn(sourceJar)
+}
 
 val checkDuplicateClasses by tasks.registering(CheckDuplicateClassesTask::class)
 
-tasks["check"].dependsOn(checkDuplicateClasses)
+tasks.check {
+    dependsOn(checkDuplicateClasses)
+}
