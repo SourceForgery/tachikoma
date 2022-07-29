@@ -1,5 +1,5 @@
 plugins {
-    id("tachikoma.java")
+    `tachikoma-java`
 }
 
 dependencies {

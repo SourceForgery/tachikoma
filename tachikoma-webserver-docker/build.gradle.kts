@@ -1,5 +1,5 @@
 plugins {
-    id("tachikoma.docker")
+    `tachikoma-docker`
 }
 
 val tarTask = project(":tachikoma-webserver")

@@ -1,5 +1,5 @@
 plugins {
-    id("tachikoma.kotlin")
+    `tachikoma-kotlin`
     id("application")
 }
 
@@ -20,8 +20,8 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-iostreams:$log4j2Version")
 }
 
-rootProject.extensions.configure<co.riiid.gradle.GithubExtension>("github") {
-    addAssets("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")
+rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension> {
+    releaseAssets.from("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")
 }
 
 val startClass = "com.sourceforgery.tachikoma.webserver.MainKt"

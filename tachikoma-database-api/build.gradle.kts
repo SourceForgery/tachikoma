@@ -1,9 +1,9 @@
 import io.ebean.gradle.EnhancePluginExtension
 
 plugins {
-    id("tachikoma.kotlin")
+    `tachikoma-kotlin`
     id("io.ebean")
-    id("kotlin-kapt")
+    `kotlin-kapt`
 }
 
 dependencies {

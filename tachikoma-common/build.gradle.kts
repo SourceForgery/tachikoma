@@ -1,6 +1,6 @@
 plugins {
-    id("tachikoma.kotlin")
-    id("kotlin-kapt")
+    `tachikoma-kotlin`
+    `kotlin-kapt`
 }
 dependencies {
     kapt("org.apache.logging.log4j:log4j-core:$log4j2Version")

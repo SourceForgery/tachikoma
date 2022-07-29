@@ -1,8 +1,14 @@
+import com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
 import java.time.Clock
 
 plugins {
     id("com.github.ben-manes.versions")
-    id("tachikoma.release")
+    id("net.researchgate.release") version "2.8.1"
+    id("com.github.breadmoirai.github-release")
+    `java-library`
+    `maven-publish`
 }
 
 val replaceVersion by tasks.registering(Copy::class) {
@@ -30,8 +36,8 @@ val publishSnapshot by tasks.registering {
 }
 rootProject.tasks["githubRelease"].dependsOn(replaceVersion)
 
-extensions.getByType<co.riiid.gradle.GithubExtension>().apply {
-    addAssets("$buildDir/kubernetes/deployment-webserver.yaml")
+rootProject.extensions.configure<GithubReleaseExtension> {
+    releaseAssets.from("$buildDir/kubernetes/deployment-webserver.yaml")
 }
 
 @Suppress("UnstableApiUsage")
@@ -42,11 +48,11 @@ allprojects {
         resolutionStrategy {
             failOnVersionConflict()
             dependencySubstitution {
-                substitute(module("org.slf4j:jcl-over-slf4j")).with(module("org.apache.logging.log4j:log4j-jcl:$log4j2Version"))
+                substitute(module("org.slf4j:jcl-over-slf4j")).using(module("org.apache.logging.log4j:log4j-jcl:$log4j2Version"))
 
-                substitute(module("org.slf4j:jul-to-slf4j")).with(module("org.apache.logging.log4j:log4j-jul:$log4j2Version"))
-                substitute(module("org.slf4j:slf4j-simple")).with(module("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version"))
-                substitute(module("com.google.guava:guava-jdk5")).with(module("com.google.guava:guava:$guavaVersion"))
+                substitute(module("org.slf4j:jul-to-slf4j")).using(module("org.apache.logging.log4j:log4j-jul:$log4j2Version"))
+                substitute(module("org.slf4j:slf4j-simple")).using(module("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version"))
+                substitute(module("com.google.guava:guava-jdk5")).using(module("com.google.guava:guava:$guavaVersion"))
 
                 all {
                     when (val requested = requested) {
@@ -55,10 +61,12 @@ allprojects {
                                 "io.grpc" -> if ("kotlin" !in requested.module) {
                                     useTarget("${requested.group}:${requested.module}:$grpcVersion")
                                 }
+
                                 "com.google.protobuf" -> useTarget("${requested.group}:${requested.module}:$protocVersion")
                                 "org.apache.logging.log4j" -> if (requested.module != "log4j-api-kotlin") {
                                     useTarget("${requested.group}:${requested.module}:$log4j2Version")
                                 }
+
                                 "org.jetbrains.kotlin" -> useTarget("${requested.group}:${requested.module}:$kotlinVersion")
                                 "com.fasterxml.jackson.core" -> useTarget("${requested.group}:${requested.module}:$jacksonVersion")
                             }
@@ -107,3 +115,66 @@ allprojects {
 }
 
 group = "com.sourceforgery.tachikoma"
+
+val currentTag = System.getenv("CIRCLE_TAG") ?: ""
+
+val publishTask = tasks.getByName("publish")
+
+if (currentTag.isNotEmpty()) {
+    fun gitHistorySinceLastTag(): String =
+        ByteArrayOutputStream().use { baos ->
+            exec {
+                commandLine = listOf("git", "describe", "--tags", "--abbrev=0", "@^")
+                standardOutput = baos
+            }
+            val previousTag = baos.toString(StandardCharsets.UTF_8).trim()
+            baos.reset()
+            exec {
+                commandLine = listOf("git", "log", "--oneline", "$previousTag..@")
+                standardOutput = baos
+            }
+            baos.toString(StandardCharsets.UTF_8)
+        }
+
+    // Only activate when we're building a tag (release)
+    println("Trying to build release")
+    publishTask.finalizedBy("githubRelease")
+    githubRelease {
+        token(requireNotNull(System.getenv("GITHUB_API_TOKEN")) { "GITHUB_API_TOKEN not set" })
+        owner.set("SourceForgery")
+        repo.set("tachikoma")
+        tagName.set(currentTag)
+        targetCommitish.set("master")
+        releaseName.set("v${project.version}")
+        releaseAssets
+        body {
+            gitHistorySinceLastTag()
+        }
+    }
+}
+
+val currentBranch = System.getenv("CIRCLE_BRANCH")
+    ?: let {
+        org.eclipse.jgit.internal.storage.file.FileRepository(File(project.rootDir, ".git")).use {
+            it.branch
+        }
+    }
+val dockerPushRelease = when {
+    currentBranch == "master" && System.getenv("DOCKER_PUSH")?.toBoolean() == true -> true
+    currentTag.isNotEmpty() -> true
+    else -> false
+}
+
+publishing {
+    repositories {
+        maven {
+            url = uri("https://youcruit.jfrog.io/artifactory/youcruit")
+            credentials {
+                username = System.getenv("ARTIFACTORY_USERNAME") ?: "tachikoma"
+                password = System.getenv("ARTIFACTORY_PASSWORD") ?: "xxxx"
+            }
+        }
+    }
+}
+
+rootProject.extensions.extraProperties["dockerPush"] = dockerPushRelease

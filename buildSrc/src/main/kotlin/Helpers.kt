@@ -1,4 +1,3 @@
-import co.riiid.gradle.GithubExtension
 import com.sourceforgery.tachikoma.buildsrc.DuplicateClassesExtension
 import groovy.lang.Closure
 import org.gradle.api.Project
@@ -11,45 +10,17 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.internal.Cast
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.kotlin.dsl.closureOf
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.util.TreeSet
 
 fun Project.duplicateClassesChecker(configure: DuplicateClassesExtension.() -> Unit) {
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("duplicateClassesChecker", configure)
 }
 
-fun DependencyHandler.testImplementation(dependencyNotation: Any): Dependency =
-    add("testImplementation", dependencyNotation)!!
-
-fun DependencyHandler.testImplementation(dependencyNotation: Any, configureClosure: ModuleDependency.() -> Unit): Dependency =
-    add("testImplementation", dependencyNotation, closureOf(configureClosure))
-
-fun DependencyHandler.implementation(dependencyNotation: Any): Dependency =
-    add("implementation", dependencyNotation)!!
-
-fun DependencyHandler.implementation(dependencyNotation: Any, configureClosure: ModuleDependency.() -> Unit): Dependency =
-    add("implementation", dependencyNotation, closureOf(configureClosure))
-
-fun DependencyHandler.api(dependencyNotation: Any): Dependency =
-    add("api", dependencyNotation)!!
-
-fun DependencyHandler.api(dependencyNotation: Any, configureClosure: ModuleDependency.() -> Unit): Dependency =
-    add("api", dependencyNotation, closureOf(configureClosure))
-
-val Project.sourceSets: org.gradle.api.tasks.SourceSetContainer
-    get() =
-        (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("sourceSets") as org.gradle.api.tasks.SourceSetContainer
-
 val googleNativePrefix = OperatingSystem.current().nativePrefix
     .replace("amd64", "x86_64")
-
-fun GithubExtension.addAssets(vararg assetsList: String) {
-    val newAssets = assetsList.toCollection(TreeSet())
-    val oldAssets = assets?.toSet()
-        ?: emptySet()
-    newAssets += oldAssets
-    setAssets(*newAssets.toTypedArray())
-}
 
 fun Project.publishing(configure: org.gradle.api.publish.PublishingExtension.() -> Unit): Unit =
     (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("publishing", configure)
@@ -74,7 +45,7 @@ fun Project.toTree(it: File): FileTree {
         it.name.endsWith("tar.gz") ||
             it.name.endsWith("tar") -> tarTree(it)
 //        it.name.endsWith("jar") ||
-            it.name.endsWith("zip") -> zipTree(it)
+        it.name.endsWith("zip") -> zipTree(it)
         else -> TODO("Don't know how to get a tree from $it")
     }
 }
@@ -97,4 +68,3 @@ fun Task.recurseTasks(): Sequence<Task> = sequence {
     }
     recurse(this@recurseTasks)
 }
-

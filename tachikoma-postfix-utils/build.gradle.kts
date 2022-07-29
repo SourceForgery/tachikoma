@@ -1,6 +1,6 @@
 plugins {
-    id("tachikoma.kotlin")
-    id("application")
+    `tachikoma-kotlin`
+    `application`
     id("com.google.osdetector")
 }
 
@@ -28,8 +28,8 @@ extensions.configure<JavaApplication>("application") {
     mainClass.set("com.sourceforgery.tachikoma.postfix.MainKt")
 }
 
-rootProject.extensions.configure<co.riiid.gradle.GithubExtension> {
-    addAssets("$buildDir/distributions/tachikoma-postfix-utils-${project.version}.tar")
+rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension> {
+    releaseAssets.from("$buildDir/distributions/tachikoma-postfix-utils-${project.version}.tar")
 }
 
 rootProject.tasks["githubRelease"]
