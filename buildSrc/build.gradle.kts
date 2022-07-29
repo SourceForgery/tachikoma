@@ -1,23 +1,23 @@
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
+plugins {
+    idea
+    `kotlin-dsl`
+    `embedded-kotlin`
+    id("com.github.ben-manes.versions") version "0.42.0"
+}
+
 val kotlinVersion = "1.6.10"
 dependencies {
-    // api(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.5.2"))
-    // api(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom:$embeddedKotlinVersion"))
-
-
-    implementation("co.riiid:gradle-github-plugin:0.4.2") {
-        exclude(group = "xerces", module = "xercesImpl")
-    }
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.18")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:10.2.1")
     implementation("io.ebean:ebean-gradle-plugin:12.15.0")
-    implementation("net.researchgate:gradle-release:2.8.1")
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
     implementation("org.junit.platform:junit-platform-gradle-plugin:1.2.0")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.42.0")
     implementation("org.apache.commons:commons-compress:1.21")
+    api("com.github.breadmoirai:github-release:2.4.1")
 }
 
 configurations.all {
@@ -50,13 +50,6 @@ repositories {
     gradlePluginPortal()
 }
 
-@Suppress("UnstableApiUsage")
-plugins {
-    idea
-    `kotlin-dsl`
-    `embedded-kotlin`
-    id("com.github.ben-manes.versions") version "0.42.0"
-}
 
 group = "com.tachikoma"
 
@@ -69,33 +62,4 @@ configure<IdeaModel> {
 
 kotlinDslPluginOptions {
     jvmTarget.set("11")
-}
-
-gradlePlugin {
-    plugins {
-        register("docker") {
-            id = "docker"
-            implementationClass = "se.transmode.gradle.plugins.docker.DockerPlugin"
-        }
-        register("tachikoma.docker") {
-            id = "tachikoma.docker"
-            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaDockerPlugin"
-        }
-        register("tachikoma.grpc") {
-            id = "tachikoma.grpc"
-            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaGrpcPlugin"
-        }
-        register("tachikoma.java") {
-            id = "tachikoma.java"
-            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaJavaPlugin"
-        }
-        register("tachikoma.kotlin") {
-            id = "tachikoma.kotlin"
-            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaKotlinPlugin"
-        }
-        register("tachikoma.release") {
-            id = "tachikoma.release"
-            implementationClass = "com.sourceforgery.tachikoma.buildsrc.TachikomaReleasePlugin"
-        }
-    }
 }

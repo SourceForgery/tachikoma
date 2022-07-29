@@ -1,5 +1,5 @@
 plugins {
-    id("tachikoma.kotlin")
+    `tachikoma-kotlin`
 }
 
 evaluationDependsOn(":tachikoma-backend-api-proto")

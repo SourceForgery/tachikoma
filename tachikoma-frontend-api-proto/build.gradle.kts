@@ -1,5 +1,5 @@
 plugins {
-    id("tachikoma.java")
+    `tachikoma-java`
 }
 
 sourceSets {
@@ -17,8 +17,8 @@ val zipProtoc by tasks.registering(Zip::class) {
     destinationDirectory.set(file("$buildDir/libs/"))
 }
 
-rootProject.extensions.getByType(co.riiid.gradle.GithubExtension::class.java).apply {
-    addAssets("$buildDir/libs/tachikoma-frontend-api-proto-${project.version}.zip")
+rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension> {
+    releaseAssets.from("$buildDir/libs/tachikoma-frontend-api-proto-${project.version}.zip")
 }
 
 tasks["assemble"].dependsOn(zipProtoc)

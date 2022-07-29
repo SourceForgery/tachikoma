@@ -1,5 +1,5 @@
 plugins {
-    id("tachikoma.kotlin")
+    `tachikoma-kotlin`
 }
 
 System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")

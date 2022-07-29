@@ -49,6 +49,3 @@ abstract class DockerPluginExtension {
         const val DEFAULT_IMAGE: String = "ubuntu"
     }
 }
-
-val Project.dockerPluginExtension: DockerPluginExtension
-    get() = extensions[DockerPlugin.EXTENSION_NAME] as DockerPluginExtension

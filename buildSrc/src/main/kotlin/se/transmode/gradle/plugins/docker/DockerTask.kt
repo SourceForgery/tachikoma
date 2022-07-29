@@ -116,7 +116,7 @@ abstract class DockerTask : DefaultTask() {
     abstract val apiEmail: Property<String>
 
     init {
-        val extension = project.extensions[DockerPlugin.EXTENSION_NAME] as DockerPluginExtension
+        val extension = project.extensions["docker"] as DockerPluginExtension
         applicationName.convention(project.provider { project.name })
         imageTag.convention(
             applicationName.map { applicationName ->

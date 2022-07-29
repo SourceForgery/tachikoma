@@ -1,3 +1,3 @@
 plugins {
-    id("tachikoma.grpc")
+    `tachikoma-grpc`
 }
