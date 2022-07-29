@@ -157,7 +157,7 @@ stringData:
     backend backend
       balance roundrobin
       option httpchk
-      http-check send meth GET uri https://tachikoma/health
+      http-check send meth GET uri /health
       server server1 tachikoma-webserver-svc.default.svc.cluster.local:443 ssl verify none alpn h2 check check-alpn http/1.1
       redirect scheme https if !{ ssl_fc }
 
