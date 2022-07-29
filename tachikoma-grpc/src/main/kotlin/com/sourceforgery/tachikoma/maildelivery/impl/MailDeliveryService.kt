@@ -320,7 +320,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         if (request.replyTo.email.isNotBlank()) {
             val replyToMailDomain = request.replyTo.toEmail().domain.mailDomain
             val fromMailDomain = request.from.toNamedEmail().address.domain.mailDomain
-            if (replyToMailDomain !== fromMailDomain) {
+            if (replyToMailDomain != fromMailDomain) {
                 throw IllegalArgumentException("Reply-to email domain $replyToMailDomain not same as from email domain $fromMailDomain")
             }
             message.replyTo = arrayOf(InternetAddress(request.replyTo.email))
