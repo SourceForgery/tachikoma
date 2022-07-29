@@ -100,6 +100,10 @@ allprojects {
             isWarnings = true
         }
     }
+
+    tasks.withType<GenerateModuleMetadata> {
+        suppressedValidationErrors.add("enforced-platform")
+    }
 }
 
 group = "com.sourceforgery.tachikoma"
