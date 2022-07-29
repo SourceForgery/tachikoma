@@ -1,5 +1,4 @@
 import com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension
-import org.gradle.plugins.ide.idea.model.IdeaModel
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.time.Clock
@@ -96,7 +95,7 @@ allprojects {
     tasks.withType<JavaCompile> {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
-        options {
+        options.apply {
             isWarnings = true
         }
     }
