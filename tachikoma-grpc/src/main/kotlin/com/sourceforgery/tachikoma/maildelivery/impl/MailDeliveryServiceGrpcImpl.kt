@@ -2,37 +2,45 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
+import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.exceptions.NotFoundException
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.GetIncomingEmailRequest
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailOrKeepAlive
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpcKt
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.SearchIncomingEmailsRequest
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import org.kodein.di.provider
 
-internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliveryServiceGrpcKt.MailDeliveryServiceCoroutineImplBase(), DIAware {
+internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
+    MailDeliveryServiceGrpcKt.MailDeliveryServiceCoroutineImplBase(), DIAware {
 
     private val mailDeliveryService: MailDeliveryService by instance()
     private val incomingEmailService: IncomingEmailService by instance()
     private val authentication: () -> Authentication by provider()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
+    private val scope: TachikomaScope by instance()
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun getIncomingEmails(request: Empty): Flow<IncomingEmail> =
         streamIncomingEmails(IncomingEmailParameters.getDefaultInstance())
 
-    override fun streamIncomingEmails(request: IncomingEmailParameters) = flow<IncomingEmail> {
+    override fun streamIncomingEmails(request: IncomingEmailParameters) = flow {
         val auth = authentication()
         auth.requireFrontend()
         LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
@@ -43,6 +51,34 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) : MailDeliverySe
                 accountId = auth.accountId,
                 parameters = request
             )
+        )
+    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+
+    override fun streamIncomingEmailsWithKeepAlive(request: IncomingEmailParameters) = flow {
+        val keepAlive = IncomingEmailOrKeepAlive.newBuilder()
+            .setKeepAlive(Empty.getDefaultInstance())
+            .build()
+
+        val auth = authentication()
+        auth.requireFrontend()
+        LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
+        scope.launch {
+            while (true) {
+                delay(30_000L)
+                emit(keepAlive)
+            }
+        }
+        emitAll(
+            incomingEmailService.streamIncomingEmails(
+                authenticationId = auth.authenticationId,
+                mailDomain = auth.mailDomain,
+                accountId = auth.accountId,
+                parameters = request
+            ).map {
+                IncomingEmailOrKeepAlive.newBuilder()
+                    .setIncomingEmail(it)
+                    .build()
+            }
         )
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
