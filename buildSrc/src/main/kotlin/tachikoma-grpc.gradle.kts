@@ -1,3 +1,4 @@
+import org.gradle.plugins.ide.idea.model.IdeaModel
 import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.plugins
@@ -11,8 +12,9 @@ import java.net.URL
 
 plugins {
     id("com.google.protobuf")
-    `kotlin`
+    kotlin("jvm")
     id("tachikoma-java")
+    `idea`
 }
 
 tasks.withType<KotlinCompile> {
@@ -49,6 +51,17 @@ dependencies {
     implementation("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion")
 }
 
+extensions.getByType<IdeaModel>().apply {
+    module {
+        outputDir = file("build/idea-out")
+        testOutputDir = file("build/idea-testout")
+        generatedSourceDirs.add(file("$buildDir/generated/source/proto/main/java/"))
+        generatedSourceDirs.add(file("$buildDir/generated/source/proto/main/grpc/"))
+
+        // TODO Can this be removed?
+        scopes["COMPILE"]!!["plus"]!!.add(configurations["protobuf"])
+    }
+}
 
 // sourceSets {
 //     "main" {
