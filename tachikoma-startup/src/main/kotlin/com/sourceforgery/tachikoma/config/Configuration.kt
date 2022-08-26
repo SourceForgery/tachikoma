@@ -25,4 +25,5 @@ internal class Configuration :
     override val sslCertKeyFile by readConfig("SSL_CERT_KEY_FILE", "")
     override val mailDomains by readListConfig("MAIL_DOMAINS", listOf(MailDomain("example.com")))
     override val unsubscribeDomainOverride by readConfig("UNSUBSCRIBE_DOMAIN_OVERRIDE", null as MailDomain?)
+    override val overridingClientIpHeader by readConfig("OVERRIDING_REMOTE_IP_HEADER", "")
 }

@@ -14,12 +14,15 @@ import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.databaseModule
 import com.sourceforgery.tachikoma.grpcModule
 import com.sourceforgery.tachikoma.kodein.withNewDatabaseSessionScope
+import com.sourceforgery.tachikoma.memoizeWithExpiration
 import com.sourceforgery.tachikoma.mq.JobWorker
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.mq.mqModule
 import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.restModule
 import com.sourceforgery.tachikoma.startup.startupModule
+import com.sourceforgery.tachikoma.tracking.REMOTE_IP_ATTRIB
+import com.sourceforgery.tachikoma.tracking.RemoteIP
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
@@ -43,6 +46,7 @@ import java.io.File
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
+import kotlin.time.Duration.Companion.seconds
 
 class WebServerStarter(override val di: DI) : DIAware {
     private val exceptionHandler: RestExceptionHandlerFunction by instance()
@@ -55,30 +59,41 @@ class WebServerStarter(override val di: DI) : DIAware {
     private val mqSequenceFactory: MQSequenceFactory by instance()
     private val database: Database by instance()
     private val requestScoped: HttpRequestScopedDecorator by instance()
+    private val remoteIP: RemoteIP by instance()
 
     private fun startServerInBackground(): CompletableFuture<Void> {
-
+        val externalServicesCheck: Boolean by memoizeWithExpiration(5.seconds) {
+            mqSequenceFactory.alive() &&
+                database.sqlQuery("SELECT 1").findOne() != null
+        }
         val healthService = HealthCheckService.builder()
-            .checkers(
-                HealthChecker { mqSequenceFactory.alive() },
-                HealthChecker { database.sqlQuery("SELECT 1").findOne() != null }
-            )
+            .checkers(HealthChecker { externalServicesCheck })
             .longPolling(0)
             .build()
 
         // Order matters!
-        val combined = AccessLogWriter.combined()
+        val custom = AccessLogWriter.custom(
+            """%{remote.ip}j "%r %s" %{requestLength}L bytes ua:%{User-Agent}i"""
+        )
         val serverBuilder = Server.builder()
             .service("/health", healthService)
             .accessLogWriter(
                 { requestLog ->
                     val path = (requestLog.context() as ServiceRequestContext).path()
                     if (path != "/health") {
-                        combined.log(requestLog)
+                        custom.log(requestLog)
                     }
                 },
                 true
             )
+            .decorator { delegate, ctx, req ->
+                try {
+                    ctx.setAttr(REMOTE_IP_ATTRIB, remoteIP.remoteAddress)
+                } catch (e: Exception) {
+                    LOGGER.error(e) { e }
+                }
+                delegate.serve(ctx, req)
+            }
 
         for (restService in restServices) {
             serverBuilder.annotatedService("/", restService, exceptionHandler)

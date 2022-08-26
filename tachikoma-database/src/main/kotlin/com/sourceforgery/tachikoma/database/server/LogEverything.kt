@@ -6,7 +6,7 @@ import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.bindings.ScopeCloseable
 import java.time.Duration
 
-class LogEverything() : InvokeCounter, ScopeCloseable {
+class LogEverything : InvokeCounter, ScopeCloseable {
 
     var slowThreshold = Duration.ofSeconds(1)!!
 
