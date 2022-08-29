@@ -5,4 +5,4 @@ import io.netty.util.AttributeKey
 interface RemoteIP {
     val remoteAddress: String
 }
-val REMOTE_IP_ATTRIB = AttributeKey.newInstance<String>("remote.ip")
+val REMOTE_IP_ATTRIB = AttributeKey.valueOf<String>("remote.ip")
