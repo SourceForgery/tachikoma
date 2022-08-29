@@ -5,9 +5,13 @@ option java_multiple_files = true;
 package com.sourceforgery.tachikoma.grpc.frontend.tracking;
 
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+import "google/protobuf/empty.proto";
 
 service DeliveryNotificationService {
-    rpc NotificationStream(NotificationStreamParameters) returns (stream EmailNotification);
+    rpc NotificationStreamWithKeepAlive(NotificationStreamParameters) returns (stream EmailNotificationOrKeepAlive);
+    rpc NotificationStream(NotificationStreamParameters) returns (stream EmailNotification) {
+        option deprecated = true;
+    };
 }
 
 // Parameters for the notification stream
@@ -21,4 +25,11 @@ message NotificationStreamParameters {
     // Whether to include metrics in the response or not.
     // Like all bools, defaults to false
     bool include_metrics_data = 103;
+}
+
+message EmailNotificationOrKeepAlive {
+    oneof notification_or_keepalive {
+        EmailNotification email_notification = 1;
+        google.protobuf.Empty keep_alive = 2;
+    }
 }

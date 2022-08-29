@@ -10,6 +10,7 @@ import com.sourceforgery.tachikoma.common.NamedEmail
 import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.commonModule
 import com.sourceforgery.tachikoma.config.TrackingConfig
+import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
@@ -33,6 +34,8 @@ import com.sourceforgery.tachikoma.users.UserService
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.Database
+import io.mockk.every
+import io.mockk.mockk
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -72,6 +75,9 @@ class UnsubscribeRestTest : DIAware {
                     get() = URI.create("http://localhost:${server.activeLocalPort()}/")
             }
         )
+        val webserverConfigMock: WebServerConfig = mockk()
+        every { webserverConfigMock.overridingClientIpHeader } returns ""
+        bind<WebServerConfig>() with instance(webserverConfigMock)
     }
 
     val userService: UserService by instance()

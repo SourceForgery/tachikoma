@@ -9,6 +9,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,7 +55,9 @@ class MailSender(
             while (true) {
                 LOGGER.info { "Connecting. Trying to listen for emails" }
                 try {
-                    stub.getEmails(channel.receiveAsFlow())
+                    stub.getEmailsWithKeepAlive(channel.receiveAsFlow())
+                        .filter { it.hasEmailMessage() }
+                        .map { it.emailMessage }
                         .collect {
                             val status = sendEmail(it)
                             LOGGER.info { "Queued email: ${it.emailId} for delivery with status ${status.success} and queueId ${status.queueId}" }

@@ -19,7 +19,10 @@ service MailDeliveryService {
         option deprecated = true;
     };
 
-    rpc StreamIncomingEmails (IncomingEmailParameters) returns (stream IncomingEmail);
+    rpc StreamIncomingEmailsWithKeepAlive (IncomingEmailParameters) returns (stream IncomingEmailOrKeepAlive);
+    rpc StreamIncomingEmails (IncomingEmailParameters) returns (stream IncomingEmail) {
+        option deprecated = true;
+    };
 
     rpc GetIncomingEmail (GetIncomingEmailRequest) returns (IncomingEmail);
 
@@ -308,6 +311,13 @@ message IncomingEmail {
     // and very prone to problems with different languages and unusual
     // email clients.
     string extracted_text_message_from_reply_chain = 306;
+}
+
+message IncomingEmailOrKeepAlive {
+    oneof email_or_keep_alive {
+        IncomingEmail incoming_email = 1;
+        google.protobuf.Empty keep_alive = 2;
+    }
 }
 
 message IncomingEmailParameters {

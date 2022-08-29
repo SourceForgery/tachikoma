@@ -116,6 +116,6 @@ fun Project.replaceDockerTask(config: DockerTask.() -> Unit) {
 val DockerTask.combinedTag: Provider<DockerTag>
     get() {
         return project.provider {
-            DockerTag("$imageTag")
+            DockerTag("${imageTag.get()}")
         }
     }

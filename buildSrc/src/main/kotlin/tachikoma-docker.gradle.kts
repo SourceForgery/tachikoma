@@ -39,16 +39,18 @@ val dockerTask by tasks.registering { }
 val pushDockerSnapshot by tasks.registering {
     dependsOn(dockerTask)
     val snapshotDockerRepo: String? by project
+    val snapshotDockerVersion: String? by project
+    inputs.property("snapshotDockerRepo", snapshotDockerRepo)
+    inputs.property("snapshotDockerVersion", snapshotDockerVersion)
     outputs.upToDateWhen {
         // Never up to date since we don't know the hash of the dockerTask task
         // without running lots of commands that are as slow as running the actual task
         false
     }
     val repo by lazy {
-        requireNotNull(snapshotDockerRepo) { "Need to have snapshotDockerRepo set to a repo (e.g. -DsnapshotDockerRepo=gcr.io/tachikoma-staging/ that will be used in the deployment yaml" }
+        requireNotNull(snapshotDockerRepo) { "Need to have snapshotDockerRepo set to a repo (e.g. -PsnapshotDockerRepo=gcr.io/tachikoma-staging/ that will be used in the deployment yaml" }
             .trimEnd('/')
     }
-    val snapshotDockerVersion: String? by project
 
     // Make sure that all images are tagged
     val dockerTasks = dockerTask.get()
@@ -59,9 +61,9 @@ val pushDockerSnapshot by tasks.registering {
         // Must be here for.. reasons?
         val originalImageTag = aDockerTask.imageTag
         doLast {
-            val snapshotTag = "$repo/${aDockerTask.applicationName}:${snapshotDockerVersion ?: version}"
+            val snapshotTag = "$repo/${aDockerTask.applicationName.get()}:${snapshotDockerVersion ?: version}"
             exec {
-                commandLine("/usr/bin/env", "docker", "tag", originalImageTag, snapshotTag)
+                commandLine("/usr/bin/env", "docker", "tag", originalImageTag.get(), snapshotTag)
             }
             exec {
                 commandLine("/usr/bin/env", "docker", "push", snapshotTag)

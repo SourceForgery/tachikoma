@@ -10,6 +10,7 @@ dependencies {
     testImplementation(project(":tachikoma-grpc"))
     testImplementation(project(":tachikoma-rest"))
     testImplementation(project(":tachikoma-webserver"))
+    testImplementation(project(":tachikoma-startup"))
 
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     testImplementation("com.google.guava:guava:$guavaVersion")
