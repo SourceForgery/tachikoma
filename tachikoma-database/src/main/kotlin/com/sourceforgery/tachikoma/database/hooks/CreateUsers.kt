@@ -39,7 +39,7 @@ class CreateUsers(override val di: DI) : DIAware {
                                 role = AuthenticationRole.FRONTEND_ADMIN,
                                 addApiToken = true
                             )
-                            LOGGER.error { "Creating new frontend api with login:password 'gproto+${uri.scheme}://$mailDomain:${frontendAuth.apiToken}@${uri.host}'" }
+                            LOGGER.error { "Creating new frontend api with login:password 'gproto+${uri.scheme}://$mailDomain:${frontendAuth.apiToken}@${uri.host}:${uri.port}'" }
                             createIncomingEmail(ebeanServer, account)
                         }
                 }

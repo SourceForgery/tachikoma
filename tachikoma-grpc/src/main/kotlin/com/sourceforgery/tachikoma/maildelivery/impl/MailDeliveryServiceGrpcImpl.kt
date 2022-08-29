@@ -14,13 +14,15 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServic
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.SearchIncomingEmailsRequest
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
-import kotlinx.coroutines.delay
+import com.sourceforgery.tachikoma.withKeepAlive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -41,46 +43,32 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
         streamIncomingEmails(IncomingEmailParameters.getDefaultInstance())
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun streamIncomingEmails(request: IncomingEmailParameters) = flow {
+    override fun streamIncomingEmails(request: IncomingEmailParameters) =
+        streamIncomingEmailsWithKeepAlive(request)
+            .filter { it.hasIncomingEmail() }
+            .map { it.incomingEmail }
+
+    override fun streamIncomingEmailsWithKeepAlive(request: IncomingEmailParameters) = channelFlow {
         val auth = authentication()
         auth.requireFrontend()
         LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
-        emitAll(
-            incomingEmailService.streamIncomingEmails(
-                authenticationId = auth.authenticationId,
-                mailDomain = auth.mailDomain,
-                accountId = auth.accountId,
-                parameters = request
-            )
+        withKeepAlive(
+            IncomingEmailOrKeepAlive.newBuilder()
+                .setKeepAlive(Empty.getDefaultInstance())
+                .build()
         )
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
-
-    override fun streamIncomingEmailsWithKeepAlive(request: IncomingEmailParameters) = flow {
-        val keepAlive = IncomingEmailOrKeepAlive.newBuilder()
-            .setKeepAlive(Empty.getDefaultInstance())
-            .build()
-
-        val auth = authentication()
-        auth.requireFrontend()
-        LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
-        scope.launch {
-            while (true) {
-                delay(30_000L)
-                emit(keepAlive)
-            }
+        incomingEmailService.streamIncomingEmails(
+            authenticationId = auth.authenticationId,
+            mailDomain = auth.mailDomain,
+            accountId = auth.accountId,
+            parameters = request
+        ).map {
+            IncomingEmailOrKeepAlive.newBuilder()
+                .setIncomingEmail(it)
+                .build()
+        }.collect {
+            send(it)
         }
-        emitAll(
-            incomingEmailService.streamIncomingEmails(
-                authenticationId = auth.authenticationId,
-                mailDomain = auth.mailDomain,
-                accountId = auth.accountId,
-                parameters = request
-            ).map {
-                IncomingEmailOrKeepAlive.newBuilder()
-                    .setIncomingEmail(it)
-                    .build()
-            }
-        )
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
     override suspend fun getIncomingEmail(request: GetIncomingEmailRequest): IncomingEmail {

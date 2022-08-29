@@ -4,7 +4,6 @@ import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpcKt
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import java.net.URI
 import java.time.Duration
@@ -24,7 +23,7 @@ fun main() {
 
     try {
         runBlocking {
-            stub.notificationStream(NotificationStreamParameters.getDefaultInstance())
+            stub.notificationStreamWithKeepAlive(NotificationStreamParameters.getDefaultInstance())
                 .collect {
                     System.err.println("Got email: " + JsonFormat.printer().print(it))
                 }

@@ -8,12 +8,12 @@ import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpcKt
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.EmailNotificationOrKeepAlive
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
-import kotlinx.coroutines.delay
+import com.sourceforgery.tachikoma.withKeepAlive
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -29,53 +29,37 @@ internal class DeliveryNotificationServiceGrpcImpl(
     private val authentication: () -> Authentication by provider()
     private val scope: TachikomaScope by instance()
 
-    override fun notificationStream(request: NotificationStreamParameters): Flow<EmailNotification> = flow {
-        try {
-            val auth = authentication()
-            auth.requireFrontend()
-            LOGGER.info { "Connected, user ${auth.authenticationId} getting delivery notifications from ${auth.mailDomain}" }
-            emitAll(
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun notificationStream(request: NotificationStreamParameters): Flow<EmailNotification> =
+        notificationStreamWithKeepAlive(request)
+            .filter { it.hasEmailNotification() }
+            .map { it.emailNotification }
+
+    override fun notificationStreamWithKeepAlive(request: NotificationStreamParameters) =
+        channelFlow {
+            try {
+                val auth = authentication()
+                auth.requireFrontend()
+                LOGGER.info { "Connected, user ${auth.authenticationId} getting delivery notifications with keep-alive from ${auth.mailDomain}" }
+                withKeepAlive(
+                    EmailNotificationOrKeepAlive.newBuilder()
+                        .setKeepAlive(Empty.getDefaultInstance())
+                        .build()
+                )
                 deliveryNotificationService.notificationStream(
                     request = request,
                     authenticationId = auth.authenticationId,
                     mailDomain = auth.mailDomain,
                     accountId = auth.accountId
                 )
-            )
-        } catch (e: Exception) {
-            throw grpcExceptionMap.findAndConvertAndLog(e)
-        }
-    }
-
-    override fun notificationStreamWithKeepAlive(request: NotificationStreamParameters) =
-        flow {
-            val keepAlive = EmailNotificationOrKeepAlive.newBuilder()
-                .setKeepAlive(Empty.getDefaultInstance())
-                .build()
-
-            try {
-                val auth = authentication()
-                auth.requireFrontend()
-                LOGGER.info { "Connected, user ${auth.authenticationId} getting delivery notifications with keep-alive from ${auth.mailDomain}" }
-                scope.launch {
-                    while (true) {
-                        delay(30_000L)
-                        emit(keepAlive)
+                    .map {
+                        EmailNotificationOrKeepAlive.newBuilder()
+                            .setEmailNotification(it)
+                            .build()
                     }
-                }
-                emitAll(
-                    deliveryNotificationService.notificationStream(
-                        request = request,
-                        authenticationId = auth.authenticationId,
-                        mailDomain = auth.mailDomain,
-                        accountId = auth.accountId
-                    )
-                        .map {
-                            EmailNotificationOrKeepAlive.newBuilder()
-                                .setEmailNotification(it)
-                                .build()
-                        }
-                )
+                    .collect {
+                        send(it)
+                    }
             } catch (e: Exception) {
                 throw grpcExceptionMap.findAndConvertAndLog(e)
             }
