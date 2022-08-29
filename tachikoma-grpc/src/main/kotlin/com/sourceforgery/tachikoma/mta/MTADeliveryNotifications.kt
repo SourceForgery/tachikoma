@@ -93,6 +93,7 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             "5.5.0", // Unknown recipient
             "5.4.4", // Unable to route??
             "5.2.2", // Mailbox full
+            "5.1.0", // Blocked by recipient
             "5.1.1", // Unknown recipient
             "5.7.1", // Unknown recipient
             "5.3.0" // Spam
@@ -100,6 +101,7 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
         private val softBounceList = listOf(
             "4.0.0", // Generic soft bounce
             "4.1.0", // Rate limited
+            "4.1.8", // Domain is not resolving. This is a most likely a major problem
             "4.2.0", // Temporarily deferred due to user complaints (SPAM?)
             "4.2.2", // Mailbox is full
             "4.3.2", // Less used. System is shutting down/going offline
