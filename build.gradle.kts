@@ -32,10 +32,11 @@ val replaceVersion by tasks.registering(Copy::class) {
 tasks.assemble {
     dependsOn(replaceVersion)
 }
+
 val publishSnapshot by tasks.registering {
     dependsOn(replaceVersion)
 }
-tasks.githubRelease{
+tasks.githubRelease {
     dependsOn(replaceVersion)
 }
 
