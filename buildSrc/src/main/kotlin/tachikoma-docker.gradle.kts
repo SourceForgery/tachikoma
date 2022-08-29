@@ -77,4 +77,4 @@ rootProject.tasks.named("publishSnapshot") {
 }
 
 tasks["build"].dependsOn(dockerTask)
-rootProject.tasks["publish"].dependsOn(dockerTask)
+rootProject.tasks["assemble"].dependsOn(dockerTask)

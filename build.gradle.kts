@@ -8,7 +8,6 @@ plugins {
     id("net.researchgate.release") version "2.8.1"
     id("com.github.breadmoirai.github-release")
     `java-library`
-    `maven-publish`
 }
 
 val replaceVersion by tasks.registering(Copy::class) {
@@ -30,14 +29,22 @@ val replaceVersion by tasks.registering(Copy::class) {
     includeEmptyDirs = false
 }
 
-tasks["assemble"].dependsOn(replaceVersion)
+tasks.assemble {
+    dependsOn(replaceVersion)
+}
 val publishSnapshot by tasks.registering {
     dependsOn(replaceVersion)
 }
-rootProject.tasks["githubRelease"].dependsOn(replaceVersion)
+tasks.githubRelease{
+    dependsOn(replaceVersion)
+}
 
 rootProject.extensions.configure<GithubReleaseExtension> {
     releaseAssets.from("$buildDir/kubernetes/deployment-webserver.yaml")
+}
+
+val publish by tasks.registering {
+    dependsOn(tasks.assemble)
 }
 
 @Suppress("UnstableApiUsage")
@@ -109,8 +116,6 @@ group = "com.sourceforgery.tachikoma"
 
 val currentTag = System.getenv("CIRCLE_TAG") ?: ""
 
-val publishTask = tasks.getByName("publish")
-
 if (currentTag.isNotEmpty()) {
     fun gitHistorySinceLastTag(): String =
         ByteArrayOutputStream().use { baos ->
@@ -129,7 +134,7 @@ if (currentTag.isNotEmpty()) {
 
     // Only activate when we're building a tag (release)
     println("Trying to build release")
-    publishTask.finalizedBy("githubRelease")
+    tasks["publish"].finalizedBy("githubRelease")
     githubRelease {
         token(requireNotNull(System.getenv("GITHUB_API_TOKEN")) { "GITHUB_API_TOKEN not set" })
         owner.set("SourceForgery")
@@ -154,18 +159,6 @@ val dockerPushRelease = when {
     currentBranch == "master" && System.getenv("DOCKER_PUSH")?.toBoolean() == true -> true
     currentTag.isNotEmpty() -> true
     else -> false
-}
-
-publishing {
-    repositories {
-        maven {
-            url = uri("https://youcruit.jfrog.io/artifactory/youcruit")
-            credentials {
-                username = System.getenv("ARTIFACTORY_USERNAME") ?: "tachikoma"
-                password = System.getenv("ARTIFACTORY_PASSWORD") ?: "xxxx"
-            }
-        }
-    }
 }
 
 rootProject.extensions.extraProperties["dockerPush"] = dockerPushRelease

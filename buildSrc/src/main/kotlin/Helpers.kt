@@ -22,9 +22,6 @@ fun Project.duplicateClassesChecker(configure: DuplicateClassesExtension.() -> U
 val googleNativePrefix = OperatingSystem.current().nativePrefix
     .replace("amd64", "x86_64")
 
-fun Project.publishing(configure: org.gradle.api.publish.PublishingExtension.() -> Unit): Unit =
-    (this as org.gradle.api.plugins.ExtensionAware).extensions.configure("publishing", configure)
-
 /** This also handles the groovy 'with' function in a hacky manner */
 fun <T> Any.delegateClosureOfHack(action: T.() -> Unit) =
     object : Closure<Unit>(this, this) {
