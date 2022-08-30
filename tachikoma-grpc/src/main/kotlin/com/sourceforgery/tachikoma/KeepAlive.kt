@@ -8,7 +8,7 @@ fun <T> ProducerScope<T>.withKeepAlive(keepAlive: T) {
     launch {
         try {
             while (true) {
-                delay(30_000L)
+                delay(10_000L)
                 send(keepAlive)
             }
         } catch (_: Exception) {
