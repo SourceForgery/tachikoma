@@ -15,7 +15,9 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.SearchIncomingEmailsRequest
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.withKeepAlive
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
@@ -70,6 +72,7 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
             send(it)
         }
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+        .buffer(Channel.RENDEZVOUS)
 
     override suspend fun getIncomingEmail(request: GetIncomingEmailRequest): IncomingEmail {
         try {

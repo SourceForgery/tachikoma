@@ -9,7 +9,9 @@ import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationSe
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.EmailNotificationOrKeepAlive
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.NotificationStreamParameters
 import com.sourceforgery.tachikoma.withKeepAlive
+import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -64,6 +66,7 @@ internal class DeliveryNotificationServiceGrpcImpl(
                 throw grpcExceptionMap.findAndConvertAndLog(e)
             }
         }
+            .buffer(RENDEZVOUS)
 
     companion object {
         private val LOGGER = logger()
