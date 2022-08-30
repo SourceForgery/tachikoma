@@ -5,16 +5,19 @@ import com.sourceforgery.tachikoma.logging.InvokeCounter
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.bindings.ScopeCloseable
 import java.time.Duration
+import java.util.Collections
 
 class LogEverything : InvokeCounter, ScopeCloseable {
 
     var slowThreshold = Duration.ofSeconds(1)!!
 
-    private val loggedQueries = object : LinkedHashMap<String, Long>() {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
-            return size > 200
+    private val loggedQueries = Collections.synchronizedMap(
+        object : LinkedHashMap<String, Long>() {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
+                return size > 200
+            }
         }
-    }
+    )
 
     fun dump() {
         if (LOGGER.delegate.isWarnEnabled) {

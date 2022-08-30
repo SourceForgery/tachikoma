@@ -4,7 +4,9 @@ import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.withKeepAlive
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -49,7 +51,7 @@ internal class MTAEmailQueueServiceGrpcImpl(
         } catch (e: Exception) {
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
-    }
+    }.buffer(Channel.RENDEZVOUS)
 
     override suspend fun incomingEmail(request: IncomingEmailMessage): MailAcceptanceResult =
         try {
