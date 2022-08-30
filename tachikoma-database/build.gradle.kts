@@ -6,7 +6,7 @@ dependencies {
     api(project(":tachikoma-internal-api"))
     api(project(":tachikoma-database-api"))
 
-    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.1.0")
+    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.2.0")
     implementation("io.ebean:ebean:$ebeanVersion")
     implementation("io.ebean:ebean-querybean:$querybeanVersion")
 
