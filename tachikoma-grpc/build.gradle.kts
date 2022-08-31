@@ -14,6 +14,7 @@ dependencies {
     implementation("com.sun.mail:jakarta.mail:$jakartaMailVersion")
     implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutineVersion")
+    implementation("commons-lang:commons-lang:1.0.1")
     implementation("org.jsoup:jsoup:$jsoupVersion")
 
     implementation(project(":jersey-uri-builder"))

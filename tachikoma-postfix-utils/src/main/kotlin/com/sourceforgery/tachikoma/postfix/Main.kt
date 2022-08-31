@@ -40,7 +40,7 @@ internal constructor(
         10,
         60L,
         TimeUnit.SECONDS,
-        SynchronousQueue()
+        SynchronousQueue(),
     )
 
     private val scope = CoroutineScope(threadPool.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler)

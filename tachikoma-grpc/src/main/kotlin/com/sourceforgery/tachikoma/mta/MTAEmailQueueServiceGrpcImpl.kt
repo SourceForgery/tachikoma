@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.mta
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.withKeepAlive
@@ -8,9 +7,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import org.apache.commons.lang.RandomStringUtils
+import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
@@ -36,7 +36,7 @@ internal class MTAEmailQueueServiceGrpcImpl(
             auth.requireBackend()
             withKeepAlive(
                 EmailMessageOrKeepAlive.newBuilder()
-                    .setKeepAlive(Empty.getDefaultInstance())
+                    .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
                     .build()
             )
             mtaEmailQueueService.getEmails(requests, auth.mailDomain)

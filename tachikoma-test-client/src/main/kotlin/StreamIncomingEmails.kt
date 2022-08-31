@@ -4,7 +4,7 @@ import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpcKt
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.runBlocking
 import java.net.URI
 import java.time.Duration
@@ -24,7 +24,7 @@ fun main() {
 
     try {
         runBlocking {
-            stub.streamIncomingEmails(
+            stub.streamIncomingEmailsWithKeepAlive(
                 IncomingEmailParameters
                     .newBuilder()
                     .setIncludeMessageAttachments(true)
@@ -32,9 +32,18 @@ fun main() {
                     .setIncludeMessageParsedBodies(true)
                     .setIncludeMessageWholeEnvelope(true)
                     .build()
-            ).collect {
-                System.err.println("Got email: " + JsonFormat.printer().print(it))
-            }
+            )
+                .mapNotNull {
+                    if (it.hasIncomingEmail()) {
+                        it.incomingEmail
+                    } else {
+                        System.err.println(it)
+                        null
+                    }
+                }
+                .collect {
+                    System.err.println("Got email: " + JsonFormat.printer().print(it))
+                }
             System.err.println("On complete called!")
         }
     } catch (e: Exception) {

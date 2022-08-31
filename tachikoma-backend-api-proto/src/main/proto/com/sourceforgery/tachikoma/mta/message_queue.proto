@@ -4,8 +4,6 @@ option java_multiple_files = true;
 
 package com.sourceforgery.tachikoma.mta;
 
-import "google/protobuf/empty.proto";
-
 service MTAEmailQueue {
     // The postfix mailer daemon will hang waiting for emails via this stream
     // Once the postfix mailer daemon gets an email, it will start
@@ -31,7 +29,7 @@ message EmailMessage {
 message EmailMessageOrKeepAlive {
     oneof email_message_or_keepalive {
         EmailMessage email_message = 1;
-        google.protobuf.Empty keep_alive = 2;
+        string keep_alive = 2;
    }
 }
 

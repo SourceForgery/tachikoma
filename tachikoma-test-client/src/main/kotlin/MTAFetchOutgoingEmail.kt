@@ -6,6 +6,7 @@ import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.runBlocking
 import java.net.URI
@@ -28,7 +29,15 @@ fun main() {
 
     try {
         runBlocking {
-            stub.getEmails(channel.receiveAsFlow())
+            stub.getEmailsWithKeepAlive(channel.receiveAsFlow())
+                .mapNotNull {
+                    if (it.hasEmailMessage()) {
+                        it.emailMessage
+                    } else {
+                        System.err.println(it)
+                        null
+                    }
+                }
                 .collect {
                     // System.err.println("Got email: " + JsonFormat.printer().print(it))
                     for (i in 1..4) {

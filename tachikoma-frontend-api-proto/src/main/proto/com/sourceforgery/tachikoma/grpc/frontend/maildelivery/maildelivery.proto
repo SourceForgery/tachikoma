@@ -316,7 +316,7 @@ message IncomingEmail {
 message IncomingEmailOrKeepAlive {
     oneof email_or_keep_alive {
         IncomingEmail incoming_email = 1;
-        google.protobuf.Empty keep_alive = 2;
+        string keep_alive = 2;
     }
 }
 

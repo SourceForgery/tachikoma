@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import org.apache.commons.lang.RandomStringUtils
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -56,7 +57,7 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
         LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
         withKeepAlive(
             IncomingEmailOrKeepAlive.newBuilder()
-                .setKeepAlive(Empty.getDefaultInstance())
+                .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
                 .build()
         )
         incomingEmailService.streamIncomingEmails(
