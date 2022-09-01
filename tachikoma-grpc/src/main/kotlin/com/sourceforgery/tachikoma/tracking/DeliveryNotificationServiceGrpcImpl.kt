@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import org.apache.commons.lang.RandomStringUtils
 import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -45,7 +46,7 @@ internal class DeliveryNotificationServiceGrpcImpl(
                 LOGGER.info { "Connected, user ${auth.authenticationId} getting delivery notifications with keep-alive from ${auth.mailDomain}" }
                 withKeepAlive(
                     EmailNotificationOrKeepAlive.newBuilder()
-                        .setKeepAlive(Empty.getDefaultInstance())
+                        .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
                         .build()
                 )
                 deliveryNotificationService.notificationStream(
