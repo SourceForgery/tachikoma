@@ -115,7 +115,7 @@ class WebServerStarter(override val di: DI) : DIAware {
             .apply {
                 if (webServerConfig.sslCertChainFile.isNotEmpty() && webServerConfig.sslCertKeyFile.isNotEmpty()) {
                     tls(File(webServerConfig.sslCertChainFile), File(webServerConfig.sslCertKeyFile))
-                    port(8443, SessionProtocol.HTTPS)
+                    port(8070, SessionProtocol.HTTPS, SessionProtocol.HTTP, SessionProtocol.PROXY)
                 } else {
                     port(8070, SessionProtocol.HTTP)
                     LOGGER.warn { "Unsubscribe may not work properly as rfc8058 REQUIRES https" }
