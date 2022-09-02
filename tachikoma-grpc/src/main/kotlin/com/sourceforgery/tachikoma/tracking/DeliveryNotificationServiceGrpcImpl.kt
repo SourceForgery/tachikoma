@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.tracking
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap

@@ -1,16 +1,13 @@
 
-import com.linecorp.armeria.client.Clients
-import com.sourceforgery.jersey.uribuilder.ensureGproto
-import com.sourceforgery.jersey.uribuilder.withoutPassword
+import com.sourceforgery.tachikoma.config.GrpcClientConfig
 import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
 import com.sourceforgery.tachikoma.mta.MTAQueuedNotification
+import com.sourceforgery.tachikoma.provideClientBuilder
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.runBlocking
 import java.net.URI
-import java.time.Duration
 
 fun main() {
     val backendUri = URI.create(
@@ -21,10 +18,17 @@ fun main() {
     val channel = Channel<MTAQueuedNotification>()
 
     val apiToken = backendUri.userInfo
-    val stub = Clients.builder(backendUri.withoutPassword().ensureGproto())
-        .addHeader("x-apitoken", apiToken)
-        .responseTimeout(Duration.ofDays(365))
-        .writeTimeout(Duration.ofDays(365))
+    val configuration = object : GrpcClientConfig {
+        override val tachikomaUrl = URI(
+            System.getenv("TACHI_BACKEND_URI")
+                ?: error("Need to specify env TACHI_BACKEND_URI")
+        )
+        override val insecure: Boolean
+            get() = true
+        override val clientCert = System.getenv("CLIENT_CERT") ?: ""
+        override val clientKey = System.getenv("CLIENT_KEY") ?: ""
+    }
+    val stub = provideClientBuilder(configuration)
         .build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java)
 
     try {

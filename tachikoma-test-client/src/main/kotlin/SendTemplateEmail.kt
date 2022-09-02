@@ -1,31 +1,30 @@
 import com.google.protobuf.Struct
 import com.google.protobuf.Value
 import com.google.protobuf.util.JsonFormat
-import com.linecorp.armeria.client.Clients
-import com.sourceforgery.jersey.uribuilder.ensureGproto
-import com.sourceforgery.jersey.uribuilder.withoutPassword
+import com.sourceforgery.tachikoma.config.GrpcClientConfig
 import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.TemplateBody
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.TemplateEngine
+import com.sourceforgery.tachikoma.provideClientBuilder
 import io.grpc.StatusRuntimeException
 import java.net.URI
-import java.time.Duration
 import java.time.Instant
 
 fun main() {
-    val frontendUri = URI.create(
-        System.getenv("TACHI_FRONTEND_URI")
-            ?: error("Need to specify env TACHI_FRONTEND_URI")
-    )
-
-    val apiToken = frontendUri.userInfo
-    val stub = Clients.builder(frontendUri.withoutPassword().ensureGproto())
-        .addHeader("x-apitoken", apiToken)
-        .responseTimeout(Duration.ofDays(365))
-        .writeTimeout(Duration.ofDays(365))
+    val configuration = object : GrpcClientConfig {
+        override val tachikomaUrl = URI(
+            System.getenv("TACHI_FRONTEND_URI")
+                ?: error("Need to specify env TACHI_FRONTEND_URI")
+        )
+        override val insecure: Boolean
+            get() = true
+        override val clientCert = System.getenv("CLIENT_CERT") ?: ""
+        override val clientKey = System.getenv("CLIENT_KEY") ?: ""
+    }
+    val stub = provideClientBuilder(configuration)
         .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
     val template =

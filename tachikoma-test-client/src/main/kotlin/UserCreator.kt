@@ -1,26 +1,31 @@
 
-import com.linecorp.armeria.client.Clients
-import com.sourceforgery.jersey.uribuilder.ensureGproto
-import com.sourceforgery.jersey.uribuilder.withoutPassword
+import com.sourceforgery.tachikoma.config.GrpcClientConfig
 import com.sourceforgery.tachikoma.grpc.frontend.EmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.AddUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.FrontendUserRole
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.PasswordAuth
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.UserServiceGrpc
+import com.sourceforgery.tachikoma.provideClientBuilder
 import java.net.URI
 import java.util.UUID
 
 fun main(args: Array<String>) {
-    val tachikomaUrl = URI.create(System.getenv("TACHIKOMA_URL"))
-
     val email = args[0]
     if (!email.contains("@")) {
         throw IllegalArgumentException("First argument is not an email")
     }
+    val configuration = object : GrpcClientConfig {
+        override val tachikomaUrl = URI(
+            System.getenv("TACHIKOMA_URL")
+                ?: error("Need to specify env TACHIKOMA_URL")
+        )
+        override val insecure: Boolean
+            get() = true
+        override val clientCert = System.getenv("CLIENT_CERT") ?: ""
+        override val clientKey = System.getenv("CLIENT_KEY") ?: ""
+    }
 
-    val apiToken = tachikomaUrl.userInfo
-    val stub = Clients.builder(tachikomaUrl.withoutPassword().ensureGproto())
-        .addHeader("x-apitoken", apiToken)
+    val stub = provideClientBuilder(configuration)
         .build(UserServiceGrpc.UserServiceBlockingStub::class.java)
 
     try {
@@ -33,7 +38,7 @@ fun main(args: Array<String>) {
                     }.build()
                     recipientOverride = EmailAddress.newBuilder().setEmail(args[0]).build()
                     active = true
-                    mailDomain = tachikomaUrl.authority.substringBefore(":")
+                    mailDomain = configuration.tachikomaUrl.authority.substringBefore(":")
                     authenticationRole = FrontendUserRole.FRONTEND
                     addApiToken = true
                 }.build()

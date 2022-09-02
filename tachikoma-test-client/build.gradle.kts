@@ -8,6 +8,7 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java-util:$protocVersion")
     implementation(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
+    implementation(project(":tachikoma-postfix-utils"))
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
     implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
