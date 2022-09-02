@@ -27,6 +27,38 @@ spec:
             - name: webserver-port
               protocol: TCP
               containerPort: 8070
+          readinessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /api/ready
+              httpHeaders:
+                  # Make sure health checks aren't traced
+                - name: traceparent
+                  value: 00-11111111111111111111111111111111-1111111111111111-00
+              port: 8070
+              scheme: HTTP
+          livenessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            httpGet:
+              path: /health
+              port: 8070
+              scheme: HTTP
+              httpHeaders:
+                  # Make sure health checks aren't traced
+                - name: traceparent
+                  value: 00-11111111111111111111111111111111-2222222222222222-00
+          startupProbe:
+            failureThreshold: 50
+            initialDelaySeconds: 10
+            httpGet:
+              path: /health
+              port: 8070
+              scheme: HTTP
+              httpHeaders:
+                # Make sure health checks aren't traced
+                - name: traceparent
+                  value: 00-11111111111111111111111111111111-2222222222222222-00
           volumeMounts:
             - name: webserver-config
               mountPath: "/etc/tachikoma/config/"
