@@ -81,6 +81,12 @@ spec:
                   key: SSL_CERT_KEY_FILE
                   name: tachikoma-webserver-config
                   optional: true
+            - name: JAVA_OPTS
+              valueFrom:
+                secretKeyRef:
+                  key: JAVA_OPTS
+                  name: tachikoma-webserver-config
+                  optional: true
       volumes:
         - name: webserver-config
           secret:
@@ -103,6 +109,10 @@ spec:
   type: NodePort
   ports:
     - name: http2
+      protocol: TCP
+      port: 443
+      targetPort: 8070
+    - name: http
       protocol: TCP
       port: 80
       targetPort: 8070
