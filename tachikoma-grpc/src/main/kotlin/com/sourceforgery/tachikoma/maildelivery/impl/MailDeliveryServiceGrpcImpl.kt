@@ -43,11 +43,10 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
     private val grpcExceptionMap: GrpcExceptionMap by instance()
     private val scope: TachikomaScope by instance()
 
-    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun getIncomingEmails(request: Empty): Flow<IncomingEmail> =
         streamIncomingEmails(IncomingEmailParameters.getDefaultInstance())
 
-    @Suppress("OVERRIDE_DEPRECATION")
     override fun streamIncomingEmails(request: IncomingEmailParameters) =
         streamIncomingEmailsWithKeepAlive(request)
             .filter { it.hasIncomingEmail() }

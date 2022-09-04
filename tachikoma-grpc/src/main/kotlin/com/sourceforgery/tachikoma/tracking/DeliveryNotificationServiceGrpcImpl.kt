@@ -31,7 +31,6 @@ internal class DeliveryNotificationServiceGrpcImpl(
     private val authentication: () -> Authentication by provider()
     private val scope: TachikomaScope by instance()
 
-    @Suppress("OVERRIDE_DEPRECATION")
     override fun notificationStream(request: NotificationStreamParameters): Flow<EmailNotification> =
         notificationStreamWithKeepAlive(request)
             .filter { it.hasEmailNotification() }

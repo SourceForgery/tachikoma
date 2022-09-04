@@ -22,9 +22,7 @@ service MailDeliveryService {
     };
 
     rpc StreamIncomingEmailsWithKeepAlive (IncomingEmailParameters) returns (stream IncomingEmailOrKeepAlive);
-    rpc StreamIncomingEmails (IncomingEmailParameters) returns (stream IncomingEmail) {
-        option deprecated = true;
-    };
+    rpc StreamIncomingEmails (IncomingEmailParameters) returns (stream IncomingEmail);
 
     rpc GetIncomingEmail (GetIncomingEmailRequest) returns (IncomingEmail);
 
