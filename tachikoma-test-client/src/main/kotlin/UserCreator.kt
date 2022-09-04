@@ -16,13 +16,13 @@ fun main(args: Array<String>) {
     }
     val configuration = object : GrpcClientConfig {
         override val tachikomaUrl = URI(
-            System.getenv("TACHIKOMA_URL")
-                ?: error("Need to specify env TACHIKOMA_URL")
+            System.getenv("TACHI_FRONTEND_URL")
+                ?: error("Need to specify env TACHI_FRONTEND")
         )
         override val insecure: Boolean
             get() = true
-        override val clientCert = System.getenv("CLIENT_CERT") ?: ""
-        override val clientKey = System.getenv("CLIENT_KEY") ?: ""
+        override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
+        override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
     }
 
     val stub = provideClientBuilder(configuration)

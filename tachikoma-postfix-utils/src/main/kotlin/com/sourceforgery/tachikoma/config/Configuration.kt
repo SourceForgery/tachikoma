@@ -12,6 +12,6 @@ interface GrpcClientConfig {
 internal class Configuration : GrpcClientConfig {
     override val tachikomaUrl by readConfig("TACHIKOMA_URL", URI(""))
     override val insecure by readConfig("INSECURE", false)
-    override val clientCert by readConfig("CLIENT_CERT", "")
-    override val clientKey by readConfig("CLIENT_KEY", "")
+    override val clientCert by readConfig("TACHIKOMA_CLIENT_CERT", "")
+    override val clientKey by readConfig("TACHIKOMA_CLIENT_KEY", "")
 }

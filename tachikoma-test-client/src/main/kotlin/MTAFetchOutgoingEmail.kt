@@ -25,8 +25,8 @@ fun main() {
         )
         override val insecure: Boolean
             get() = true
-        override val clientCert = System.getenv("CLIENT_CERT") ?: ""
-        override val clientKey = System.getenv("CLIENT_KEY") ?: ""
+        override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
+        override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
     }
     val stub = provideClientBuilder(configuration)
         .build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java)
