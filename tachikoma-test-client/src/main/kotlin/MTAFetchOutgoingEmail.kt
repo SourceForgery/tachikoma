@@ -17,7 +17,6 @@ fun main() {
 
     val channel = Channel<MTAQueuedNotification>()
 
-    val apiToken = backendUri.userInfo
     val configuration = object : GrpcClientConfig {
         override val tachikomaUrl = URI(
             System.getenv("TACHI_BACKEND_URI")
