@@ -30,7 +30,7 @@ spec:
           readinessProbe:
             failureThreshold: 10
             httpGet:
-              path: /api/ready
+              path: /health
               httpHeaders:
                   # Make sure health checks aren't traced
                 - name: traceparent
