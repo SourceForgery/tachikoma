@@ -27,6 +27,38 @@ spec:
             - name: webserver-port
               protocol: TCP
               containerPort: 8070
+          readinessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /health
+              httpHeaders:
+                  # Make sure health checks aren't traced
+                - name: traceparent
+                  value: 00-11111111111111111111111111111111-1111111111111111-00
+              port: 8070
+              scheme: HTTP
+          livenessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            httpGet:
+              path: /health
+              port: 8070
+              scheme: HTTP
+              httpHeaders:
+                  # Make sure health checks aren't traced
+                - name: traceparent
+                  value: 00-11111111111111111111111111111111-2222222222222222-00
+          startupProbe:
+            failureThreshold: 50
+            initialDelaySeconds: 10
+            httpGet:
+              path: /health
+              port: 8070
+              scheme: HTTP
+              httpHeaders:
+                # Make sure health checks aren't traced
+                - name: traceparent
+                  value: 00-11111111111111111111111111111111-2222222222222222-00
           volumeMounts:
             - name: webserver-config
               mountPath: "/etc/tachikoma/config/"
@@ -47,6 +79,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: SSL_CERT_KEY_FILE
+                  name: tachikoma-webserver-config
+                  optional: true
+            - name: JAVA_OPTS
+              valueFrom:
+                secretKeyRef:
+                  key: JAVA_OPTS
                   name: tachikoma-webserver-config
                   optional: true
       volumes:
@@ -71,6 +109,10 @@ spec:
   type: NodePort
   ports:
     - name: http2
+      protocol: TCP
+      port: 443
+      targetPort: 8070
+    - name: http
       protocol: TCP
       port: 80
       targetPort: 8070

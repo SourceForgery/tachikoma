@@ -1,23 +1,17 @@
 import com.google.protobuf.Timestamp
 import com.google.protobuf.util.JsonFormat
-import com.linecorp.armeria.client.Clients
-import com.sourceforgery.jersey.uribuilder.ensureGproto
-import com.sourceforgery.jersey.uribuilder.withoutPassword
+import com.sourceforgery.tachikoma.config.GrpcClientConfig
 import com.sourceforgery.tachikoma.grpc.frontend.NamedEmailAddress
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailRecipient
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.StaticBody
+import com.sourceforgery.tachikoma.provideClientBuilder
 import jakarta.mail.internet.InternetAddress
 import java.net.URI
-import java.time.Duration
 import java.time.Instant
 
 fun main() {
-    val frontendUri = URI.create(
-        System.getenv("TACHI_FRONTEND_URI")
-            ?: error("Need to specify env TACHI_FRONTEND_URI")
-    )
     val from = InternetAddress(
         System.getenv("TACHI_FROM")
             ?: error("Need to specify env TACHI_FROM")
@@ -27,11 +21,17 @@ fun main() {
             ?: error("Need to specify env TACHI_TO (multiple addresses possible via RFC822 format)")
     )
 
-    val apiToken = frontendUri.userInfo
-    val stub = Clients.builder(frontendUri.withoutPassword().ensureGproto())
-        .addHeader("x-apitoken", apiToken)
-        .responseTimeout(Duration.ofDays(365))
-        .writeTimeout(Duration.ofDays(365))
+    val configuration = object : GrpcClientConfig {
+        override val tachikomaUrl = URI(
+            System.getenv("TACHI_FRONTEND_URI")
+                ?: error("Need to specify env TACHI_FRONTEND_URI")
+        )
+        override val insecure: Boolean
+            get() = true
+        override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
+        override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
+    }
+    val stub = provideClientBuilder(configuration)
         .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
     val mailBody =
@@ -100,7 +100,7 @@ fun main() {
         .build()
 
     try {
-        stub.sendEmail(outgoingEmail).forEach {
+        stub.sendEmailUnary(outgoingEmail).listList.forEach {
             System.err.println(JsonFormat.printer().print(it))
         }
     } catch (e: Exception) {

@@ -1,13 +1,12 @@
 package com.sourceforgery.tachikoma.postfix
 
-import com.linecorp.armeria.client.Clients
-import com.sourceforgery.jersey.uribuilder.ensureGproto
 import com.sourceforgery.jersey.uribuilder.withoutPassword
 import com.sourceforgery.tachikoma.config.Configuration
 import com.sourceforgery.tachikoma.incoming.IncomingEmailHandler
 import com.sourceforgery.tachikoma.mailer.MailSender
-import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpcKt
-import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt
+import com.sourceforgery.tachikoma.mta.MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub
+import com.sourceforgery.tachikoma.mta.MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub
+import com.sourceforgery.tachikoma.provideClientBuilder
 import com.sourceforgery.tachikoma.syslog.SyslogSniffer
 import io.netty.util.internal.logging.InternalLoggerFactory
 import io.netty.util.internal.logging.Log4J2LoggerFactory
@@ -18,7 +17,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
 import org.apache.logging.log4j.kotlin.logger
-import java.time.Duration
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -26,7 +24,7 @@ import kotlin.system.exitProcess
 
 class Main
 internal constructor(
-    configuration: Configuration
+    private val configuration: Configuration
 ) {
 
     private val tachikomaUrl = configuration.tachikomaUrl
@@ -48,19 +46,13 @@ internal constructor(
     fun run() {
         LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
 
-        val apiToken = tachikomaUrl.userInfo
-        val builder = Clients.builder(tachikomaUrl.withoutPassword().ensureGproto())
-            .addHeader("x-apitoken", apiToken)
-            .responseTimeout(Duration.ofDays(365))
-            .writeTimeout(Duration.ofDays(365))
-            .maxResponseLength(0)
-
+        val builder = provideClientBuilder(configuration)
         runCatching {
-            MailSender(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
+            MailSender(builder.build(MTAEmailQueueCoroutineStub::class.java), scope)
                 .start()
-            val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java), scope)
+            val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueCoroutineStub::class.java), scope)
             incomingEmail.start()
-            SyslogSniffer(builder.build(MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub::class.java))
+            SyslogSniffer(builder.build(MTADeliveryNotificationsCoroutineStub::class.java))
                 .blockingSniffer()
         }.onFailure {
             LOGGER.fatal(it) { "Syslog sniffer died. Dying with it." }

@@ -9,9 +9,7 @@ service MTAEmailQueue {
     // Once the postfix mailer daemon gets an email, it will start
     // looping out all the recipients. All results will be sent as a request stream here
     rpc GetEmailsWithKeepAlive (stream MTAQueuedNotification) returns (stream EmailMessageOrKeepAlive);
-    rpc GetEmails (stream MTAQueuedNotification) returns (stream EmailMessage) {
-        option deprecated = true;
-    };
+    rpc GetEmails (stream MTAQueuedNotification) returns (stream EmailMessage);
 
     // This is for mails coming from external mail servers
     rpc IncomingEmail (IncomingEmailMessage) returns (MailAcceptanceResult);

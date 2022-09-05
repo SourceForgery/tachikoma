@@ -13,6 +13,8 @@ service MailDeliveryService {
     // Send emails. This will always succeed unless spam marked.
     // Failures can only be detected via DeliveryNotificationService.notificationStream()
     rpc SendEmail (OutgoingEmail) returns (stream EmailQueueStatus);
+    // Unfortunately, e.g. Cloudflare does not support streaming responses where the server closes the connection.
+    rpc SendEmailUnary (OutgoingEmail) returns (EmailQueueStatusList);
 
     // This method works the same as StreamIncomingEmails, but is not configurable
     rpc GetIncomingEmails (google.protobuf.Empty) returns (stream IncomingEmail) {
@@ -20,13 +22,13 @@ service MailDeliveryService {
     };
 
     rpc StreamIncomingEmailsWithKeepAlive (IncomingEmailParameters) returns (stream IncomingEmailOrKeepAlive);
-    rpc StreamIncomingEmails (IncomingEmailParameters) returns (stream IncomingEmail) {
-        option deprecated = true;
-    };
+    rpc StreamIncomingEmails (IncomingEmailParameters) returns (stream IncomingEmail);
 
     rpc GetIncomingEmail (GetIncomingEmailRequest) returns (IncomingEmail);
 
     rpc SearchIncomingEmails (SearchIncomingEmailsRequest) returns (stream IncomingEmail);
+    // Unfortunately, e.g. Cloudflare does not support streaming responses where the server closes the connection.
+    rpc SearchIncomingEmailsUnary (SearchIncomingEmailsRequest) returns (IncomingEmailList);
 }
 
 // A recipient
@@ -183,6 +185,10 @@ message OutgoingEmail {
     bool inline_css = 601;
 }
 
+message EmailQueueStatusList {
+    repeated EmailQueueStatus list = 1;
+}
+
 // Every email sent will generate one or more of these
 // representing the status of delivering to outgoing email server
 message EmailQueueStatus {
@@ -259,6 +265,10 @@ message IncomingEmailAttachment {
     // Optional
     // The filename (if any) for this attachment
     string file_name = 12;
+}
+
+message IncomingEmailList {
+    repeated IncomingEmail list = 1;
 }
 
 // IncomingEmail is an email that is sent to the mail server

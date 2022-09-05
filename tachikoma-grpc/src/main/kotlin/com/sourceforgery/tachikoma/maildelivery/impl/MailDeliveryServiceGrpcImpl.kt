@@ -6,8 +6,10 @@ import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.exceptions.NotFoundException
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatusList
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.GetIncomingEmailRequest
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
+import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailList
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailOrKeepAlive
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.MailDeliveryServiceGrpcKt
@@ -41,11 +43,10 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
     private val grpcExceptionMap: GrpcExceptionMap by instance()
     private val scope: TachikomaScope by instance()
 
-    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun getIncomingEmails(request: Empty): Flow<IncomingEmail> =
         streamIncomingEmails(IncomingEmailParameters.getDefaultInstance())
 
-    @Suppress("OVERRIDE_DEPRECATION")
     override fun streamIncomingEmails(request: IncomingEmailParameters) =
         streamIncomingEmailsWithKeepAlive(request)
             .filter { it.hasIncomingEmail() }
@@ -101,6 +102,13 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
         )
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
+    override suspend fun searchIncomingEmailsUnary(request: SearchIncomingEmailsRequest): IncomingEmailList {
+        val builder = IncomingEmailList.newBuilder()
+        searchIncomingEmails(request)
+            .collect { builder.addList(it) }
+        return builder.build()
+    }
+
     override fun sendEmail(request: OutgoingEmail): Flow<EmailQueueStatus> = flow {
         val auth = authentication()
         auth.requireFrontend()
@@ -115,6 +123,14 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
             )
         )
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+
+    override suspend fun sendEmailUnary(request: OutgoingEmail): EmailQueueStatusList {
+        val builder = EmailQueueStatusList.newBuilder()
+        sendEmail(request)
+            .collect { builder.addList(it) }
+        LOGGER.error { "Done sending" }
+        return builder.build()
+    }
 
     companion object {
         private val LOGGER = logger()

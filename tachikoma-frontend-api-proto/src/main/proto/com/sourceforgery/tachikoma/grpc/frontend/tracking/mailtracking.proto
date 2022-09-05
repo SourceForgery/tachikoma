@@ -8,9 +8,7 @@ import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
 
 service DeliveryNotificationService {
     rpc NotificationStreamWithKeepAlive(NotificationStreamParameters) returns (stream EmailNotificationOrKeepAlive);
-    rpc NotificationStream(NotificationStreamParameters) returns (stream EmailNotification) {
-        option deprecated = true;
-    };
+    rpc NotificationStream(NotificationStreamParameters) returns (stream EmailNotification);
 }
 
 // Parameters for the notification stream

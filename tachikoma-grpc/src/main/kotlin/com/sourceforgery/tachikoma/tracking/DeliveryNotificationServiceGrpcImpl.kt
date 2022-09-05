@@ -1,6 +1,5 @@
 package com.sourceforgery.tachikoma.tracking
 
-import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
@@ -32,7 +31,6 @@ internal class DeliveryNotificationServiceGrpcImpl(
     private val authentication: () -> Authentication by provider()
     private val scope: TachikomaScope by instance()
 
-    @Suppress("OVERRIDE_DEPRECATION")
     override fun notificationStream(request: NotificationStreamParameters): Flow<EmailNotification> =
         notificationStreamWithKeepAlive(request)
             .filter { it.hasEmailNotification() }

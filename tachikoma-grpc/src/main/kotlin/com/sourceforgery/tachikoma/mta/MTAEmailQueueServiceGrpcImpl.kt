@@ -23,7 +23,6 @@ internal class MTAEmailQueueServiceGrpcImpl(
     private val mtaEmailQueueService: MTAEmailQueueService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 
-    @Suppress("OVERRIDE_DEPRECATION")
     override fun getEmails(requests: Flow<MTAQueuedNotification>): Flow<EmailMessage> =
         getEmailsWithKeepAlive(requests)
             .filter { it.hasEmailMessage() }
