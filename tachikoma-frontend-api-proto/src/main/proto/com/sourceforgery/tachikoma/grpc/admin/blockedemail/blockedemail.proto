@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
+option go_package = "./";
 option java_outer_classname = "BlockedEmailClass";
 
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
