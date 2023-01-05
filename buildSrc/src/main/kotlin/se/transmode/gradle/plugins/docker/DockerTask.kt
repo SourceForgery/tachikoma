@@ -25,6 +25,7 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
@@ -65,7 +66,7 @@ abstract class DockerTask : DefaultTask() {
     /**
      * Path to external Dockerfile
      */
-    @get:Input
+    @get:InputFile
     @get:Optional
     abstract val dockerfile: RegularFileProperty
 

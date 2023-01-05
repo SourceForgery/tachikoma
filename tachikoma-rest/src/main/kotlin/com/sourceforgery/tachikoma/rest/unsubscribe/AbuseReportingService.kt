@@ -62,11 +62,18 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
 
     @Get("/abuse")
     @Produces("text/html; charset=utf-8")
-    fun getPage(): String = getPage(null)
+    fun getPage(): String =
+        renderPage(
+            mailId = null,
+            info = null,
+            reporterName = null,
+            reporterEmail = null,
+            error = null,
+        )
 
     @Get("/abuse/{abuseEmailId}")
     @Produces("text/html; charset=utf-8")
-    fun getPage(@Param("abuseEmailId") abuseEmailId: AutoMailId?): String =
+    fun getPage(@Param("abuseEmailId") abuseEmailId: AutoMailId): String =
         renderPage(
             mailId = abuseEmailId,
             info = null,

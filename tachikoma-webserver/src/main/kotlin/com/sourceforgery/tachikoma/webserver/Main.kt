@@ -12,6 +12,7 @@ import com.sourceforgery.tachikoma.commonModule
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.databaseModule
+import com.sourceforgery.tachikoma.databaseUpgradesModule
 import com.sourceforgery.tachikoma.grpcModule
 import com.sourceforgery.tachikoma.kodein.withNewDatabaseSessionScope
 import com.sourceforgery.tachikoma.memoizeWithExpiration
@@ -166,6 +167,7 @@ fun main() {
         importOnce(mqModule)
         importOnce(grpcModule)
         importOnce(databaseModule)
+        importOnce(databaseUpgradesModule)
         importOnce(webModule)
         bind<HttpRequestScopedDecorator>() with singleton { HttpRequestScopedDecorator(di) }
     }

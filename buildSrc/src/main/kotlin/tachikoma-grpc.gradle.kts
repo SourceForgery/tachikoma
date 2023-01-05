@@ -1,9 +1,6 @@
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
 import com.sourceforgery.tachikoma.buildsrc.DownloadFileTask
 import com.sourceforgery.tachikoma.buildsrc.fixUglyCode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -13,23 +10,11 @@ import java.net.URL
 plugins {
     id("com.google.protobuf")
     kotlin("jvm")
-    id("tachikoma-java")
+    id("tachikoma-kotlin")
     `idea`
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        languageVersion = "1.6"
-        apiVersion = "1.6"
-        jvmTarget = "11"
-        freeCompilerArgs = listOf(
-            "-java-parameters",
-            "-Xjsr305=strict",
-            "-Xjvm-default=enable",
-            "-Xopt-in=kotlin.RequiresOptIn"
-        )
-    }
-}
+val javaVersion: String by project
 
 val downloadProtocLint: DownloadFileTask = rootProject.tasks.findByName("downloadProtocLint") as? DownloadFileTask
     ?: rootProject.tasks.create("downloadProtocLint", DownloadFileTask::class.java) {
@@ -40,15 +25,15 @@ val downloadProtocLint: DownloadFileTask = rootProject.tasks.findByName("downloa
     }
 
 dependencies {
-    implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutineVersion"))
+    implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom"))
 
-    api("io.grpc:grpc-protobuf:$grpcVersion")
+    api("io.grpc:grpc-protobuf")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation(project(":tachikoma-protobuf-annotations"))
-    implementation("io.grpc:grpc-stub:$grpcVersion")
-    implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
-    implementation("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion")
+    implementation("io.grpc:grpc-stub")
+    implementation("io.grpc:grpc-kotlin-stub")
+    implementation("jakarta.annotation:jakarta.annotation-api")
 }
 
 extensions.getByType<IdeaModel>().apply {
@@ -72,8 +57,12 @@ extensions.getByType<IdeaModel>().apply {
 // }
 
 protobuf {
+    val protocVersion: String by project
+    val grpcVersion: String by project
+    val grpcKotlinVersion: String by project
     protoc {
         // The artifact spec for the Protobuf Compiler
+
         artifact = "com.google.protobuf:protoc:$protocVersion"
     }
 
@@ -101,6 +90,11 @@ protobuf {
         }
     }
 }
+
+tasks.withType<Jar> {
+    exclude("classpath.index")
+}
+
 afterEvaluate {
     tasks["generateProto"].dependsOn(downloadProtocLint)
 }

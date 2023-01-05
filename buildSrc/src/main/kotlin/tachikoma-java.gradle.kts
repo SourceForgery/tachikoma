@@ -4,6 +4,13 @@ plugins {
     `java-library`
 }
 
+java {
+    toolchain {
+        val javaVersion: String by extra
+        languageVersion.set(JavaLanguageVersion.of(javaVersion))
+    }
+}
+
 val javadocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.javadoc)
     from(tasks.javadoc.get().destinationDir)

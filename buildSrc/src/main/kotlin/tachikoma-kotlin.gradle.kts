@@ -6,28 +6,42 @@ import org.jlleitschuh.gradle.ktlint.KtlintExtension
 plugins {
     `kotlin`
     id("org.jlleitschuh.gradle.ktlint")
+    id("tachikoma-dependencies")
 }
 
-dependencies {
-    implementation(enforcedPlatform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:$kotlinCoroutineVersion"))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
+val javaVersion: String by project
+val kotlinVersion: String by project
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-    testImplementation("org.junit.platform:junit-platform-runner:1.8.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(javaVersion))
+    }
+}
+
+
+dependencies {
+    for (forcedBom in forcedBoms()) {
+        implementation(enforcedPlatform(forcedBom))
+    }
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testImplementation("org.junit.platform:junit-platform-runner")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine")
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
-        languageVersion = "1.6"
-        apiVersion = "1.6"
-        jvmTarget = "11"
+        val kotlinApiVersion = kotlinVersion.substringBeforeLast('.')
+        languageVersion = kotlinApiVersion
+        apiVersion = kotlinApiVersion
+        jvmTarget = javaVersion
         freeCompilerArgs = listOf(
             "-java-parameters",
             "-Xjsr305=strict",
-            "-Xjvm-default=enable",
-            "-Xopt-in=kotlin.RequiresOptIn"
+            "-Xjvm-default=all",
+            "-opt-in=kotlin.RequiresOptIn"
         )
     }
 }

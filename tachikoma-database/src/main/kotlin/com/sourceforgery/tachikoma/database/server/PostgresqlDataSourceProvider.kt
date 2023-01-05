@@ -1,8 +1,8 @@
 package com.sourceforgery.tachikoma.database.server
 
 import com.sourceforgery.tachikoma.config.DatabaseConfig
-import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourceConfig
+import io.ebean.platform.postgres.PostgresPlatform
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance

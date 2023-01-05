@@ -2,9 +2,10 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.github.mustachejava.DefaultMustacheFactory
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
+import com.samskivert.mustache.BasicCollector
+import com.samskivert.mustache.Mustache
 import com.sourceforgery.jersey.uribuilder.JerseyUriBuilder
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.NamedEmail
@@ -66,8 +67,6 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import java.io.ByteArrayOutputStream
-import java.io.StringReader
-import java.io.StringWriter
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Clock
@@ -76,9 +75,9 @@ import java.time.ZoneId
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.HashMap
 import java.util.Properties
 import java.util.StringTokenizer
+import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 class MailDeliveryService(override val di: DI) : DIAware {
@@ -96,6 +95,16 @@ class MailDeliveryService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val messageIdFactory: MessageIdFactory by instance()
     private val clock: Clock by instance()
+
+    private val mustacheCompiler: Mustache.Compiler =
+        Mustache.compiler()
+            .withCollector(
+                object : BasicCollector() {
+                    override fun <K : Any?, V : Any?> createFetcherCache(): MutableMap<K, V> {
+                        return ConcurrentHashMap()
+                    }
+                }
+            )
 
     suspend fun sendEmail(
         request: OutgoingEmail,
@@ -181,12 +190,14 @@ class MailDeliveryService(override val di: DI) : DIAware {
                         sendAt = requestedSendTime,
                         emailDBO = emailDBO
                     )
+
                     OutgoingEmail.BodyCase.TEMPLATE -> getTemplateBody(
                         request = request,
                         sendAt = requestedSendTime,
                         recipient = recipient,
                         emailDBO = emailDBO
                     )
+
                     else -> throw StatusRuntimeException(Status.INVALID_ARGUMENT)
                 }
                 emailDBO.subject = pair.first
@@ -284,12 +295,9 @@ class MailDeliveryService(override val di: DI) : DIAware {
     private fun mergeTemplate(
         template: String,
         vararg scopes: HashMap<String, Any>
-    ) = StringWriter().use {
-        DefaultMustacheFactory { null }
-            .compile(StringReader(template), "html")
-            .execute(it, scopes)
-        it.toString()
-    }
+    ) = mustacheCompiler
+        .compile(template)
+        .execute(scopes)
 
     private fun wrapAndPackBody(
         request: OutgoingEmail,

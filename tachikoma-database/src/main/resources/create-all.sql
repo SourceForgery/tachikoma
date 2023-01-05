@@ -23,7 +23,6 @@ create table e_user (
   constraint uq_e_user_api_token unique (api_token),
   constraint pk_e_user primary key (id)
 );
-create sequence unique_id_seq increment by 1;
 
 create table e_blocked_email (
   id                            decimal(20) not null,
@@ -38,7 +37,6 @@ create table e_blocked_email (
   constraint uq_e_blocked_email_from_email_recipient_email unique (from_email,recipient_email),
   constraint pk_e_blocked_email primary key (id)
 );
-create sequence unique_id_seq increment by 1;
 
 create table e_email (
   id                            decimal(20) not null,
@@ -54,7 +52,6 @@ create table e_email (
   constraint uq_e_email_message_id unique (message_id),
   constraint pk_e_email primary key (id)
 );
-create sequence unique_id_seq increment by 1;
 
 create table e_email_send_transaction (
   id                            decimal(20) not null,
@@ -66,7 +63,6 @@ create table e_email_send_transaction (
   last_updated                  timestamptz not null,
   constraint pk_e_email_send_transaction primary key (id)
 );
-create sequence unique_id_seq increment by 1;
 
 create table e_email_status (
   id                            decimal(20) not null,
@@ -90,7 +86,6 @@ create table e_incoming_email_address (
   constraint uq_e_incoming_email_address_local_part_mail_domain unique (local_part,mail_domain),
   constraint pk_e_incoming_email_address primary key (id)
 );
-create sequence unique_id_seq increment by 1;
 
 create table e_incoming_email (
   id                            decimal(20) not null,
@@ -106,7 +101,6 @@ create table e_incoming_email (
   last_updated                  timestamptz not null,
   constraint pk_e_incoming_email primary key (id)
 );
-create sequence unique_id_seq increment by 1;
 
 alter table e_user add constraint fk_e_user_account_id foreign key (account_id) references e_account (id) on delete restrict on update restrict;
 create index ix_e_user_account_id on e_user (account_id);

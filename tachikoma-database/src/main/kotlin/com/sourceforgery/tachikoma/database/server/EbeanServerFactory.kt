@@ -8,7 +8,6 @@ import io.ebean.Database
 import io.ebean.DatabaseFactory
 import io.ebean.config.EncryptKey
 import io.ebean.config.EncryptKeyManager
-import io.ebean.config.dbplatform.postgres.PostgresPlatform
 import io.ebean.datasource.DataSourcePool
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.io.IoBuilder
@@ -30,11 +29,8 @@ class EbeanServerFactory(override val di: DI) : DIAware {
 
     private inner class WrappedServerConfig : io.ebean.config.DatabaseConfig() {
         override fun setDataSource(originalDataSource: DataSource?) {
-            if (this.databasePlatform is PostgresPlatform) {
-                // Only do database upgrade on postgresql
-                originalDataSource
-                    ?.also { upgradeDatabase(it) }
-            }
+            originalDataSource
+                ?.also { upgradeDatabase(it) }
 
             if (databaseConfig.timeDatabaseQueries) {
                 val loggingDataSource =

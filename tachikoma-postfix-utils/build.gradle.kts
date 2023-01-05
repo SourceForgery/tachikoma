@@ -1,28 +1,27 @@
 plugins {
     `tachikoma-kotlin`
-    `application`
+    application
     id("com.google.osdetector")
 }
 
 dependencies {
-    implementation("com.github.jnr:jnr-unixsocket:0.25")
-    implementation("net.sf.expectit:expectit-core:0.9.0")
-    implementation("org.apache.logging.log4j:log4j-iostreams:$log4j2Version")
-    implementation("com.google.protobuf:protobuf-java:$protocVersion")
-    // implementation("io.grpc:grpc-stub:$grpcVersion")
-    implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
-    implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
-    implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
-    implementation("org.apache.logging.log4j:log4j-jul:$log4j2Version")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
-    implementation("com.squareup:tape:1.2.3")
+    implementation("com.github.jnr:jnr-unixsocket")
+    implementation("net.sf.expectit:expectit-core")
+    implementation("org.apache.logging.log4j:log4j-iostreams")
+    implementation("com.google.protobuf:protobuf-java")
+    implementation("io.grpc:grpc-kotlin-stub")
+    implementation("com.linecorp.armeria:armeria-grpc")
+    implementation("org.apache.logging.log4j:log4j-core")
+    implementation("org.apache.logging.log4j:log4j-jul")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("com.squareup:tape")
 
     implementation(project(":jersey-uri-builder"))
     implementation(project(":tachikoma-common"))
     implementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
 
-    testImplementation("io.mockk:mockk:1.12.2")
+    testImplementation("io.mockk:mockk")
 }
 
 extensions.configure<JavaApplication>("application") {

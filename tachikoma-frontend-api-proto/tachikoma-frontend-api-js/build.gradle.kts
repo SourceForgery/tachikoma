@@ -18,13 +18,13 @@ kotlin {
 
 dependencies {
     protobuf(project(":tachikoma-frontend-api-proto"))
-    protobuf("com.google.protobuf:protobuf-java:$protocVersion")
+    protobuf("com.google.protobuf:protobuf-java")
 }
 
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler
-        artifact = "com.google.protobuf:protoc:$protocVersion"
+        artifact = "com.google.protobuf:protoc"
     }
     generateProtoTasks {
         all().configureEach {
