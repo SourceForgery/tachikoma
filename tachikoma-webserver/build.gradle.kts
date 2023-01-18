@@ -11,13 +11,13 @@ dependencies {
     implementation(project(":tachikoma-internal-api"))
     implementation(project(":tachikoma-database"))
     implementation(project(":tachikoma-mq"))
-    implementation("io.ebean:ebean:$ebeanVersion")
-    implementation("com.linecorp.armeria:armeria:$armeriaVersion")
-    implementation("com.linecorp.armeria:armeria-grpc:$armeriaVersion")
-    implementation("com.linecorp.armeria:armeria-kotlin:$armeriaVersion")
-    implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version")
-    implementation("org.apache.logging.log4j:log4j-iostreams:$log4j2Version")
+    implementation("io.ebean:ebean")
+    implementation("com.linecorp.armeria:armeria")
+    implementation("com.linecorp.armeria:armeria-grpc")
+    implementation("com.linecorp.armeria:armeria-kotlin")
+    implementation("org.apache.logging.log4j:log4j-core")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl")
+    implementation("org.apache.logging.log4j:log4j-iostreams")
 }
 
 rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension> {

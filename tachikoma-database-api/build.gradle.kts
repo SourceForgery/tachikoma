@@ -7,14 +7,14 @@ plugins {
 }
 
 dependencies {
-    add("kapt", "io.ebean:kotlin-querybean-generator:$querybeanVersion")
+    add("kapt", "io.ebean:kotlin-querybean-generator")
 
     implementation(project(":tachikoma-internal-api"))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("com.google.guava:guava:$guavaVersion")
-    implementation("io.ebean:ebean:$ebeanVersion")
-    implementation("io.ebean:ebean-querybean:$querybeanVersion")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.google.guava:guava")
+    implementation("io.ebean:ebean")
+    implementation("io.ebean:ebean-querybean")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 }
 
 extensions.configure<EnhancePluginExtension> {

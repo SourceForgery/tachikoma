@@ -9,9 +9,5 @@ dependencies {
     implementation(project(":tachikoma-mq"))
     implementation(project(":tachikoma-common"))
 
-    implementation("org.postgresql:postgresql:$postgresqlDriverVersion")
-}
-
-tasks.compileJava {
-    options.compilerArgs.add("-Aorg.glassfish.hk2.metadata.location=META-INF/hk2-locator/com.sourceforgery.tachikoma")
+    implementation("org.postgresql:postgresql")
 }

@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-    api("com.google.guava:guava:$guavaVersion")
-    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.2.0")
+    api("com.google.guava:guava")
+    implementation("org.apache.logging.log4j:log4j-api-kotlin")
 }

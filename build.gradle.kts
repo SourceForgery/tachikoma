@@ -10,6 +10,8 @@ plugins {
     `java-library`
 }
 
+val javaVersion: String by project
+
 val replaceVersion by tasks.registering(Copy::class) {
     // Always regenerate yaml
     outputs.upToDateWhen { false }
@@ -51,49 +53,6 @@ val publish by tasks.registering {
 @Suppress("UnstableApiUsage")
 allprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
-
-    configurations.all {
-        resolutionStrategy {
-            failOnVersionConflict()
-            dependencySubstitution {
-                substitute(module("org.slf4j:jcl-over-slf4j")).using(module("org.apache.logging.log4j:log4j-jcl:$log4j2Version"))
-
-                substitute(module("org.slf4j:jul-to-slf4j")).using(module("org.apache.logging.log4j:log4j-jul:$log4j2Version"))
-                substitute(module("org.slf4j:slf4j-simple")).using(module("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version"))
-                substitute(module("com.google.guava:guava-jdk5")).using(module("com.google.guava:guava:$guavaVersion"))
-
-                all {
-                    when (val requested = requested) {
-                        is org.gradle.internal.component.external.model.DefaultModuleComponentSelector ->
-                            when (requested.group) {
-                                "io.grpc" -> if ("kotlin" !in requested.module) {
-                                    useTarget("${requested.group}:${requested.module}:$grpcVersion")
-                                }
-
-                                "com.google.protobuf" -> useTarget("${requested.group}:${requested.module}:$protocVersion")
-                                "org.apache.logging.log4j" -> if (requested.module != "log4j-api-kotlin") {
-                                    useTarget("${requested.group}:${requested.module}:$log4j2Version")
-                                }
-
-                                "org.jetbrains.kotlin" -> useTarget("${requested.group}:${requested.module}:$kotlinVersion")
-                                "com.fasterxml.jackson.core" -> useTarget("${requested.group}:${requested.module}:$jacksonVersion")
-                            }
-                    }
-                }
-            }
-            force(
-                "com.google.errorprone:error_prone_annotations:2.9.0",
-                "net.bytebuddy:byte-buddy:$bytebuddyVersion",
-                "com.google.guava:guava:$guavaVersion",
-                "commons-io:commons-io:2.6",
-                "commons-logging:commons-logging:1.2",
-                "javax.annotation:javax.annotation-api:1.3.2",
-                "org.postgresql:postgresql:$postgresqlDriverVersion",
-                "com.google.code.gson:gson:2.8.9",
-                "org.slf4j:slf4j-api:1.7.29",
-            )
-        }
-    }
 
     repositories {
         mavenLocal()

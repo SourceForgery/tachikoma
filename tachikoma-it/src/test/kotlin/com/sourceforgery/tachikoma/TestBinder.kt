@@ -47,13 +47,12 @@ fun testModule(vararg attributes: TestAttribute) = DI.Module("test") {
         }
     }
 
-    bind<DataSourceProvider>(overrides = true) with singleton {
-        if (TestAttribute.POSTGRESQL in attributes) {
-            PostgresqlEmbeddedDataSourceProvider(di)
-        } else {
-            @Suppress("USELESS_CAST")
-            H2DataSourceProvider(di) as DataSourceProvider
-        }
+    if (TestAttribute.POSTGRESQL in attributes) {
+        bind<DataSourceProvider>(overrides = true) with singleton { PostgresqlEmbeddedDataSourceProvider(di) }
+        importOnce(databaseUpgradesModule)
+    } else {
+        bind<DataSourceProvider>(overrides = true) with singleton { H2DataSourceProvider(di) }
+        bind<H2DatabaseUpgrade>() with singleton { H2DatabaseUpgrade() }
     }
 }
 

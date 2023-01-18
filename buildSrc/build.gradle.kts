@@ -7,37 +7,38 @@ plugins {
     id("com.github.ben-manes.versions") version "0.42.0"
 }
 
-val kotlinVersion = "1.6.10"
+val kotlinVersion: String by project
 dependencies {
-    implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.18")
+    val guavaVersion: String by project
+    implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.1")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:10.2.1")
-    implementation("io.ebean:ebean-gradle-plugin:12.15.0")
+    implementation("io.ebean:ebean-gradle-plugin:13.11.0")
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
-    implementation("org.junit.platform:junit-platform-gradle-plugin:1.2.0")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.42.0")
     implementation("org.apache.commons:commons-compress:1.21")
     api("com.github.breadmoirai:github-release:2.4.1")
+    implementation("com.google.guava:guava:$guavaVersion")
 }
+
+val jacksonVersion: String by project
+val guavaVersion: String by project
+val slf4jVersion: String by project
+val commonsLoggingVersion: String by project
+val commonsLangVersion: String by project
 
 configurations.all {
     resolutionStrategy {
         failOnVersionConflict()
         force(
-            "com.fasterxml.jackson.core:jackson-databind:2.11.1",
-            "com.fasterxml.jackson.core:jackson-core:2.11.1",
-            "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.11.1",
-            "com.google.guava:guava:28.2-jre",
-            "org.slf4j:slf4j-api:1.7.30",
-            "commons-logging:commons-logging:1.2",
-            "commons-lang:commons-lang:2.6",
+            "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
+            "com.fasterxml.jackson.core:jackson-core:$jacksonVersion",
+            "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion",
+            "com.google.guava:guava:$guavaVersion",
+            "org.slf4j:slf4j-api:$slf4jVersion",
+            "commons-logging:commons-logging:$commonsLoggingVersion",
+            "commons-lang:commons-lang:$commonsLangVersion",
             "com.sun.jersey:jersey-client:1.18",
-            "org.apache.maven:maven-artifact:3.6.3",
-            "org.apache.maven:maven-model:3.6.3",
-            "org.codehaus.plexus:plexus-utils:3.3.0",
-            "com.google.gradle:osdetector-gradle-plugin:1.6.2",
-            "org.codehaus.groovy.modules.http-builder:http-builder:0.7.2",
-            "org.apache.httpcomponents:httpclient:4.5.11",
             "org.jetbrains.kotlin:kotlin-stdlib:$embeddedKotlinVersion",
             "org.jetbrains.kotlin:kotlin-stdlib-common:$embeddedKotlinVersion",
         )
@@ -58,8 +59,4 @@ configure<IdeaModel> {
         outputDir = file("build/idea-out")
         testOutputDir = file("build/idea-testout")
     }
-}
-
-kotlinDslPluginOptions {
-    jvmTarget.set("11")
 }

@@ -5,7 +5,7 @@ import com.sourceforgery.tachikoma.database.find
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.testModule
 import io.ebean.Database
-import io.ebean.config.dbplatform.postgres.PostgresPlatform
+import io.ebean.platform.postgres.PostgresPlatform
 import io.ebeaninternal.server.core.DefaultServer
 import org.junit.Test
 import org.kodein.di.DI

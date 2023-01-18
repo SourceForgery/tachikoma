@@ -2,8 +2,8 @@ package com.sourceforgery.tachikoma
 
 import com.sourceforgery.tachikoma.database.server.DataSourceProvider
 import io.ebean.config.DatabaseConfig
-import io.ebean.config.dbplatform.h2.H2Platform
 import io.ebean.datasource.DataSourceConfig
+import io.ebean.platform.h2.H2Platform
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import java.sql.Connection
@@ -25,6 +25,6 @@ class H2DataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
         serverConfig.databasePlatform = H2Platform()
         serverConfig.isDdlCreateOnly = true
         serverConfig.isDdlGenerate = true
-        serverConfig.isDdlRun = true
+        serverConfig.isDdlRun = false
     }
 }

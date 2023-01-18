@@ -61,7 +61,6 @@ val databaseModule = DI.Module("database") {
     bind<InternalCreateUserService>() with singleton { InternalCreateUserServiceImpl(di) }
     bind<CreateUsers>() with singleton { CreateUsers(di) }
     bind<TransactionManager>() with singleton { TransactionManagerImpl(di) }
-    importOnce(databaseUpgradesModule)
 }
 
 private val daoModule = DI.Module("dao") {
@@ -75,7 +74,7 @@ private val daoModule = DI.Module("dao") {
     bind<IncomingEmailDAO>() with singleton { IncomingEmailDAOImpl(di) }
 }
 
-private val databaseUpgradesModule = DI.Module("databaseUpgrades") {
+val databaseUpgradesModule = DI.Module("databaseUpgrades") {
     // NEVER EVER change order or insert elements anywhere but at the end of this list!!
     // These classes will be run in order before ebean starts
     bind<Version1>() with provider { Version1() }

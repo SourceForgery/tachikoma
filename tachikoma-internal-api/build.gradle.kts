@@ -3,12 +3,12 @@ plugins {
 }
 
 dependencies {
-    implementation("io.ebean:ebean-annotation:$ebeanAnnotationVersion")
-    implementation("com.google.guava:guava:$guavaVersion")
-    implementation("com.linecorp.armeria:armeria:$armeriaVersion")
-    implementation("com.linecorp.armeria:armeria-kotlin:$armeriaVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutineVersion")
-    implementation("com.sun.mail:jakarta.mail:$jakartaMailVersion")
+    implementation("io.ebean:ebean-annotation")
+    implementation("com.google.guava:guava")
+    implementation("com.linecorp.armeria:armeria")
+    implementation("com.linecorp.armeria:armeria-kotlin")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+    implementation("com.sun.mail:jakarta.mail")
 
     api(project(":tachikoma-common"))
     api(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))
