@@ -141,7 +141,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
 
         val future = SettableFuture.create<Unit>()
         future.addListener(
-            Runnable {
+            {
                 LOGGER.info("Closing channel")
                 try {
                     channel.close()
@@ -192,8 +192,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
     }
 
     private fun <T> listenOnQueueFlow(messageQueue: MessageQueue<T>): Flow<T> {
-        @Suppress("EXPERIMENTAL_API_USAGE")
-        return callbackFlow<ByteArray> {
+        return callbackFlow {
             val channel = withContext(Dispatchers.IO) {
                 connection
                     .createChannel()
@@ -203,7 +202,6 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
                     send(it)
                 }
             }
-            @Suppress("BlockingMethodInNonBlockingContext")
             channel.basicConsume(messageQueue.name, false, consumer)
             channel.addShutdownListener {
                 if (it.isInitiatedByApplication) {
@@ -212,7 +210,10 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
                     (channel as ChannelN).processShutdownSignal(it, true, true)
                 }
             }
-            awaitClose { channel.close() }
+            awaitClose {
+                LOGGER.info { "Closing flow for ${messageQueue.name}" }
+                channel.close()
+            }
         }.map { messageQueue.parser(it) }
     }
 
@@ -307,17 +308,18 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         private val callback: (ByteArray) -> Unit
     ) : DefaultConsumer(channel) {
         override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
-            LOGGER.debug { "Processing message, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: ${HmacUtil.calculateMd5(body)}" }
-            runCatching {
-                callback(body)
+            LOGGER.debug {
+                val md5 = HmacUtil.calculateMd5(body)
+                "Processing message, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: $md5"
             }
-                .onSuccess {
-                    channel.basicAck(envelope.deliveryTag, false)
-                }
-                .onFailure { e ->
-                    LOGGER.error(e) { "Got exception, consumer tag: $consumerTag" }
-                    channel.basicNack(envelope.deliveryTag, false, false)
-                }
+            try {
+                callback(body)
+                LOGGER.debug { "Acked ${envelope.routingKey}" }
+                channel.basicAck(envelope.deliveryTag, false)
+            } catch (e: Exception) {
+                LOGGER.error(e) { "Got exception, consumer tag: $consumerTag" }
+                channel.basicNack(envelope.deliveryTag, false, false)
+            }
         }
     }
 
