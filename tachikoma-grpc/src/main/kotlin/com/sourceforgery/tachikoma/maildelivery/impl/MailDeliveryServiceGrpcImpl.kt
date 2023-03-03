@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.google.protobuf.Empty
 import com.sourceforgery.tachikoma.auth.Authentication
-import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.exceptions.NotFoundException
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailQueueStatus
@@ -17,9 +16,7 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.OutgoingEmail
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.SearchIncomingEmailsRequest
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.withKeepAlive
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
@@ -41,7 +38,6 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
     private val incomingEmailService: IncomingEmailService by instance()
     private val authentication: () -> Authentication by provider()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
-    private val scope: TachikomaScope by instance()
 
     @Suppress("OVERRIDE_DEPRECATION")
     override fun getIncomingEmails(request: Empty): Flow<IncomingEmail> =
@@ -74,7 +70,6 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
             send(it)
         }
     }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
-        .buffer(Channel.RENDEZVOUS)
 
     override suspend fun getIncomingEmail(request: GetIncomingEmailRequest): IncomingEmail {
         try {

@@ -6,12 +6,9 @@ import kotlinx.coroutines.launch
 
 fun <T> ProducerScope<T>.withKeepAlive(keepAlive: T) {
     launch {
-        try {
-            while (true) {
-                delay(10_000L)
-                send(keepAlive)
-            }
-        } catch (_: Exception) {
+        while (true) {
+            delay(10_000L)
+            send(keepAlive)
         }
     }
 }
