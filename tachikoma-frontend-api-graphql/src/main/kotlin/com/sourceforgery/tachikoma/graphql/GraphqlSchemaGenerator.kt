@@ -22,7 +22,7 @@ class GraphqlSchemaGenerator(override val di: DI) : DIAware {
 
     fun generateGraphqlSchema() = toSchema(
         config = SchemaGeneratorConfig(
-            supportedPackages = listOf(GraphqlSchemaGenerator::class.java.packageName, "com.sourceforgery.tachikoma.identifiers"),
+            supportedPackages = listOf(GraphqlSchemaGenerator::class.java.packageName),
             introspectionEnabled = true,
             hooks = schemaGeneratorHooks,
             dataFetcherFactoryProvider = SimpleKotlinDataFetcherFactoryProvider(),
