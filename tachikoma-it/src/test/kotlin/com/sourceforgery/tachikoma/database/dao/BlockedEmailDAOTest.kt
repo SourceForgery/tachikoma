@@ -44,7 +44,7 @@ class BlockedEmailDAOTest : DIAware {
 
     @Before
     fun `create domain`() {
-        accountDBO = accountDAO.getByMailDomain(mailDomain)
+        accountDBO = accountDAO.get(mailDomain)
             ?: let {
                 val a = AccountDBO(mailDomain)
                 accountDAO.save(a)

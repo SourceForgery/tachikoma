@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":tachikoma-frontend-api-graphql"))
     implementation(project(":tachikoma-grpc"))
     implementation(project(":tachikoma-rest"))
     implementation(project(":tachikoma-common"))
@@ -13,6 +14,7 @@ dependencies {
     implementation(project(":tachikoma-mq"))
     implementation("io.ebean:ebean")
     implementation("com.linecorp.armeria:armeria")
+    implementation("com.linecorp.armeria:armeria-graphql")
     implementation("com.linecorp.armeria:armeria-grpc")
     implementation("com.linecorp.armeria:armeria-kotlin")
     implementation("org.apache.logging.log4j:log4j-core")

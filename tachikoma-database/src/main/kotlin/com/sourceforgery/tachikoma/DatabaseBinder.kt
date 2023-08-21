@@ -20,6 +20,7 @@ import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailAddressDAOImpl
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAO
 import com.sourceforgery.tachikoma.database.dao.IncomingEmailDAOImpl
+import com.sourceforgery.tachikoma.database.facade.AccountFacadeImpl
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.database.server.DBObjectMapper
 import com.sourceforgery.tachikoma.database.server.DBObjectMapperImpl
@@ -31,6 +32,7 @@ import com.sourceforgery.tachikoma.database.upgrades.Version1
 import com.sourceforgery.tachikoma.database.upgrades.Version10
 import com.sourceforgery.tachikoma.database.upgrades.Version11
 import com.sourceforgery.tachikoma.database.upgrades.Version12
+import com.sourceforgery.tachikoma.database.upgrades.Version13
 import com.sourceforgery.tachikoma.database.upgrades.Version2
 import com.sourceforgery.tachikoma.database.upgrades.Version3
 import com.sourceforgery.tachikoma.database.upgrades.Version4
@@ -54,6 +56,7 @@ val databaseModule = DI.Module("database") {
     bind<Database>() with singleton { EbeanServerFactory(di).provide() }
 
     importOnce(daoModule)
+    importOnce(facadeModule)
     bind<InvokeCounter>() with scoped(DatabaseSessionKodeinScope).singleton { LogEverything() }
     registerContextFinder { threadLocalDatabaseSessionScope.get() ?: error("Not in Database Session scope") }
     bind<DBObjectMapper>() with singleton { DBObjectMapperImpl }
@@ -74,6 +77,10 @@ private val daoModule = DI.Module("dao") {
     bind<IncomingEmailDAO>() with singleton { IncomingEmailDAOImpl(di) }
 }
 
+private val facadeModule = DI.Module("facade") {
+    bind<AccountFacadeImpl>() with singleton { AccountFacadeImpl(di) }
+}
+
 val databaseUpgradesModule = DI.Module("databaseUpgrades") {
     // NEVER EVER change order or insert elements anywhere but at the end of this list!!
     // These classes will be run in order before ebean starts
@@ -89,4 +96,5 @@ val databaseUpgradesModule = DI.Module("databaseUpgrades") {
     bind<Version10>() with provider { Version10() }
     bind<Version11>() with provider { Version11() }
     bind<Version12>() with singleton { Version12(di) }
+    bind<Version13>() with singleton { Version13(di) }
 }

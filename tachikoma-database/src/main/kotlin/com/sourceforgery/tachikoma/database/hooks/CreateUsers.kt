@@ -27,7 +27,7 @@ class CreateUsers(override val di: DI) : DIAware {
             .beginTransaction()
             .use {
                 for (mailDomain in mailDomains) {
-                    accountDAO.getByMailDomain(mailDomain)
+                    accountDAO.get(mailDomain)
                         ?: also {
                             val account = internalCreateUserService.createAccount(mailDomain)
                             LOGGER.error { "Creating new account and authentications for $mailDomain" }

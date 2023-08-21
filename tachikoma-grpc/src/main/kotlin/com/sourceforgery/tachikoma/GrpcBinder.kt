@@ -24,6 +24,7 @@ import com.sourceforgery.tachikoma.tracking.TrackingDecoder
 import com.sourceforgery.tachikoma.tracking.TrackingDecoderImpl
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoder
 import com.sourceforgery.tachikoma.unsubscribe.UnsubscribeDecoderImpl
+import com.sourceforgery.tachikoma.users.AccountServiceGrpcImpl
 import com.sourceforgery.tachikoma.users.UserService
 import com.sourceforgery.tachikoma.users.UserServiceGrpcImpl
 import org.kodein.di.DI
@@ -39,6 +40,7 @@ val grpcModule = DI.Module("grpc") {
     bind<BlockedEmailService>() with singleton { BlockedEmailService(di) }
     bind<EmailStatusEventService>() with singleton { EmailStatusEventService(di) }
 
+    bind<AccountServiceGrpcImpl>() with singleton { AccountServiceGrpcImpl(di) }
     bind<MTADeliveryServiceGrpcImpl>() with singleton { MTADeliveryServiceGrpcImpl(di) }
     bind<MTAEmailQueueServiceGrpcImpl>() with singleton { MTAEmailQueueServiceGrpcImpl(di) }
     bind<DeliveryNotificationServiceGrpcImpl>() with singleton { DeliveryNotificationServiceGrpcImpl(di) }

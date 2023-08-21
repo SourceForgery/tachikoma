@@ -9,7 +9,6 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import org.kodein.di.provider
-import java.net.InetSocketAddress
 
 class RemoteIPImpl(override val di: DI) : RemoteIP, DIAware {
     private val httpHeaders: () -> HttpHeaders by provider()
@@ -37,7 +36,7 @@ class RemoteIPImpl(override val di: DI) : RemoteIP, DIAware {
             .takeUnless { it.isNullOrBlank() }
 
     fun remoteSocket(requestContext: RequestContext) =
-        requestContext.remoteAddress<InetSocketAddress>()!!
+        requestContext.remoteAddress()!!
             .address
             .hostAddress
 }

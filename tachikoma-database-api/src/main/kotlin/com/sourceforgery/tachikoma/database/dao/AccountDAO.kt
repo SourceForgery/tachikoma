@@ -6,6 +6,6 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 
 interface AccountDAO {
     fun save(account: AccountDBO)
-    fun getById(accountId: AccountId): AccountDBO
-    fun getByMailDomain(mailDomain: MailDomain): AccountDBO?
+    operator fun get(accountId: AccountId): AccountDBO
+    operator fun get(mailDomain: MailDomain): AccountDBO?
 }

@@ -1,9 +1,16 @@
 package com.sourceforgery.tachikoma.webserver
 
+import com.linecorp.armeria.common.HttpData
+import com.linecorp.armeria.common.HttpMethod
+import com.linecorp.armeria.common.HttpResponse
+import com.linecorp.armeria.common.HttpStatus
+import com.linecorp.armeria.common.MediaType
 import com.linecorp.armeria.common.SessionProtocol
 import com.linecorp.armeria.common.grpc.GrpcSerializationFormats
+import com.linecorp.armeria.server.Route
 import com.linecorp.armeria.server.Server
 import com.linecorp.armeria.server.ServiceRequestContext
+import com.linecorp.armeria.server.graphql.GraphqlService
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
 import com.linecorp.armeria.server.healthcheck.HealthChecker
@@ -13,6 +20,8 @@ import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.databaseModule
 import com.sourceforgery.tachikoma.databaseUpgradesModule
+import com.sourceforgery.tachikoma.graphql.GraphqlSchemaGenerator
+import com.sourceforgery.tachikoma.graphql.graphqlApiModule
 import com.sourceforgery.tachikoma.grpcModule
 import com.sourceforgery.tachikoma.kodein.withNewDatabaseSessionScope
 import com.sourceforgery.tachikoma.memoizeWithExpiration
@@ -28,6 +37,7 @@ import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
 import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
+import graphql.GraphQL
 import io.ebean.Database
 import io.grpc.BindableService
 import io.grpc.ServerInterceptors
@@ -61,6 +71,7 @@ class WebServerStarter(override val di: DI) : DIAware {
     private val database: Database by instance()
     private val requestScoped: HttpRequestScopedDecorator by instance()
     private val remoteIP: RemoteIP by instance()
+    private val schemaGenerator: GraphqlSchemaGenerator by instance()
 
     private fun startServerInBackground(): CompletableFuture<Void> {
         val externalServicesCheck: Boolean by memoizeWithExpiration(5.seconds) {
@@ -86,6 +97,31 @@ class WebServerStarter(override val di: DI) : DIAware {
                     }
                 },
                 true
+            )
+            .service(Route.builder().exact("/graphql").methods(HttpMethod.GET).build()) { _, _ ->
+                HttpResponse.of(
+                    HttpStatus.OK,
+                    MediaType.HTML_UTF_8,
+                    graphqlPlayground,
+                )
+            }
+            .service(
+                "/graphql",
+                GraphqlService.builder()
+                    .configureGraphql({ graphqlBuilder: GraphQL.Builder ->
+                        graphqlBuilder.schema(
+                            schemaGenerator.generateGraphqlSchema(),
+                        )
+                    })
+                    .useBlockingTaskExecutor(true)
+                    .configureGraphql(listOf())
+                    .schemaFile(
+                        File.createTempFile("dummy", ".graphqls").also { file ->
+                            file.deleteOnExit()
+                            file.writeText("type Query { thisIsJustDummy: ID }")
+                        },
+                    )
+                    .build()
             )
             .decorator { delegate, ctx, req ->
                 try {
@@ -150,6 +186,14 @@ class WebServerStarter(override val di: DI) : DIAware {
     }
 
     companion object {
+        private val graphqlPlayground by lazy {
+            HttpData.copyOf(
+                requireNotNull(WebServerStarter::class.java.getResourceAsStream("/withAnimation.html")) {
+                    "Did not find /withAnimation.html"
+                }
+                    .use { it.readAllBytes() }
+            )
+        }
         private val LOGGER = logger()
     }
 }
@@ -168,6 +212,7 @@ fun main() {
         importOnce(grpcModule)
         importOnce(databaseModule)
         importOnce(databaseUpgradesModule)
+        importOnce(graphqlApiModule)
         importOnce(webModule)
         bind<HttpRequestScopedDecorator>() with singleton { HttpRequestScopedDecorator(di) }
     }

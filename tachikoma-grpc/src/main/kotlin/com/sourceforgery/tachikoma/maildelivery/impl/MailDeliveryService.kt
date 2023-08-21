@@ -36,7 +36,6 @@ import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlTrackingData
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.UnsubscribeData
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.AutoMailId
-import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageIdFactory
 import com.sourceforgery.tachikoma.maildelivery.getPlainText
 import com.sourceforgery.tachikoma.mq.JobMessageFactory
@@ -105,6 +104,9 @@ class MailDeliveryService(override val di: DI) : DIAware {
                     }
                 }
             )
+
+    private fun baseUrl(emailDBO: EmailDBO): URI =
+        emailDBO.transaction.authentication.account.baseUrl ?: trackingConfig.baseUrl
 
     suspend fun sendEmail(
         request: OutgoingEmail,
@@ -334,7 +336,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
             message.replyTo = arrayOf(InternetAddress(request.replyTo.email))
         }
 
-        val unsubscribeUri = createUnsubscribeOneClickPostLink(emailDBO.id, request.unsubscribeRedirectUri)
+        val unsubscribeUri = createUnsubscribeOneClickPostLink(emailDBO, request.unsubscribeRedirectUri)
         addListAndAbuseHeaders(
             message = message,
             emailDBO = emailDBO,
@@ -358,8 +360,8 @@ class MailDeliveryService(override val di: DI) : DIAware {
                     .prettyPrint(false)
             }
 
-            replaceLinks(htmlDoc, emailDBO.id, unsubscribeUri)
-            injectTrackingPixel(htmlDoc, emailDBO.id)
+            replaceLinks(htmlDoc, emailDBO, unsubscribeUri)
+            injectTrackingPixel(htmlDoc, emailDBO)
 
             val plainText = { getPlainText(htmlDoc) }
 
@@ -425,7 +427,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         message.addHeader("Return-Path", bounceReturnPathEmail.address)
         // TODO Abuse-email should be system-wide config parameter
         message.addHeader("X-Report-Abuse", "Please forward a copy of this message, including all headers, to abuse@${emailDBO.transaction.fromEmail.domain}")
-        val abuseUrl = JerseyUriBuilder(trackingConfig.baseUrl)
+        val abuseUrl = JerseyUriBuilder(baseUrl(emailDBO))
             .paths("abuse/{0}")
             .build(emailDBO.autoMailId.autoMailId)
         message.addHeader("X-Report-Abuse", "You can also report abuse here: $abuseUrl")
@@ -521,45 +523,45 @@ class MailDeliveryService(override val di: DI) : DIAware {
     }
 
     @TestOnly
-    fun createUnsubscribeOneClickPostLink(emailId: EmailId, unsubscribeRedirectUri: String): URI {
+    fun createUnsubscribeOneClickPostLink(email: EmailDBO, unsubscribeRedirectUri: String): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
-            .setEmailId(emailId.toGrpcInternal())
+            .setEmailId(email.id.toGrpcInternal())
             .setRedirectUrl(unsubscribeRedirectUri)
             .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
-        return JerseyUriBuilder(trackingConfig.baseUrl)
+        return JerseyUriBuilder(baseUrl(email))
             .paths("unsubscribe/{0}")
             .build(unsubscribeUrl)
     }
 
     @TestOnly
-    fun createUnsubscribeClickLink(emailId: EmailId, redirectUri: URI? = null): URI {
+    fun createUnsubscribeClickLink(email: EmailDBO, redirectUri: URI? = null): URI {
         val unsubscribeData = UnsubscribeData.newBuilder()
-            .setEmailId(emailId.toGrpcInternal())
+            .setEmailId(email.id.toGrpcInternal())
             .setRedirectUrl(redirectUri?.toString() ?: "")
             .build()
         val unsubscribeUrl = unsubscribeDecoderImpl.createUrl(unsubscribeData)
 
-        return JerseyUriBuilder(trackingConfig.baseUrl)
+        return JerseyUriBuilder(baseUrl(email))
             .paths("unsubscribe/{0}")
             .build(unsubscribeUrl)
     }
 
     @TestOnly
-    fun createTrackingLink(emailId: EmailId, originalUri: String): URI {
+    fun createTrackingLink(email: EmailDBO, originalUri: String): URI {
         val trackingData = UrlTrackingData.newBuilder()
-            .setEmailId(emailId.toGrpcInternal())
+            .setEmailId(email.id.toGrpcInternal())
             .setRedirectUrl(originalUri)
             .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-        return JerseyUriBuilder(trackingConfig.baseUrl)
+        return JerseyUriBuilder(baseUrl(email))
             .paths("c/{0}")
             .build(trackingUrl)
     }
 
-    private fun replaceLinks(doc: Document, emailId: EmailId, unsubscribeUri: URI) {
+    private fun replaceLinks(doc: Document, email: EmailDBO, unsubscribeUri: URI) {
         val links = doc.select("a[href]")
         for (link in links) {
             val originalUri = link.attr("href")
@@ -568,19 +570,19 @@ class MailDeliveryService(override val di: DI) : DIAware {
             } else if (originalUri.startsWith("http://") || originalUri.startsWith("https://")) {
                 link.attr(
                     "href",
-                    createTrackingLink(emailId, originalUri).toString()
+                    createTrackingLink(email, originalUri).toString()
                 )
             }
         }
     }
 
-    private fun injectTrackingPixel(doc: Document, emailId: EmailId) {
+    private fun injectTrackingPixel(doc: Document, email: EmailDBO) {
         val trackingData = UrlTrackingData.newBuilder()
-            .setEmailId(emailId.toGrpcInternal())
+            .setEmailId(email.id.toGrpcInternal())
             .build()
         val trackingUrl = trackingDecoderImpl.createUrl(trackingData)
 
-        val trackingUri = JerseyUriBuilder(trackingConfig.baseUrl)
+        val trackingUri = JerseyUriBuilder(baseUrl(email))
             .paths("t/{0}")
             .build(trackingUrl)
 

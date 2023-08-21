@@ -1,7 +1,8 @@
 package com.sourceforgery.tachikoma.identifiers
 
 // Will be of format "<uuid>@${mailDomain}"
-data class MessageId(val messageId: String) {
+@JvmInline
+value class MessageId(val messageId: String) {
     // Don't change as it's used in templates
     override fun toString() = messageId
 

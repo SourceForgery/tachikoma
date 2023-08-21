@@ -66,7 +66,7 @@ class MTAEmailQueueServiceTest {
         val accountDAO: AccountDAO by di.instance()
 
         // Setup auth
-        val account = accountDAO.getByMailDomain(databaseConfig.mailDomains.first())!!
+        val account = accountDAO.get(databaseConfig.mailDomains.first())!!
         authenticationDBO =
             account.authentications
                 .first { it.role == AuthenticationRole.BACKEND }

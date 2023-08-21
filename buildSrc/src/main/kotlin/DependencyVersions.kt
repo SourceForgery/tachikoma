@@ -65,6 +65,7 @@ fun Project.forcedDependencies(): Set<String> {
         "com.google.code.gson:gson:$gsonVersion",
         "com.google.errorprone:error_prone_annotations:$errorProneAnnotationsVersion",
         "com.google.guava:guava:$guavaVersion",
+        "com.graphql-java:graphql-java:20.4",
         "com.h2database:h2:$h2Version",
         "com.linecorp.armeria:armeria-grpc:$armeriaVersion",
         "com.linecorp.armeria:armeria-grpc:$armeriaVersion",
@@ -91,6 +92,7 @@ fun Project.forcedDependencies(): Set<String> {
         "org.jsoup:jsoup:$jsoupVersion",
         "org.kodein.di:kodein-di:$kodeinVersion",
         "org.postgresql:postgresql:$postgresqlDriverVersion",
+        "org.reactivestreams:reactive-streams:1.0.4",
         "org.slf4j:slf4j-api:$slf4jVersion",
     )
 }

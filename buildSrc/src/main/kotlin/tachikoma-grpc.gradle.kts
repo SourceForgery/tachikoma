@@ -19,7 +19,7 @@ val javaVersion: String by project
 val downloadProtocLint: DownloadFileTask = rootProject.tasks.findByName("downloadProtocLint") as? DownloadFileTask
     ?: rootProject.tasks.create("downloadProtocLint", DownloadFileTask::class.java) {
         url =
-            { URL("https://github.com/ckaznocha/protoc-gen-lint/releases/download/v0.2.1/protoc-gen-lint_$nativePrefix.zip") }
+            { URL("https://github.com/ckaznocha/protoc-gen-lint/releases/download/v0.3.0/protoc-gen-lint_$nativePrefix.zip") }
         outputFile = File(rootProject.buildDir, "protoc-gen-lint")
         zipFileMatcher = { "protoc-gen-lint" == it.name }
     }
@@ -48,14 +48,6 @@ extensions.getByType<IdeaModel>().apply {
     }
 }
 
-// sourceSets {
-//     "main" {
-//         resources {
-//             srcDir("src/main/proto")
-//         }
-//     }
-// }
-
 protobuf {
     val protocVersion: String by project
     val grpcVersion: String by project
@@ -71,7 +63,7 @@ protobuf {
             artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
         }
         id("grpckt") {
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk7@jar"
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk8@jar"
         }
         id("lint") {
             path = downloadProtocLint.outputFile.absolutePath

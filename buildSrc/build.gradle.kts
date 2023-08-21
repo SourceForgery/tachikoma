@@ -27,6 +27,10 @@ val slf4jVersion: String by project
 val commonsLoggingVersion: String by project
 val commonsLangVersion: String by project
 
+kotlinDslPluginOptions {
+    jvmTarget.set("11")
+}
+
 configurations.all {
     resolutionStrategy {
         failOnVersionConflict()
