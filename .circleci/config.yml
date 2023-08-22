@@ -43,7 +43,7 @@ jobs:
           path: ~/test-results/junit
   releasebuild:
     docker:
-      - image: circleci/openjdk:11-jdk
+      - image: circleci/openjdk:17-jdk
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit

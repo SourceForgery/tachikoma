@@ -9,6 +9,8 @@ plugins {
 
 val kotlinVersion: String by project
 dependencies {
+    api("com.github.breadmoirai:github-release:2.4.1")
+
     val guavaVersion: String by project
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.1")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:10.2.1")
@@ -17,8 +19,17 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.42.0")
     implementation("org.apache.commons:commons-compress:1.21")
-    api("com.github.breadmoirai:github-release:2.4.1")
     implementation("com.google.guava:guava:$guavaVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    val expediagroupGraphqlVersion by properties
+    implementation("com.expediagroup:graphql-kotlin-gradle-plugin:$expediagroupGraphqlVersion") {
+        exclude("org.jetbrains.kotlin", "kotlin-stdlib-common")
+        exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
+        exclude("org.jetbrains.kotlin", "kotlin-gradle-plugin-api")
+        exclude("org.jetbrains.kotlinx", "kotlinx-coroutines-core-jvm")
+        exclude("org.jetbrains.kotlin", "kotlin-reflect")
+    }
 }
 
 val jacksonVersion: String by project
@@ -28,7 +39,7 @@ val commonsLoggingVersion: String by project
 val commonsLangVersion: String by project
 
 kotlinDslPluginOptions {
-    jvmTarget.set("11")
+    jvmTarget.set("17")
 }
 
 configurations.all {

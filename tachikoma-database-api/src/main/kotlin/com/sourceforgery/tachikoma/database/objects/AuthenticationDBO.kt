@@ -38,6 +38,10 @@ class AuthenticationDBO(
     val emailSendTransactionDBO: List<EmailSendTransactionDBO> = ArrayList()
     @Column
     var active = true
+
+    override fun toString(): String {
+        return "AuthenticationDBO(id=$id, role=$role, login=$login)"
+    }
 }
 
 val AuthenticationDBO.id: AuthenticationId

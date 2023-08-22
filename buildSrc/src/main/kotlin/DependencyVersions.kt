@@ -85,6 +85,7 @@ fun Project.forcedDependencies(): Set<String> {
         "javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion",
         "net.bytebuddy:byte-buddy:$bytebuddyVersion",
         "net.sf.expectit:expectit-core:$expectItVersion",
+        "org.apache.httpcomponents:httpcore:4.4.15",
         "org.apache.logging.log4j:log4j-api-kotlin:$log4jApiKotlin",
         "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
         "org.jetbrains.kotlinx:kotlinx-html-jvm:$kotlinxHtmlVersion",

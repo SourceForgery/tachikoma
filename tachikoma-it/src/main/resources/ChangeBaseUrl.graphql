@@ -1,0 +1,9 @@
+mutation ChangeBaseUrl($mailDomain: MailDomain!, $baseUrl: URI) {
+    accounts {
+        changeBaseUrl(mailDomain: $mailDomain, baseUrl: $baseUrl) {
+            mailDomain
+            baseUrl
+            id
+        }
+    }
+}

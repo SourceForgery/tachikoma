@@ -30,8 +30,8 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.restModule
 import com.sourceforgery.tachikoma.testModule
 import com.sourceforgery.tachikoma.users.UserService
-import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
+import com.sourceforgery.tachikoma.webserver.webModule
 import io.ebean.Database
 import io.mockk.every
 import io.mockk.mockk

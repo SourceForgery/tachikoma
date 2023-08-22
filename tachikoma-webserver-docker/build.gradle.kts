@@ -10,11 +10,11 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     applicationName.set("tachikoma-webserver")
 
-    baseImage.set("ubuntu:20.04")
+    baseImage.set("ubuntu:22.04")
 
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
 
-    runCommand("apt-get update && apt-get -y --no-install-recommends install curl rsyslog rsyslog-gnutls less nvi openjdk-11-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*")
+    runCommand("apt-get update && apt-get -y --no-install-recommends install curl rsyslog rsyslog-gnutls less nvi openjdk-17-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*")
 
     runCommand(
         """

@@ -6,6 +6,7 @@ import java.time.Clock
 plugins {
     id("com.github.ben-manes.versions")
     id("net.researchgate.release") version "2.8.1"
+    id("com.expediagroup.graphql")
     id("com.github.breadmoirai.github-release")
     `java-library`
 }

@@ -7,5 +7,5 @@ import java.net.URI
 class AccountResponse(
     val id: AccountId,
     val mailDomain: MailDomain,
-    val baseUrl: URI?,
+    val baseUrl: URI,
 )

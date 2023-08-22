@@ -284,7 +284,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
     }
 
     private fun unwrapStruct(struct: Struct): HashMap<String, Any> {
-        return dbObjectMapper.objectMapper.readValue<HashMap<String, Any>>(
+        return dbObjectMapper.objectMapper.readValue(
             JsonFormat.printer().print(struct),
             object : TypeReference<HashMap<String, Any>>() {}
         )
