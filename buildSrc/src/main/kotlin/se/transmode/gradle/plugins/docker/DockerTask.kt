@@ -340,6 +340,7 @@ abstract class DockerTask : DefaultTask() {
         if (!dryRun.get()) {
             val client = client
             client.buildImage(stageDir.get().asFile, tag)
+            logger.warn("pushState: {}", push.get())
             if (push.get()) {
                 client.pushImage(tag)
             }

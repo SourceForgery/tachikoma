@@ -1,3 +1,5 @@
+import com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension
+import com.github.breadmoirai.githubreleaseplugin.GithubReleaseTask
 import graphql.GraphqlSchemaGeneratorTask
 
 plugins {
@@ -38,8 +40,11 @@ tasks.assemble {
     dependsOn(graphqlSchemaGenerator)
 }
 
-rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension> {
+rootProject.extensions.configure<GithubReleaseExtension> {
     releaseAssets.from(graphqlsFile)
+}
+rootProject.tasks.named<GithubReleaseTask>("githubRelease") {
+    dependsOn(graphqlSchemaGenerator)
 }
 
 artifacts {
