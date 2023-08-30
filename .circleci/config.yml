@@ -71,7 +71,7 @@ jobs:
           docker version
           echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
           export DOCKER_PUSH=true
-          ./gradlew assemble publish --stacktrace
+          ./gradlew assemble publish --stacktrace --info
 
 workflows:
   version: 2

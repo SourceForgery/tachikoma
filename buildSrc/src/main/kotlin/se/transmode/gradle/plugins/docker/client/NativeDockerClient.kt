@@ -15,12 +15,18 @@
  */
 package se.transmode.gradle.plugins.docker.client
 
+import org.gradle.api.GradleException
+import org.gradle.api.Project
 import java.io.File
 import se.transmode.gradle.plugins.docker.executeAndWait
 
-internal class NativeDockerClient(private val binary: String) : DockerClient {
+internal class NativeDockerClient(
+    private val binary: String,
+    private val project: Project
+) : DockerClient {
     override fun buildImage(buildDir: File, tag: String) {
-        executeAndWait(
+        project.logger.info("Docker build $tag")
+        project.executeAndWait(
             listOf(
                 binary,
                 "build",
@@ -32,7 +38,8 @@ internal class NativeDockerClient(private val binary: String) : DockerClient {
     }
 
     override fun pushImage(tag: String) {
-        executeAndWait(
+        project.logger.info("Docker push $tag")
+        project.executeAndWait(
             listOf(
                 binary,
                 "push",

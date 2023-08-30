@@ -88,10 +88,6 @@ abstract class DockerTask : DefaultTask() {
     @Internal
     val stageBacklog = mutableListOf<Runnable>()
 
-    // Should we use Docker's remote API instead of the docker executable
-    @get:Input
-    abstract val useApi: Property<Boolean>
-
     // URL of the remote Docker host (default: localhost)
     @get:Input
     @get:Optional
@@ -136,7 +132,6 @@ abstract class DockerTask : DefaultTask() {
         baseImage.convention(extension.baseImage)
         dockerBinary.convention(extension.dockerBinary)
         registry.convention(extension.registry)
-        useApi.convention(extension.useApi)
         hostUrl.convention(extension.hostUrl)
         apiUsername.convention(extension.apiUsername)
         apiPassword.convention(extension.apiPassword)
@@ -349,21 +344,8 @@ abstract class DockerTask : DefaultTask() {
 
     private val client: DockerClient
         get() {
-            val client: DockerClient
-            if (useApi.get()) {
-                TODO("Not implemented")
-//                logger.info("Using the Docker remote API.")
-//                client = JavaDockerClient.create(
-//                    getHostUrl(),
-//                    getApiUsername(),
-//                    getApiPassword(),
-//                    getApiEmail()
-//                )
-            } else {
-                logger.info("Using the native docker binary.")
-                client = NativeDockerClient(dockerBinary.get())
-            }
-            return client
+            logger.info("Using the native docker binary.")
+            return NativeDockerClient(dockerBinary.get(), project)
         }
 }
 
@@ -372,6 +354,7 @@ fun Project.toTree(it: File): FileTree {
         it.isDirectory -> fileTree(it)
         it.name.endsWith("tar.gz") ||
             it.name.endsWith("tar") -> tarTree(it)
+
         it.name.endsWith("zip") -> zipTree(it)
         else -> TODO("Don't know how to get a tree from $it")
     }
