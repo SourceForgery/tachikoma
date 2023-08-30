@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -68,33 +69,33 @@ class MailDeliveryServiceTest : DIAware {
 
     @Test
     fun `Simple email inlined css`() {
-        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
-        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expected.html").readText()).html()
+        val input = parseJsoupResource("/wrapAndPackBody/parseHTML/simple/input.html").html()
+        val expected = parseJsoupResource("/wrapAndPackBody/parseHTML/simple/expected.html").html()
         val actual = mailDeliveryService.parseHTML(input, "", true).html()
         assertEquals(expected, actual)
     }
 
     @Test
     fun `Complex email inlined css`() {
-        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
-        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expected.html").readText()).html()
-        val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", true).html()).html()
+        val input = parseJsoupResource("/wrapAndPackBody/parseHTML/complex/input.html").html()
+        val expected = parseJsoupResource("/wrapAndPackBody/parseHTML/complex/expected.html").html()
+        val actual = parseJsoupHtml(mailDeliveryService.parseHTML(input, "", true).html()).html()
         assertEquals(expected, actual)
     }
 
     @Test
     fun `Simple email no css inlineing`() {
-        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/input.html").readText()
-        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/simple/expectedNoInlining.html").readText()).html()
+        val input = parseJsoupResource("/wrapAndPackBody/parseHTML/simple/input.html").html()
+        val expected = parseJsoupResource("/wrapAndPackBody/parseHTML/simple/expectedNoInlining.html").html()
         val actual = mailDeliveryService.parseHTML(input, "", false).html()
         assertEquals(expected, actual)
     }
 
     @Test
     fun `Complex email no css inlining`() {
-        val input = this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/input.html").readText()
-        val expected = Jsoup.parse(this.javaClass.getResource("/wrapAndPackBody/parseHTML/complex/expectedNoInlining.html").readText()).html()
-        val actual = Jsoup.parse(mailDeliveryService.parseHTML(input, "", false).html()).html()
+        val input = parseJsoupResource("/wrapAndPackBody/parseHTML/complex/input.html").html()
+        val expected = parseJsoupResource("/wrapAndPackBody/parseHTML/complex/expectedNoInlining.html").html()
+        val actual = parseJsoupHtml(mailDeliveryService.parseHTML(input, "", false).html()).html()
         assertEquals(expected, actual)
     }
 
@@ -148,11 +149,21 @@ class MailDeliveryServiceTest : DIAware {
         }
         val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
 
-        val expected = this.javaClass.getResourceAsStream("/attachment_email.txt").use {
+        val expected = this.javaClass.getResourceAsStream("/attachment_email.txt")!!.use {
             it.readBytes().toString(StandardCharsets.UTF_8)
         }
         assertEquals(expected, byEmailId.body!!)
     }
+
+    private fun parseJsoupHtml(html: String): Document =
+        Jsoup.parse(html)
+
+    private fun parseJsoupResource(resourceName: String): Document =
+        Jsoup.parse(
+            requireNotNull(javaClass.getResource(resourceName)) {
+                "Didn't find $resourceName"
+            }.readText()
+        )
 
     companion object {
         val validEmail: NamedEmailAddress = NamedEmailAddress.newBuilder().setEmail("foo@example.com").setName("Valid Email").build()

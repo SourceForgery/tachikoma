@@ -17,7 +17,6 @@ import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.AuthenticationDBO
 import com.sourceforgery.tachikoma.database.objects.EmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailSendTransactionDBO
-import com.sourceforgery.tachikoma.database.objects.id
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.AddUserRequest
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.FrontendUserRole
 import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.PasswordAuth
@@ -31,8 +30,8 @@ import com.sourceforgery.tachikoma.rest.RestService
 import com.sourceforgery.tachikoma.rest.restModule
 import com.sourceforgery.tachikoma.testModule
 import com.sourceforgery.tachikoma.users.UserService
-import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
+import com.sourceforgery.tachikoma.webserver.webModule
 import io.ebean.Database
 import io.mockk.every
 import io.mockk.mockk
@@ -196,8 +195,8 @@ class UnsubscribeRestTest : DIAware {
         )
         ebeanServer.save(emailDBO)
 
-        unsubscribeOneClickPostUri = mailDeliveryService.createUnsubscribeOneClickPostLink(emailDBO.id, "")
-        unsubscribeClickUri = mailDeliveryService.createUnsubscribeClickLink(emailDBO.id)
+        unsubscribeOneClickPostUri = mailDeliveryService.createUnsubscribeOneClickPostLink(emailDBO, "")
+        unsubscribeClickUri = mailDeliveryService.createUnsubscribeClickLink(emailDBO)
     }
 
     @After

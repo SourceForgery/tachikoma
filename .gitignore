@@ -1,5 +1,6 @@
 /.idea/
 *.iml
+/.run/
 
 # Gradle
 /build/
@@ -10,3 +11,5 @@
 tachikoma-create-all.sql
 tachikoma-drop-all.sql
 
+*.key
+*.crt

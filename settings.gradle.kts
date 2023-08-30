@@ -7,6 +7,7 @@ include(
     "tachikoma-backend-api-proto",
     "tachikoma-backend-api-proto:tachikoma-backend-api-jvm",
 
+    "tachikoma-frontend-api-graphql",
     "tachikoma-frontend-api-proto",
     "tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm",
 // "tachikoma-frontend-api-proto:tachikoma-frontend-api-js",

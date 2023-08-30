@@ -117,7 +117,7 @@ class AuthenticationFactory(override val di: DI) : DIAware {
         val LOGGER = logger()
         val BASE64_DECODER = Base64.getDecoder()!!
         val NO_AUTHENTICATION: Authentication =
-            ThrowingAuthentication { NoAuthorizationCredentialsException() }
+            ThrowingAuthentication { NoAuthorizationCredentialsException("No auth credentials") }
 
         val WEBTOKEN_HEADER = AsciiString("x-webtoken")
         val APITOKEN_HEADER = AsciiString("x-apitoken")
@@ -132,7 +132,7 @@ internal class AuthenticationImpl(
 ) : Authentication {
 
     override val mailDomain: MailDomain by lazy {
-        accountDAO.getById(accountId).mailDomain
+        accountDAO.get(accountId).mailDomain
     }
 
     override fun requireFrontend(): AccountId {
@@ -149,7 +149,7 @@ internal class AuthenticationImpl(
             throw InvalidOrInsufficientCredentialsException("auth domain (${this.mailDomain}) is not the same as the request one ($mailDomain")
         }
         if (role != AuthenticationRole.FRONTEND_ADMIN) {
-            throw InvalidOrInsufficientCredentialsException()
+            throw InvalidOrInsufficientCredentialsException("Invalid or insufficient credentials")
         }
         return accountId
     }

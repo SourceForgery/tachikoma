@@ -1,0 +1,9 @@
+query GetAccountData($mailDomain: MailDomain!) {
+    accounts {
+        getAccountData(mailDomain: $mailDomain) {
+            mailDomain
+            baseUrl
+            id
+        }
+    }
+}

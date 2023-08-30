@@ -12,7 +12,7 @@ class AccountDAOImpl(override val di: DI) : AccountDAO, DIAware {
 
     private val database: Database by instance()
 
-    override fun getByMailDomain(mailDomain: MailDomain) =
+    override fun get(mailDomain: MailDomain) =
         database
             .find(AccountDBO::class.java)
             .where()
@@ -21,7 +21,7 @@ class AccountDAOImpl(override val di: DI) : AccountDAO, DIAware {
 
     override fun save(account: AccountDBO) = database.save(account)
 
-    override fun getById(accountId: AccountId) =
+    override fun get(accountId: AccountId) =
         requireNotNull(database.find(AccountDBO::class.java, accountId.accountId)) {
             "Could not find account with id $accountId"
         }

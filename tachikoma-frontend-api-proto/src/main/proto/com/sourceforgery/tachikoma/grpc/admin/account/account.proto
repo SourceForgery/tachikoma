@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option go_package = "./";
+
+package com.sourceforgery.tachikoma.grpc.frontend.admin.account;
+
+service AccountService {
+    rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+}
+
+message UpdateSettingsRequest {
+    // Which mail domain the account is used for
+    string mail_domain = 1;
+
+    // What uri is used for prefixing tracking and unsubscribe urls e.g. https://example.com/
+    // While technically not necessarily a CNAME/A record for Tachikoma, it needs to proxy everything to tachikoma
+    optional string base_url = 5;
+}
+
+message UpdateSettingsResponse {
+    // Which mail domain the account is used for
+    string mail_domain = 1;
+
+    // What uri is used for prefixing tracking and unsubscribe urls e.g. https://example.com/
+    // While technically not necessarily a CNAME/A record for Tachikoma, it needs to proxy everything to tachikoma
+    string base_url = 5;
+}

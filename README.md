@@ -38,7 +38,7 @@ What it uses:
 Setting up the different programs necessary to develop (not run)
 it in IntelliJ.
 
-* JDK 11
+* JDK 17
 
 ** Running **
 

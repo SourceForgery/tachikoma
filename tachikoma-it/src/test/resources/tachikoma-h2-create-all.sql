@@ -2,6 +2,7 @@
 create table e_account (
   id                            decimal(20) not null,
   mail_domain                   varchar(255) not null,
+  base_url                      varchar(255),
   version                       bigint not null,
   date_created                  timestamp not null,
   last_updated                  timestamp not null,

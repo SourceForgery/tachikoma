@@ -1,4 +1,4 @@
-package com.sourceforgery.tachikoma.webserver.hk2
+package com.sourceforgery.tachikoma.webserver
 
 import com.linecorp.armeria.common.HttpHeaders
 import com.linecorp.armeria.common.HttpRequest
@@ -6,11 +6,10 @@ import com.linecorp.armeria.common.RequestContext
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.kodein.threadLocalRequestContext
 import com.sourceforgery.tachikoma.tracking.RemoteIP
-import com.sourceforgery.tachikoma.webserver.AuthenticationFactory
-import com.sourceforgery.tachikoma.webserver.RemoteIPImpl
 import com.sourceforgery.tachikoma.webserver.catchers.InvalidOrInsufficientCredentialsCatcher
 import com.sourceforgery.tachikoma.webserver.catchers.NoAuthorizationCredentialsCatcher
 import com.sourceforgery.tachikoma.webserver.catchers.NotFoundCatcher
+import com.sourceforgery.tachikoma.webserver.graphql.GraphqlServiceProvider
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import org.kodein.di.DI
@@ -35,6 +34,7 @@ val webModule = DI.Module("web") {
     bind<GrpcExceptionInterceptor>() with singleton { GrpcExceptionInterceptor(di) }
     bind<RestExceptionHandlerFunction>() with singleton { RestExceptionHandlerFunction(di) }
     bind<RemoteIP>() with singleton { RemoteIPImpl(di) }
+    bind<GraphqlServiceProvider>() with singleton { GraphqlServiceProvider(di) }
 }
 
 private val catchersModule = DI.Module("catchers") {

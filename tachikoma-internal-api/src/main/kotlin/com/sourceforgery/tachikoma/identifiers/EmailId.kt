@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.identifiers
 
-data class EmailId(val emailId: Long) {
+@JvmInline
+value class EmailId(val emailId: Long) {
     override fun toString() = "EmailId: $emailId"
 
     companion object {

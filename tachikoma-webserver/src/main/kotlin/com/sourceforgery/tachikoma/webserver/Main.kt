@@ -13,6 +13,7 @@ import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.hooks.CreateUsers
 import com.sourceforgery.tachikoma.databaseModule
 import com.sourceforgery.tachikoma.databaseUpgradesModule
+import com.sourceforgery.tachikoma.graphql.graphqlApiModule
 import com.sourceforgery.tachikoma.grpcModule
 import com.sourceforgery.tachikoma.kodein.withNewDatabaseSessionScope
 import com.sourceforgery.tachikoma.memoizeWithExpiration
@@ -24,9 +25,9 @@ import com.sourceforgery.tachikoma.rest.restModule
 import com.sourceforgery.tachikoma.startup.startupModule
 import com.sourceforgery.tachikoma.tracking.REMOTE_IP_ATTRIB
 import com.sourceforgery.tachikoma.tracking.RemoteIP
+import com.sourceforgery.tachikoma.webserver.graphql.GraphqlServiceProvider
 import com.sourceforgery.tachikoma.webserver.grpc.GrpcExceptionInterceptor
 import com.sourceforgery.tachikoma.webserver.grpc.HttpRequestScopedDecorator
-import com.sourceforgery.tachikoma.webserver.hk2.webModule
 import com.sourceforgery.tachikoma.webserver.rest.RestExceptionHandlerFunction
 import io.ebean.Database
 import io.grpc.BindableService
@@ -61,6 +62,7 @@ class WebServerStarter(override val di: DI) : DIAware {
     private val database: Database by instance()
     private val requestScoped: HttpRequestScopedDecorator by instance()
     private val remoteIP: RemoteIP by instance()
+    private val graphqlService: GraphqlServiceProvider by instance()
 
     private fun startServerInBackground(): CompletableFuture<Void> {
         val externalServicesCheck: Boolean by memoizeWithExpiration(5.seconds) {
@@ -87,6 +89,7 @@ class WebServerStarter(override val di: DI) : DIAware {
                 },
                 true
             )
+            .also { graphqlService.addGraphqlService(it) }
             .decorator { delegate, ctx, req ->
                 try {
                     ctx.setAttr(REMOTE_IP_ATTRIB, remoteIP.remoteAddress)
@@ -168,6 +171,7 @@ fun main() {
         importOnce(grpcModule)
         importOnce(databaseModule)
         importOnce(databaseUpgradesModule)
+        importOnce(graphqlApiModule)
         importOnce(webModule)
         bind<HttpRequestScopedDecorator>() with singleton { HttpRequestScopedDecorator(di) }
     }

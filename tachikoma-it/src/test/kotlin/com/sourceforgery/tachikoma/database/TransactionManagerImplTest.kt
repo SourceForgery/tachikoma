@@ -35,15 +35,14 @@ class TransactionManagerImplTest : DIAware {
         val txManager = (database as SpiEbeanServer).transactionManager().scope()
         runBlocking {
             val thread = Thread.currentThread()
-            lateinit var id: AccountId
             assertNull(txManager.inScope())
-            transactionManager.coroutineTx { tx ->
+            val id = transactionManager.coroutineTx { tx ->
                 withContext(Dispatchers.IO) {
                     val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                     database.save(accountDBO)
-                    id = accountDBO.id
                     assertNotSame(thread, Thread.currentThread())
                     assertSame(tx, txManager.inScope())
+                    accountDBO.id
                 }
             }
             assertNull(txManager.inScope())
@@ -57,7 +56,7 @@ class TransactionManagerImplTest : DIAware {
         val txManager = (database as SpiEbeanServer).transactionManager().scope()
         runBlocking {
             val thread = Thread.currentThread()
-            lateinit var id: AccountId
+            var id: AccountId? = null
             assertNull(txManager.inScope())
             assertFailsWith(AbortException::class) {
                 transactionManager.coroutineTx { tx ->
@@ -67,14 +66,14 @@ class TransactionManagerImplTest : DIAware {
                         id = accountDBO.id
                         assertNotSame(thread, Thread.currentThread())
                         assertSame(tx, txManager.inScope())
-                        val account = database.find<AccountDBO>(id)
+                        val account = database.find<AccountDBO>(accountDBO.id)
                         assertNotNull(account)
                         throw AbortException()
                     }
                 }
             }
             assertNull(txManager.inScope())
-            val account = database.find<AccountDBO>(id)
+            val account = database.find<AccountDBO>(id!!)
             assertNull(account)
         }
     }
@@ -84,7 +83,7 @@ class TransactionManagerImplTest : DIAware {
         val txManager = (database as SpiEbeanServer).transactionManager().scope()
         runBlocking {
             val thread = Thread.currentThread()
-            lateinit var id: AccountId
+            var id: AccountId? = null
             assertNull(txManager.inScope())
             assertFailsWith(AbortException::class) {
                 transactionManager.coroutineTx { tx ->
@@ -94,20 +93,20 @@ class TransactionManagerImplTest : DIAware {
                         id = accountDBO.id
                         assertNotSame(thread, Thread.currentThread())
                         assertSame(tx, txManager.inScope())
-                        val account = database.find<AccountDBO>(id)
+                        val account = database.find<AccountDBO>(id!!)
                         assertNotNull(account)
                         throw AbortException()
                     }
                 }
             }
             assertNull(txManager.inScope())
-            assertNull(database.find<AccountDBO>(id))
+            assertNull(database.find<AccountDBO>(id!!))
             transactionManager.coroutineTx {
                 val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
                 database.save(accountDBO)
                 id = accountDBO.id
             }
-            assertNotNull(database.find<AccountDBO>(id))
+            assertNotNull(database.find<AccountDBO>(id!!))
         }
     }
 

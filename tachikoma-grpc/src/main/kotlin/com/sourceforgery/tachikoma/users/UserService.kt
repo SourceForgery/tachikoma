@@ -48,7 +48,7 @@ class UserService(
         } else {
             null
         }
-        val account = accountDAO.getByMailDomain(MailDomain(request.mailDomain))!!
+        val account = accountDAO.get(MailDomain(request.mailDomain))!!
 
         val newAuth = internalCreateUsers.createFrontendAuthentication(
             role = role,
@@ -107,14 +107,14 @@ class UserService(
             .apply {
                 user = toUser(auth)
                 if (addApiToken) {
-                    apiToken = auth.apiToken
+                    apiToken = auth.apiToken!!
                 }
             }
             .build()
     }
 
     fun getFrontendUsers(mailDomain: MailDomain): Flow<FrontendUser> =
-        accountDAO.getByMailDomain(mailDomain = mailDomain)!!
+        accountDAO.get(mailDomain = mailDomain)!!
             .authentications
             .asFlow()
             .filter { it.role == AuthenticationRole.FRONTEND_ADMIN || it.role == AuthenticationRole.FRONTEND }
