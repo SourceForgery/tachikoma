@@ -23,7 +23,12 @@ internal class Configuration :
     override val baseUrl: URI by readConfig("BASE_URL", URI("http://localhost:8070/"))
     override val sslCertChainFile by readConfig("SSL_CERT_CHAIN_FILE", "")
     override val sslCertKeyFile by readConfig("SSL_CERT_KEY_FILE", "")
-    override val mailDomains by readListConfig("MAIL_DOMAINS", listOf(MailDomain("example.com")))
-    override val unsubscribeDomainOverride by readConfig("UNSUBSCRIBE_DOMAIN_OVERRIDE", null as MailDomain?)
+    private val stringMailDomains by readListConfig("MAIL_DOMAINS", listOf("example.com"))
+    override val mailDomains: List<MailDomain> by lazy {
+        stringMailDomains.map { MailDomain(it) }
+    }
+    private val stringUnsubscribeDomainOverride by readConfig("UNSUBSCRIBE_DOMAIN_OVERRIDE", null as String?)
+    override val unsubscribeDomainOverride: MailDomain?
+        get() = stringUnsubscribeDomainOverride?.let { MailDomain(it) }
     override val overridingClientIpHeader by readConfig("OVERRIDING_REMOTE_IP_HEADER", "")
 }
