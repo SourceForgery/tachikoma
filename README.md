@@ -12,11 +12,11 @@ Primary features
 * Block lists for unsubscribed emails (per sender email)
 * Zero Downtime upgrades for web server
 * No messages lost, not even during upgrade
+* Queue outgoing emails until a specific time
 
 
 Possible later improvements:
-* Queue outgoing emails until a specific time
-* Web API
+* Web API (Currently only one endpoint is available in GraphQL)
 * Template support
 
 
