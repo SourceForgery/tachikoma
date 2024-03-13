@@ -89,18 +89,21 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
     companion object {
         private val hardBounceList = listOf(
             "5.0.0", // Generic error
-            "5.4.1", // Spam
-            "5.5.0", // Unknown recipient
-            "5.4.4", // Unable to route??
-            "5.2.2", // Mailbox full
             "5.1.0", // Blocked by recipient
             "5.1.1", // Unknown recipient
-            "5.7.1", // Unknown recipient
-            "5.3.0", // Spam
+            "5.2.0", // Other or undefined mailbox status
+            "5.2.1", // Mailbox disabled, not accepting messages
+            "5.2.2", // Mailbox full
+            "5.4.1", // Spam
+            "5.4.4", // Unable to route??
+            "5.5.0", // Unknown recipient
+            "5.5.1", // User unknown
+            "5.7.1", // Unknown recipient"5.3.0", // Spam
         )
         private val softBounceList = listOf(
             "4.0.0", // Generic soft bounce
             "4.1.0", // Rate limited
+            "4.1.1", // Unknown user, but retry(sic!)
             "4.1.8", // Domain is not resolving. This is a most likely a major problem
             "4.2.0", // Temporarily deferred due to user complaints (SPAM?)
             "4.2.2", // Mailbox is full
@@ -111,6 +114,7 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             "4.4.4", // Delayed message: Email routing issue due to network
             "4.7.0", // Temporary failure. Could be auth (Exchange) or just snafu (Gmail)
             "4.7.1", // Temporarily deferred due to user complaints (SPAM?)
+            "4.7.5", // TLS problems
         )
         private val LOGGER = logger()
     }
