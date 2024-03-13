@@ -96,7 +96,7 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             "5.1.0", // Blocked by recipient
             "5.1.1", // Unknown recipient
             "5.7.1", // Unknown recipient
-            "5.3.0" // Spam
+            "5.3.0", // Spam
         )
         private val softBounceList = listOf(
             "4.0.0", // Generic soft bounce
@@ -108,8 +108,9 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             "4.4.1", // Connection busy
             "4.4.2", // Network connection issue
             "4.4.3", // Temporary I suppose?
+            "4.4.4", // Delayed message: Email routing issue due to network
             "4.7.0", // Temporary failure. Could be auth (Exchange) or just snafu (Gmail)
-            "4.7.1" // Temporarily deferred due to user complaints (SPAM?)
+            "4.7.1", // Temporarily deferred due to user complaints (SPAM?)
         )
         private val LOGGER = logger()
     }
