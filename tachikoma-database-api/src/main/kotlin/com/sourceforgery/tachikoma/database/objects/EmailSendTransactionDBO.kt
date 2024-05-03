@@ -29,7 +29,7 @@ class EmailSendTransactionDBO(
     @DbJsonB
     val metaData: Map<String, String> = emptyMap(),
     @DbArray
-    val tags: List<String> = emptyList()
+    val tags: Set<String> = emptySet()
 
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])

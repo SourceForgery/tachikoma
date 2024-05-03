@@ -70,7 +70,7 @@ class BlockedEmailDAOTest : DIAware {
             fromEmail = from,
             authentication = authentication,
             metaData = emptyMap(),
-            tags = emptyList()
+            tags = emptySet()
         )
 
         val fromEmail = EmailDBO(

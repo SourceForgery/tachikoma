@@ -60,7 +60,7 @@ class EmailDAOTest : DIAware {
             fromEmail = from,
             authentication = authentication,
             metaData = emptyMap(),
-            tags = emptyList(),
+            tags = emptySet(),
             bcc = bcc.map { it.address }
         )
 

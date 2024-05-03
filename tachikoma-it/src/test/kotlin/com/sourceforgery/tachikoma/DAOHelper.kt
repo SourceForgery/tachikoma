@@ -52,7 +52,8 @@ class DAOHelper(override val di: DI) : DIAware {
         from: Email,
         recipient: Email,
         emailStatus: EmailStatus,
-        dateCreated: Instant? = null
+        dateCreated: Instant? = null,
+        tags: Set<String> = emptySet(),
     ): EmailStatusEventDBO {
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
@@ -66,7 +67,7 @@ class DAOHelper(override val di: DI) : DIAware {
                 fromEmail = from,
                 authentication = authentication,
                 metaData = emptyMap(),
-                tags = emptyList()
+                tags = tags
             ),
             messageId = MessageId("${UUID.randomUUID()}@example.com"),
             autoMailId = AutoMailId("${UUID.randomUUID()}@example.net"),

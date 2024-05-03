@@ -124,7 +124,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
             authentication = auth,
             bcc = request.bccList.map { it.toEmail().address },
             metaData = request.trackingData.metadataMap,
-            tags = request.trackingData.tagsList
+            tags = request.trackingData.tagsList.toSet()
         )
         val requestedSendTime =
             if (request.hasSendAt()) {

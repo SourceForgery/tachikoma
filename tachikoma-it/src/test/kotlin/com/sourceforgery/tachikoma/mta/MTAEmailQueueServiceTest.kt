@@ -83,7 +83,7 @@ class MTAEmailQueueServiceTest {
                 fromEmail = Email("foodsjklff@example.net"),
                 authentication = authenticationDBO,
                 metaData = emptyMap(),
-                tags = emptyList()
+                tags = emptySet()
             )
         )
         email.body = "${UUID.randomUUID()}"
