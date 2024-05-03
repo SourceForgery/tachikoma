@@ -120,9 +120,29 @@ class EmailStatusEventDAOTest : DIAware {
 
         val emailStatusEvents = emailStatusEventDAO.getEvents(
             accountId = authentication1.account.id,
-            tags = setOf("B")
+            tags = setOf("B", "C")
         )
 
         assertEquals(1, emailStatusEvents.size)
+    }
+
+    @Test
+    fun `find out entries based on tags`() {
+        val authentication1 = daoHelper.createAuthentication("example.org")
+        daoHelper.createEmailStatusEvent(
+            authentication = authentication1,
+            from = Email("from@example.org"),
+            recipient = Email("recipient1@example.org"),
+            emailStatus = EmailStatus.DELIVERED,
+            dateCreated = clock.instant().minus(3, ChronoUnit.DAYS),
+            tags = setOf("A", "B"),
+        )
+
+        val emailStatusEvents = emailStatusEventDAO.getEvents(
+            accountId = authentication1.account.id,
+            tags = setOf("C")
+        )
+
+        assertEquals(0, emailStatusEvents.size)
     }
 }
