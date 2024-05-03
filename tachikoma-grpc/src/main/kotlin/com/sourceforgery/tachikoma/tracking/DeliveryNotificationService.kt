@@ -55,8 +55,11 @@ internal class DeliveryNotificationService(override val di: DI) : DIAware {
             LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
             return@mapNotNull null
         }
+
         if (includeTags.isNotEmpty()) {
-            emailData.transaction.tags.any { it in includeTags }
+            if (emailData.transaction.tags.intersect(includeTags).isEmpty()) {
+                return@mapNotNull null
+            }
         }
 
         deliveryNotificationMessage.toEmailNotification(emailData, request)
