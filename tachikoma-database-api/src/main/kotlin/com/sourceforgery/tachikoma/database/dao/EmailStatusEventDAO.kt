@@ -13,6 +13,7 @@ interface EmailStatusEventDAO {
         instant: Instant? = null,
         recipientEmail: Email? = null,
         fromEmail: Email? = null,
-        events: List<EmailStatus> = emptyList()
+        events: List<EmailStatus> = emptyList(),
+        tags: Set<String> = emptySet()
     ): List<EmailStatusEventDBO>
 }

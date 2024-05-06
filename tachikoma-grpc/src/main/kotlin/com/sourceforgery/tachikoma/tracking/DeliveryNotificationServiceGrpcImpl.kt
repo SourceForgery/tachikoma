@@ -1,7 +1,6 @@
 package com.sourceforgery.tachikoma.tracking
 
 import com.sourceforgery.tachikoma.auth.Authentication
-import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.grpc.catcher.GrpcExceptionMap
 import com.sourceforgery.tachikoma.grpc.frontend.EmailNotification
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.DeliveryNotificationServiceGrpcKt
@@ -29,7 +28,6 @@ internal class DeliveryNotificationServiceGrpcImpl(
     private val deliveryNotificationService: DeliveryNotificationService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
     private val authentication: () -> Authentication by provider()
-    private val scope: TachikomaScope by instance()
 
     override fun notificationStream(request: NotificationStreamParameters): Flow<EmailNotification> =
         notificationStreamWithKeepAlive(request)
@@ -51,7 +49,8 @@ internal class DeliveryNotificationServiceGrpcImpl(
                     request = request,
                     authenticationId = auth.authenticationId,
                     mailDomain = auth.mailDomain,
-                    accountId = auth.accountId
+                    accountId = auth.accountId,
+                    includeTags = request.tagsList.toSet(),
                 )
                     .map {
                         EmailNotificationOrKeepAlive.newBuilder()

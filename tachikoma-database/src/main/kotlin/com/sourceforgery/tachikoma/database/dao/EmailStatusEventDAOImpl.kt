@@ -3,6 +3,7 @@ package com.sourceforgery.tachikoma.database.dao
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.database.objects.query.QEmailStatusEventDBO
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import io.ebean.Database
 import org.kodein.di.DI
@@ -20,26 +21,28 @@ class EmailStatusEventDAOImpl(override val di: DI) : EmailStatusEventDAO, DIAwar
         instant: Instant?,
         recipientEmail: Email?,
         fromEmail: Email?,
-        events: List<EmailStatus>
+        events: List<EmailStatus>,
+        tags: Set<String>,
     ): List<EmailStatusEventDBO> {
-        return database
-            .find(EmailStatusEventDBO::class.java)
-            .where()
-            .eq("email.transaction.authentication.account.dbId", accountId.accountId)
+        return QEmailStatusEventDBO(database)
+            .email.transaction.authentication.account.dbId.eq(accountId.accountId)
             .apply {
                 if (instant != null) {
-                    gt("dateCreated", instant)
+                    dateCreated.gt(instant)
                 }
                 if (recipientEmail != null) {
-                    eq("email.recipient", recipientEmail)
+                    email.recipient.eq(recipientEmail)
                 }
                 if (fromEmail != null) {
-                    eq("email.transaction.fromEmail", fromEmail)
+                    email.transaction.fromEmail.eq(fromEmail)
                 }
                 if (events.isNotEmpty()) {
-                    `in`("emailStatus", events)
+                    emailStatus.`in`(events)
                 }
+                rawOrEmpty("email.transaction.tags && ARRAY[?1]::text[]", tags)
             }
+            .orderBy()
+            .dateCreated.asc()
             .findList()
     }
 }

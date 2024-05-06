@@ -43,7 +43,8 @@ internal class DeliveryNotificationService(override val di: DI) : DIAware {
         request: NotificationStreamParameters,
         authenticationId: AuthenticationId,
         accountId: AccountId,
-        mailDomain: MailDomain
+        mailDomain: MailDomain,
+        includeTags: Set<String>,
     ): Flow<EmailNotification> = mqSequenceFactory.listenForDeliveryNotifications(
         authenticationId = authenticationId,
         mailDomain = mailDomain,
@@ -52,10 +53,16 @@ internal class DeliveryNotificationService(override val di: DI) : DIAware {
         val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(deliveryNotificationMessage.emailMessageId))
         if (emailData == null) {
             LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
-            null
-        } else {
-            deliveryNotificationMessage.toEmailNotification(emailData, request)
+            return@mapNotNull null
         }
+
+        if (includeTags.isNotEmpty()) {
+            if (emailData.transaction.tags.intersect(includeTags).isEmpty()) {
+                return@mapNotNull null
+            }
+        }
+
+        deliveryNotificationMessage.toEmailNotification(emailData, request)
     }
 
     companion object {

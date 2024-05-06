@@ -1,6 +1,7 @@
 package com.sourceforgery.tachikoma.database.dao
 
 import com.sourceforgery.tachikoma.DAOHelper
+import com.sourceforgery.tachikoma.TestAttribute
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.id
@@ -15,7 +16,7 @@ import kotlin.test.assertEquals
 
 class EmailStatusEventDAOTest : DIAware {
     override val di = DI {
-        importOnce(testModule(), allowOverride = true)
+        importOnce(testModule(TestAttribute.POSTGRESQL), allowOverride = true)
     }
     val emailStatusEventDAO: EmailStatusEventDAO by instance()
     val daoHelper: DAOHelper by instance()
@@ -93,7 +94,6 @@ class EmailStatusEventDAOTest : DIAware {
             recipient = Email("recipient1@example.org"),
             emailStatus = EmailStatus.DELIVERED,
             dateCreated = clock.instant().minus(4, ChronoUnit.DAYS)
-
         )
 
         val eventsTimeLimit = clock.instant().minus(2, ChronoUnit.DAYS)
@@ -101,6 +101,46 @@ class EmailStatusEventDAOTest : DIAware {
         val emailStatusEvents = emailStatusEventDAO.getEvents(
             accountId = authentication1.account.id,
             instant = eventsTimeLimit
+        )
+
+        assertEquals(0, emailStatusEvents.size)
+    }
+
+    @Test
+    fun `find entries based on tags`() {
+        val authentication1 = daoHelper.createAuthentication("example.org")
+        daoHelper.createEmailStatusEvent(
+            authentication = authentication1,
+            from = Email("from@example.org"),
+            recipient = Email("recipient1@example.org"),
+            emailStatus = EmailStatus.DELIVERED,
+            dateCreated = clock.instant().minus(3, ChronoUnit.DAYS),
+            tags = setOf("A", "B"),
+        )
+
+        val emailStatusEvents = emailStatusEventDAO.getEvents(
+            accountId = authentication1.account.id,
+            tags = setOf("B", "C")
+        )
+
+        assertEquals(1, emailStatusEvents.size)
+    }
+
+    @Test
+    fun `find out entries based on tags`() {
+        val authentication1 = daoHelper.createAuthentication("example.org")
+        daoHelper.createEmailStatusEvent(
+            authentication = authentication1,
+            from = Email("from@example.org"),
+            recipient = Email("recipient1@example.org"),
+            emailStatus = EmailStatus.DELIVERED,
+            dateCreated = clock.instant().minus(3, ChronoUnit.DAYS),
+            tags = setOf("A", "B"),
+        )
+
+        val emailStatusEvents = emailStatusEventDAO.getEvents(
+            accountId = authentication1.account.id,
+            tags = setOf("C")
         )
 
         assertEquals(0, emailStatusEvents.size)

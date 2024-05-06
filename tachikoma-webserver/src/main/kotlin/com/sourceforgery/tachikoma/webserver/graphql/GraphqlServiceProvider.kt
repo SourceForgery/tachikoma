@@ -45,7 +45,7 @@ class GraphqlServiceProvider(override val di: DI) : DIAware {
         protected fun logException(error: ExceptionWhileDataFetching, exception: Throwable) {
             when (exception) {
                 is NoAuthorizationCredentialsException -> LOGGER.info("Failed auth for ${exception.message}")
-                else -> LOGGER.warn(exception) { exception.message }
+                else -> LOGGER.warn(exception) { exception.message + error }
             }
         }
 

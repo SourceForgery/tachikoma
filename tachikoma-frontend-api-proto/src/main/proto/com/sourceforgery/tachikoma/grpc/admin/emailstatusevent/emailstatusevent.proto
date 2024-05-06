@@ -34,6 +34,10 @@ message GetEmailStatusEventsFilter {
 
     // Whether to include email metrics in the response or not. If true all clicks and opens per email is included in the response
     bool include_metrics_data = 106;
+
+    // Only include events for emails with these tags.
+    // Will not filter if empty.
+    repeated string tags = 107;
 }
 
 // Event types available to filter on

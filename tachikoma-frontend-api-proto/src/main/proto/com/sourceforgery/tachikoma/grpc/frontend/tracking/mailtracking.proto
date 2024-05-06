@@ -23,6 +23,9 @@ message NotificationStreamParameters {
     // Whether to include metrics in the response or not.
     // Like all bools, defaults to false
     bool include_metrics_data = 103;
+    // Only include events for emails with either of these tags.
+    // Will not filter if empty.
+    repeated string tags = 104;
 }
 
 message EmailNotificationOrKeepAlive {

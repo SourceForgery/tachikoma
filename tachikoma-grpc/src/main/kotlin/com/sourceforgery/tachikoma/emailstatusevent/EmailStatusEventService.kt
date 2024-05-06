@@ -61,7 +61,8 @@ internal class EmailStatusEventService(override val di: DI) : DIAware {
             instant = request.newerThan.toInstant(),
             recipientEmail = request.recipientEmail.toEmail(),
             fromEmail = request.fromEmail.toEmail(),
-            events = events
+            events = events,
+            tags = request.tagsList.toSet(),
         ).asFlow()
             .map { getEmailNotification(it, includeTrackingData, includeMetricsData) }
     }
