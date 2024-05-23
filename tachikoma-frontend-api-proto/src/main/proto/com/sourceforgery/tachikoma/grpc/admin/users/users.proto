@@ -10,16 +10,16 @@ package com.sourceforgery.tachikoma.grpc.frontend.blockedemail;
 
 service UserService {
 
-    // Removes the blocked email based on specified from and recipient addresses
+    // Remove frontend user from tachikoma
     rpc RemoveUser (RemoveUserRequest) returns (RemoveUserResponse);
 
-    // Returns all blocked email addresses
+    // Get all frontend user
     rpc GetFrontendUsers (GetUsersRequest) returns (stream FrontendUser);
 
-    // Add user
+    // Add frontend user
     rpc AddFrontendUser (AddUserRequest) returns (ModifyUserResponse);
 
-    // Add user
+    // Modify a frontend user.
     rpc ModifyFrontendUser (ModifyUserRequest) returns (ModifyUserResponse);
 }
 
