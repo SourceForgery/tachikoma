@@ -80,11 +80,8 @@ class UserService(
             auth.apiToken = null
         }
         if (request.hasRecipientOverride()) {
-            auth.recipientOverride = request.recipientOverride.email
-                .emptyToNull()
-                ?.let {
-                    Email(request.recipientOverride.email)
-                }
+            auth.recipientOverride = request.recipientOverride.email.takeUnless { it.isBlank() }
+                ?.let { Email(it) }
         }
         auth.role = frontendRole(request.authenticationRole)
         auth.active = request.active
@@ -92,15 +89,14 @@ class UserService(
             internalCreateUsers.setApiToken(auth)
         }
 
-        request.newPassword
-            .emptyToNull()
-            ?.let {
-                if (auth.login != null) {
-                    auth.encryptedPassword = PasswordStorage.createHash(it)
-                } else {
-                    throw IllegalArgumentException("Trying to set password when there's no login")
-                }
+        if (request.hasNewPassword()) {
+            if (auth.login != null) {
+                auth.encryptedPassword = request.newPassword.takeUnless { it.isBlank() }
+                    ?.let { PasswordStorage.createHash(it) }
+            } else {
+                throw IllegalArgumentException("Trying to set password when there's no login")
             }
+        }
 
         authenticationDAO.save(auth)
         return ModifyUserResponse.newBuilder()

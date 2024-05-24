@@ -99,16 +99,22 @@ message ModifyUserRequest {
     // The id of the user
     UserId auth_id = 101;
     // If the user is active
-    bool active = 102;
+    oneof active_toggle {
+        bool active = 102;
+    }
     // The new password of the user
     // (optional and requires previous login credentials)
-    string new_password = 103;
+    oneof password_toggle {
+        string new_password = 103;
+    }
     // Set or keep
     ApiToken api_token = 104;
     // What role the user has
     FrontendUserRole authentication_role = 105;
     // Which address _all_ emails will go to (optional)
-    EmailAddress recipient_override = 107;
+    oneof recipient_override_toggle {
+        EmailAddress recipient_override = 107;
+    }
 }
 
 enum ApiToken {
