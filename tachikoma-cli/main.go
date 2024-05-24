@@ -21,23 +21,23 @@ import (
 var logger zerolog.Logger
 
 type Options struct {
-	Address           string        `short:"a" long:"address" description:"Address of the tachikoma server e.g. https://example.com" required:"true"`
-	LoggingFormat     string        `short:"l" long:"logging" choice:"coloured" choice:"plain" choice:"json" default:"coloured" description:"Log output format"`
-	Verbose           []bool        `short:"v" long:"verbose" description:"Show verbose debug information"`
-	Quiet             bool          `short:"q" long:"quiet" description:"Be very quiet"`
-	CertificatePath   string        `short:"c" long:"certificate" description:"Path to client certificate"`
-	KeyPath           string        `short:"k" long:"key" description:"Path to Key"`
-	CreateUserCommand CreateUserCmd `command:"create-user" description:"Create new user"`
-	ListUsers         struct{}      `command:"list-users" description:"List users user"`
-	RemoveUser        RemoveUserCmd `command:"remove-users" description:"Remove users user"`
-	ModifyUser        ModifyUserCmd `command:"modify-user" description:"Modify user"`
+	Address         string        `short:"a" long:"address" description:"Address of the tachikoma server e.g. https://example.com" required:"true"`
+	LoggingFormat   string        `short:"l" long:"logging" choice:"coloured" choice:"plain" choice:"json" default:"coloured" description:"Log output format"`
+	Verbose         []bool        `short:"v" long:"verbose" description:"Show verbose debug information"`
+	Quiet           bool          `short:"q" long:"quiet" description:"Be very quiet"`
+	CertificatePath string        `short:"c" long:"certificate" description:"Path to client certificate"`
+	KeyPath         string        `short:"k" long:"key" description:"Path to Key"`
+	AddUserCommand  AddUserCmd    `command:"add-user" description:"Create new user"`
+	ListUsers       struct{}      `command:"list-users" description:"List users user"`
+	RemoveUser      RemoveUserCmd `command:"remove-users" description:"Remove users user"`
+	ModifyUser      ModifyUserCmd `command:"modify-user" description:"Modify user"`
 }
 
 type RemoveUserCmd struct {
 	UserId int64 `positional-args:"yes" required:"yes" description:"User IDs to remove"`
 }
 
-type CreateUserCmd struct {
+type AddUserCmd struct {
 	User           string `long:"username" description:"Username for the new user"`
 	Password       string `long:"password" description:"Password for the new user"`
 	CreateApiToken bool   `long:"api-token" description:"If API token should be created"`
@@ -124,22 +124,22 @@ func main() {
 	})
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
-	logger.Fatal().Any("foo", opts).Msg("bar")
-
 	mailDomain := tachikomaUrl.User.Username()
 	switch parser.Active.Name {
-	case "create-user":
-		createUser(ctx, grpcConn, mailDomain, opts.CreateUserCommand)
+	case "add-user":
+		addUser(ctx, grpcConn, mailDomain, opts.AddUserCommand)
 	case "list-users":
 		listUsers(ctx, grpcConn, mailDomain)
 	case "remove-users":
 		removeUser(ctx, grpcConn, opts.RemoveUser)
 	case "modify-user":
 		modifyUser(ctx, grpcConn, opts.ModifyUser)
+	default:
+		logger.Panic().Msgf("Didn't cater to %s", parser.Active.Name)
 	}
 }
 
-func createUser(ctx context.Context, grpcConn *grpc.ClientConn, mailDomain string, createUserCmd CreateUserCmd) {
+func addUser(ctx context.Context, grpcConn *grpc.ClientConn, mailDomain string, createUserCmd AddUserCmd) {
 	client := tachikoma.NewUserServiceClient(grpcConn)
 
 	var passwordAuth *tachikoma.PasswordAuth
