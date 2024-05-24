@@ -16,8 +16,6 @@ import com.sourceforgery.tachikoma.grpc.frontend.blockedemail.UserServiceGrpcKt
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
@@ -40,11 +38,13 @@ class UserServiceGrpcImpl(
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
 
-    override fun getFrontendUsers(request: GetUsersRequest): Flow<FrontendUser> = flow<FrontendUser> {
+    override fun getFrontendUsers(request: GetUsersRequest): Flow<FrontendUser> = try {
         val auth = authentication()
         auth.requireFrontend()
         userService.getFrontendUsers(auth.mailDomain)
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+    } catch (e: Exception) {
+        throw grpcExceptionMap.findAndConvertAndLog(e)
+    }
 
     override suspend fun modifyFrontendUser(request: ModifyUserRequest): ModifyUserResponse =
         try {
