@@ -69,43 +69,47 @@ class WebServerStarter(override val di: DI) : DIAware {
             mqSequenceFactory.alive() &&
                 database.sqlQuery("SELECT 1").findOne() != null
         }
-        val healthService = HealthCheckService.builder()
-            .checkers(HealthChecker { externalServicesCheck })
-            .longPolling(0)
-            .build()
+        val healthService =
+            HealthCheckService.builder()
+                .checkers(HealthChecker { externalServicesCheck })
+                .longPolling(0)
+                .build()
 
         // Order matters!
-        val custom = AccessLogWriter.custom(
-            """%{remote.ip}j "%r %s" %{requestLength}L bytes ua:%{User-Agent}i"""
-        )
-        val serverBuilder = Server.builder()
-            .service("/health", healthService)
-            .accessLogWriter(
-                { requestLog ->
-                    val path = (requestLog.context() as ServiceRequestContext).path()
-                    if (path != "/health") {
-                        custom.log(requestLog)
-                    }
-                },
-                true
+        val custom =
+            AccessLogWriter.custom(
+                """%{remote.ip}j "%r %s" %{requestLength}L bytes ua:%{User-Agent}i""",
             )
-            .also { graphqlService.addGraphqlService(it) }
-            .decorator { delegate, ctx, req ->
-                try {
-                    ctx.setAttr(REMOTE_IP_ATTRIB, remoteIP.remoteAddress)
-                } catch (e: Exception) {
-                    LOGGER.error(e) { e }
+        val serverBuilder =
+            Server.builder()
+                .service("/health", healthService)
+                .accessLogWriter(
+                    { requestLog ->
+                        val path = (requestLog.context() as ServiceRequestContext).path()
+                        if (path != "/health") {
+                            custom.log(requestLog)
+                        }
+                    },
+                    true,
+                )
+                .also { graphqlService.addGraphqlService(it) }
+                .decorator { delegate, ctx, req ->
+                    try {
+                        ctx.setAttr(REMOTE_IP_ATTRIB, remoteIP.remoteAddress)
+                    } catch (e: Exception) {
+                        LOGGER.error(e) { e }
+                    }
+                    delegate.serve(ctx, req)
                 }
-                delegate.serve(ctx, req)
-            }
 
         for (restService in restServices) {
             serverBuilder.annotatedService("/", restService, exceptionHandler)
         }
 
-        val grpcServiceBuilder = GrpcService.builder()
-            .supportedSerializationFormats(GrpcSerializationFormats.values())
-            .useBlockingTaskExecutor(true)
+        val grpcServiceBuilder =
+            GrpcService.builder()
+                .supportedSerializationFormats(GrpcSerializationFormats.values())
+                .useBlockingTaskExecutor(true)
         for (grpcService in grpcServices) {
             grpcServiceBuilder.addService(ServerInterceptors.intercept(grpcService, exceptionInterceptor))
         }
@@ -163,17 +167,18 @@ fun main() {
     System.setOut(IoBuilder.forLogger("System.sout").setLevel(Level.WARN).buildPrintStream())
     System.setErr(IoBuilder.forLogger("System.serr").setLevel(Level.ERROR).buildPrintStream())
 
-    val kodein = DI {
-        importOnce(commonModule)
-        importOnce(startupModule)
-        importOnce(restModule)
-        importOnce(mqModule)
-        importOnce(grpcModule)
-        importOnce(databaseModule)
-        importOnce(databaseUpgradesModule)
-        importOnce(graphqlApiModule)
-        importOnce(webModule)
-        bind<HttpRequestScopedDecorator>() with singleton { HttpRequestScopedDecorator(di) }
-    }
+    val kodein =
+        DI {
+            importOnce(commonModule)
+            importOnce(startupModule)
+            importOnce(restModule)
+            importOnce(mqModule)
+            importOnce(grpcModule)
+            importOnce(databaseModule)
+            importOnce(databaseUpgradesModule)
+            importOnce(graphqlApiModule)
+            importOnce(webModule)
+            bind<HttpRequestScopedDecorator>() with singleton { HttpRequestScopedDecorator(di) }
+        }
     WebServerStarter(kodein).start()
 }

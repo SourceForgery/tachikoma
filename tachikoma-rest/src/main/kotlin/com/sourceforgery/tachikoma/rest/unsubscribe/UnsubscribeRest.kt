@@ -34,7 +34,7 @@ import java.time.Clock
 import java.util.Optional
 
 internal class UnsubscribeRest(
-    override val di: DI
+    override val di: DI,
 ) : RestService, DIAware, TachikomaScope by di.direct.instance() {
     private val clock: Clock by instance()
     private val mqSender: MQSender by instance()
@@ -48,7 +48,7 @@ internal class UnsubscribeRest(
     @ConsumesGroup(Consumes("multipart/form-data"), Consumes("application/x-www-form-urlencoded"))
     fun unsubscribe(
         @Param("unsubscribeData") unsubscribeDataString: String,
-        @Param("List-Unsubscribe") optionalListUnsubscribe: Optional<String>
+        @Param("List-Unsubscribe") optionalListUnsubscribe: Optional<String>,
     ) = scopedFuture {
         try {
             val listUnsubscribe = optionalListUnsubscribe.orElse(null)
@@ -65,7 +65,7 @@ internal class UnsubscribeRest(
 
     @Get("regex:^/unsubscribe/(?<unsubscribeData>.*)")
     fun unsubscribe(
-        @Param("unsubscribeData") unsubscribeDataString: String
+        @Param("unsubscribeData") unsubscribeDataString: String,
     ) = scopedFuture {
         if (unsubscribeDataString.endsWith("/1")) {
             actuallyUnsubscribe(unsubscribeDataString.removeSuffix("/1"))
@@ -94,26 +94,29 @@ internal class UnsubscribeRest(
         val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
         val email = emailDAO.fetchEmailData(unsubscribeData.emailId.toEmailId())!!
         LOGGER.info { "Received unsubscribe event from ${email.recipient} for email ${email.id}" }
-        val emailStatusEvent = EmailStatusEventDBO(
-            emailStatus = EmailStatus.UNSUBSCRIBE,
-            email = email,
-            metaData = StatusEventMetaData(
-                ipAddress = remoteIP.remoteAddress
+        val emailStatusEvent =
+            EmailStatusEventDBO(
+                emailStatus = EmailStatus.UNSUBSCRIBE,
+                email = email,
+                metaData =
+                    StatusEventMetaData(
+                        ipAddress = remoteIP.remoteAddress,
+                    ),
             )
-        )
         emailStatusEventDAO.save(emailStatusEvent)
         blockedEmailDAO.block(emailStatusEvent)
 
-        val notificationMessage = DeliveryNotificationMessage
-            .newBuilder()
-            .setCreationTimestamp(clock.instant().toTimestamp())
-            .setEmailMessageId(email.id.emailId)
-            .setMessageUnsubscribed(
-                MessageUnsubscribed
-                    .newBuilder()
-                    .setIpAddress(remoteIP.remoteAddress)
-            )
-            .build()
+        val notificationMessage =
+            DeliveryNotificationMessage
+                .newBuilder()
+                .setCreationTimestamp(clock.instant().toTimestamp())
+                .setEmailMessageId(email.id.emailId)
+                .setMessageUnsubscribed(
+                    MessageUnsubscribed
+                        .newBuilder()
+                        .setIpAddress(remoteIP.remoteAddress),
+                )
+                .build()
         mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
         return unsubscribeData
     }

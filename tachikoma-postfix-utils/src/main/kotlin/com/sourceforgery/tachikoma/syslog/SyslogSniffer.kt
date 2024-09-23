@@ -19,25 +19,27 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 
 class SyslogSniffer(
-    private val stub: MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub
+    private val stub: MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineStub,
 ) {
     private val notificationQueue = LinkedBlockingQueue<DeliveryNotification>()
 
-    private val tape = FileObjectQueue<DeliveryNotification>(
-        File("/var/spool/postfix/tachikoma/notification_queue"),
-        DeliveryNotificationConverter
-    )
+    private val tape =
+        FileObjectQueue<DeliveryNotification>(
+            File("/var/spool/postfix/tachikoma/notification_queue"),
+            DeliveryNotificationConverter,
+        )
 
     @OptIn(DelicateCoroutinesApi::class)
-    private val deliverer = GlobalScope.launch(
-        context = delivererDispatcher,
-        start = CoroutineStart.LAZY
-    ) {
-        while (true) {
-            runDeliverer()
-            saveAll()
+    private val deliverer =
+        GlobalScope.launch(
+            context = delivererDispatcher,
+            start = CoroutineStart.LAZY,
+        ) {
+            while (true) {
+                runDeliverer()
+                saveAll()
+            }
         }
-    }
 
     private fun saveAll() {
         synchronized(tape) {
@@ -87,8 +89,9 @@ class SyslogSniffer(
                 @Suppress("BlockingMethodInNonBlockingContext")
                 runBlocking {
                     RandomAccessFile(file, "r").use { pipe ->
-                        val line = pipe.readLine()
-                            ?: error("End of file? This is a socket, so that should not happen!")
+                        val line =
+                            pipe.readLine()
+                                ?: error("End of file? This is a socket, so that should not happen!")
                         val notification = parseLine(line)
 
                         if (notification != null) {
@@ -115,12 +118,13 @@ internal fun parseLine(line: String): DeliveryNotification? {
     SyslogSniffer.LOGGER.trace { "[[[[$line]]]] (${split.size})" }
     return if (split.size == 3 && !line.contains("postfix/lmtp")) {
         val (_, queueId, rest) = split
-        val map = try {
-            splitLineToMap(rest)
-        } catch (e: Exception) {
-            SyslogSniffer.LOGGER.error(e) { "Failed to parse line $line" }
-            return null
-        }
+        val map =
+            try {
+                splitLineToMap(rest)
+            } catch (e: Exception) {
+                SyslogSniffer.LOGGER.error(e) { "Failed to parse line $line" }
+                return null
+            }
 
         map["dsn"]?.let { dsn ->
             map["to"]?.let { originalRecipient ->
@@ -150,20 +154,23 @@ private fun splitLineToMap(rest: String): Map<String, String> =
             it.substringBefore("=", "") to it.substringAfter("=", "")
         }
 
-private val syslogLineSplitter = Splitter
-    .on(": ")
-    .limit(3)
-    .trimResults()
+private val syslogLineSplitter =
+    Splitter
+        .on(": ")
+        .limit(3)
+        .trimResults()
 
 @Suppress("UnstableApiUsage")
-private val lineSplitter = Splitter
-    .on(", ")
-    .trimResults()
+private val lineSplitter =
+    Splitter
+        .on(", ")
+        .trimResults()
 
 private object DeliveryNotificationConverter : FileObjectQueue.Converter<DeliveryNotification> {
-    override fun from(bytes: ByteArray): DeliveryNotification =
-        DeliveryNotification.parseFrom(bytes)
+    override fun from(bytes: ByteArray): DeliveryNotification = DeliveryNotification.parseFrom(bytes)
 
-    override fun toStream(o: DeliveryNotification, bytes: OutputStream) =
-        o.writeTo(bytes)
+    override fun toStream(
+        o: DeliveryNotification,
+        bytes: OutputStream,
+    ) = o.writeTo(bytes)
 }

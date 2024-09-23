@@ -65,16 +65,13 @@ class PatternWithGroups {
     /**
      * The regular expression for matching and obtaining capturing group values.
      */
-    /**
-     * Get the regular expression.
-     *
-     * @return the regular expression.
-     */
     val regex: String
+
     /**
      * The compiled regular expression of [.regex].
      */
     private val regexPattern: Pattern?
+
     /**
      * The array of group indexes to capturing groups.
      */
@@ -136,7 +133,6 @@ class PatternWithGroups {
     }
 
     private class EmptyStringMatchResult : MatchResult {
-
         override fun start(): Int {
             return 0
         }
@@ -176,7 +172,6 @@ class PatternWithGroups {
     }
 
     private inner class GroupIndexMatchResult internal constructor(private val result: MatchResult) : MatchResult {
-
         override fun start(): Int {
             return result.start()
         }
@@ -259,7 +254,10 @@ class PatternWithGroups {
      * @throws IllegalArgumentException if the group values is `null`.
      */
     @Throws(IllegalArgumentException::class)
-    fun match(cs: CharSequence?, groupValues: MutableList<String>?): Boolean {
+    fun match(
+        cs: CharSequence?,
+        groupValues: MutableList<String>?,
+    ): Boolean {
         if (groupValues == null) {
             throw IllegalArgumentException()
         }
@@ -311,7 +309,11 @@ class PatternWithGroups {
      * @throws IllegalArgumentException if group values is `null`.
      */
     @Throws(IllegalArgumentException::class)
-    fun match(cs: CharSequence?, groupNames: List<String>, groupValues: MutableMap<String, String>?): Boolean {
+    fun match(
+        cs: CharSequence?,
+        groupNames: List<String>,
+        groupValues: MutableMap<String, String>?,
+    ): Boolean {
         if (groupValues == null) {
             throw IllegalArgumentException()
         }
@@ -369,8 +371,8 @@ class PatternWithGroups {
     }
 
     companion object {
-
         private val EMPTY_INT_ARRAY = IntArray(0)
+
         /**
          * The empty pattern that matches the null or empty string.
          */

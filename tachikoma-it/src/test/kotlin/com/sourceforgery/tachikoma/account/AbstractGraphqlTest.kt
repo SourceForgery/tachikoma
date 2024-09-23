@@ -28,12 +28,12 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 abstract class AbstractGraphqlTest : DIAware {
-
-    override val di = DI {
-        importOnce(testModule(), allowOverride = true)
-        importOnce(webModule)
-        importOnce(graphqlApiModule)
-    }
+    override val di =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+            importOnce(webModule)
+            importOnce(graphqlApiModule)
+        }
 
     val database: Database by instance()
     private val graphqlServiceProvider: GraphqlServiceProvider by instance()
@@ -42,14 +42,14 @@ abstract class AbstractGraphqlTest : DIAware {
     lateinit var client: GraphQLKtorClient
 
     fun startServer(): Server {
-
         // Order matters!
         val serverBuilder = Server.builder()
-        val server = graphqlServiceProvider
-            .addGraphqlService(serverBuilder)
-            // Grpc must be last
-            .requestTimeout(Duration.ofMinutes(1))
-            .build()
+        val server =
+            graphqlServiceProvider
+                .addGraphqlService(serverBuilder)
+                // Grpc must be last
+                .requestTimeout(Duration.ofMinutes(1))
+                .build()
         server.start().get()
 
         return server

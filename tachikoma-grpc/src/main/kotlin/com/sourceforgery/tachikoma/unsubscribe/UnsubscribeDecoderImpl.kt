@@ -12,7 +12,7 @@ import org.kodein.di.instance
 import java.util.Base64
 
 class UnsubscribeDecoderImpl(
-    override val di: DI
+    override val di: DI,
 ) : UnsubscribeDecoder, DIAware {
     private val trackingConfig: TrackingConfig by instance()
 
@@ -36,10 +36,11 @@ class UnsubscribeDecoderImpl(
     override fun createUrl(unsubscribeData: UnsubscribeData): String {
         val parcelled = unsubscribeData.toByteArray()!!
         val signature = trackingHmac.hashBytes(parcelled).asBytes()
-        val signedMessage = SignedUnsubscribeData.newBuilder()
-            .setMessage(ByteString.copyFrom(parcelled))
-            .setSignature(ByteString.copyFrom(signature))
-            .build()
+        val signedMessage =
+            SignedUnsubscribeData.newBuilder()
+                .setMessage(ByteString.copyFrom(parcelled))
+                .setSignature(ByteString.copyFrom(signature))
+                .build()
         return Base64.getUrlEncoder().withoutPadding().encodeToString(signedMessage.toByteArray())
     }
 }

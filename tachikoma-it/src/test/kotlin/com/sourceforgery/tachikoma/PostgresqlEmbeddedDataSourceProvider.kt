@@ -9,10 +9,11 @@ import org.kodein.di.DIAware
 
 class PostgresqlEmbeddedDataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
     override fun provide(serverConfig: DatabaseConfig) {
-        val pg = EmbeddedPostgres.builder()
-            .setServerConfig("listen_addresses", "127.0.0.1")
-            .setOutputRedirector(ProcessBuilder.Redirect.PIPE)
-            .start()
+        val pg =
+            EmbeddedPostgres.builder()
+                .setServerConfig("listen_addresses", "127.0.0.1")
+                .setOutputRedirector(ProcessBuilder.Redirect.PIPE)
+                .start()
         serverConfig.databasePlatform = PostgresPlatform()
         serverConfig.isDdlGenerate = false
         serverConfig.isDdlRun = false

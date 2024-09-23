@@ -12,8 +12,11 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 
 class HttpRequestScopedDecorator(override val di: DI) : DecoratingHttpServiceFunction, DIAware {
-
-    override fun serve(delegate: HttpService, ctx: ServiceRequestContext, req: HttpRequest): HttpResponse {
+    override fun serve(
+        delegate: HttpService,
+        ctx: ServiceRequestContext,
+        req: HttpRequest,
+    ): HttpResponse {
         val databaseSessionContext = DatabaseSessionContext()
         ctx.log()
             .whenComplete()

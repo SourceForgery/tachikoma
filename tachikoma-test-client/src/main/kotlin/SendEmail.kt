@@ -12,27 +12,32 @@ import java.net.URI
 import java.time.Instant
 
 fun main() {
-    val from = InternetAddress(
-        System.getenv("TACHI_FROM")
-            ?: error("Need to specify env TACHI_FROM")
-    )
-    val to = InternetAddress.parse(
-        System.getenv("TACHI_TO")
-            ?: error("Need to specify env TACHI_TO (multiple addresses possible via RFC822 format)")
-    )
-
-    val configuration = object : GrpcClientConfig {
-        override val tachikomaUrl = URI(
-            System.getenv("TACHI_FRONTEND_URI")
-                ?: error("Need to specify env TACHI_FRONTEND_URI")
+    val from =
+        InternetAddress(
+            System.getenv("TACHI_FROM")
+                ?: error("Need to specify env TACHI_FROM"),
         )
-        override val insecure: Boolean
-            get() = true
-        override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
-        override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
-    }
-    val stub = provideClientBuilder(configuration)
-        .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
+    val to =
+        InternetAddress.parse(
+            System.getenv("TACHI_TO")
+                ?: error("Need to specify env TACHI_TO (multiple addresses possible via RFC822 format)"),
+        )
+
+    val configuration =
+        object : GrpcClientConfig {
+            override val tachikomaUrl =
+                URI(
+                    System.getenv("TACHI_FRONTEND_URI")
+                        ?: error("Need to specify env TACHI_FRONTEND_URI"),
+                )
+            override val insecure: Boolean
+                get() = true
+            override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
+            override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
+        }
+    val stub =
+        provideClientBuilder(configuration)
+            .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
     val mailBody =
         """
@@ -73,31 +78,32 @@ fun main() {
     |</body>
         """.trimMargin()
 
-    val outgoingEmail = OutgoingEmail.newBuilder()
-        .setUnsubscribeRedirectUri("https://google.com/?q=unsubscribed")
-        .setStatic(
-            StaticBody.newBuilder()
-                .setHtmlBody(mailBody)
-                .setSubject("Application for öåäöäåöäåöåäöäå 日本." + Instant.now())
-        )
-        .setSendAt(Instant.now().plusSeconds(60).toTimestamp())
-        .addAllRecipients(
-            to.map {
-                EmailRecipient.newBuilder()
-                    .setNamedEmail(
-                        NamedEmailAddress.newBuilder()
-                            .setEmail(it.address)
-                            .setName(it.personal ?: "")
-                    )
-                    .build()
-            }
-        )
-        .setFrom(
-            NamedEmailAddress.newBuilder()
-                .setEmail(from.address)
-                .setName(from.personal ?: "")
-        )
-        .build()
+    val outgoingEmail =
+        OutgoingEmail.newBuilder()
+            .setUnsubscribeRedirectUri("https://google.com/?q=unsubscribed")
+            .setStatic(
+                StaticBody.newBuilder()
+                    .setHtmlBody(mailBody)
+                    .setSubject("Application for öåäöäåöäåöåäöäå 日本." + Instant.now()),
+            )
+            .setSendAt(Instant.now().plusSeconds(60).toTimestamp())
+            .addAllRecipients(
+                to.map {
+                    EmailRecipient.newBuilder()
+                        .setNamedEmail(
+                            NamedEmailAddress.newBuilder()
+                                .setEmail(it.address)
+                                .setName(it.personal ?: ""),
+                        )
+                        .build()
+                },
+            )
+            .setFrom(
+                NamedEmailAddress.newBuilder()
+                    .setEmail(from.address)
+                    .setName(from.personal ?: ""),
+            )
+            .build()
 
     try {
         stub.sendEmailUnary(outgoingEmail).listList.forEach {

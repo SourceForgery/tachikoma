@@ -16,13 +16,17 @@ internal class IncomingEmailAddressService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val incomingEmailAddressDAO: IncomingEmailAddressDAO by instance()
 
-    fun addIncomingEmailAddress(request: IncomingEmailAddress, authenticationId: AuthenticationId) {
+    fun addIncomingEmailAddress(
+        request: IncomingEmailAddress,
+        authenticationId: AuthenticationId,
+    ) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
-        val incomingEmailAddressDBO = IncomingEmailAddressDBO(
-            localPart = request.localPart,
-            account = authenticationDBO.account
-        )
+        val incomingEmailAddressDBO =
+            IncomingEmailAddressDBO(
+                localPart = request.localPart,
+                account = authenticationDBO.account,
+            )
 
         incomingEmailAddressDAO.save(incomingEmailAddressDBO)
     }
@@ -40,12 +44,15 @@ internal class IncomingEmailAddressService(override val di: DI) : DIAware {
             }
     }
 
-    fun deleteIncomingEmailAddress(request: IncomingEmailAddress, authenticationId: AuthenticationId) {
+    fun deleteIncomingEmailAddress(
+        request: IncomingEmailAddress,
+        authenticationId: AuthenticationId,
+    ) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
         incomingEmailAddressDAO.delete(
             accountDBO = authenticationDBO.account,
-            localPart = request.localPart
+            localPart = request.localPart,
         )
     }
 }

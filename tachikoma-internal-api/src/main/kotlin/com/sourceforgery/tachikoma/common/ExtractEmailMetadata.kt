@@ -16,18 +16,22 @@ class ExtractEmailMetadata(override val di: DI) : DIAware {
         val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), ByteArrayInputStream(message))
         return try {
             EmailMetadata(
-                from = mimeMessage.from
-                    ?.parseNamedEmails()
-                    ?: emptyList(),
-                replyTo = mimeMessage.replyTo
-                    ?.parseNamedEmails()
-                    ?: emptyList(),
-                to = mimeMessage.getRecipients(Message.RecipientType.TO)
-                    ?.parseNamedEmails()
-                    ?: emptyList(),
-                cc = mimeMessage.getRecipients(Message.RecipientType.CC)
-                    ?.parseNamedEmails()
-                    ?: emptyList()
+                from =
+                    mimeMessage.from
+                        ?.parseNamedEmails()
+                        ?: emptyList(),
+                replyTo =
+                    mimeMessage.replyTo
+                        ?.parseNamedEmails()
+                        ?: emptyList(),
+                to =
+                    mimeMessage.getRecipients(Message.RecipientType.TO)
+                        ?.parseNamedEmails()
+                        ?: emptyList(),
+                cc =
+                    mimeMessage.getRecipients(Message.RecipientType.CC)
+                        ?.parseNamedEmails()
+                        ?: emptyList(),
             )
         } catch (e: Exception) {
             LOGGER.warn(e) { "Could not parse emails in ${mimeMessage.messageID}" }
@@ -42,12 +46,12 @@ class ExtractEmailMetadata(override val di: DI) : DIAware {
 
 @ConsistentCopyVisibility
 data class EmailMetadata
-internal constructor(
-    val from: List<NamedEmail>,
-    val replyTo: List<NamedEmail>,
-    val to: List<NamedEmail>,
-    val cc: List<NamedEmail>
-)
+    internal constructor(
+        val from: List<NamedEmail>,
+        val replyTo: List<NamedEmail>,
+        val to: List<NamedEmail>,
+        val cc: List<NamedEmail>,
+    )
 
 internal fun Array<Address>.parseNamedEmails(): List<NamedEmail> =
     asSequence()

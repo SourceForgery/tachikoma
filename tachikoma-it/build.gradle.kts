@@ -56,14 +56,15 @@ graphql {
     client {
         endpoint = "http://localhost:8888/graphql"
         packageName = "com.youcruit.graphql.client.test.generated"
-        queryFiles = File(projectDir, "src/main/resources")
-            .walk()
-            .filter { !it.isDirectory }
-            .sorted()
-            // .gql is deprecated for no other reason than it not being picked up
-            // by the intellij plugin by default
-            .filter { it.extension == "graphql" || it.extension == "gql" }
-            .toList()
+        queryFiles =
+            File(projectDir, "src/main/resources")
+                .walk()
+                .filter { !it.isDirectory }
+                .sorted()
+                // .gql is deprecated for no other reason than it not being picked up
+                // by the intellij plugin by default
+                .filter { it.extension == "graphql" || it.extension == "gql" }
+                .toList()
         serializer = GraphQLSerializer.JACKSON
     }
 }

@@ -57,8 +57,6 @@ extensions.configure<KtlintExtension> {
     filter {
         exclude { "/generated/" in it.file.path }
     }
-    disabledRules.set(listOf("final-newline"))
-    version.set("0.44.0")
 }
 
 val sourceJar by tasks.registering(Jar::class) {

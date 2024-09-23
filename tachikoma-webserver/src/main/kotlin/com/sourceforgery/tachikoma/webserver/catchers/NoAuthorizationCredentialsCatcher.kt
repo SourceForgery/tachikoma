@@ -11,13 +11,14 @@ import io.grpc.Status
 import org.kodein.di.DI
 
 class NoAuthorizationCredentialsCatcher(
-    override val di: DI
+    override val di: DI,
 ) : GrpcExceptionCatcher<NoAuthorizationCredentialsException>(NoAuthorizationCredentialsException::class.java),
     RestExceptionCatcher<NoAuthorizationCredentialsException> {
+    override fun handleException(
+        ctx: RequestContext?,
+        req: HttpRequest?,
+        cause: NoAuthorizationCredentialsException,
+    ) = HttpResponse.of(UNAUTHORIZED)
 
-    override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: NoAuthorizationCredentialsException) =
-        HttpResponse.of(UNAUTHORIZED)
-
-    override fun status(t: NoAuthorizationCredentialsException) =
-        Status.UNAUTHENTICATED
+    override fun status(t: NoAuthorizationCredentialsException) = Status.UNAUTHENTICATED
 }

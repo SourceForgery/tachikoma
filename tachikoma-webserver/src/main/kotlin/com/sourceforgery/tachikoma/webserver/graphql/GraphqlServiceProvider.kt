@@ -21,7 +21,6 @@ import org.apache.logging.log4j.kotlin.logger
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
-import java.io.File
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 
@@ -29,9 +28,7 @@ class GraphqlServiceProvider(override val di: DI) : DIAware {
     private val schemaGenerator: GraphqlSchemaGenerator by instance()
 
     private class GraphqlExceptionHandler(override val di: DI) : DIAware, DataFetcherExceptionHandler {
-
         override fun handleException(handlerParameters: DataFetcherExceptionHandlerParameters): CompletableFuture<DataFetcherExceptionHandlerResult> {
-
             val exception: Throwable = unwrap(handlerParameters.exception)
             val sourceLocation = handlerParameters.sourceLocation
             val path = handlerParameters.path
@@ -42,7 +39,10 @@ class GraphqlServiceProvider(override val di: DI) : DIAware {
             return CompletableFuture.completedFuture(DataFetcherExceptionHandlerResult.newResult().error(error).build())
         }
 
-        protected fun logException(error: ExceptionWhileDataFetching, exception: Throwable) {
+        protected fun logException(
+            error: ExceptionWhileDataFetching,
+            exception: Throwable,
+        ) {
             when (exception) {
                 is NoAuthorizationCredentialsException -> LOGGER.info("Failed auth for ${exception.message}")
                 else -> LOGGER.warn(exception) { exception.message + error }
@@ -83,10 +83,10 @@ class GraphqlServiceProvider(override val di: DI) : DIAware {
                     .graphql(
                         GraphQL.newGraphQL(schemaGenerator.generateGraphqlSchema())
                             .queryExecutionStrategy(AsyncExecutionStrategy(dataFetcherExceptionHandler))
-                            .build()
+                            .build(),
                     )
                     .useBlockingTaskExecutor(true)
-                    .build()
+                    .build(),
             )
     }
 
@@ -98,7 +98,7 @@ class GraphqlServiceProvider(override val di: DI) : DIAware {
                 requireNotNull(WebServerStarter::class.java.getResourceAsStream("/withAnimation.html")) {
                     "Did not find /withAnimation.html"
                 }
-                    .use { it.readAllBytes() }
+                    .use { it.readAllBytes() },
             )
         }
     }

@@ -8,11 +8,9 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 class AuthenticationDAOImpl(override val di: DI) : AuthenticationDAO, DIAware {
-
     private val database: Database by instance()
 
-    override fun save(authenticationDBO: AuthenticationDBO) =
-        database.save(authenticationDBO)
+    override fun save(authenticationDBO: AuthenticationDBO) = database.save(authenticationDBO)
 
     override fun getByUsername(username: String) =
         database
@@ -28,8 +26,7 @@ class AuthenticationDAOImpl(override val di: DI) : AuthenticationDAO, DIAware {
             .findOne()
     }
 
-    override fun getById(authenticationId: AuthenticationId) =
-        database.find(AuthenticationDBO::class.java, authenticationId.authenticationId)!!
+    override fun getById(authenticationId: AuthenticationId) = database.find(AuthenticationDBO::class.java, authenticationId.authenticationId)!!
 
     override fun getActiveById(authenticationId: AuthenticationId) =
         database.find(AuthenticationDBO::class.java)

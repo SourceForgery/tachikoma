@@ -17,7 +17,10 @@ class AccountServiceMutations(override val di: DI) : DIAware {
     private val trackingConfig: TrackingConfig by instance()
 
     @GraphQLDescription("Change base url of tracking/click urls")
-    fun changeBaseUrl(mailDomain: MailDomain, baseUrl: URI?): AccountResponse {
+    fun changeBaseUrl(
+        mailDomain: MailDomain,
+        baseUrl: URI?,
+    ): AccountResponse {
         authentication().requireFrontendAdmin(mailDomain)
         val account = accountFacade.modifyAccount(mailDomain, baseUrl)
         return account.toAccountResponse(trackingConfig.baseUrl)
@@ -32,8 +35,9 @@ class AccountServiceQueries(override val di: DI) : DIAware {
     @GraphQLDescription("Change base url of tracking/click urls")
     fun getAccountData(mailDomain: MailDomain): AccountResponse {
         authentication().requireFrontendAdmin(mailDomain)
-        val account = accountFacade[mailDomain]
-            ?: error("No account with mailDomain $mailDomain")
+        val account =
+            accountFacade[mailDomain]
+                ?: error("No account with mailDomain $mailDomain")
         return account.toAccountResponse(trackingConfig.baseUrl)
     }
 }

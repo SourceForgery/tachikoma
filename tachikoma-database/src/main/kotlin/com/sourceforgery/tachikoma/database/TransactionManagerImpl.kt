@@ -40,12 +40,14 @@ internal data class TransactionScopeManagerKey(private val scopeManager: Transac
 
 private class CoroutineTransactionScopeManager(
     private val transactionScopeManager: TransactionScopeManager,
-    private val spiTransaction: SpiTransaction? = transactionScopeManager.active()
+    private val spiTransaction: SpiTransaction? = transactionScopeManager.active(),
 ) : ThreadContextElement<SpiTransaction?> {
-
     override val key: CoroutineContext.Key<*> = TransactionScopeManagerKey(transactionScopeManager)
 
-    override fun restoreThreadContext(context: CoroutineContext, oldState: SpiTransaction?) {
+    override fun restoreThreadContext(
+        context: CoroutineContext,
+        oldState: SpiTransaction?,
+    ) {
         setWithNull(oldState)
     }
 

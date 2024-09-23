@@ -62,7 +62,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
     fun getIncomingEmail(
         incomingEmailId: IncomingEmailId,
         accountId: AccountId,
-        parameters: IncomingEmailParameters
+        parameters: IncomingEmailParameters,
     ): IncomingEmail? =
         incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
             ?.toGrpc(parameters)
@@ -124,7 +124,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
                                     .setName(it.name)
                                     .setBody(it.value)
                                     .build()
-                            }.toList()
+                            }.toList(),
                     )
                     .setFileName(singleBody.fileName ?: "")
                     .apply {
@@ -159,41 +159,44 @@ class IncomingEmailService(override val di: DI) : DIAware {
         }
 
     private fun includeParsedBodies(parsedMessage: MimeMessage): Pair<String, String> {
+        val allAlternatives =
+            parsedMessage
+                // Only allows two categories, either:
+                // * the root part, ie the first in every
+                // * in "multipart/alternative"
+                // Caveat: This actually supports multiparts in multiparts,
+                // but I have no idea if the standard does that.
+                .unroll { parent, idx, _ -> idx == 0 || parent.isMultipartAlternative }
+                .map { (_, part) -> part }
+                .toList()
 
-        val allAlternatives = parsedMessage
-            // Only allows two categories, either:
-            // * the root part, ie the first in every
-            // * in "multipart/alternative"
-            // Caveat: This actually supports multiparts in multiparts,
-            // but I have no idea if the standard does that.
-            .unroll { parent, idx, _ -> idx == 0 || parent.isMultipartAlternative }
-            .map { (_, part) -> part }
-            .toList()
+        val messageHtmlBody =
+            allAlternatives
+                .firstOrNull { TEXT_HTML.match(it.contentType) }
+                ?.text()
+                ?: ""
 
-        val messageHtmlBody = allAlternatives
-            .firstOrNull { TEXT_HTML.match(it.contentType) }
-            ?.text()
-            ?: ""
-
-        val messageTextBody = allAlternatives
-            .firstOrNull { TEXT_PLAIN.match(it.contentType) }
-            ?.text()
-            ?: let { messageHtmlBody.stripHtml() }
+        val messageTextBody =
+            allAlternatives
+                .firstOrNull { TEXT_PLAIN.match(it.contentType) }
+                ?.text()
+                ?: let { messageHtmlBody.stripHtml() }
         return messageHtmlBody to messageTextBody
     }
 
     private val Multipart.isMultipartAlternative: Boolean
         get() = MULTIPART_ALTERNATIVE.match(contentType)
 
-    private fun Multipart.bodyPartsWithIndex() = (0 until count)
-        .asSequence()
-        .map { it to getBodyPart(it) }
+    private fun Multipart.bodyPartsWithIndex() =
+        (0 until count)
+            .asSequence()
+            .map { it to getBodyPart(it) }
 
     // Not internal function because Kotlin 1.3.72 w/ coroutine 1.3.6 cannot build it
     suspend fun SequenceScope<Pair<Int, Part>>.recursive(
         idx: Int,
         body: Part,
-        pathSelector: (Multipart, Int, Part) -> Boolean
+        pathSelector: (Multipart, Int, Part) -> Boolean,
     ) {
         when (val content = body.content) {
             is Multipart -> {
@@ -221,12 +224,12 @@ class IncomingEmailService(override val di: DI) : DIAware {
         authenticationId: AuthenticationId,
         mailDomain: MailDomain,
         accountId: AccountId,
-        parameters: IncomingEmailParameters
+        parameters: IncomingEmailParameters,
     ): Flow<IncomingEmail> =
         mqSequenceFactory.listenForIncomingEmails(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
-            accountId = accountId
+            accountId = accountId,
         ).mapNotNull {
             val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
             val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
@@ -242,13 +245,14 @@ class IncomingEmailService(override val di: DI) : DIAware {
     fun searchIncomingEmails(
         filter: List<EmailSearchFilter>,
         accountId: AccountId,
-        parameters: IncomingEmailParameters
+        parameters: IncomingEmailParameters,
     ): Flow<IncomingEmail> {
-        val dbFilter = filter
-            .map { it.convert() }
+        val dbFilter =
+            filter
+                .map { it.convert() }
         return incomingEmailDAO.searchIncomingEmails(
             accountId = accountId,
-            filter = dbFilter
+            filter = dbFilter,
         )
             .map { it.toGrpc(parameters) }
     }
@@ -261,16 +265,19 @@ class IncomingEmailService(override val di: DI) : DIAware {
             CONTAINS_SENDER_EMAIL -> SenderEmailContains(containsSenderEmail)
             CONTAINS_RECEIVER_NAME -> ReceiverNameContains(containsReceiverName)
             CONTAINS_RECEIVER_EMAIL -> ReceiverEmailContains(containsReceiverEmail)
-            RECEIVED_WITHIN -> ReceivedBetween(
-                after = receivedWithin.after
-                    .takeIf { it.seconds != 0L }
-                    ?.toInstant()
-                    ?: Instant.EPOCH,
-                before = receivedWithin.before
-                    .takeIf { it.seconds != 0L }
-                    ?.toInstant()
-                    ?: Instant.MAX
-            )
+            RECEIVED_WITHIN ->
+                ReceivedBetween(
+                    after =
+                        receivedWithin.after
+                            .takeIf { it.seconds != 0L }
+                            ?.toInstant()
+                            ?: Instant.EPOCH,
+                    before =
+                        receivedWithin.before
+                            .takeIf { it.seconds != 0L }
+                            ?.toInstant()
+                            ?: Instant.MAX,
+                )
             FILTER_NOT_SET -> error("Must set filter")
         }
 

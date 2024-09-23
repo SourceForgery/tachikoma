@@ -7,18 +7,21 @@ import kotlinx.coroutines.runBlocking
 import java.net.URI
 
 fun main() {
-    val configuration = object : GrpcClientConfig {
-        override val tachikomaUrl = URI(
-            System.getenv("TACHI_FRONTEND_URI")
-                ?: error("Need to specify env TACHI_FRONTEND_URI")
-        )
-        override val insecure: Boolean
-            get() = true
-        override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
-        override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
-    }
-    val stub = provideClientBuilder(configuration)
-        .build(DeliveryNotificationServiceGrpcKt.DeliveryNotificationServiceCoroutineStub::class.java)
+    val configuration =
+        object : GrpcClientConfig {
+            override val tachikomaUrl =
+                URI(
+                    System.getenv("TACHI_FRONTEND_URI")
+                        ?: error("Need to specify env TACHI_FRONTEND_URI"),
+                )
+            override val insecure: Boolean
+                get() = true
+            override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
+            override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
+        }
+    val stub =
+        provideClientBuilder(configuration)
+            .build(DeliveryNotificationServiceGrpcKt.DeliveryNotificationServiceCoroutineStub::class.java)
 
     try {
         runBlocking {

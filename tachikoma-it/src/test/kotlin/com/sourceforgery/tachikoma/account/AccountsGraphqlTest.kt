@@ -28,34 +28,38 @@ class AccountsGraphqlTest : AbstractGraphqlTest() {
                 AuthenticationDBO(
                     account = account,
                     role = AuthenticationRole.FRONTEND_ADMIN,
-                    apiToken = RandomStringUtils.randomAlphabetic(50)
-                )
+                    apiToken = RandomStringUtils.randomAlphabetic(50),
+                ),
             )
             database.refresh(account)
             val auth = account.authentications.first { it.role == AuthenticationRole.FRONTEND_ADMIN }
 
-            val firstGet = client.execute(GetAccountData(GetAccountData.Variables(mailDomain.mailDomain))) {
-                addApitoken(auth)
-            }
+            val firstGet =
+                client.execute(GetAccountData(GetAccountData.Variables(mailDomain.mailDomain))) {
+                    addApitoken(auth)
+                }
 
             assertEquals(trackingConfig.baseUrl.toASCIIString(), firstGet.data!!.accounts.getAccountData.baseUrl)
 
-            val firstMod = client.execute(ChangeBaseUrl(ChangeBaseUrl.Variables(mailDomain.mailDomain, OptionalInput.Defined("https://foobar.com")))) {
-                addApitoken(auth)
-            }
+            val firstMod =
+                client.execute(ChangeBaseUrl(ChangeBaseUrl.Variables(mailDomain.mailDomain, OptionalInput.Defined("https://foobar.com")))) {
+                    addApitoken(auth)
+                }
             assertEquals("https://foobar.com", firstMod.data!!.accounts.changeBaseUrl.baseUrl)
 
             database.refresh(account)
             assertEquals(URI("https://foobar.com"), account.baseUrl)
 
-            val secondGet = client.execute(GetAccountData(GetAccountData.Variables(mailDomain.mailDomain))) {
-                addApitoken(auth)
-            }
+            val secondGet =
+                client.execute(GetAccountData(GetAccountData.Variables(mailDomain.mailDomain))) {
+                    addApitoken(auth)
+                }
             assertEquals("https://foobar.com", secondGet.data!!.accounts.getAccountData.baseUrl)
 
-            val secondMod = client.execute(ChangeBaseUrl(ChangeBaseUrl.Variables(mailDomain.mailDomain, OptionalInput.Defined(null)))) {
-                addApitoken(auth)
-            }
+            val secondMod =
+                client.execute(ChangeBaseUrl(ChangeBaseUrl.Variables(mailDomain.mailDomain, OptionalInput.Defined(null)))) {
+                    addApitoken(auth)
+                }
             assertEquals(trackingConfig.baseUrl.toASCIIString(), secondMod.data!!.accounts.changeBaseUrl.baseUrl)
 
             database.refresh(account)

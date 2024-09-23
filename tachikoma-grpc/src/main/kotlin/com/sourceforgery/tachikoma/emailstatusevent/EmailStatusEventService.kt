@@ -35,24 +35,27 @@ internal class EmailStatusEventService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val emailStatusEventDAO: EmailStatusEventDAO by instance()
 
-    fun getEmailStatusEvents(request: GetEmailStatusEventsFilter, authenticationId: AuthenticationId): Flow<EmailNotification> {
-
+    fun getEmailStatusEvents(
+        request: GetEmailStatusEventsFilter,
+        authenticationId: AuthenticationId,
+    ): Flow<EmailNotification> {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
-        val events: List<EmailStatus> = request.eventsList
-            .map {
-                when (it) {
-                    Event.CLICKED -> EmailStatus.CLICKED
-                    Event.DELIVERED -> EmailStatus.DELIVERED
-                    Event.UNSUBSCRIBED -> EmailStatus.UNSUBSCRIBE
-                    Event.HARD_BOUNCED -> EmailStatus.HARD_BOUNCED
-                    Event.SOFT_BOUNCED -> EmailStatus.SOFT_BOUNCED
-                    Event.QUEUED -> EmailStatus.QUEUED
-                    Event.SPAM -> EmailStatus.SPAM
-                    Event.OPENED -> EmailStatus.OPENED
-                    else -> throw IllegalArgumentException("$it is not valid for blocking")
+        val events: List<EmailStatus> =
+            request.eventsList
+                .map {
+                    when (it) {
+                        Event.CLICKED -> EmailStatus.CLICKED
+                        Event.DELIVERED -> EmailStatus.DELIVERED
+                        Event.UNSUBSCRIBED -> EmailStatus.UNSUBSCRIBE
+                        Event.HARD_BOUNCED -> EmailStatus.HARD_BOUNCED
+                        Event.SOFT_BOUNCED -> EmailStatus.SOFT_BOUNCED
+                        Event.QUEUED -> EmailStatus.QUEUED
+                        Event.SPAM -> EmailStatus.SPAM
+                        Event.OPENED -> EmailStatus.OPENED
+                        else -> throw IllegalArgumentException("$it is not valid for blocking")
+                    }
                 }
-            }
         val includeTrackingData = request.includeTrackingData
         val includeMetricsData = request.includeMetricsData
 
@@ -67,7 +70,11 @@ internal class EmailStatusEventService(override val di: DI) : DIAware {
             .map { getEmailNotification(it, includeTrackingData, includeMetricsData) }
     }
 
-    private fun getEmailNotification(emailStatusEventDBO: EmailStatusEventDBO, includeTrackingData: Boolean, includeMetricsData: Boolean): EmailNotification {
+    private fun getEmailNotification(
+        emailStatusEventDBO: EmailStatusEventDBO,
+        includeTrackingData: Boolean,
+        includeMetricsData: Boolean,
+    ): EmailNotification {
         val builder = EmailNotification.newBuilder()
         builder.emailId = emailStatusEventDBO.email.id.toGrpcInternal()
         builder.recipientEmailAddress = emailStatusEventDBO.email.recipient.toGrpcInternal()
@@ -95,7 +102,7 @@ internal class EmailStatusEventService(override val di: DI) : DIAware {
                     OpenedEvent.newBuilder()
                         .setIpAddress(ipAddress)
                         .setUserAgent(emailStatusEventDBO.metaData.userAgent ?: "")
-                        .build()
+                        .build(),
                 )
             }
 
@@ -105,7 +112,7 @@ internal class EmailStatusEventService(override val di: DI) : DIAware {
                     ClickedEvent.newBuilder()
                         .setIpAddress(ipAddress)
                         .setUserAgent(emailStatusEventDBO.metaData.userAgent ?: "")
-                        .build()
+                        .build(),
                 )
             }
             EmailStatus.HARD_BOUNCED -> {

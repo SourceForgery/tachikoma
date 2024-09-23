@@ -14,9 +14,10 @@ import org.kodein.di.instance
 import kotlin.test.assertTrue
 
 class StartupTest : DIAware {
-    override val di = DI {
-        importOnce(testModule(TestAttribute.POSTGRESQL), allowOverride = true)
-    }
+    override val di =
+        DI {
+            importOnce(testModule(TestAttribute.POSTGRESQL), allowOverride = true)
+        }
 
     val database: Database by instance()
 

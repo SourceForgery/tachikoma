@@ -10,9 +10,10 @@ import org.kodein.di.bind
 import org.kodein.di.singleton
 import java.time.Clock
 
-val commonModule = DI.Module("common") {
-    bind<Clock>() with singleton { Clocker() }
-    bind<JobMessageFactory>() with singleton { JobMessageFactory(di) }
-    bind<TachikomaScope>() with singleton { TachikomaScopeImpl(di) }
-    bind<ExtractEmailMetadata>() with singleton { ExtractEmailMetadata(di) }
-}
+val commonModule =
+    DI.Module("common") {
+        bind<Clock>() with singleton { Clocker() }
+        bind<JobMessageFactory>() with singleton { JobMessageFactory(di) }
+        bind<TachikomaScope>() with singleton { TachikomaScopeImpl(di) }
+        bind<ExtractEmailMetadata>() with singleton { ExtractEmailMetadata(di) }
+    }

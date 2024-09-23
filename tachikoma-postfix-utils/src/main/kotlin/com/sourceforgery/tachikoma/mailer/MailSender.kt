@@ -29,7 +29,7 @@ import kotlin.system.exitProcess
 
 class MailSender(
     private val stub: MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : AutoCloseable {
     private val executor = Executors.newCachedThreadPool()
     private val channel = Channel<MTAQueuedNotification>()
@@ -78,44 +78,53 @@ class MailSender(
     suspend fun sendEmail(emailMessage: EmailMessage): MTAQueuedNotification {
         LOGGER.info { "Got email: ${emailMessage.emailId}" }
 
-        val builder = MTAQueuedNotification.newBuilder()
-            .setEmailId(emailMessage.emailId)
-        val success = try {
-            withContext(executor.asCoroutineDispatcher()) {
-                Socket("localhost", 25).use { smtpSocket ->
-                    IoBuilder.forLogger("smtp.debug")
-                        .setLevel(Level.TRACE)
-                        .buildPrintWriter()!!
-                        .use { os ->
-                            createExpect(os, smtpSocket).use { expect ->
-                                val queueId = ssmtpSendEmail(expect, emailMessage)
-                                builder.queueId = queueId
-                                LOGGER.debug { "Successfully queued email: ${emailMessage.emailId} with QueueId: $queueId" }
-                                true
+        val builder =
+            MTAQueuedNotification.newBuilder()
+                .setEmailId(emailMessage.emailId)
+        val success =
+            try {
+                withContext(executor.asCoroutineDispatcher()) {
+                    Socket("localhost", 25).use { smtpSocket ->
+                        IoBuilder.forLogger("smtp.debug")
+                            .setLevel(Level.TRACE)
+                            .buildPrintWriter()!!
+                            .use { os ->
+                                createExpect(os, smtpSocket).use { expect ->
+                                    val queueId = ssmtpSendEmail(expect, emailMessage)
+                                    builder.queueId = queueId
+                                    LOGGER.debug { "Successfully queued email: ${emailMessage.emailId} with QueueId: $queueId" }
+                                    true
+                                }
                             }
-                        }
+                    }
                 }
+            } catch (e: Exception) {
+                LOGGER.error(e) { "Failed to send message" }
+                false
             }
-        } catch (e: Exception) {
-            LOGGER.error(e) { "Failed to send message" }
-            false
-        }
         return builder.setSuccess(success)
             .build()
     }
 
-    private fun createExpect(os: PrintWriter, smtpSocket: Socket): Expect = ExpectBuilder()
-        .withEchoOutput(os)
-        .withEchoInput(os)
-        .withInputs(smtpSocket.getInputStream())
-        .withOutput(smtpSocket.getOutputStream())
-        .withLineSeparator("\r\n")
-        .withExceptionOnFailure()
-        .withExecutor(executor)
-        .withTimeout(180, TimeUnit.SECONDS)
-        .build()
+    private fun createExpect(
+        os: PrintWriter,
+        smtpSocket: Socket,
+    ): Expect =
+        ExpectBuilder()
+            .withEchoOutput(os)
+            .withEchoInput(os)
+            .withInputs(smtpSocket.getInputStream())
+            .withOutput(smtpSocket.getOutputStream())
+            .withLineSeparator("\r\n")
+            .withExceptionOnFailure()
+            .withExecutor(executor)
+            .withTimeout(180, TimeUnit.SECONDS)
+            .build()
 
-    private fun ssmtpSendEmail(expect: Expect, emailMessage: EmailMessage): String {
+    private fun ssmtpSendEmail(
+        expect: Expect,
+        emailMessage: EmailMessage,
+    ): String {
         expect.expectNoSmtpError("^220 ")
         expect.emptyBuffer()
         expect.sendLine("EHLO localhost")
@@ -135,13 +144,15 @@ class MailSender(
             .expectNoSmtpError("^354 ")
         expect.expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
         // Every line that starts with a dot must have it 'escaped' with an extra dot
-        val preProcessedBody = emailMessage.body
-            .replace(Regex("\n\\."), "..")
-            .replace(Regex("^\\."), "..")
-        val queueId = expect.send(preProcessedBody)
-            .sendLine(".")
-            .expectNoSmtpError("^250 .* queued as (.*)$")
-            .group(1)!!
+        val preProcessedBody =
+            emailMessage.body
+                .replace(Regex("\n\\."), "..")
+                .replace(Regex("^\\."), "..")
+        val queueId =
+            expect.send(preProcessedBody)
+                .sendLine(".")
+                .expectNoSmtpError("^250 .* queued as (.*)$")
+                .group(1)!!
         expect.sendLine("QUIT")
 
         return queueId

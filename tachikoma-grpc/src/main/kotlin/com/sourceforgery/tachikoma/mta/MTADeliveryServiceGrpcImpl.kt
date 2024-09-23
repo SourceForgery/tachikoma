@@ -9,9 +9,8 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class MTADeliveryServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : MTADeliveryNotificationsGrpcKt.MTADeliveryNotificationsCoroutineImplBase(), DIAware {
-
     private val authentication: () -> Authentication by provider()
     private val mtaDeliveryNotifications: MTADeliveryNotifications by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()

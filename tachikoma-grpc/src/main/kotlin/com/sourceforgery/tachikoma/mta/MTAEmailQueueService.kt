@@ -53,7 +53,10 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
     private val incomingEmailAddressDAO: IncomingEmailAddressDAO by instance()
     private val extractEmailMetadata: ExtractEmailMetadata by instance()
 
-    fun getEmails(requests: Flow<MTAQueuedNotification>, mailDomain: MailDomain): Flow<EmailMessage> {
+    fun getEmails(
+        requests: Flow<MTAQueuedNotification>,
+        mailDomain: MailDomain,
+    ): Flow<EmailMessage> {
         LOGGER.info { "MTA connected with mail domain $mailDomain" }
 
         val blockingDispatcher = ServiceRequestContext.current().blockingTaskExecutor().asCoroutineDispatcher()
@@ -79,34 +82,38 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
                     email.mtaQueueId = queueId
                     emailDAO.save(email)
 
-                    val statusDBO = EmailStatusEventDBO(
-                        email = email,
-                        emailStatus = EmailStatus.QUEUED,
-                        metaData = StatusEventMetaData()
-                    )
+                    val statusDBO =
+                        EmailStatusEventDBO(
+                            email = email,
+                            emailStatus = EmailStatus.QUEUED,
+                            metaData = StatusEventMetaData(),
+                        )
                     emailStatusEventDAO.save(statusDBO)
                     mqSender.queueDeliveryNotification(
                         accountId = email.transaction.authentication.account.id,
-                        notificationMessage = DeliveryNotificationMessage.newBuilder()
-                            .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
-                            .setEmailMessageId(email.id.emailId)
-                            .setMessageQueued(MessageQueued.getDefaultInstance())
-                            .build()
+                        notificationMessage =
+                            DeliveryNotificationMessage.newBuilder()
+                                .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
+                                .setEmailMessageId(email.id.emailId)
+                                .setMessageQueued(MessageQueued.getDefaultInstance())
+                                .build(),
                     )
                 } else {
-                    val statusDBO = EmailStatusEventDBO(
-                        email = email,
-                        emailStatus = EmailStatus.HARD_BOUNCED,
-                        metaData = StatusEventMetaData()
-                    )
+                    val statusDBO =
+                        EmailStatusEventDBO(
+                            email = email,
+                            emailStatus = EmailStatus.HARD_BOUNCED,
+                            metaData = StatusEventMetaData(),
+                        )
                     emailStatusEventDAO.save(statusDBO)
                     mqSender.queueDeliveryNotification(
                         accountId = email.transaction.authentication.account.id,
-                        notificationMessage = DeliveryNotificationMessage.newBuilder()
-                            .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
-                            .setEmailMessageId(email.id.emailId)
-                            .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
-                            .build()
+                        notificationMessage =
+                            DeliveryNotificationMessage.newBuilder()
+                                .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
+                                .setEmailMessageId(email.id.emailId)
+                                .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
+                                .build(),
                     )
 
                     LOGGER.error { "Wasn't able to deliver message with emailId: $emailId" }
@@ -138,9 +145,10 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
         val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), body.inputStream())
         val receiverAddress = InternetAddress(request.emailAddress)
         val recipientEmail = Email(receiverAddress.address)
-        val accountTypePair = handleUnsubscribe(recipientEmail)
-            ?: handleHardBounce(recipientEmail)
-            ?: handleNormalEmails(recipientEmail)
+        val accountTypePair =
+            handleUnsubscribe(recipientEmail)
+                ?: handleHardBounce(recipientEmail)
+                ?: handleNormalEmails(recipientEmail)
 
         // "" from address means bounce
         if (request.from == "") {
@@ -150,21 +158,23 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
             val accountDBO = accountTypePair.first
 
             val emails = extractEmailMetadata.extract(body)
-            val incomingEmailDBO = IncomingEmailDBO(
-                body = body,
-                mailFrom = Email(request.from),
-                recipient = Email(request.emailAddress),
-                fromEmails = emails.from,
-                toEmails = emails.to,
-                replyToEmails = emails.replyTo,
-                account = accountDBO,
-                subject = mimeMessage.subject ?: ""
-            )
+            val incomingEmailDBO =
+                IncomingEmailDBO(
+                    body = body,
+                    mailFrom = Email(request.from),
+                    recipient = Email(request.emailAddress),
+                    fromEmails = emails.from,
+                    toEmails = emails.to,
+                    replyToEmails = emails.replyTo,
+                    account = accountDBO,
+                    subject = mimeMessage.subject ?: "",
+                )
             incomingEmailDAO.save(incomingEmailDBO)
             if (accountTypePair.second == IncomingEmailType.NORMAL) {
-                val notificationMessage = IncomingEmailNotificationMessage.newBuilder()
-                    .setIncomingEmailMessageId(incomingEmailDBO.id.incomingEmailId)
-                    .build()
+                val notificationMessage =
+                    IncomingEmailNotificationMessage.newBuilder()
+                        .setIncomingEmailMessageId(incomingEmailDBO.id.incomingEmailId)
+                        .build()
                 mqSender.queueIncomingEmailNotification(accountDBO.id, notificationMessage)
             }
             return MailAcceptanceResult.AcceptanceStatus.ACCEPTED
@@ -185,19 +195,21 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
             val autoMailId = AutoMailId(recipientAddress.address.substringAfter('-'))
             emailDAO.getByAutoMailId(autoMailId)
                 ?.let { email ->
-                    val emailStatusEventDBO = EmailStatusEventDBO(
-                        email = email,
-                        emailStatus = EmailStatus.HARD_BOUNCED,
-                        metaData = StatusEventMetaData()
-                    )
+                    val emailStatusEventDBO =
+                        EmailStatusEventDBO(
+                            email = email,
+                            emailStatus = EmailStatus.HARD_BOUNCED,
+                            metaData = StatusEventMetaData(),
+                        )
                     emailStatusEventDAO.save(emailStatusEventDBO)
                     blockedEmailDAO.block(emailStatusEventDBO)
-                    val notificationMessage = DeliveryNotificationMessage
-                        .newBuilder()
-                        .setCreationTimestamp(clock.instant().toTimestamp())
-                        .setEmailMessageId(email.id.emailId)
-                        .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
-                        .build()
+                    val notificationMessage =
+                        DeliveryNotificationMessage
+                            .newBuilder()
+                            .setCreationTimestamp(clock.instant().toTimestamp())
+                            .setEmailMessageId(email.id.emailId)
+                            .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
+                            .build()
                     mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
                     email.transaction.authentication.account to IncomingEmailType.HARD_BOUNCE
                 }
@@ -211,19 +223,21 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
             val autoMailId = AutoMailId(recipientAddress.address.substringAfter('-'))
             emailDAO.getByAutoMailId(autoMailId)
                 ?.let { email ->
-                    val emailStatusEventDBO = EmailStatusEventDBO(
-                        email = email,
-                        emailStatus = EmailStatus.UNSUBSCRIBE,
-                        metaData = StatusEventMetaData()
-                    )
+                    val emailStatusEventDBO =
+                        EmailStatusEventDBO(
+                            email = email,
+                            emailStatus = EmailStatus.UNSUBSCRIBE,
+                            metaData = StatusEventMetaData(),
+                        )
                     emailStatusEventDAO.save(emailStatusEventDBO)
                     blockedEmailDAO.block(emailStatusEventDBO)
-                    val notificationMessage = DeliveryNotificationMessage
-                        .newBuilder()
-                        .setCreationTimestamp(clock.instant().toTimestamp())
-                        .setEmailMessageId(email.id.emailId)
-                        .setMessageUnsubscribed(MessageUnsubscribed.getDefaultInstance())
-                        .build()
+                    val notificationMessage =
+                        DeliveryNotificationMessage
+                            .newBuilder()
+                            .setCreationTimestamp(clock.instant().toTimestamp())
+                            .setEmailMessageId(email.id.emailId)
+                            .setMessageUnsubscribed(MessageUnsubscribed.getDefaultInstance())
+                            .build()
                     mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessage)
                     email.transaction.authentication.account to IncomingEmailType.UNSUBSCRIBE
                 }
@@ -240,5 +254,5 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
 enum class IncomingEmailType {
     UNSUBSCRIBE,
     HARD_BOUNCE,
-    NORMAL
+    NORMAL,
 }

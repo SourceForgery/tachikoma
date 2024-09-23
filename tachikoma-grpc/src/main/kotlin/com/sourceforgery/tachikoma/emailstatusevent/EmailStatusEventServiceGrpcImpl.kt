@@ -14,16 +14,16 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class EmailStatusEventServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : EmailStatusEventServiceGrpcKt.EmailStatusEventServiceCoroutineImplBase(), DIAware {
-
     private val authentication: () -> Authentication by provider()
     private val emailStatsEventService: EmailStatusEventService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 
-    override fun getEmailStatusEvents(request: GetEmailStatusEventsFilter) = flow<EmailNotification> {
-        val auth = authentication()
-        auth.requireFrontend()
-        emitAll(emailStatsEventService.getEmailStatusEvents(request, auth.authenticationId))
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+    override fun getEmailStatusEvents(request: GetEmailStatusEventsFilter) =
+        flow<EmailNotification> {
+            val auth = authentication()
+            auth.requireFrontend()
+            emitAll(emailStatsEventService.getEmailStatusEvents(request, auth.authenticationId))
+        }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 }

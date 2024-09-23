@@ -2,7 +2,6 @@ package com.sourceforgery.tachikoma.webserver
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.google.common.hash.Hashing
 import com.google.common.hash.Hashing.hmacSha1
 import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
@@ -36,9 +35,10 @@ class AuthenticationFactory(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val accountDAO: AccountDAO by instance()
 
-    private val apiKeyCache = CacheBuilder.newBuilder()
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build(CacheLoader.from<String, Authentication?> { parseApiTokenHeader(it) })
+    private val apiKeyCache =
+        CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build(CacheLoader.from<String, Authentication?> { parseApiTokenHeader(it) })
 
     @Suppress("UnstableApiUsage")
     private val authHmac by lazy {
@@ -74,7 +74,7 @@ class AuthenticationFactory(override val di: DI) : DIAware {
                                 role = auth.role,
                                 authenticationId = auth.id,
                                 accountId = auth.account.id,
-                                accountDAO = accountDAO
+                                accountDAO = accountDAO,
                             )
                         } else {
                             LOGGER.warn { "Incorrect domain(${splitAuthString.first}) for account ${auth.account.id})" }
@@ -90,12 +90,14 @@ class AuthenticationFactory(override val di: DI) : DIAware {
     }
 
     private fun parseWebTokenHeader(): Authentication? {
-        val webtokenHeader = httpHeaders()[WEBTOKEN_HEADER]
-            ?: return null
-        val splitToken = webtokenHeader.split(
-            limit = 2,
-            delimiters = charArrayOf('.')
-        )
+        val webtokenHeader =
+            httpHeaders()[WEBTOKEN_HEADER]
+                ?: return null
+        val splitToken =
+            webtokenHeader.split(
+                limit = 2,
+                delimiters = charArrayOf('.'),
+            )
         if (splitToken.size != 2) {
             return null
         }
@@ -105,17 +107,19 @@ class AuthenticationFactory(override val di: DI) : DIAware {
             return null
         }
         val tokenAuthData = WebTokenAuthData.parseFrom(payload)
-        val authenticationId = tokenAuthData.toAuthenticationId()
-            ?: throw InvalidOrInsufficientCredentialsException()
+        val authenticationId =
+            tokenAuthData.toAuthenticationId()
+                ?: throw InvalidOrInsufficientCredentialsException()
 
-        val accountId = tokenAuthData.toAccountId()
-            ?: throw InvalidOrInsufficientCredentialsException()
+        val accountId =
+            tokenAuthData.toAccountId()
+                ?: throw InvalidOrInsufficientCredentialsException()
         return AuthenticationImpl(
             // No webtoken should allow backend
             role = tokenAuthData.authenticationRole.toAuthenticationRole(),
             authenticationId = authenticationId,
             accountId = accountId,
-            accountDAO = accountDAO
+            accountDAO = accountDAO,
         )
     }
 
@@ -134,9 +138,8 @@ internal class AuthenticationImpl(
     override var authenticationId: AuthenticationId,
     override var accountId: AccountId,
     private val accountDAO: AccountDAO,
-    private val role: AuthenticationRole
+    private val role: AuthenticationRole,
 ) : Authentication {
-
     override val mailDomain: MailDomain by lazy {
         accountDAO.get(accountId).mailDomain
     }

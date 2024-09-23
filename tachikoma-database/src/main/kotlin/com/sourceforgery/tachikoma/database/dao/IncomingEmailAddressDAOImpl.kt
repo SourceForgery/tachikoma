@@ -11,8 +11,7 @@ import org.kodein.di.instance
 class IncomingEmailAddressDAOImpl(override val di: DI) : IncomingEmailAddressDAO, DIAware {
     private val database: Database by instance()
 
-    override fun save(incomingEmailAddressDBO: IncomingEmailAddressDBO) =
-        database.save(incomingEmailAddressDBO)
+    override fun save(incomingEmailAddressDBO: IncomingEmailAddressDBO) = database.save(incomingEmailAddressDBO)
 
     override fun getByEmail(email: Email) =
         database.find(IncomingEmailAddressDBO::class.java)
@@ -32,7 +31,10 @@ class IncomingEmailAddressDAOImpl(override val di: DI) : IncomingEmailAddressDAO
             .eq("account", accountDBO)
             .findList()
 
-    override fun delete(accountDBO: AccountDBO, localPart: String): Int =
+    override fun delete(
+        accountDBO: AccountDBO,
+        localPart: String,
+    ): Int =
         database.find(IncomingEmailAddressDBO::class.java)
             .where()
             .eq("account", accountDBO)

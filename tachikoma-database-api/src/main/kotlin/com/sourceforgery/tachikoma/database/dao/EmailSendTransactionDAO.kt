@@ -5,5 +5,6 @@ import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 
 interface EmailSendTransactionDAO {
     fun save(emailSendTransactionDBO: EmailSendTransactionDBO)
+
     fun get(emailTransactionId: EmailTransactionId): EmailSendTransactionDBO?
 }

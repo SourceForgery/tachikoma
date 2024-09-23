@@ -22,10 +22,10 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 class TransactionManagerImplTest : DIAware {
-
-    override val di = DI {
-        importOnce(testModule(), allowOverride = true)
-    }
+    override val di =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+        }
 
     private val database: Database by instance()
     private val transactionManager: TransactionManager by instance()
@@ -36,15 +36,16 @@ class TransactionManagerImplTest : DIAware {
         runBlocking {
             val thread = Thread.currentThread()
             assertNull(txManager.inScope())
-            val id = transactionManager.coroutineTx { tx ->
-                withContext(Dispatchers.IO) {
-                    val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
-                    database.save(accountDBO)
-                    assertNotSame(thread, Thread.currentThread())
-                    assertSame(tx, txManager.inScope())
-                    accountDBO.id
+            val id =
+                transactionManager.coroutineTx { tx ->
+                    withContext(Dispatchers.IO) {
+                        val accountDBO = AccountDBO(MailDomain("${UUID.randomUUID()}.example.com"))
+                        database.save(accountDBO)
+                        assertNotSame(thread, Thread.currentThread())
+                        assertSame(tx, txManager.inScope())
+                        accountDBO.id
+                    }
                 }
-            }
             assertNull(txManager.inScope())
             val account = database.find<AccountDBO>(id)
             assertNotNull(account)

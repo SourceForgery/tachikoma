@@ -68,7 +68,6 @@ import java.util.LinkedList
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 object UriComponent {
-
     private val HEX_DIGITS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
 
     private val SCHEME = listOf("0-9", "A-Z", "a-z", "+", "-", ".")
@@ -86,63 +85,74 @@ object UriComponent {
      * The URI component type.
      */
     enum class Type {
-
         /**
          * ALPHA / DIGIT / "-" / "." / "_" / "~" characters.
          */
         UNRESERVED,
+
         /**
          * The URI scheme component type.
          */
         SCHEME,
+
         /**
          * The URI authority component type.
          */
         AUTHORITY,
+
         /**
          * The URI user info component type.
          */
         USER_INFO,
+
         /**
          * The URI host component type.
          */
         HOST,
+
         /**
          * The URI port component type.
          */
         PORT,
+
         /**
          * The URI path component type.
          */
         PATH,
+
         /**
          * The URI path component type that is a path segment.
          */
         PATH_SEGMENT,
+
         /**
          * The URI path component type that is a matrix parameter.
          */
         MATRIX_PARAM,
+
         /**
          * The URI query component type, encoded using application/x-www-form-urlencoded rules.
          */
         QUERY,
+
         /**
          * The URI query component type that is a query parameter, encoded using
          * application/x-www-form-urlencoded rules (space character is encoded
          * as `+`).
          */
         QUERY_PARAM,
+
         /**
          * The URI query component type that is a query parameter, encoded using
          * application/x-www-form-urlencoded (space character is encoded as
          * `%20`).
          */
         QUERY_PARAM_SPACE_ENCODED,
+
         /**
          * The URI fragment component type.
          */
-        FRAGMENT
+        FRAGMENT,
     }
 
     /**
@@ -156,8 +166,12 @@ object UriComponent {
      * characters.
      */
     @JvmOverloads
-    fun validate(s: String, t: Type, template: Boolean = false) {
-        val i = _valid(s, t, template)
+    fun validate(
+        s: String,
+        t: Type,
+        template: Boolean = false,
+    ) {
+        val i = xValid(s, t, template)
         if (i > -1) {
             throw IllegalArgumentException("The string ''" + s + "'' for the URI component " + t + " contains an invalid character, ''" + s[i] + "'', at index " + i + ".")
         }
@@ -173,11 +187,19 @@ object UriComponent {
      * @return true if the encoded string is valid, otherwise false.
      */
     @JvmOverloads
-    fun valid(s: String, t: Type, template: Boolean = false): Boolean {
-        return _valid(s, t, template) == -1
+    fun valid(
+        s: String,
+        t: Type,
+        template: Boolean = false,
+    ): Boolean {
+        return xValid(s, t, template) == -1
     }
 
-    private fun _valid(s: String, t: Type, template: Boolean): Int {
+    private fun xValid(
+        s: String,
+        t: Type,
+        template: Boolean,
+    ): Int {
         val table = ENCODING_TABLES[t.ordinal]
 
         for (i in 0 until s.length) {
@@ -202,8 +224,11 @@ object UriComponent {
      * must be percent-encoded.
      * @return the encoded string.
      */
-    fun contextualEncode(s: String, t: Type): String {
-        return _encode(s, t, false, true)
+    fun contextualEncode(
+        s: String,
+        t: Type,
+    ): String {
+        return xEncode(s, t, false, true)
     }
 
     /**
@@ -218,8 +243,12 @@ object UriComponent {
      * @param template true if the encoded string contains URI template variables
      * @return the encoded string.
      */
-    fun contextualEncode(s: String, t: Type, template: Boolean): String {
-        return _encode(s, t, template, true)
+    fun contextualEncode(
+        s: String,
+        t: Type,
+        template: Boolean,
+    ): String {
+        return xEncode(s, t, template, true)
     }
 
     /**
@@ -232,8 +261,11 @@ object UriComponent {
      * must be percent-encoded.
      * @return the encoded string.
      */
-    fun encode(s: String, t: Type): String {
-        return _encode(s, t, false, false)
+    fun encode(
+        s: String,
+        t: Type,
+    ): String {
+        return xEncode(s, t, false, false)
     }
 
     /**
@@ -247,8 +279,12 @@ object UriComponent {
      * @param template true if the encoded string contains URI template variables
      * @return the encoded string.
      */
-    fun encode(s: String, t: Type, template: Boolean): String {
-        return _encode(s, t, template, false)
+    fun encode(
+        s: String,
+        t: Type,
+        template: Boolean,
+    ): String {
+        return xEncode(s, t, template, false)
     }
 
     /**
@@ -272,7 +308,12 @@ object UriComponent {
         return result
     }
 
-    private fun _encode(s: String, t: Type, template: Boolean, contextualEncode: Boolean): String {
+    private fun xEncode(
+        s: String,
+        t: Type,
+        template: Boolean,
+        contextualEncode: Boolean,
+    ): String {
         val table = ENCODING_TABLES[t.ordinal]
         var insideTemplateParam = false
 
@@ -333,13 +374,19 @@ object UriComponent {
         return sb?.toString() ?: s
     }
 
-    private fun appendPercentEncodedOctet(sb: StringBuilder, b: Int) {
+    private fun appendPercentEncodedOctet(
+        sb: StringBuilder,
+        b: Int,
+    ) {
         sb.append('%')
         sb.append(HEX_DIGITS[b shr 4])
         sb.append(HEX_DIGITS[b and 0x0F])
     }
 
-    private fun appendUTF8EncodedCharacter(sb: StringBuilder, codePoint: Int) {
+    private fun appendUTF8EncodedCharacter(
+        sb: StringBuilder,
+        codePoint: Int,
+    ) {
         val chars = CharBuffer.wrap(Character.toChars(codePoint))
         val bytes = UTF_8_CHARSET.encode(chars)
 
@@ -439,7 +486,10 @@ object UriComponent {
      * @throws IllegalArgumentException if a malformed percent-encoded octet is
      * detected
      */
-    fun decode(s: String?, t: Type?): String {
+    fun decode(
+        s: String?,
+        t: Type?,
+    ): String {
         if (s == null) {
             throw IllegalArgumentException()
         }
@@ -495,7 +545,10 @@ object UriComponent {
      * should be in decoded form.
      * @return the multivalued map of query parameters.
      */
-    fun decodeQuery(u: URI, decode: Boolean): Multimap<String, String> {
+    fun decodeQuery(
+        u: URI,
+        decode: Boolean,
+    ): Multimap<String, String> {
         return decodeQuery(u.rawQuery, decode)
     }
 
@@ -512,7 +565,10 @@ object UriComponent {
      * should be in decoded form.
      * @return the multivalued map of query parameters.
      */
-    fun decodeQuery(q: String, decode: Boolean): Multimap<String, String> {
+    fun decodeQuery(
+        q: String,
+        decode: Boolean,
+    ): Multimap<String, String> {
         return decodeQuery(q, true, decode)
     }
 
@@ -534,7 +590,7 @@ object UriComponent {
     fun decodeQuery(
         q: String?,
         decodeNames: Boolean,
-        decodeValues: Boolean
+        decodeValues: Boolean,
     ): Multimap<String, String> {
         val queryParameters = MultimapBuilder.linkedHashKeys().arrayListValues().build<String, String>()
 
@@ -561,14 +617,14 @@ object UriComponent {
         params: Multimap<String, String>,
         param: String,
         decodeNames: Boolean,
-        decodeValues: Boolean
+        decodeValues: Boolean,
     ) {
         try {
             val equals = param.indexOf('=')
             if (equals > 0) {
                 params.put(
                     if (decodeNames) URLDecoder.decode(param.substring(0, equals), "UTF-8") else param.substring(0, equals),
-                    if (decodeValues) URLDecoder.decode(param.substring(equals + 1), "UTF-8") else param.substring(equals + 1)
+                    if (decodeValues) URLDecoder.decode(param.substring(equals + 1), "UTF-8") else param.substring(equals + 1),
                 )
             } else if (equals == 0) {
                 // no key declared, ignore
@@ -591,7 +647,10 @@ object UriComponent {
      * should be in decoded form.
      * @return the list of path segments.
      */
-    fun decodePath(u: URI, decode: Boolean): List<PathSegment> {
+    fun decodePath(
+        u: URI,
+        decode: Boolean,
+    ): List<PathSegment> {
         var rawPath: String? = u.rawPath
         if (rawPath != null && rawPath.length > 0 && rawPath[0] == '/') {
             rawPath = rawPath.substring(1)
@@ -616,7 +675,10 @@ object UriComponent {
      * should be in decoded form.
      * @return the list of path segments.
      */
-    fun decodePath(path: String?, decode: Boolean): List<PathSegment> {
+    fun decodePath(
+        path: String?,
+        decode: Boolean,
+    ): List<PathSegment> {
         val segments = LinkedList<PathSegment>()
 
         if (path == null) {
@@ -650,7 +712,11 @@ object UriComponent {
      * @param segment path segment to be decoded.
      * @param decode `true` if the path segment should be in a decoded form.
      */
-    fun decodePathSegment(segments: MutableList<PathSegment>, segment: String, decode: Boolean) {
+    fun decodePathSegment(
+        segments: MutableList<PathSegment>,
+        segment: String,
+        decode: Boolean,
+    ) {
         val colon = segment.indexOf(';')
         if (colon != -1) {
             segments.add(
@@ -659,9 +725,9 @@ object UriComponent {
                     decode,
                     decodeMatrix(
                         segment,
-                        decode
-                    )
-                )
+                        decode,
+                    ),
+                ),
             )
         } else {
             segments.add(PathSegment(segment, decode))
@@ -676,7 +742,10 @@ object UriComponent {
      * should be in decoded form.
      * @return the multivalued map of matrix parameters.
      */
-    fun decodeMatrix(pathSegment: String, decode: Boolean): Multimap<String, String> {
+    fun decodeMatrix(
+        pathSegment: String,
+        decode: Boolean,
+    ): Multimap<String, String> {
         val matrixMap = MultimapBuilder.linkedHashKeys().arrayListValues().build<String, String>()
 
         // Skip over path segment
@@ -699,16 +768,21 @@ object UriComponent {
         return matrixMap
     }
 
-    private fun decodeMatrixParam(params: Multimap<String, String>, param: String, decode: Boolean) {
+    private fun decodeMatrixParam(
+        params: Multimap<String, String>,
+        param: String,
+        decode: Boolean,
+    ) {
         val equals = param.indexOf('=')
         if (equals > 0) {
             params.put(
                 decode(param.substring(0, equals), Type.MATRIX_PARAM),
-                if (decode)
+                if (decode) {
                     decode(param.substring(equals + 1), Type.MATRIX_PARAM)
-                else
+                } else {
                     param
                         .substring(equals + 1)
+                },
             )
         } else if (equals == 0) {
             // no key declared, ignore
@@ -717,7 +791,10 @@ object UriComponent {
         }
     }
 
-    private fun decode(s: String, n: Int): String {
+    private fun decode(
+        s: String,
+        n: Int,
+    ): String {
         val sb = StringBuilder(n)
         var bb: ByteBuffer? = null
 
@@ -735,7 +812,10 @@ object UriComponent {
         return sb.toString()
     }
 
-    private fun decodeQueryParam(s: String, n: Int): String {
+    private fun decodeQueryParam(
+        s: String,
+        n: Int,
+    ): String {
         val sb = StringBuilder(n)
         var bb: ByteBuffer? = null
 
@@ -757,7 +837,10 @@ object UriComponent {
         return sb.toString()
     }
 
-    private fun decodeHost(s: String, n: Int): String {
+    private fun decodeHost(
+        s: String,
+        n: Int,
+    ): String {
         val sb = StringBuilder(n)
         var bb: ByteBuffer? = null
 
@@ -789,14 +872,19 @@ object UriComponent {
      * Assumes the index, i, starts that the first hex digit of the first
      * percent-encoded octet.
      */
-    private fun decodePercentEncodedOctets(s: String, i: Int, bb: ByteBuffer?): ByteBuffer {
+    private fun decodePercentEncodedOctets(
+        s: String,
+        i: Int,
+        bb: ByteBuffer?,
+    ): ByteBuffer {
         var position = i
-        var buffer = if (bb == null) {
-            ByteBuffer.allocate(1)
-        } else {
-            bb.clear()
-            bb
-        }
+        var buffer =
+            if (bb == null) {
+                ByteBuffer.allocate(1)
+            } else {
+                bb.clear()
+                bb
+            }
 
         while (true) {
             // Decode the hex digits
@@ -817,9 +905,9 @@ object UriComponent {
                 buffer.flip()
                 // Create a new byte buffer with the maximum number of possible
                 // octets, hence resize should only occur once
-                val bb_new = ByteBuffer.allocate(s.length / 3)
-                bb_new.put(buffer)
-                buffer = bb_new
+                val bbNew = ByteBuffer.allocate(s.length / 3)
+                bbNew.put(buffer)
+                buffer = bbNew
             }
         }
 
@@ -833,7 +921,11 @@ object UriComponent {
      *
      * @return the index to the next unchecked character in the string to decode
      */
-    private fun decodeOctets(i: Int, bb: ByteBuffer, sb: StringBuilder): Int {
+    private fun decodeOctets(
+        i: Int,
+        bb: ByteBuffer,
+        sb: StringBuilder,
+    ): Int {
         // If there is only one octet and is an ASCII character
         if (bb.limit() == 1 && bb.get(0).toInt() and 0xFF < 0x80) {
             // Octet can be appended directly
@@ -847,7 +939,10 @@ object UriComponent {
         }
     }
 
-    private fun decodeHex(s: String, i: Int): Int {
+    private fun decodeHex(
+        s: String,
+        i: Int,
+    ): Int {
         val v = decodeHex(s[i])
         if (v == -1) {
             throw IllegalArgumentException("Malformed percent-encoded octet at index " + i + ", invalid hexadecimal digit ''" + s[i] + "''.")
@@ -905,31 +1000,32 @@ object UriComponent {
     fun fullRelativeUri(uri: URI?): String? {
         uri ?: return null
 
-        val query = uri.rawQuery
-            ?: ""
+        val query =
+            uri.rawQuery
+                ?: ""
 
         return uri.rawPath + if (query.length > 0) "?$query" else ""
     }
 }
+
 class PathSegment
-internal constructor(
-    path: String,
-    decode: Boolean,
-    matrixParameters: Multimap<String, String> = emptyMultimap()
-) {
-    val path: String
-    val matrixParameters = MultimapBuilder.linkedHashKeys().arrayListValues().build(matrixParameters)
+    internal constructor(
+        path: String,
+        decode: Boolean,
+        matrixParameters: Multimap<String, String> = emptyMultimap(),
+    ) {
+        val path: String
+        val matrixParameters = MultimapBuilder.linkedHashKeys().arrayListValues().build(matrixParameters)
 
-    init {
-        this.path = if (decode) UriComponent.decode(path, UriComponent.Type.PATH_SEGMENT) else path
+        init {
+            this.path = if (decode) UriComponent.decode(path, UriComponent.Type.PATH_SEGMENT) else path
+        }
+
+        override fun toString(): String {
+            return path
+        }
+
+        companion object {
+            internal val EMPTY_PATH_SEGMENT = PathSegment("", false)
+        }
     }
-
-    override fun toString(): String {
-        return path
-    }
-
-    companion object {
-
-        internal val EMPTY_PATH_SEGMENT = PathSegment("", false)
-    }
-}

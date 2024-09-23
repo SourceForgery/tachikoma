@@ -30,10 +30,11 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class UserServiceTest : DIAware {
-    override val di = DI {
-        importOnce(testModule(), allowOverride = true)
-        bind<UserService>() with singleton { UserService(di) }
-    }
+    override val di =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+            bind<UserService>() with singleton { UserService(di) }
+        }
 
     val userService: UserService by instance()
     val authenticationDAO: AuthenticationDAO by instance()
@@ -43,13 +44,14 @@ class UserServiceTest : DIAware {
         val accountDBO = AccountDBO(MailDomain(domain))
         ebeanServer.save(accountDBO)
 
-        val authenticationDBO = AuthenticationDBO(
-            login = domain,
-            encryptedPassword = UUID.randomUUID().toString(),
-            apiToken = UUID.randomUUID().toString(),
-            role = AuthenticationRole.FRONTEND_ADMIN,
-            account = accountDBO
-        )
+        val authenticationDBO =
+            AuthenticationDBO(
+                login = domain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.FRONTEND_ADMIN,
+                account = accountDBO,
+            )
         ebeanServer.save(authenticationDBO)
 
         return authenticationDBO
@@ -57,17 +59,18 @@ class UserServiceTest : DIAware {
 
     fun createUser(): AuthenticationDBO {
         createAuthentication("example.com")
-        val b4 = AddUserRequest.newBuilder()
-            .setActive(true)
-            .setAddApiToken(false)
-            .setAuthenticationRole(FrontendUserRole.FRONTEND)
-            .setMailDomain("example.com")
-            .setPasswordAuth(
-                PasswordAuth.newBuilder()
-                    .setLogin("foobar")
-                    .setPassword("123")
-            )
-            .build()
+        val b4 =
+            AddUserRequest.newBuilder()
+                .setActive(true)
+                .setAddApiToken(false)
+                .setAuthenticationRole(FrontendUserRole.FRONTEND)
+                .setMailDomain("example.com")
+                .setPasswordAuth(
+                    PasswordAuth.newBuilder()
+                        .setLogin("foobar")
+                        .setPassword("123"),
+                )
+                .build()
         val req = AddUserRequest.parseFrom(b4.toByteArray())
 
         val resp = userService.addFrontendUser(req)
@@ -95,10 +98,11 @@ class UserServiceTest : DIAware {
     @Test
     fun `create & modify user`() {
         val newUser = createUser()
-        val before = ModifyUserRequest.newBuilder()
-            .setActive(false)
-            .setApiToken(ApiToken.RESET_API_TOKEN)
-            .build()
+        val before =
+            ModifyUserRequest.newBuilder()
+                .setActive(false)
+                .setApiToken(ApiToken.RESET_API_TOKEN)
+                .build()
         val oldApiToken = newUser.apiToken
         val oldMailDomain = newUser.account.mailDomain
         val resp = userService.modifyFrontendUser(before, newUser)

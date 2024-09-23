@@ -30,9 +30,10 @@ import java.util.Collections
 import kotlin.test.assertEquals
 
 class BlockedEmailDAOTest : DIAware {
-    override val di: DI = DI {
-        importOnce(testModule(), allowOverride = true)
-    }
+    override val di: DI =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+        }
 
     val mailDomain = MailDomain("example.com")
     val blockedEmailDAO: BlockedEmailDAO by instance()
@@ -40,7 +41,7 @@ class BlockedEmailDAOTest : DIAware {
     val dbObjectMapper: DBObjectMapper by instance()
     val database: Database by instance()
 
-    val PRINTER = JsonFormat.printer()!!
+    private val printer = JsonFormat.printer()!!
 
     @Before
     fun `create domain`() {
@@ -54,39 +55,47 @@ class BlockedEmailDAOTest : DIAware {
             .delete()
     }
 
-    fun getEmailStatusEvent(accountDBO: AccountDBO, from: Email, recipient: Email, emailStatus: EmailStatus): EmailStatusEventDBO {
-        val authentication = AuthenticationDBO(
-            encryptedPassword = null,
-            apiToken = null,
-            role = AuthenticationRole.BACKEND,
-            account = accountDBO
-        )
+    fun getEmailStatusEvent(
+        accountDBO: AccountDBO,
+        from: Email,
+        recipient: Email,
+        emailStatus: EmailStatus,
+    ): EmailStatusEventDBO {
+        val authentication =
+            AuthenticationDBO(
+                encryptedPassword = null,
+                apiToken = null,
+                role = AuthenticationRole.BACKEND,
+                account = accountDBO,
+            )
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
-        val jsonRequest = dbObjectMapper.objectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
+        val jsonRequest = dbObjectMapper.objectMapper.readValue(printer.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
-        val emailSendTransaction = EmailSendTransactionDBO(
-            jsonRequest = jsonRequest,
-            fromEmail = from,
-            authentication = authentication,
-            metaData = emptyMap(),
-            tags = emptySet()
-        )
+        val emailSendTransaction =
+            EmailSendTransactionDBO(
+                jsonRequest = jsonRequest,
+                fromEmail = from,
+                authentication = authentication,
+                metaData = emptyMap(),
+                tags = emptySet(),
+            )
 
-        val fromEmail = EmailDBO(
-            recipient = recipient,
-            recipientName = "Mr. Recipient",
-            transaction = emailSendTransaction,
-            messageId = MessageId("1023@example.com"),
-            autoMailId = AutoMailId("1023@example.net"),
-            mtaQueueId = null,
-            metaData = emptyMap()
-        )
+        val fromEmail =
+            EmailDBO(
+                recipient = recipient,
+                recipientName = "Mr. Recipient",
+                transaction = emailSendTransaction,
+                messageId = MessageId("1023@example.com"),
+                autoMailId = AutoMailId("1023@example.net"),
+                mtaQueueId = null,
+                metaData = emptyMap(),
+            )
 
         return EmailStatusEventDBO(
             emailStatus = emailStatus,
             email = fromEmail,
-            metaData = StatusEventMetaData()
+            metaData = StatusEventMetaData(),
         )
     }
 
@@ -102,32 +111,32 @@ class BlockedEmailDAOTest : DIAware {
                 accountDBO = getAccount(),
                 from = Email("from1@example.com"),
                 recipient = recipient,
-                emailStatus = EmailStatus.HARD_BOUNCED
-            )
+                emailStatus = EmailStatus.HARD_BOUNCED,
+            ),
         )
         blockedEmailDAO.block(
             getEmailStatusEvent(
                 accountDBO = getAccount(),
                 from = Email("from2@example.com"),
                 recipient = recipient,
-                emailStatus = EmailStatus.UNSUBSCRIBE
-            )
+                emailStatus = EmailStatus.UNSUBSCRIBE,
+            ),
         )
         blockedEmailDAO.block(
             getEmailStatusEvent(
                 accountDBO = getAccount(),
                 from = Email("from3@example.com"),
                 recipient = recipient,
-                emailStatus = EmailStatus.UNSUBSCRIBE
-            )
+                emailStatus = EmailStatus.UNSUBSCRIBE,
+            ),
         )
         blockedEmailDAO.block(
             getEmailStatusEvent(
                 accountDBO = getAccount(),
                 from = Email("from4@example.com"),
                 recipient = recipient,
-                emailStatus = EmailStatus.UNSUBSCRIBE
-            )
+                emailStatus = EmailStatus.UNSUBSCRIBE,
+            ),
         )
     }
 
@@ -143,7 +152,6 @@ class BlockedEmailDAOTest : DIAware {
 
     @Test
     fun `should return blocked reason if e-mail is blocked`() {
-
         val from = Email("from@example.com")
         val recipient = Email("recipient@example.com")
 
@@ -158,7 +166,6 @@ class BlockedEmailDAOTest : DIAware {
 
     @Test
     fun `should should be possible to unblock a blocked e-mail`() {
-
         val from = Email("from@example.com")
         val recipient = Email("recipient@example.com")
 
@@ -175,7 +182,6 @@ class BlockedEmailDAOTest : DIAware {
 
     @Test
     fun `should should be possible to get a list of all blocked e-mails`() {
-
         val recipient = Email("recipient@example.com")
 
         blockEmails(recipient)
@@ -185,7 +191,6 @@ class BlockedEmailDAOTest : DIAware {
 
     @Test
     fun `should should be possible to unblock blocked e-mails by from & recipient`() {
-
         val recipient = Email("recipient@example.com")
 
         blockEmails(recipient)

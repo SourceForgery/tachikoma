@@ -16,7 +16,6 @@ fun Expect.expectNoQuit(pattern: String): Result =
         .then { r -> throw ExpectIOException("Error", r.input) }
         .until(regexpLine(pattern))
 
-fun Expect.emptyBuffer(): Result =
-    expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
+fun Expect.emptyBuffer(): Result = expect(regexp(Pattern.compile(".*", Pattern.DOTALL)))
 
 fun regexpLine(regex: String): Matcher<Result> = regexp(Pattern.compile(regex, Pattern.MULTILINE))

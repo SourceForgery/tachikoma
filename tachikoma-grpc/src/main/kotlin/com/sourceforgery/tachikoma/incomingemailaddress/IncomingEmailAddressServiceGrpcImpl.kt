@@ -14,9 +14,8 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class IncomingEmailAddressServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : IncomingEmailAddressServiceGrpcKt.IncomingEmailAddressServiceCoroutineImplBase(), DIAware {
-
     private val incomingEmailAddressService: IncomingEmailAddressService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
     private val authentication: () -> Authentication by provider()
@@ -31,11 +30,12 @@ internal class IncomingEmailAddressServiceGrpcImpl(
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
 
-    override fun getIncomingEmailAddresses(request: Empty) = flow<IncomingEmailAddress> {
-        val auth = authentication()
-        auth.requireFrontendAdmin(auth.mailDomain)
-        emitAll(incomingEmailAddressService.getIncomingEmailAddresses(auth.authenticationId))
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+    override fun getIncomingEmailAddresses(request: Empty) =
+        flow<IncomingEmailAddress> {
+            val auth = authentication()
+            auth.requireFrontendAdmin(auth.mailDomain)
+            emitAll(incomingEmailAddressService.getIncomingEmailAddresses(auth.authenticationId))
+        }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
     override suspend fun deleteIncomingEmailAddress(request: IncomingEmailAddress): Empty =
         try {

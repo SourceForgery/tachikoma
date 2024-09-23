@@ -9,7 +9,10 @@ import java.util.UUID
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-private fun <T> convert(clazz: Class<T>, stringValue: String): T {
+private fun <T> convert(
+    clazz: Class<T>,
+    stringValue: String,
+): T {
     return try {
         @Suppress("UNCHECKED_CAST")
         if (clazz == UUID::class.java) {
@@ -27,7 +30,10 @@ private fun <T> convert(clazz: Class<T>, stringValue: String): T {
     }
 }
 
-private fun <T> valueOf(clazz: Class<T>, stringValue: String): T {
+private fun <T> valueOf(
+    clazz: Class<T>,
+    stringValue: String,
+): T {
     return try {
         val method = clazz.getMethod("valueOf", stringValue.javaClass)
         clazz.cast(method.invoke(null, stringValue)) as T
@@ -39,28 +45,30 @@ private fun <T> valueOf(clazz: Class<T>, stringValue: String): T {
 
 private const val REALLY_BAD_KEY = "really_really_poor_dev_encryption_key"
 
-inline fun <reified R, reified T> readConfig(propertyName: String, default: T): ReadOnlyProperty<R, T> =
-    ConfigReader(propertyName, default, T::class.java)
+inline fun <reified R, reified T> readConfig(
+    propertyName: String,
+    default: T,
+): ReadOnlyProperty<R, T> = ConfigReader(propertyName, default, T::class.java)
 
 inline fun <reified T> getEnvironment(
     environmentKey: String,
-    defaultValue: String? = null
-): ReadOnlyProperty<Any, T> =
-    EnvGetter(environmentKey, defaultValue, T::class.java)
+    defaultValue: String? = null,
+): ReadOnlyProperty<Any, T> = EnvGetter(environmentKey, defaultValue, T::class.java)
 
 class EnvGetter<T>(
     private val environmentKey: String,
     private val defaultValue: String?,
-    private val clazz: Class<T>
+    private val clazz: Class<T>,
 ) : ReadOnlyProperty<Any, T> {
     private var data: T? = null
     private var set = false
 
     private fun readValue(): T {
         if (!set) {
-            val stringValue = System.getenv(environmentKey)
-                ?: defaultValue
-                ?: throw IllegalArgumentException("Didn't find any environment variable $environmentKey")
+            val stringValue =
+                System.getenv(environmentKey)
+                    ?: defaultValue
+                    ?: throw IllegalArgumentException("Didn't find any environment variable $environmentKey")
             data = convert(clazz, stringValue)
             set = true
         }
@@ -68,27 +76,36 @@ class EnvGetter<T>(
         return data as T
     }
 
-    override fun getValue(thisRef: Any, property: KProperty<*>): T {
+    override fun getValue(
+        thisRef: Any,
+        property: KProperty<*>,
+    ): T {
         return readValue()
     }
 }
 
 fun <R> readEncryptionConfig(propertyName: String) = EncryptionConfig<R, String>(propertyName, REALLY_BAD_KEY, String::class.java)
 
-inline fun <reified R, reified T> readEncryptionConfig(propertyName: String, defaultValue: T) = EncryptionConfig<R, T>(propertyName, defaultValue, T::class.java)
+inline fun <reified R, reified T> readEncryptionConfig(
+    propertyName: String,
+    defaultValue: T,
+) = EncryptionConfig<R, T>(propertyName, defaultValue, T::class.java)
 
-inline fun <reified R, reified T> readListConfig(propertyName: String, defaultValue: List<T>) = ReadListConfig<R, T>(propertyName, defaultValue, T::class.java)
+inline fun <reified R, reified T> readListConfig(
+    propertyName: String,
+    defaultValue: List<T>,
+) = ReadListConfig<R, T>(propertyName, defaultValue, T::class.java)
 
 @Suppress("UNCHECKED_CAST")
 class ReadListConfig<R, T2>(
     propertyName: String,
     defaultValue: List<T2>,
-    private val listClazz: Class<T2>
+    private val listClazz: Class<T2>,
 ) : ConfigReader<R, List<T2>>(
-    propertyName = propertyName,
-    defaultValue = defaultValue,
-    clazz = List::class.java as Class<List<T2>>
-) {
+        propertyName = propertyName,
+        defaultValue = defaultValue,
+        clazz = List::class.java as Class<List<T2>>,
+    ) {
     override fun <T> readConfig(configKey: String): T {
         return ConfigData.getProperty(configKey, defaultValue) {
             (it.split(',').map { convert(listClazz, it) })
@@ -99,12 +116,12 @@ class ReadListConfig<R, T2>(
 class EncryptionConfig<R, T>(
     propertyName: String,
     defaultValue: T,
-    clazz: Class<T>
+    clazz: Class<T>,
 ) : ConfigReader<R, T>(
-    propertyName = propertyName,
-    defaultValue = defaultValue,
-    clazz = clazz
-) {
+        propertyName = propertyName,
+        defaultValue = defaultValue,
+        clazz = clazz,
+    ) {
     override fun readValue(property: KProperty<*>) =
         super.readValue(property)
             .also {
@@ -118,13 +135,16 @@ class EncryptionConfig<R, T>(
 open class ConfigReader<R, T>(
     internal val propertyName: String,
     internal val defaultValue: T,
-    internal val clazz: Class<T>
+    internal val clazz: Class<T>,
 ) : ReadOnlyProperty<R, T> {
     private var data: T? = null
     var set = false
         set
 
-    override fun getValue(thisRef: R, property: KProperty<*>): T {
+    override fun getValue(
+        thisRef: R,
+        property: KProperty<*>,
+    ): T {
         return readValue(property)
     }
 
@@ -149,13 +169,14 @@ private object ConfigData {
     private val LOGGER = logger()
 
     init {
-        val configFile = (
-            System.getProperty("tachikomaConfig")
-                ?: System.getenv("TACHIKOMA_CONFIG")
+        val configFile =
+            (
+                System.getProperty("tachikomaConfig")
+                    ?: System.getenv("TACHIKOMA_CONFIG")
             )
-            ?.let {
-                File(it)
-            }
+                ?.let {
+                    File(it)
+                }
         if (configFile == null) {
             LOGGER.error { "No config file defined via System property tachikomaConfig nor environment variable TACHIKOMA_CONFIG. Could work, but probably isn't what you want" }
         } else {
@@ -169,11 +190,15 @@ private object ConfigData {
         }
     }
 
-    fun <T> getProperty(key: String, default: T, converter: (String) -> T): T =
+    fun <T> getProperty(
+        key: String,
+        default: T,
+        converter: (String) -> T,
+    ): T =
         (
             System.getenv(key)
                 ?: properties.getProperty(key)
-            )
+        )
             ?.let { converter(it) }
             ?: default
 }

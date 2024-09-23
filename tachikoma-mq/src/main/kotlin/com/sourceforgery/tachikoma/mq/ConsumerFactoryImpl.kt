@@ -34,7 +34,6 @@ import java.time.Clock
 import java.time.Duration
 
 internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQSender, MQManager, DIAware {
-
     private val mqConfig: MqConfig by instance()
     private val clock: Clock by instance()
 
@@ -70,9 +69,8 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
 
     private inner class WorkerThread(
         runnable: Runnable,
-        private val threadName: String
+        private val threadName: String,
     ) : Thread(runnable, threadName) {
-
         @Synchronized
         override fun start() {
             if (threadName == name) {
@@ -90,7 +88,11 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         removeQueue(OutgoingEmailsMessageQueue(mailDomain))
     }
 
-    override fun setupAuthentication(mailDomain: MailDomain, authenticationId: AuthenticationId, accountId: AccountId) {
+    override fun setupAuthentication(
+        mailDomain: MailDomain,
+        authenticationId: AuthenticationId,
+        accountId: AccountId,
+    ) {
         val incomingEmailQueue = IncomingEmailNotificationMessageQueue(authenticationId = authenticationId)
         createQueue(incomingEmailQueue)
         sendChannel.queueBind(incomingEmailQueue.name, MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name, "/account/$accountId")
@@ -135,9 +137,13 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
             }
     }
 
-    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Unit> {
-        val channel = connection
-            .createChannel()!!
+    override fun <T> listenOnQueue(
+        messageQueue: MessageQueue<T>,
+        callback: suspend (T) -> Unit,
+    ): ListenableFuture<Unit> {
+        val channel =
+            connection
+                .createChannel()!!
 
         val future = SettableFuture.create<Unit>()
         future.addListener(
@@ -149,13 +155,14 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
                     // 'tis ok
                 }
             },
-            MoreExecutors.directExecutor()
+            MoreExecutors.directExecutor(),
         )
-        val consumer = CallbackConsumer(channel) {
-            runBlocking {
-                callback(messageQueue.parser(it))
+        val consumer =
+            CallbackConsumer(channel) {
+                runBlocking {
+                    callback(messageQueue.parser(it))
+                }
             }
-        }
         channel.basicConsume(messageQueue.name, false, consumer)
         channel.addShutdownListener {
             if (it.isInitiatedByApplication) {
@@ -167,12 +174,16 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return future
     }
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<DeliveryNotificationMessage> {
+    override fun listenForDeliveryNotifications(
+        authenticationId: AuthenticationId,
+        mailDomain: MailDomain,
+        accountId: AccountId,
+    ): Flow<DeliveryNotificationMessage> {
         val queue = DeliveryNotificationMessageQueue(authenticationId)
         setupAuthentication(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
-            accountId = accountId
+            accountId = accountId,
         )
         return listenOnQueueFlow(queue)
     }
@@ -182,26 +193,32 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         return listenOnQueueFlow(OutgoingEmailsMessageQueue(mailDomain))
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<IncomingEmailNotificationMessage> {
+    override fun listenForIncomingEmails(
+        authenticationId: AuthenticationId,
+        mailDomain: MailDomain,
+        accountId: AccountId,
+    ): Flow<IncomingEmailNotificationMessage> {
         setupAuthentication(
             authenticationId = authenticationId,
             mailDomain = mailDomain,
-            accountId = accountId
+            accountId = accountId,
         )
         return listenOnQueueFlow(IncomingEmailNotificationMessageQueue(authenticationId))
     }
 
     private fun <T> listenOnQueueFlow(messageQueue: MessageQueue<T>): Flow<T> {
         return callbackFlow {
-            val channel = withContext(Dispatchers.IO) {
-                connection
-                    .createChannel()
-            }
-            val consumer = CallbackConsumer(channel) {
-                runBlocking {
-                    send(it)
+            val channel =
+                withContext(Dispatchers.IO) {
+                    connection
+                        .createChannel()
                 }
-            }
+            val consumer =
+                CallbackConsumer(channel) {
+                    runBlocking {
+                        send(it)
+                    }
+                }
             channel.basicConsume(messageQueue.name, false, consumer)
             channel.addShutdownListener {
                 if (it.isInitiatedByApplication) {
@@ -230,10 +247,11 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
     }
 
     private fun getRequeueQueueByRequestedExecutionTime(jobMessage: JobMessage): JobMessageQueue? {
-        val expectedDelay = Duration.between(
-            clock.instant(),
-            jobMessage.requestedExecutionTime.toInstant()
-        )!!
+        val expectedDelay =
+            Duration.between(
+                clock.instant(),
+                jobMessage.requestedExecutionTime.toInstant(),
+            )!!
         return SORTED_DELAYED_JOB_QUEUE
             .firstOrNull {
                 it.delay <= expectedDelay
@@ -242,72 +260,93 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
 
     override fun queueJob(jobMessage: JobMessage) {
         val queue = getRequeueQueueByRequestedExecutionTime(jobMessage) ?: JobMessageQueue.JOBS
-        val jobMessageClone = JobMessage.newBuilder(jobMessage)
-            .setCreationTimestamp(clock.timestamp())
-            .build()
+        val jobMessageClone =
+            JobMessage.newBuilder(jobMessage)
+                .setCreationTimestamp(clock.timestamp())
+                .build()
         queueJob(jobMessageClone, queue)
     }
 
-    override fun queueOutgoingEmail(mailDomain: MailDomain, outgoingEmailMessage: OutgoingEmailMessage) {
+    override fun queueOutgoingEmail(
+        mailDomain: MailDomain,
+        outgoingEmailMessage: OutgoingEmailMessage,
+    ) {
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
             "",
             OutgoingEmailsMessageQueue(mailDomain).name,
             true,
             basicProperties,
-            outgoingEmailMessage.toByteArray()
+            outgoingEmailMessage.toByteArray(),
         )
     }
 
-    private fun queueJob(jobMessage: JobMessage, jobMessageQueue: JobMessageQueue) {
+    private fun queueJob(
+        jobMessage: JobMessage,
+        jobMessageQueue: JobMessageQueue,
+    ) {
         var basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         if (jobMessageQueue.delay > Duration.ZERO) {
-            basicProperties = basicProperties.builder()
-                .expiration(jobMessageQueue.delay.toMillis().toString())
-                .build()
+            basicProperties =
+                basicProperties.builder()
+                    .expiration(jobMessageQueue.delay.toMillis().toString())
+                    .build()
         }
         sendChannel.basicPublish(
             "",
             jobMessageQueue.name,
             true,
             basicProperties,
-            jobMessage.toByteArray()
+            jobMessage.toByteArray(),
         )
     }
 
-    override fun queueDeliveryNotification(accountId: AccountId, notificationMessage: DeliveryNotificationMessage) {
-        val notificationMessageClone = DeliveryNotificationMessage.newBuilder(notificationMessage)
-            .setCreationTimestamp(clock.instant().toTimestamp())
-            .build()
+    override fun queueDeliveryNotification(
+        accountId: AccountId,
+        notificationMessage: DeliveryNotificationMessage,
+    ) {
+        val notificationMessageClone =
+            DeliveryNotificationMessage.newBuilder(notificationMessage)
+                .setCreationTimestamp(clock.instant().toTimestamp())
+                .build()
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
             MessageExchange.DELIVERY_NOTIFICATIONS.name,
             "/account/$accountId",
             true,
             basicProperties,
-            notificationMessageClone.toByteArray()
+            notificationMessageClone.toByteArray(),
         )
     }
 
-    override fun queueIncomingEmailNotification(accountId: AccountId, incomingEmailNotificationMessage: IncomingEmailNotificationMessage) {
-        val notificationMessageClone = IncomingEmailNotificationMessage.newBuilder(incomingEmailNotificationMessage)
-            .setCreationTimestamp(clock.instant().toTimestamp())
-            .build()
+    override fun queueIncomingEmailNotification(
+        accountId: AccountId,
+        incomingEmailNotificationMessage: IncomingEmailNotificationMessage,
+    ) {
+        val notificationMessageClone =
+            IncomingEmailNotificationMessage.newBuilder(incomingEmailNotificationMessage)
+                .setCreationTimestamp(clock.instant().toTimestamp())
+                .build()
         val basicProperties = MessageProperties.MINIMAL_PERSISTENT_BASIC
         sendChannel.basicPublish(
             MessageExchange.INCOMING_EMAILS_NOTIFICATIONS.name,
             "/account/$accountId",
             true,
             basicProperties,
-            notificationMessageClone.toByteArray()
+            notificationMessageClone.toByteArray(),
         )
     }
 
     private inner class CallbackConsumer(
         channel: Channel,
-        private val callback: (ByteArray) -> Unit
+        private val callback: (ByteArray) -> Unit,
     ) : DefaultConsumer(channel) {
-        override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
+        override fun handleDelivery(
+            consumerTag: String,
+            envelope: Envelope,
+            properties: AMQP.BasicProperties,
+            body: ByteArray,
+        ) {
             LOGGER.debug {
                 @Suppress("UnstableApiUsage", "DEPRECATION")
                 val md5 = Hashing.md5().hashBytes(body).toString()
@@ -329,11 +368,12 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
     companion object {
         val LOGGER = logger()
 
-        val SORTED_DELAYED_JOB_QUEUE = JobMessageQueue
-            .values()
-            .asSequence()
-            .filter { it.nextDestination == JobMessageQueue.JOBS }
-            .sortedByDescending { it.delay }
-            .toList()
+        val SORTED_DELAYED_JOB_QUEUE =
+            JobMessageQueue
+                .values()
+                .asSequence()
+                .filter { it.nextDestination == JobMessageQueue.JOBS }
+                .sortedByDescending { it.delay }
+                .toList()
     }
 }

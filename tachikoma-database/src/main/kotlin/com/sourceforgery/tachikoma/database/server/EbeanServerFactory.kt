@@ -36,14 +36,16 @@ class EbeanServerFactory(override val di: DI) : DIAware {
                 val loggingDataSource =
                     when (originalDataSource) {
                         null -> null
-                        is DataSourcePool -> LoggingDataSourcePool(
-                            originalDataSourcePool = originalDataSource,
-                            counter = counter
-                        )
-                        else -> LoggingDataSource(
-                            originalDataSource = originalDataSource,
-                            counter = counter
-                        )
+                        is DataSourcePool ->
+                            LoggingDataSourcePool(
+                                originalDataSourcePool = originalDataSource,
+                                counter = counter,
+                            )
+                        else ->
+                            LoggingDataSource(
+                                originalDataSource = originalDataSource,
+                                counter = counter,
+                            )
                     }
                 super.setDataSource(loggingDataSource)
             } else {

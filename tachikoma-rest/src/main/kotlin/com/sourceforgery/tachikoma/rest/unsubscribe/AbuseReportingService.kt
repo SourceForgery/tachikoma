@@ -73,7 +73,9 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
 
     @Get("/abuse/{abuseEmailId}")
     @Produces("text/html; charset=utf-8")
-    fun getPage(@Param("abuseEmailId") abuseEmailId: AutoMailId): String =
+    fun getPage(
+        @Param("abuseEmailId") abuseEmailId: AutoMailId,
+    ): String =
         renderPage(
             mailId = abuseEmailId,
             info = null,
@@ -85,7 +87,7 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
     @Post("/abuse/{ignored}")
     @ConsumesGroup(
         Consumes("multipart/form-data"),
-        Consumes("application/x-www-form-urlencoded")
+        Consumes("application/x-www-form-urlencoded"),
     )
     suspend fun abuseReport(
         @Suppress("UNUSED_PARAMETER") @Param("ignored") ignored: String,
@@ -97,56 +99,59 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
         mailId = mailId,
         info = info,
         reporterNameOpt = reporterNameOpt,
-        reporterEmailOpt = reporterEmailOpt
+        reporterEmailOpt = reporterEmailOpt,
     )
 
     @Post("/abuse")
     @ConsumesGroup(
         Consumes("multipart/form-data"),
-        Consumes("application/x-www-form-urlencoded")
+        Consumes("application/x-www-form-urlencoded"),
     )
     suspend fun abuseReport(
         @Param("abuseEmailId") mailId: AutoMailId,
         @Param("info") info: String,
         @Param("reporterName") reporterNameOpt: String,
         @Param("reporterEmail") reporterEmailOpt: String,
-    ): HttpResponse = withContext(Dispatchers.IO) {
-        val reporterName = reporterNameOpt.ifEmpty { "Anonymous" }
-        val reporterEmail = reporterEmailOpt.ifEmpty { null }
-            ?.let { Email(it) }
+    ): HttpResponse =
+        withContext(Dispatchers.IO) {
+            val reporterName = reporterNameOpt.ifEmpty { "Anonymous" }
+            val reporterEmail =
+                reporterEmailOpt.ifEmpty { null }
+                    ?.let { Email(it) }
 
-        val reportedEmail = emailDAO.getByAutoMailId(mailId)
-            ?: return@withContext HttpResponse.of(
-                HttpStatus.NOT_FOUND,
+            val reportedEmail =
+                emailDAO.getByAutoMailId(mailId)
+                    ?: return@withContext HttpResponse.of(
+                        HttpStatus.NOT_FOUND,
+                        MediaType.HTML_UTF_8,
+                        renderPage(
+                            mailId,
+                            info,
+                            reporterName,
+                            reporterEmail,
+                            "No email with id $mailId has been sent from this system. Please double-check and send an email to abuse@${mailId.mailDomain} if the data was correct",
+                        ),
+                    )
+            sendAbuseReport(reportedEmail, mailId, reporterName, reporterEmail, info)
+            HttpResponse.of(
+                HttpStatus.OK,
                 MediaType.HTML_UTF_8,
                 renderPage(
                     mailId,
-                    info,
-                    reporterName,
-                    reporterEmail,
-                    "No email with id $mailId has been sent from this system. Please double-check and send an email to abuse@${mailId.mailDomain} if the data was correct"
-                )
+                    null,
+                    null,
+                    null,
+                    "Abuse report sent",
+                ),
             )
-        sendAbuseReport(reportedEmail, mailId, reporterName, reporterEmail, info)
-        HttpResponse.of(
-            HttpStatus.OK,
-            MediaType.HTML_UTF_8,
-            renderPage(
-                mailId,
-                null,
-                null,
-                null,
-                "Abuse report sent"
-            )
-        )
-    }
+        }
 
     private suspend fun sendAbuseReport(
         reportedEmail: EmailDBO,
         mailId: AutoMailId,
         reporterName: String?,
         reporterEmail: Email?,
-        info: String
+        info: String,
     ) {
         val auth = reportedEmail.transaction.authentication
         val fromEmail = NamedEmail(Email(auth.account.mailDomain, "abuse"), "Web abuse report")
@@ -156,12 +161,12 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
                 "Abuse report about mail($mailId) to ${reportedEmail.recipient} from $reporterName (${reporterEmail ?: ""})"
             val body =
                 """
-                        Abuse report from $reporterName (${reporterEmail ?: ""}).
-                        Recipient: ${reportedEmail.recipient}
-                        Subject: ${reportedEmail.subject}
-                        MessageId: ${reportedEmail.messageId}
-                        EmailId: ${reportedEmail.id}
-                        More info: $info
+                Abuse report from $reporterName (${reporterEmail ?: ""}).
+                Recipient: ${reportedEmail.recipient}
+                Subject: ${reportedEmail.subject}
+                MessageId: ${reportedEmail.messageId}
+                EmailId: ${reportedEmail.id}
+                More info: $info
                 """.trimIndent()
 
             val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()))
@@ -172,38 +177,42 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
             mimeMessage.setContent(body, MediaType.PLAIN_TEXT_UTF_8.toString())
 
             val bytes = mimeMessage.inputStream.use { it.readAllBytes() }
-            val incomingEmailDBO = IncomingEmailDBO(
-                body = bytes,
-                mailFrom = fromEmail.address,
-                recipient = fromEmail.address,
-                fromEmails = listOf(fromEmail),
-                toEmails = listOf(fromEmail),
-                replyToEmails = emptyList(),
-                account = auth.account,
-                subject = subject,
-            )
+            val incomingEmailDBO =
+                IncomingEmailDBO(
+                    body = bytes,
+                    mailFrom = fromEmail.address,
+                    recipient = fromEmail.address,
+                    fromEmails = listOf(fromEmail),
+                    toEmails = listOf(fromEmail),
+                    replyToEmails = emptyList(),
+                    account = auth.account,
+                    subject = subject,
+                )
             incomingEmailDAO.save(incomingEmailDBO)
-            val notificationMessage = IncomingEmailNotificationMessage.newBuilder()
-                .setIncomingEmailMessageId(incomingEmailDBO.id.incomingEmailId)
-                .build()
+            val notificationMessage =
+                IncomingEmailNotificationMessage.newBuilder()
+                    .setIncomingEmailMessageId(incomingEmailDBO.id.incomingEmailId)
+                    .build()
 
-            val emailStatusEvent = EmailStatusEventDBO(
-                emailStatus = EmailStatus.SPAM,
-                email = reportedEmail,
-                metaData = StatusEventMetaData()
-            )
+            val emailStatusEvent =
+                EmailStatusEventDBO(
+                    emailStatus = EmailStatus.SPAM,
+                    email = reportedEmail,
+                    metaData = StatusEventMetaData(),
+                )
             emailStatusEventDAO.save(emailStatusEvent)
 
-            val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
-                .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
-                .setEmailMessageId(reportedEmail.id.emailId)
-                .setMessageReportedAbuse(MessageReportedAbuse.getDefaultInstance())
+            val notificationMessageBuilder =
+                DeliveryNotificationMessage.newBuilder()
+                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
+                    .setEmailMessageId(reportedEmail.id.emailId)
+                    .setMessageReportedAbuse(MessageReportedAbuse.getDefaultInstance())
 
             mqSender.queueIncomingEmailNotification(auth.account.id, notificationMessage)
 
             mqSender.queueDeliveryNotification(
                 reportedEmail.transaction.authentication.account.id,
-                notificationMessageBuilder.build()
+                notificationMessageBuilder.build(),
             )
         }
     }

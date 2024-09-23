@@ -3,7 +3,10 @@ package com.sourceforgery.tachikoma.common
 import java.math.BigInteger
 import java.security.MessageDigest
 
-private fun slowEquals(a: CharSequence, b: CharSequence): Boolean {
+private fun slowEquals(
+    a: CharSequence,
+    b: CharSequence,
+): Boolean {
     var diff = a.length xor b.length
     var i = 0
     while (i < a.length && i < b.length) {
