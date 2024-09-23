@@ -13,12 +13,12 @@ group = "sourceforgery"
 val downloadTini by tasks.registering {
     val tiniUrl = URL("https://github.com/krallin/tini/releases/download/v0.16.1/tini-static-amd64")
     val tiniChecksum = "d1cb5d71adc01d47e302ea439d70c79bd0864288"
-    val tiniBinary = File(project.buildDir, "tini")
+    val tiniBinary = file("build/tini")
     inputs.property("tiniUrl", tiniUrl)
     inputs.property("tiniChecksum", tiniChecksum)
     outputs.file(tiniBinary)
     doLast {
-        project.buildDir.mkdirs()
+        file("build/").mkdirs()
         if (!tiniBinary.exists()) {
             val bytes = tiniUrl.openStream().use { it.readBytes() }
             tiniBinary.outputStream().buffered().use {

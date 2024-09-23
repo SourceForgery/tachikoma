@@ -68,6 +68,7 @@ class GraphqlServiceProvider(override val di: DI) : DIAware {
 
     fun addGraphqlService(serverBuilder: ServerBuilder): ServerBuilder {
         val dataFetcherExceptionHandler = GraphqlExceptionHandler(di)
+
         return serverBuilder
             .service(Route.builder().exact("/graphql").methods(HttpMethod.GET).build()) { _, _ ->
                 HttpResponse.of(
@@ -79,18 +80,12 @@ class GraphqlServiceProvider(override val di: DI) : DIAware {
             .service(
                 "/graphql",
                 GraphqlService.builder()
-                    .configureGraphql({ graphqlBuilder: GraphQL.Builder ->
-                        graphqlBuilder.schema(schemaGenerator.generateGraphqlSchema())
+                    .graphql(
+                        GraphQL.newGraphQL(schemaGenerator.generateGraphqlSchema())
                             .queryExecutionStrategy(AsyncExecutionStrategy(dataFetcherExceptionHandler))
-                    })
-                    .useBlockingTaskExecutor(true)
-                    .configureGraphql(listOf())
-                    .schemaFile(
-                        File.createTempFile("dummy", ".graphqls").also { file ->
-                            file.deleteOnExit()
-                            file.writeText("type Query { thisIsJustDummy: ID }")
-                        },
+                            .build()
                     )
+                    .useBlockingTaskExecutor(true)
                     .build()
             )
     }

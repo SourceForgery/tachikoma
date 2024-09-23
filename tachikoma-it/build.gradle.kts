@@ -75,7 +75,7 @@ with(tasks) {
 
     graphqlGenerateClient {
         doFirst {
-            delete("$buildDir/generated/source/graphql")
+            delete("build/generated/source/graphql")
         }
     }
     getByName("classes").dependsOn(graphqlGenerateClient)

@@ -74,11 +74,11 @@ fun String?.emptyToNull() =
         this
     }
 
-fun BlockedReason.toGrpc(): com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason {
+fun BlockedReason.toGrpc(): com.sourceforgery.tachikoma.grpc.frontend.BlockedReason {
     return when (this) {
-        BlockedReason.UNSUBSCRIBED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.UNSUBSCRIBED
-        BlockedReason.SPAM_MARKED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.SPAM_MARKED
-        BlockedReason.HARD_BOUNCED -> com.sourceforgery.tachikoma.grpc.frontend.blockedemail.BlockedReason.HARD_BOUNCED
+        BlockedReason.UNSUBSCRIBED -> com.sourceforgery.tachikoma.grpc.frontend.BlockedReason.UNSUBSCRIBED
+        BlockedReason.SPAM_MARKED -> com.sourceforgery.tachikoma.grpc.frontend.BlockedReason.SPAM_MARKED
+        BlockedReason.HARD_BOUNCED -> com.sourceforgery.tachikoma.grpc.frontend.BlockedReason.HARD_BOUNCED
     }
 }
 

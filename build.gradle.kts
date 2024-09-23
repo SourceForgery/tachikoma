@@ -44,7 +44,7 @@ tasks.githubRelease {
 }
 
 rootProject.extensions.configure<GithubReleaseExtension> {
-    releaseAssets.from("$buildDir/kubernetes/deployment-webserver.yaml")
+    releaseAssets.from("build/kubernetes/deployment-webserver.yaml")
 }
 
 val publish by tasks.registering {

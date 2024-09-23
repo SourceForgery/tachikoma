@@ -2,10 +2,11 @@ package com.sourceforgery.tachikoma.webserver
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.google.common.hash.Hashing
+import com.google.common.hash.Hashing.hmacSha1
 import com.linecorp.armeria.common.HttpHeaders
 import com.sourceforgery.tachikoma.auth.Authentication
 import com.sourceforgery.tachikoma.common.AuthenticationRole
-import com.sourceforgery.tachikoma.common.HmacUtil.hmacSha1
 import com.sourceforgery.tachikoma.config.WebServerConfig
 import com.sourceforgery.tachikoma.database.dao.AccountDAO
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
@@ -38,6 +39,11 @@ class AuthenticationFactory(override val di: DI) : DIAware {
     private val apiKeyCache = CacheBuilder.newBuilder()
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(CacheLoader.from<String, Authentication?> { parseApiTokenHeader(it) })
+
+    @Suppress("UnstableApiUsage")
+    private val authHmac by lazy {
+        hmacSha1(webServerConfig.webtokenSignKey)
+    }
 
     fun provide() =
         parseWebTokenHeader()
@@ -95,7 +101,7 @@ class AuthenticationFactory(override val di: DI) : DIAware {
         }
         val payloadSignature = BASE64_DECODER.decode(splitToken[0])!!
         val payload = BASE64_DECODER.decode(splitToken[1])!!
-        if (hmacSha1(webServerConfig.webtokenSignKey, payload).contentEquals(payloadSignature)) {
+        if (authHmac.hashBytes(payload).asBytes().contentEquals(payloadSignature)) {
             return null
         }
         val tokenAuthData = WebTokenAuthData.parseFrom(payload)

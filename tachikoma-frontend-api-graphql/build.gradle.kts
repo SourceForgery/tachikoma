@@ -27,7 +27,7 @@ dependencies {
     generatorConfiguration("org.slf4j:slf4j-jdk14:2.0.6")
 }
 
-val graphqlsFile = File(buildDir, "tachikoma-frontend-api-graphql-${project.version}.graphqls")
+val graphqlsFile = file("build/tachikoma-frontend-api-graphql-${project.version}.graphqls")
 
 val graphqlSchemaGenerator by tasks.registering(GraphqlSchemaGeneratorTask::class) {
     dependsOn("classes")

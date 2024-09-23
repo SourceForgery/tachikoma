@@ -1,5 +1,7 @@
 import com.sourceforgery.tachikoma.buildsrc.CheckDuplicateClassesTask
 import org.gradle.api.tasks.bundling.Jar
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
@@ -11,6 +13,7 @@ plugins {
 
 val javaVersion: String by project
 val kotlinVersion: String by project
+val unshadowedKotlinVersion = kotlinVersion
 
 java {
     toolchain {
@@ -32,11 +35,11 @@ dependencies {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        val kotlinApiVersion = kotlinVersion.substringBeforeLast('.')
-        languageVersion = kotlinApiVersion
+    compilerOptions {
+        val kotlinApiVersion = KotlinVersion.fromVersion(unshadowedKotlinVersion.substringBeforeLast('.'))
+        languageVersion.set(kotlinApiVersion)
         apiVersion = kotlinApiVersion
-        jvmTarget = javaVersion
+        jvmTarget.set(JvmTarget.fromTarget(javaVersion))
         freeCompilerArgs = listOf(
             "-java-parameters",
             "-Xjsr305=strict",

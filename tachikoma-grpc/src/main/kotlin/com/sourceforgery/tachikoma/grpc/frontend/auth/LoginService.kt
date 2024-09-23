@@ -1,6 +1,6 @@
 package com.sourceforgery.tachikoma.grpc.frontend.auth
 
-import com.sourceforgery.tachikoma.common.HmacUtil
+import com.google.common.hash.Hashing.hmacSha1
 import com.sourceforgery.tachikoma.common.PasswordStorage
 import com.sourceforgery.tachikoma.config.WebtokenAuthConfig
 import com.sourceforgery.tachikoma.database.dao.AuthenticationDAO
@@ -17,6 +17,11 @@ import java.util.Base64
 class LoginService(override val di: DI) : DIAware {
     private val authenticationDAO: AuthenticationDAO by instance()
     private val webtokenAuthConfig: WebtokenAuthConfig by instance()
+
+    @Suppress("UnstableApiUsage")
+    private val authHmac by lazy {
+        hmacSha1(webtokenAuthConfig.webtokenSignKey)
+    }
 
     fun login(loginRequest: LoginRequest): LoginResponse {
         val auth = authenticationDAO.validateApiToken(loginRequest.username)
@@ -45,7 +50,11 @@ class LoginService(override val di: DI) : DIAware {
             .let {
                 val byteArray = it.toByteArray()
                 val data = BASE64_ENCODER.encodeToString(byteArray)!!
-                val signature = BASE64_ENCODER.encodeToString(HmacUtil.hmacSha1(byteArray, webtokenAuthConfig.webtokenSignKey))!!
+                val signature = BASE64_ENCODER.encodeToString(
+                    authHmac
+                        .hashBytes(byteArray)
+                        .asBytes()
+                )
                 "$signature.$data"
             }
 

@@ -1,5 +1,6 @@
 package com.sourceforgery.tachikoma.mq
 
+import com.google.common.hash.Hashing
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.SettableFuture
@@ -11,7 +12,6 @@ import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.MessageProperties
 import com.rabbitmq.client.impl.ChannelN
-import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.timestamp
 import com.sourceforgery.tachikoma.common.toInstant
 import com.sourceforgery.tachikoma.common.toTimestamp
@@ -309,7 +309,8 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
     ) : DefaultConsumer(channel) {
         override fun handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: ByteArray) {
             LOGGER.debug {
-                val md5 = HmacUtil.calculateMd5(body)
+                @Suppress("UnstableApiUsage", "DEPRECATION")
+                val md5 = Hashing.md5().hashBytes(body).toString()
                 "Processing message, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: $md5"
             }
             try {

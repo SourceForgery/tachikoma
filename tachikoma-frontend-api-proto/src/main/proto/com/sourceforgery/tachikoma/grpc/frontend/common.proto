@@ -177,3 +177,10 @@ message Attachment {
 message MessageId {
     string message_id = 101;
 }
+
+// The reason for a blocked email address
+enum BlockedReason {
+    UNSUBSCRIBED = 0;
+    SPAM_MARKED = 1;
+    HARD_BOUNCED = 2;
+}

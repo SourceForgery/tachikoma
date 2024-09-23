@@ -151,7 +151,7 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
         val auth = reportedEmail.transaction.authentication
         val fromEmail = NamedEmail(Email(auth.account.mailDomain, "abuse"), "Web abuse report")
 
-        transactionManager.coroutineTx {
+        transactionManager.coroutineTx { _ ->
             val subject =
                 "Abuse report about mail($mailId) to ${reportedEmail.recipient} from $reporterName (${reporterEmail ?: ""})"
             val body =
@@ -171,7 +171,6 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
             mimeMessage.setRecipient(Message.RecipientType.TO, receiverAddress)
             mimeMessage.setContent(body, MediaType.PLAIN_TEXT_UTF_8.toString())
 
-            @Suppress("BlockingMethodInNonBlockingContext")
             val bytes = mimeMessage.inputStream.use { it.readAllBytes() }
             val incomingEmailDBO = IncomingEmailDBO(
                 body = bytes,

@@ -32,5 +32,20 @@ message EmailNotificationOrKeepAlive {
     oneof notification_or_keepalive {
         EmailNotification email_notification = 1;
         string keep_alive = 2;
+        EmailAddressNotification email_address_notification = 3;
     }
 }
+
+message EmailAddressNotification {
+    // From email address
+    string from_email = 1;
+    // Recipient email address
+    string recipient_email = 2;
+    oneof reason {
+        // The reason of why the block is being blocked
+        com.sourceforgery.tachikoma.grpc.frontend.BlockedReason new_reason = 3;
+        // The reason of why the block was being blocked
+        com.sourceforgery.tachikoma.grpc.frontend.BlockedReason old_reason = 4;
+    }
+}
+
