@@ -1,0 +1,13 @@
+/.idea/
+*.iml
+/.run/
+/.go/wrapper/tmp/
+/.go/wrapper/go/
+
+# Gradle
+/build/
+
+*.key
+*.crt
+
+/tachikoma-cli

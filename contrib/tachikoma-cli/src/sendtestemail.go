@@ -12,6 +12,7 @@ import (
 type SendTestEmailCmd struct {
 	From      string `long:"from" required:"yes" description:"From address of the test email"`
 	Recipient string `long:"to" required:"yes" description:"Recipient of the test email"`
+	Body      string `long:"body" required:"yes" description:"Body of the test email"`
 }
 
 func sendTestEmail(ctx context.Context, grpcConn *grpc.ClientConn, cmd SendTestEmailCmd) {
