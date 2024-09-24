@@ -12,7 +12,9 @@ open class DuplicateClassesExtension {
     var ignoredFiles = mutableListOf(
         Regex("^module-info.class$"),
         Regex(".*/package-info.class$"),
-        Regex("^META-INF/.*")
+        Regex("^META-INF/.*"),
+        // Ignore netty binary dependencies
+        Regex("^io/netty/channel/unix/.*"),
     )
 }
 
