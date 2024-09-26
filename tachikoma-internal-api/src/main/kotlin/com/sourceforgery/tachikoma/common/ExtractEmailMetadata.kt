@@ -40,6 +40,7 @@ class ExtractEmailMetadata(override val di: DI) : DIAware {
     }
 }
 
+@ConsistentCopyVisibility
 data class EmailMetadata
 internal constructor(
     val from: List<NamedEmail>,

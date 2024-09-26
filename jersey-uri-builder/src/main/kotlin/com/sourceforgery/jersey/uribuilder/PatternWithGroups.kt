@@ -65,11 +65,6 @@ class PatternWithGroups {
     /**
      * The regular expression for matching and obtaining capturing group values.
      */
-    /**
-     * Get the regular expression.
-     *
-     * @return the regular expression.
-     */
     val regex: String
     /**
      * The compiled regular expression of [.regex].

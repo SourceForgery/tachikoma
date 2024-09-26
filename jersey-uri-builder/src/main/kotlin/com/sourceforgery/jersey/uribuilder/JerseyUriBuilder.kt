@@ -649,19 +649,19 @@ private constructor(
     }
 
     fun buildFromMap(values: Map<String, *>): URI {
-        return _buildFromMap(true, true, values)
+        return xBuildFromMap(true, true, values)
     }
 
     fun buildFromMap(values: Map<String, *>, encodeSlashInPath: Boolean): URI {
-        return _buildFromMap(true, encodeSlashInPath, values)
+        return xBuildFromMap(true, encodeSlashInPath, values)
     }
 
     @Throws(IllegalArgumentException::class)
     fun buildFromEncodedMap(values: Map<String, *>): URI {
-        return _buildFromMap(false, false, values)
+        return xBuildFromMap(false, false, values)
     }
 
-    private fun _buildFromMap(encode: Boolean, encodeSlashInPath: Boolean, values: Map<String, *>): URI {
+    private fun xBuildFromMap(encode: Boolean, encodeSlashInPath: Boolean, values: Map<String, *>): URI {
         if (ssp != null) {
             throw IllegalArgumentException("Schema specific part is opaque.")
         }
@@ -686,15 +686,15 @@ private constructor(
     }
 
     fun build(vararg values: Any): URI {
-        return _build(true, true, *values)
+        return xBuild(true, true, *values)
     }
 
     fun build(values: Array<Any>, encodeSlashInPath: Boolean): URI {
-        return _build(true, encodeSlashInPath, *values)
+        return xBuild(true, encodeSlashInPath, *values)
     }
 
     fun buildFromEncoded(vararg values: Any): URI {
-        return _build(false, false, *values)
+        return xBuild(false, false, *values)
     }
 
     fun toTemplate(): String {
@@ -755,7 +755,7 @@ private constructor(
         return sb.toString()
     }
 
-    private fun _build(encode: Boolean, encodeSlashInPath: Boolean, vararg values: Any): URI {
+    private fun xBuild(encode: Boolean, encodeSlashInPath: Boolean, vararg values: Any): URI {
         if (ssp != null) {
             if (values.isEmpty()) {
                 return createURI(create())

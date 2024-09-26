@@ -157,7 +157,7 @@ object UriComponent {
      */
     @JvmOverloads
     fun validate(s: String, t: Type, template: Boolean = false) {
-        val i = _valid(s, t, template)
+        val i = xValid(s, t, template)
         if (i > -1) {
             throw IllegalArgumentException("The string ''" + s + "'' for the URI component " + t + " contains an invalid character, ''" + s[i] + "'', at index " + i + ".")
         }
@@ -174,10 +174,10 @@ object UriComponent {
      */
     @JvmOverloads
     fun valid(s: String, t: Type, template: Boolean = false): Boolean {
-        return _valid(s, t, template) == -1
+        return xValid(s, t, template) == -1
     }
 
-    private fun _valid(s: String, t: Type, template: Boolean): Int {
+    private fun xValid(s: String, t: Type, template: Boolean): Int {
         val table = ENCODING_TABLES[t.ordinal]
 
         for (i in 0 until s.length) {
@@ -203,7 +203,7 @@ object UriComponent {
      * @return the encoded string.
      */
     fun contextualEncode(s: String, t: Type): String {
-        return _encode(s, t, false, true)
+        return xEncode(s, t, false, true)
     }
 
     /**
@@ -219,7 +219,7 @@ object UriComponent {
      * @return the encoded string.
      */
     fun contextualEncode(s: String, t: Type, template: Boolean): String {
-        return _encode(s, t, template, true)
+        return xEncode(s, t, template, true)
     }
 
     /**
@@ -233,7 +233,7 @@ object UriComponent {
      * @return the encoded string.
      */
     fun encode(s: String, t: Type): String {
-        return _encode(s, t, false, false)
+        return xEncode(s, t, false, false)
     }
 
     /**
@@ -248,7 +248,7 @@ object UriComponent {
      * @return the encoded string.
      */
     fun encode(s: String, t: Type, template: Boolean): String {
-        return _encode(s, t, template, false)
+        return xEncode(s, t, template, false)
     }
 
     /**
@@ -272,7 +272,7 @@ object UriComponent {
         return result
     }
 
-    private fun _encode(s: String, t: Type, template: Boolean, contextualEncode: Boolean): String {
+    private fun xEncode(s: String, t: Type, template: Boolean, contextualEncode: Boolean): String {
         val table = ENCODING_TABLES[t.ordinal]
         var insideTemplateParam = false
 
@@ -817,9 +817,9 @@ object UriComponent {
                 buffer.flip()
                 // Create a new byte buffer with the maximum number of possible
                 // octets, hence resize should only occur once
-                val bb_new = ByteBuffer.allocate(s.length / 3)
-                bb_new.put(buffer)
-                buffer = bb_new
+                val bbNew = ByteBuffer.allocate(s.length / 3)
+                bbNew.put(buffer)
+                buffer = bbNew
             }
         }
 

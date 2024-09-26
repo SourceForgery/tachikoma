@@ -68,11 +68,6 @@ class UriTemplate {
     /**
      * The URI template.
      */
-    /**
-     * Get the URI template as a String.
-     *
-     * @return the URI template.
-     */
     val template: String?
     /**
      * The normalized URI template. Any explicit regex are removed to leave
@@ -82,11 +77,6 @@ class UriTemplate {
     /**
      * The pattern generated from the template.
      */
-    /**
-     * Get the URI pattern.
-     *
-     * @return the URI pattern.
-     */
     val pattern: PatternWithGroups
     /**
      * True if the URI template ends in a '/' character.
@@ -95,42 +85,21 @@ class UriTemplate {
     /**
      * The template variables in the URI template.
      */
-    /**
-     * Get the list of template variables for the template.
-     *
-     * @return the list of template variables.
-     */
     val templateVariables: List<String>
     /**
      * The number of explicit regular expressions declared for template
      * variables.
-     */
-    /**
-     * Get the number of explicit regular expressions declared in the template variables.
-     *
-     * @return the number of explicit regular expressions in the template variables.
      */
     val numberOfExplicitRegexes: Int
 
     /**
      * The number of regular expression groups in this pattern.
      */
-    /**
-     * Get the number of regular expression groups
-     *
-     * @return the number of regular expressions groups
-     */
     val numberOfRegexGroups: Int
 
     /**
      * The number of characters in the regular expression not resulting
      * from conversion of template variables.
-     */
-    /**
-     * Get the number of characters in the regular expression not resulting
-     * from conversion of template variables.
-     *
-     * @return the number of explicit characters
      */
     val numberOfExplicitCharacters: Int
 

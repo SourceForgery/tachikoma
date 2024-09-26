@@ -23,7 +23,7 @@ dependencies {
 }
 
 rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension> {
-    releaseAssets.from("$buildDir/distributions/tachikoma-webserver-${project.version}.tar")
+    releaseAssets.from("build/distributions/tachikoma-webserver-${project.version}.tar")
 }
 
 val startClass = "com.sourceforgery.tachikoma.webserver.MainKt"

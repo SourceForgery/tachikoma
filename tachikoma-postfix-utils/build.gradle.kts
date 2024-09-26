@@ -29,7 +29,7 @@ extensions.configure<JavaApplication>("application") {
 }
 
 rootProject.extensions.configure<com.github.breadmoirai.githubreleaseplugin.GithubReleaseExtension> {
-    releaseAssets.from("$buildDir/distributions/tachikoma-postfix-utils-${project.version}.tar")
+    releaseAssets.from("build/distributions/tachikoma-postfix-utils-${project.version}.tar")
 }
 
 rootProject.tasks["githubRelease"]

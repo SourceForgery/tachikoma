@@ -9,6 +9,8 @@ plugins {
 dependencies {
     add("kapt", "io.ebean:kotlin-querybean-generator")
 
+    api("io.ebean:ebean-api")
+
     implementation(project(":tachikoma-internal-api"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.google.guava:guava")

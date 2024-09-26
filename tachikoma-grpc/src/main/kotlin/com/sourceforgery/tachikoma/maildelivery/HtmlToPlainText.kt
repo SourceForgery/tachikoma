@@ -6,7 +6,7 @@ import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 
-private const val maxWidth = 80
+private const val MAX_WIDTH = 80
 
 /**
  * HTML to plain-text. This example program demonstrates the use of jsoup to convert HTML input to lightly-formatted
@@ -61,7 +61,7 @@ private class FormattingVisitor : NodeVisitor {
             return
         }
 
-        if (text.length + width > maxWidth) { // won't fit, needs to wrap
+        if (text.length + width > MAX_WIDTH) { // won't fit, needs to wrap
             val words = text.split("\\s+".toRegex()).dropLastWhile { it.isEmpty() }
             for (i in words.indices) {
                 var word = words[i]
@@ -70,7 +70,7 @@ private class FormattingVisitor : NodeVisitor {
                     // insert a space if not the last word
                     word += " "
                 }
-                if (word.length + width > maxWidth) { // wrap and reset counter
+                if (word.length + width > MAX_WIDTH) { // wrap and reset counter
                     if (accum.isNotEmpty() && accum.last() == ' ') {
                         // If last char was a space, remove it as we are adding a line break
                         accum.deleteCharAt(accum.length - 1)
