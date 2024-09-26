@@ -9,14 +9,13 @@ import javax.persistence.UniqueConstraint
 @Table(
     name = "e_incoming_email_address",
     uniqueConstraints = [
-        UniqueConstraint(columnNames = ["local_part", "account_id"])
-    ]
+        UniqueConstraint(columnNames = ["local_part", "account_id"]),
+    ],
 )
 @Entity
 class IncomingEmailAddressDBO(
     @Column
     val localPart: String,
-
     @ManyToOne
-    val account: AccountDBO
+    val account: AccountDBO,
 ) : GenericDBO()

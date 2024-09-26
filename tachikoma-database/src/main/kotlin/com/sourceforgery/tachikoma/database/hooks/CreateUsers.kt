@@ -34,11 +34,12 @@ class CreateUsers(override val di: DI) : DIAware {
                             val backendAuth = internalCreateUserService.createBackendAuthentication(account)
                             val uri = trackingConfig.baseUrl
                             LOGGER.error { "Creating new backend api with login:password 'gproto+${uri.scheme}://$mailDomain:${backendAuth.apiToken}@${uri.host}'" }
-                            val frontendAuth = internalCreateUserService.createFrontendAuthentication(
-                                account = account,
-                                role = AuthenticationRole.FRONTEND_ADMIN,
-                                addApiToken = true
-                            )
+                            val frontendAuth =
+                                internalCreateUserService.createFrontendAuthentication(
+                                    account = account,
+                                    role = AuthenticationRole.FRONTEND_ADMIN,
+                                    addApiToken = true,
+                                )
                             LOGGER.error { "Creating new frontend api with login:password 'gproto+${uri.scheme}://$mailDomain:${frontendAuth.apiToken}@${uri.host}:${uri.port}'" }
                             createIncomingEmail(ebeanServer, account)
                         }
@@ -47,11 +48,15 @@ class CreateUsers(override val di: DI) : DIAware {
             }
     }
 
-    private fun createIncomingEmail(ebeanServer: Database, account: AccountDBO) {
-        val incomingAddress = IncomingEmailAddressDBO(
-            localPart = "",
-            account = account
-        )
+    private fun createIncomingEmail(
+        ebeanServer: Database,
+        account: AccountDBO,
+    ) {
+        val incomingAddress =
+            IncomingEmailAddressDBO(
+                localPart = "",
+                account = account,
+            )
         ebeanServer.save(incomingAddress)
     }
 

@@ -1,7 +1,10 @@
 package com.sourceforgery.tachikoma.logging
 
 interface InvokeCounter {
-    fun inc(sql: String?, millis: Long)
+    fun inc(
+        sql: String?,
+        millis: Long,
+    )
 }
 
 interface InvokeCounterFactory {

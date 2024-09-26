@@ -16,18 +16,18 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class BlockedEmailServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : BlockedEmailServiceGrpcKt.BlockedEmailServiceCoroutineImplBase(), DIAware {
-
     private val authentication: () -> Authentication by provider()
     private val blockedEmailService: BlockedEmailService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 
-    override fun getBlockedEmails(request: Empty): Flow<BlockedEmail> = flow {
-        val auth = authentication()
-        auth.requireFrontend()
-        emitAll(blockedEmailService.getBlockedEmails(auth.authenticationId))
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+    override fun getBlockedEmails(request: Empty): Flow<BlockedEmail> =
+        flow {
+            val auth = authentication()
+            auth.requireFrontend()
+            emitAll(blockedEmailService.getBlockedEmails(auth.authenticationId))
+        }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
     override suspend fun removeBlockedEmail(request: RemoveBlockedEmailRequest): Empty {
         try {

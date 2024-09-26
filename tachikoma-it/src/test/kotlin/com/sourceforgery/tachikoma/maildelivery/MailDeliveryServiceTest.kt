@@ -41,11 +41,12 @@ import java.time.ZoneId
 import java.util.Base64
 
 class MailDeliveryServiceTest : DIAware {
-    override val di = DI {
-        importOnce(testModule(), allowOverride = true)
-        bind<JobMessageFactory>() with singleton { JobMessageFactory(di) }
-        bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
-    }
+    override val di =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+            bind<JobMessageFactory>() with singleton { JobMessageFactory(di) }
+            bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
+        }
 
     val mailDeliveryService: MailDeliveryService by instance()
     val daoHelper: DAOHelper by instance()
@@ -102,67 +103,69 @@ class MailDeliveryServiceTest : DIAware {
     @Test
     fun `Send emails with attachment`() {
         val authentication = daoHelper.createAuthentication(fromEmail.toNamedEmail().address.domain)
-        val email = OutgoingEmail.newBuilder()
-            .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
-            .setTimeZone("America/New_York")
-            .addAttachments(
-                Attachment.newBuilder()
-                    .setContentType("application/pdf")
-                    .setData(ByteString.copyFrom(data))
-                    .setFileName("NotReally.pdf")
-            )
-            .addRelatedAttachments(
-                RelatedAttachment.newBuilder()
-                    .setContentId("68b12347-e804-48f8-a9d4-86a1d1acfda3")
-                    .setFileName("transparent.gif")
-                    .setContentType("image/gif")
-                    .setData(ByteString.copyFrom(pixel))
-            )
-            .setFrom(fromEmail)
-            .setStatic(
-                StaticBody.newBuilder().setPlaintextBody(
-                    """This is a test
+        val email =
+            OutgoingEmail.newBuilder()
+                .addRecipients(EmailRecipient.newBuilder().setNamedEmail(validEmail))
+                .setTimeZone("America/New_York")
+                .addAttachments(
+                    Attachment.newBuilder()
+                        .setContentType("application/pdf")
+                        .setData(ByteString.copyFrom(data))
+                        .setFileName("NotReally.pdf"),
+                )
+                .addRelatedAttachments(
+                    RelatedAttachment.newBuilder()
+                        .setContentId("68b12347-e804-48f8-a9d4-86a1d1acfda3")
+                        .setFileName("transparent.gif")
+                        .setContentType("image/gif")
+                        .setData(ByteString.copyFrom(pixel)),
+                )
+                .setFrom(fromEmail)
+                .setStatic(
+                    StaticBody.newBuilder().setPlaintextBody(
+                        """This is a test
                             |                                      .
                             |.
                             |}
                             |.                 ${""}
                             |
                     """
-                        .trimMargin()
-                )
-                    .setHtmlBody(
-                        """
-                        <h1>This is a test</h1>
-                        <img src="cid:68b12347-e804-48f8-a9d4-86a1d1acfda3">
-                        """.trimIndent()
+                            .trimMargin(),
                     )
-                    .setSubject("Test mail subject")
-            )
-            .build()
-        val queued = runBlocking {
-            withTimeout(10000) {
-                mailDeliveryService.sendEmail(
-                    request = email,
-                    authenticationId = authentication.id
-                ).first()
+                        .setHtmlBody(
+                            """
+                            <h1>This is a test</h1>
+                            <img src="cid:68b12347-e804-48f8-a9d4-86a1d1acfda3">
+                            """.trimIndent(),
+                        )
+                        .setSubject("Test mail subject"),
+                )
+                .build()
+        val queued =
+            runBlocking {
+                withTimeout(10000) {
+                    mailDeliveryService.sendEmail(
+                        request = email,
+                        authenticationId = authentication.id,
+                    ).first()
+                }
             }
-        }
         val byEmailId = emailDAO.getByEmailId(queued.emailId.toEmailId())!!
 
-        val expected = this.javaClass.getResourceAsStream("/attachment_email.txt")!!.use {
-            it.readBytes().toString(StandardCharsets.UTF_8)
-        }
+        val expected =
+            this.javaClass.getResourceAsStream("/attachment_email.txt")!!.use {
+                it.readBytes().toString(StandardCharsets.UTF_8)
+            }
         assertEquals(expected, byEmailId.body!!)
     }
 
-    private fun parseJsoupHtml(html: String): Document =
-        Jsoup.parse(html)
+    private fun parseJsoupHtml(html: String): Document = Jsoup.parse(html)
 
     private fun parseJsoupResource(resourceName: String): Document =
         Jsoup.parse(
             requireNotNull(javaClass.getResource(resourceName)) {
                 "Didn't find $resourceName"
-            }.readText()
+            }.readText(),
         )
 
     companion object {

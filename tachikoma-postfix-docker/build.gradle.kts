@@ -23,7 +23,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
         apt-get clean &&
         rm -rf /var/cache/apt/ /var/lib/apt/lists/* &&
         echo "LANG=C.UTF-8" > /etc/default/locale
-        """.trimMargin().replace('\n', ' ')
+        """.trimMargin().replace('\n', ' '),
     )
     runCommand("pip3 install --no-cache-dir honcho==1.0.1")
 
@@ -48,14 +48,14 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
         chown postfix:tachikoma /var/spool/postfix/tachikoma/ && chmod 0770 /var/spool/postfix/tachikoma/
         """.trimIndent().replace(
             '\n',
-            ' '
-        )
+            ' ',
+        ),
     )
 
     addFiles(tarTask.outputs.files) {
         it.replace(
             "^[^/]*".toRegex(),
-            "/opt/tachikoma-postfix-utils"
+            "/opt/tachikoma-postfix-utils",
         )
     }
 

@@ -20,14 +20,15 @@ class LoginService(override val di: DI) : DIAware {
 
     fun login(loginRequest: LoginRequest): LoginResponse {
         val auth = authenticationDAO.validateApiToken(loginRequest.username)
-        val correct = auth
-            ?.encryptedPassword
-            ?.let {
-                PasswordStorage.verifyPassword(
-                    password = loginRequest.password,
-                    correctHash = it
-                )
-            }
+        val correct =
+            auth
+                ?.encryptedPassword
+                ?.let {
+                    PasswordStorage.verifyPassword(
+                        password = loginRequest.password,
+                        correctHash = it,
+                    )
+                }
         if (correct != true) {
             throw throw StatusRuntimeException(Status.PERMISSION_DENIED)
         }

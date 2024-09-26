@@ -22,9 +22,10 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class IncomingEmailAddressDAOTest : DIAware {
-    override val di = DI {
-        importOnce(testModule(), allowOverride = true)
-    }
+    override val di =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+        }
 
     val incomingEmailAddressDAO: IncomingEmailAddressDAO by instance()
     val database: Database by instance()
@@ -40,31 +41,35 @@ class IncomingEmailAddressDAOTest : DIAware {
         val accountDBO = AccountDBO(MailDomain(domain))
         database.save(accountDBO)
 
-        val authenticationDBO = AuthenticationDBO(
-            login = domain,
-            encryptedPassword = UUID.randomUUID().toString(),
-            apiToken = UUID.randomUUID().toString(),
-            role = AuthenticationRole.BACKEND,
-            account = accountDBO
-        )
+        val authenticationDBO =
+            AuthenticationDBO(
+                login = domain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.BACKEND,
+                account = accountDBO,
+            )
         database.save(authenticationDBO)
 
         return authenticationDBO
     }
 
-    fun saveIncomingEmailAddress(authenticationDBO: AuthenticationDBO, localPart: String) {
+    fun saveIncomingEmailAddress(
+        authenticationDBO: AuthenticationDBO,
+        localPart: String,
+    ) {
         database.save(authenticationDBO)
         val account = database.find(AccountDBO::class.java, authenticationDBO.account.id)!!
-        val incomingEmailAddressDBO = IncomingEmailAddressDBO(
-            account = account,
-            localPart = localPart
-        )
+        val incomingEmailAddressDBO =
+            IncomingEmailAddressDBO(
+                account = account,
+                localPart = localPart,
+            )
         incomingEmailAddressDAO.save(incomingEmailAddressDBO)
     }
 
     @Test
     fun `it should be possible to add several incoming email addresses`() {
-
         val authentication1 = createAuthentication("example.org")
 
         saveIncomingEmailAddress(authentication1, "a")
@@ -79,7 +84,6 @@ class IncomingEmailAddressDAOTest : DIAware {
 
     @Test
     fun `it should be possible to add several incoming email addresses on different accounts`() {
-
         val authentication1 = createAuthentication("example.org")
         val authentication2 = createAuthentication("example.net")
 
@@ -101,7 +105,6 @@ class IncomingEmailAddressDAOTest : DIAware {
 
     @Test
     fun `it should not be possible to have duplicate local part`() {
-
         val authentication1 = createAuthentication("example.org")
         val authentication2 = createAuthentication("example.net")
 
@@ -121,7 +124,6 @@ class IncomingEmailAddressDAOTest : DIAware {
 
     @Test
     fun `it should return a correct account from en E-mail`() {
-
         val authentication1 = createAuthentication("example.org")
 
         saveIncomingEmailAddress(authentication1, "a")
@@ -139,7 +141,6 @@ class IncomingEmailAddressDAOTest : DIAware {
 
     @Test
     fun `it should return a correct account from an E-mail`() {
-
         val authentication1 = createAuthentication("example.org")
         val authentication2 = createAuthentication("example.net")
 
@@ -166,7 +167,6 @@ class IncomingEmailAddressDAOTest : DIAware {
 
     @Test
     fun `it should be possible to delete an incoming e-mail`() {
-
         val authentication1 = createAuthentication("example.org")
 
         saveIncomingEmailAddress(authentication1, "a")

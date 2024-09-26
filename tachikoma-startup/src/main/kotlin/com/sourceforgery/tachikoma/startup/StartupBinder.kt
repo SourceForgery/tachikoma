@@ -5,6 +5,7 @@ import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.singleton
 
-val startupModule = DI.Module("startup") {
-    bind<Configuration>() with singleton { Configuration() }
-}
+val startupModule =
+    DI.Module("startup") {
+        bind<Configuration>() with singleton { Configuration() }
+    }

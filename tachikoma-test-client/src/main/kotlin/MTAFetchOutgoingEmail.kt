@@ -10,25 +10,29 @@ import kotlinx.coroutines.runBlocking
 import java.net.URI
 
 fun main() {
-    val backendUri = URI.create(
-        System.getenv("TACHI_BACKEND_URI")
-            ?: error("Need to specify env TACHI_BACKEND_URI")
-    )
+    val backendUri =
+        URI.create(
+            System.getenv("TACHI_BACKEND_URI")
+                ?: error("Need to specify env TACHI_BACKEND_URI"),
+        )
 
     val channel = Channel<MTAQueuedNotification>()
 
-    val configuration = object : GrpcClientConfig {
-        override val tachikomaUrl = URI(
-            System.getenv("TACHI_BACKEND_URI")
-                ?: error("Need to specify env TACHI_BACKEND_URI")
-        )
-        override val insecure: Boolean
-            get() = true
-        override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
-        override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
-    }
-    val stub = provideClientBuilder(configuration)
-        .build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java)
+    val configuration =
+        object : GrpcClientConfig {
+            override val tachikomaUrl =
+                URI(
+                    System.getenv("TACHI_BACKEND_URI")
+                        ?: error("Need to specify env TACHI_BACKEND_URI"),
+                )
+            override val insecure: Boolean
+                get() = true
+            override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
+            override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
+        }
+    val stub =
+        provideClientBuilder(configuration)
+            .build(MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub::class.java)
 
     try {
         runBlocking {
@@ -48,7 +52,7 @@ fun main() {
                             MTAQueuedNotification.newBuilder()
                                 .setQueueId("12345A$i")
                                 .setSuccess(true)
-                                .build()
+                                .build(),
                         )
                     }
                 }

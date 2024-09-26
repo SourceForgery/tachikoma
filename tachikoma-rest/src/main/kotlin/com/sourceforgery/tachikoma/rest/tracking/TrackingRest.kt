@@ -33,7 +33,7 @@ import org.kodein.di.instance
 import java.util.Base64
 
 internal class TrackingRest(
-    override val di: DI
+    override val di: DI,
 ) : RestService, DIAware, TachikomaScope by di.direct.instance() {
     private val trackingDecoder: TrackingDecoder by instance()
     private val emailDAO: EmailDAO by instance()
@@ -45,7 +45,7 @@ internal class TrackingRest(
     @Produces("image/gif")
     fun trackOpen(
         @Param("trackingData") trackingDataString: String,
-        @Header("User-Agent") @Default("") userAgent: String
+        @Header("User-Agent") @Default("") userAgent: String,
     ) = scopedFuture {
         if (trackingDataString.endsWith("/1")) {
             actuallyTrackOpen(trackingDataString.removeSuffix("/1"), userAgent)
@@ -54,28 +54,34 @@ internal class TrackingRest(
         }
     }
 
-    private fun actuallyTrackOpen(trackingDataString: String, userAgent: String): HttpResponse {
+    private fun actuallyTrackOpen(
+        trackingDataString: String,
+        userAgent: String,
+    ): HttpResponse {
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
             val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
-            val emailStatusEvent = EmailStatusEventDBO(
-                emailStatus = EmailStatus.OPENED,
-                email = email,
-                metaData = StatusEventMetaData(
-                    ipAddress = remoteIP.remoteAddress,
-                    userAgent = userAgent
+            val emailStatusEvent =
+                EmailStatusEventDBO(
+                    emailStatus = EmailStatus.OPENED,
+                    email = email,
+                    metaData =
+                        StatusEventMetaData(
+                            ipAddress = remoteIP.remoteAddress,
+                            userAgent = userAgent,
+                        ),
                 )
-            )
             emailStatusEventDAO.save(emailStatusEvent)
 
-            val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
-                .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
-                .setEmailMessageId(email.id.emailId)
-                .setMessageOpened(
-                    MessageOpened.newBuilder()
-                        .setIpAddress(remoteIP.remoteAddress)
-                )
+            val notificationMessageBuilder =
+                DeliveryNotificationMessage.newBuilder()
+                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
+                    .setEmailMessageId(email.id.emailId)
+                    .setMessageOpened(
+                        MessageOpened.newBuilder()
+                            .setIpAddress(remoteIP.remoteAddress),
+                    )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
         } catch (e: Exception) {
             LOGGER.warn { "Failed to track invalid link $trackingDataString with error ${e.message}" }
@@ -88,7 +94,7 @@ internal class TrackingRest(
     @Produces("text/html")
     fun trackClick(
         @Param("trackingData") trackingDataString: String,
-        @Header("User-Agent") @Default("") userAgent: String
+        @Header("User-Agent") @Default("") userAgent: String,
     ) = scopedFuture {
         if (trackingDataString.endsWith("/1")) {
             actuallyTrackClick(trackingDataString.removeSuffix("/1"), userAgent)
@@ -97,30 +103,36 @@ internal class TrackingRest(
         }
     }
 
-    private fun actuallyTrackClick(trackingDataString: String, userAgent: String): HttpResponse {
+    private fun actuallyTrackClick(
+        trackingDataString: String,
+        userAgent: String,
+    ): HttpResponse {
         try {
             val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)
 
             val email = emailDAO.fetchEmailData(trackingData.emailId.toEmailId())!!
-            val emailStatusEvent = EmailStatusEventDBO(
-                emailStatus = EmailStatus.CLICKED,
-                email = email,
-                metaData = StatusEventMetaData(
-                    ipAddress = remoteIP.remoteAddress,
-                    trackingLink = trackingData.redirectUrl,
-                    userAgent = userAgent
+            val emailStatusEvent =
+                EmailStatusEventDBO(
+                    emailStatus = EmailStatus.CLICKED,
+                    email = email,
+                    metaData =
+                        StatusEventMetaData(
+                            ipAddress = remoteIP.remoteAddress,
+                            trackingLink = trackingData.redirectUrl,
+                            userAgent = userAgent,
+                        ),
                 )
-            )
             emailStatusEventDAO.save(emailStatusEvent)
 
-            val notificationMessageBuilder = DeliveryNotificationMessage.newBuilder()
-                .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
-                .setEmailMessageId(email.id.emailId)
-                .setMessageClicked(
-                    MessageClicked.newBuilder()
-                        .setIpAddress(remoteIP.remoteAddress)
-                        .setClickedUrl(trackingData.redirectUrl)
-                )
+            val notificationMessageBuilder =
+                DeliveryNotificationMessage.newBuilder()
+                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
+                    .setEmailMessageId(email.id.emailId)
+                    .setMessageClicked(
+                        MessageClicked.newBuilder()
+                            .setIpAddress(remoteIP.remoteAddress)
+                            .setClickedUrl(trackingData.redirectUrl),
+                    )
             mqSender.queueDeliveryNotification(email.transaction.authentication.account.id, notificationMessageBuilder.build())
 
             return httpRedirect(trackingData.redirectUrl)
@@ -130,7 +142,7 @@ internal class TrackingRest(
             return HttpResponse.of(
                 HttpStatus.NOT_FOUND,
                 MediaType.HTML_UTF_8,
-                STATIC_HTML_PAGE_THAT_SAYS_BROKEN_LINK
+                STATIC_HTML_PAGE_THAT_SAYS_BROKEN_LINK,
             )
         }
     }

@@ -22,45 +22,53 @@ import org.kodein.di.instance
 
 class IncomingEmailDAOImpl(override val di: DI) : IncomingEmailDAO, DIAware {
     private val database: Database by instance()
+
     override fun save(incomingEmailDBO: IncomingEmailDBO) {
         database.save(incomingEmailDBO)
     }
 
-    override fun fetchIncomingEmail(incomingEmailId: IncomingEmailId, accountId: AccountId) =
-        QIncomingEmailDBO(database)
-            .account.dbId.eq(accountId.accountId)
-            .dbId.eq(incomingEmailId.incomingEmailId)
-            .findOne()
+    override fun fetchIncomingEmail(
+        incomingEmailId: IncomingEmailId,
+        accountId: AccountId,
+    ) = QIncomingEmailDBO(database)
+        .account.dbId.eq(accountId.accountId)
+        .dbId.eq(incomingEmailId.incomingEmailId)
+        .findOne()
 
-    override fun searchIncomingEmails(accountId: AccountId, filter: List<EmailSearchFilterQuery>): Flow<IncomingEmailDBO> {
-        val q = QIncomingEmailDBO(database)
-            .apply {
-                for (emailSearchFilterQuery in filter) {
-                    @Suppress("UNUSED_VARIABLE")
-                    val allCasesCovered = when (emailSearchFilterQuery) {
-                        is SubjectContains -> subject.contains(emailSearchFilterQuery.subject)
-                        is SenderNameContains -> fromEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
-                        is SenderEmailContains ->
-                            raw("mailFrom = ?", emailSearchFilterQuery.email)
-                                .fromEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
-                        is ReceiverNameContains ->
-                            toEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
-                                .replyToEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
-                        is ReceiverEmailContains ->
-                            raw("recipient = ?", emailSearchFilterQuery.email)
-                                .toEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
-                                .replyToEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
-                        is ReceivedBetween -> dateCreated.between(emailSearchFilterQuery.after, emailSearchFilterQuery.before)
+    override fun searchIncomingEmails(
+        accountId: AccountId,
+        filter: List<EmailSearchFilterQuery>,
+    ): Flow<IncomingEmailDBO> {
+        val q =
+            QIncomingEmailDBO(database)
+                .apply {
+                    for (emailSearchFilterQuery in filter) {
+                        @Suppress("UNUSED_VARIABLE")
+                        val allCasesCovered =
+                            when (emailSearchFilterQuery) {
+                                is SubjectContains -> subject.contains(emailSearchFilterQuery.subject)
+                                is SenderNameContains -> fromEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
+                                is SenderEmailContains ->
+                                    raw("mailFrom = ?", emailSearchFilterQuery.email)
+                                        .fromEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
+                                is ReceiverNameContains ->
+                                    toEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
+                                        .replyToEmails.jsonEqualTo("name", emailSearchFilterQuery.name)
+                                is ReceiverEmailContains ->
+                                    raw("recipient = ?", emailSearchFilterQuery.email)
+                                        .toEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
+                                        .replyToEmails.jsonEqualTo("address", emailSearchFilterQuery.email)
+                                is ReceivedBetween -> dateCreated.between(emailSearchFilterQuery.after, emailSearchFilterQuery.before)
+                            }
                     }
+                    account.dbId.eq(accountId.accountId)
                 }
-                account.dbId.eq(accountId.accountId)
-            }
 
         return flow {
             q.findIterate()
                 .use {
                     emitAll(
-                        it.asFlow()
+                        it.asFlow(),
                     )
                 }
         }

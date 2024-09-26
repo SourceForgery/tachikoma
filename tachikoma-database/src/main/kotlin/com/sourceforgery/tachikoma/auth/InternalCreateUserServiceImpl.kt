@@ -38,7 +38,7 @@ class InternalCreateUserServiceImpl(override val di: DI) : InternalCreateUserSer
         role: AuthenticationRole,
         addApiToken: Boolean,
         active: Boolean,
-        recipientOverride: Email?
+        recipientOverride: Email?,
     ): AuthenticationDBO {
         if (role != AuthenticationRole.FRONTEND_ADMIN && role != AuthenticationRole.FRONTEND) {
             throw IllegalArgumentException("Only frontend supported")
@@ -56,17 +56,19 @@ class InternalCreateUserServiceImpl(override val di: DI) : InternalCreateUserSer
             }
         }
 
-        val encryptedPassword = password
-            ?.let {
-                PasswordStorage.createHash(it)
-            }
+        val encryptedPassword =
+            password
+                ?.let {
+                    PasswordStorage.createHash(it)
+                }
 
-        val frontendAuthentication = AuthenticationDBO(
-            account = account,
-            role = role,
-            login = login,
-            encryptedPassword = encryptedPassword
-        )
+        val frontendAuthentication =
+            AuthenticationDBO(
+                account = account,
+                role = role,
+                login = login,
+                encryptedPassword = encryptedPassword,
+            )
         if (addApiToken) {
             setApiToken(frontendAuthentication)
         }
@@ -75,7 +77,7 @@ class InternalCreateUserServiceImpl(override val di: DI) : InternalCreateUserSer
         mqManager.setupAuthentication(
             mailDomain = account.mailDomain,
             authenticationId = frontendAuthentication.id,
-            accountId = account.id
+            accountId = account.id,
         )
         return frontendAuthentication
     }
@@ -85,11 +87,12 @@ class InternalCreateUserServiceImpl(override val di: DI) : InternalCreateUserSer
     }
 
     override fun createBackendAuthentication(account: AccountDBO): AuthenticationDBO {
-        val backendAuthentication = AuthenticationDBO(
-            apiToken = randomString.nextString(),
-            role = AuthenticationRole.BACKEND,
-            account = account
-        )
+        val backendAuthentication =
+            AuthenticationDBO(
+                apiToken = randomString.nextString(),
+                role = AuthenticationRole.BACKEND,
+                account = account,
+            )
         authenticationDAO.save(backendAuthentication)
         return backendAuthentication
     }

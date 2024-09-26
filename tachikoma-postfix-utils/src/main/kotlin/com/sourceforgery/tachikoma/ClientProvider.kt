@@ -27,7 +27,7 @@ fun provideClientBuilder(grpcClientConfig: GrpcClientConfig): ClientBuilder {
                         sslCtxBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE)
                     }
                 }
-                .build()
+                .build(),
         )
         .onlyIf(apiToken != null) {
             addHeader("x-apitoken", apiToken!!)

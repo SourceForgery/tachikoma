@@ -69,23 +69,28 @@ class UriTemplate {
      * The URI template.
      */
     val template: String?
+
     /**
      * The normalized URI template. Any explicit regex are removed to leave
      * the template variables.
      */
     private val normalizedTemplate: String
+
     /**
      * The pattern generated from the template.
      */
     val pattern: PatternWithGroups
+
     /**
      * True if the URI template ends in a '/' character.
      */
     private val endsWithSlash: Boolean
+
     /**
      * The template variables in the URI template.
      */
     val templateVariables: List<String>
+
     /**
      * The number of explicit regular expressions declared for template
      * variables.
@@ -126,7 +131,10 @@ class UriTemplate {
          * @throws java.lang.IllegalArgumentException in case no value has been found and the strategy
          * does not support `null` values.
          */
-        fun valueFor(templateVariable: String, matchedGroup: String): String?
+        fun valueFor(
+            templateVariable: String,
+            matchedGroup: String,
+        ): String?
     }
 
     /**
@@ -250,7 +258,10 @@ class UriTemplate {
      * templateVariableToValue is null.
      */
     @Throws(IllegalArgumentException::class)
-    fun match(uri: CharSequence, templateVariableToValue: MutableMap<String, String>?): Boolean {
+    fun match(
+        uri: CharSequence,
+        templateVariableToValue: MutableMap<String, String>?,
+    ): Boolean {
         if (templateVariableToValue == null) {
             throw IllegalArgumentException()
         }
@@ -277,7 +288,10 @@ class UriTemplate {
      * templateVariableToValue is null.
      */
     @Throws(IllegalArgumentException::class)
-    fun match(uri: CharSequence, groupValues: MutableList<String>?): Boolean {
+    fun match(
+        uri: CharSequence,
+        groupValues: MutableList<String>?,
+    ): Boolean {
         if (groupValues == null) {
             throw IllegalArgumentException()
         }
@@ -302,10 +316,13 @@ class UriTemplate {
             normalizedTemplate,
             sb,
             object : TemplateValueStrategy {
-                override fun valueFor(templateVariable: String, matchedGroup: String): String? {
+                override fun valueFor(
+                    templateVariable: String,
+                    matchedGroup: String,
+                ): String? {
                     return values[templateVariable]
                 }
-            }
+            },
         )
         return sb.toString()
     }
@@ -340,28 +357,35 @@ class UriTemplate {
      * @param length the length of the template value array.
      * @return the URI.
      */
-    fun createURI(values: Array<out String>, offset: Int, length: Int): String {
+    fun createURI(
+        values: Array<out String>,
+        offset: Int,
+        length: Int,
+    ): String {
+        val ns =
+            object : TemplateValueStrategy {
+                private val lengthPlusOffset = length + offset
+                private var v = offset
+                private val mapValues = HashMap<String, String>()
 
-        val ns = object : TemplateValueStrategy {
-            private val lengthPlusOffset = length + offset
-            private var v = offset
-            private val mapValues = HashMap<String, String>()
-
-            override fun valueFor(templateVariable: String, matchedGroup: String): String? {
-                // Check if a template variable has already occurred
-                // If so use the value to ensure that two or more declarations of
-                // a template variable have the same value
-                var tValue: String? = mapValues[templateVariable]
-                if (tValue == null) {
-                    if (v < lengthPlusOffset) {
-                        tValue = values[v++]
-                        mapValues[templateVariable] = tValue
+                override fun valueFor(
+                    templateVariable: String,
+                    matchedGroup: String,
+                ): String? {
+                    // Check if a template variable has already occurred
+                    // If so use the value to ensure that two or more declarations of
+                    // a template variable have the same value
+                    var tValue: String? = mapValues[templateVariable]
+                    if (tValue == null) {
+                        if (v < lengthPlusOffset) {
+                            tValue = values[v++]
+                            mapValues[templateVariable] = tValue
+                        }
                     }
-                }
 
-                return tValue
+                    return tValue
+                }
             }
-        }
 
         val sb = StringBuilder()
         resolveTemplate(normalizedTemplate, sb, ns)
@@ -412,58 +436,61 @@ class UriTemplate {
          * declarations as the tertiary key.
          *
          */
-        val COMPARATOR: Comparator<UriTemplate> = Comparator { o1, o2 ->
-            if (o1 == null && o2 == null) {
-                return@Comparator 0
-            }
-            if (o1 == null) {
-                return@Comparator 1
-            }
-            if (o2 == null) {
-                return@Comparator -1
-            }
+        val COMPARATOR: Comparator<UriTemplate> =
+            Comparator { o1, o2 ->
+                if (o1 == null && o2 == null) {
+                    return@Comparator 0
+                }
+                if (o1 == null) {
+                    return@Comparator 1
+                }
+                if (o2 == null) {
+                    return@Comparator -1
+                }
 
-            if (o1 === EMPTY && o2 === EMPTY) {
-                return@Comparator 0
-            }
-            if (o1 === EMPTY) {
-                return@Comparator 1
-            }
-            if (o2 === EMPTY) {
-                return@Comparator -1
-            }
+                if (o1 === EMPTY && o2 === EMPTY) {
+                    return@Comparator 0
+                }
+                if (o1 === EMPTY) {
+                    return@Comparator 1
+                }
+                if (o2 === EMPTY) {
+                    return@Comparator -1
+                }
 
-            // Compare the number of explicit characters
-            // Note that it is important that o2 is compared against o1
-            // so that a regular expression with say 10 explicit characters
-            // is less than a regular expression with say 5 explicit characters.
-            var i = o2.numberOfExplicitCharacters - o1.numberOfExplicitCharacters
-            if (i != 0) {
-                return@Comparator i
+                // Compare the number of explicit characters
+                // Note that it is important that o2 is compared against o1
+                // so that a regular expression with say 10 explicit characters
+                // is less than a regular expression with say 5 explicit characters.
+                var i = o2.numberOfExplicitCharacters - o1.numberOfExplicitCharacters
+                if (i != 0) {
+                    return@Comparator i
+                }
+
+                // If the number of explicit characters is equal
+                // compare the number of template variables
+                // Note that it is important that o2 is compared against o1
+                // so that a regular expression with say 10 template variables
+                // is less than a regular expression with say 5 template variables.
+                i = o2.numberOfTemplateVariables - o1.numberOfTemplateVariables
+                if (i != 0) {
+                    return@Comparator i
+                }
+
+                // If the number of template variables is equal
+                // compare the number of explicit regexes
+                i = o2.numberOfExplicitRegexes - o1.numberOfExplicitRegexes
+                if (i != 0) {
+                    i
+                } else {
+                    o2.pattern.regex.compareTo(o1.pattern.regex)
+                }
+
+                // If the number of explicit characters and template variables
+                // are equal then comapre the regexes
+                // The order does not matter as long as templates with different
+                // explicit characters are distinguishable
             }
-
-            // If the number of explicit characters is equal
-            // compare the number of template variables
-            // Note that it is important that o2 is compared against o1
-            // so that a regular expression with say 10 template variables
-            // is less than a regular expression with say 5 template variables.
-            i = o2.numberOfTemplateVariables - o1.numberOfTemplateVariables
-            if (i != 0) {
-                return@Comparator i
-            }
-
-            // If the number of template variables is equal
-            // compare the number of explicit regexes
-            i = o2.numberOfExplicitRegexes - o1.numberOfExplicitRegexes
-            if (i != 0) {
-                i
-            } else o2.pattern.regex.compareTo(o1.pattern.regex)
-
-            // If the number of explicit characters and template variables
-            // are equal then comapre the regexes
-            // The order does not matter as long as templates with different
-            // explicit characters are distinguishable
-        }
 
         /**
          * The regular expression for matching URI templates and names.
@@ -495,7 +522,10 @@ class UriTemplate {
          *
          * @throws IllegalArgumentException If the given string violates the URI specification RFC.
          */
-        fun resolve(baseUri: URI, refUri: String): URI {
+        fun resolve(
+            baseUri: URI,
+            refUri: String,
+        ): URI {
             return resolve(baseUri, URI.create(refUri))
         }
 
@@ -507,19 +537,23 @@ class UriTemplate {
          * @param refUri reference URI to be resolved against the base URI.
          * @return resolved URI.
          */
-        fun resolve(baseUri: URI, refUri: URI): URI {
+        fun resolve(
+            baseUri: URI,
+            refUri: URI,
+        ): URI {
             val refString = refUri.toString()
-            val nonEmptyRefUri = if (refString.isEmpty()) {
-                // we need something to resolve against
-                URI.create("#")
-            } else if (refString.startsWith("?")) {
-                var baseString = baseUri.toString()
-                val qIndex = baseString.indexOf('?')
-                baseString = if (qIndex > -1) baseString.substring(0, qIndex) else baseString
-                return URI.create(baseString + refString)
-            } else {
-                refUri
-            }
+            val nonEmptyRefUri =
+                if (refString.isEmpty()) {
+                    // we need something to resolve against
+                    URI.create("#")
+                } else if (refString.startsWith("?")) {
+                    var baseString = baseUri.toString()
+                    val qIndex = baseString.indexOf('?')
+                    baseString = if (qIndex > -1) baseString.substring(0, qIndex) else baseString
+                    return URI.create(baseString + refString)
+                } else {
+                    refUri
+                }
 
             var result = baseUri.resolve(nonEmptyRefUri)
             if (refString.isEmpty()) {
@@ -590,16 +624,17 @@ class UriTemplate {
                 pathBuilder.append('/').append(segment)
             }
 
-            val resultString = createURIWithStringValues(
-                scheme = uri.scheme,
-                authority = uri.authority, userInfo = null, host = null, port = null,
-                path = pathBuilder.toString(),
-                query = uri.query,
-                fragment = uri.fragment,
-                values = EMPTY_VALUES,
-                encode = false,
-                encodeSlashInPath = false
-            )
+            val resultString =
+                createURIWithStringValues(
+                    scheme = uri.scheme,
+                    authority = uri.authority, userInfo = null, host = null, port = null,
+                    path = pathBuilder.toString(),
+                    query = uri.query,
+                    fragment = uri.fragment,
+                    values = EMPTY_VALUES,
+                    encode = false,
+                    encodeSlashInPath = false,
+                )
 
             return URI.create(resultString)
         }
@@ -613,7 +648,10 @@ class UriTemplate {
          * @param refUri URI to be relativized.
          * @return relativized URI.
          */
-        fun relativize(baseUri: URI, refUri: URI): URI {
+        fun relativize(
+            baseUri: URI,
+            refUri: URI,
+        ): URI {
             return normalize(baseUri.relativize(refUri))
         }
 
@@ -628,7 +666,7 @@ class UriTemplate {
         private fun resolveTemplate(
             normalizedTemplate: String,
             builder: StringBuilder,
-            valueStrategy: TemplateValueStrategy
+            valueStrategy: TemplateValueStrategy,
         ) {
             // Find all template variables
             val m = TEMPLATE_NAMES_PATTERN.matcher(normalizedTemplate)
@@ -732,9 +770,8 @@ class UriTemplate {
             fragment: String?,
             values: Map<String, *>,
             encode: Boolean,
-            encodeSlashInPath: Boolean
+            encodeSlashInPath: Boolean,
         ): String {
-
             val stringValues = HashMap<String, String>()
             for ((key, value) in values) {
                 if (value != null) {
@@ -745,7 +782,7 @@ class UriTemplate {
             return createURIWithStringValues(
                 scheme, authority,
                 userInfo, host, port, path, query, fragment,
-                stringValues, encode, encodeSlashInPath
+                stringValues, encode, encodeSlashInPath,
             )
         }
 
@@ -787,9 +824,8 @@ class UriTemplate {
             fragment: String?,
             values: Map<String, Any>,
             encode: Boolean,
-            encodeSlashInPath: Boolean
+            encodeSlashInPath: Boolean,
         ): String {
-
             return createURIWithStringValues(
                 scheme,
                 authority,
@@ -802,7 +838,7 @@ class UriTemplate {
                 EMPTY_VALUES,
                 encode,
                 encodeSlashInPath,
-                values.toMutableMap()
+                values.toMutableMap(),
             )
         }
 
@@ -845,9 +881,8 @@ class UriTemplate {
             fragment: String?,
             values: Array<Any>,
             encode: Boolean,
-            encodeSlashInPath: Boolean
+            encodeSlashInPath: Boolean,
         ): String {
-
             val stringValues = values.map { it.toString() }.toTypedArray()
 
             return createURIWithStringValues(
@@ -861,7 +896,7 @@ class UriTemplate {
                 fragment,
                 stringValues,
                 encode,
-                encodeSlashInPath
+                encodeSlashInPath,
             )
         }
 
@@ -898,12 +933,11 @@ class UriTemplate {
             fragment: String?,
             values: Array<String>,
             encode: Boolean,
-            encodeSlashInPath: Boolean
+            encodeSlashInPath: Boolean,
         ): String {
-
             val mapValues = HashMap<String, Any>()
             return createURIWithStringValues(
-                scheme, authority, userInfo, host, port, path, query, fragment, values, encode, encodeSlashInPath, mapValues
+                scheme, authority, userInfo, host, port, path, query, fragment, values, encode, encodeSlashInPath, mapValues,
             )
         }
 
@@ -919,22 +953,22 @@ class UriTemplate {
             values: Array<String>,
             encode: Boolean,
             encodeSlashInPath: Boolean,
-            mapValues: MutableMap<String, Any>
+            mapValues: MutableMap<String, Any>,
         ): String {
-
             val sb = StringBuilder()
             var offset = 0
 
             if (scheme != null) {
-                offset = createUriComponent(
-                    UriComponent.Type.SCHEME,
-                    scheme,
-                    values,
-                    offset,
-                    false,
-                    mapValues,
-                    sb
-                )
+                offset =
+                    createUriComponent(
+                        UriComponent.Type.SCHEME,
+                        scheme,
+                        values,
+                        offset,
+                        false,
+                        mapValues,
+                        sb,
+                    )
                 sb.append(':')
             }
 
@@ -944,56 +978,60 @@ class UriTemplate {
                 sb.append("//")
 
                 if (notEmpty(userInfo)) {
-                    offset = createUriComponent(
-                        UriComponent.Type.USER_INFO,
-                        userInfo!!,
-                        values,
-                        offset,
-                        encode,
-                        mapValues,
-                        sb
-                    )
+                    offset =
+                        createUriComponent(
+                            UriComponent.Type.USER_INFO,
+                            userInfo!!,
+                            values,
+                            offset,
+                            encode,
+                            mapValues,
+                            sb,
+                        )
                     sb.append('@')
                 }
 
                 if (notEmpty(host)) {
                     // TODO check IPv6 address
-                    offset = createUriComponent(
-                        UriComponent.Type.HOST,
-                        host!!,
-                        values,
-                        offset,
-                        encode,
-                        mapValues,
-                        sb
-                    )
+                    offset =
+                        createUriComponent(
+                            UriComponent.Type.HOST,
+                            host!!,
+                            values,
+                            offset,
+                            encode,
+                            mapValues,
+                            sb,
+                        )
                 }
 
                 if (notEmpty(port)) {
                     sb.append(':')
-                    offset = createUriComponent(
-                        UriComponent.Type.PORT,
-                        port!!,
-                        values,
-                        offset,
-                        false,
-                        mapValues,
-                        sb
-                    )
+                    offset =
+                        createUriComponent(
+                            UriComponent.Type.PORT,
+                            port!!,
+                            values,
+                            offset,
+                            false,
+                            mapValues,
+                            sb,
+                        )
                 }
             } else if (notEmpty(authority)) {
                 hasAuthority = true
                 sb.append("//")
 
-                offset = createUriComponent(
-                    UriComponent.Type.AUTHORITY,
-                    authority!!,
-                    values,
-                    offset,
-                    encode,
-                    mapValues,
-                    sb
-                )
+                offset =
+                    createUriComponent(
+                        UriComponent.Type.AUTHORITY,
+                        authority!!,
+                        values,
+                        offset,
+                        encode,
+                        mapValues,
+                        sb,
+                    )
             }
 
             if (notEmpty(path) || notEmpty(query) || notEmpty(fragment)) {
@@ -1006,28 +1044,30 @@ class UriTemplate {
                     // path template values are treated as path segments unless encodeSlashInPath is false.
                     val t = if (encodeSlashInPath) UriComponent.Type.PATH_SEGMENT else UriComponent.Type.PATH
 
-                    offset = createUriComponent(
-                        t,
-                        path!!,
-                        values,
-                        offset,
-                        encode,
-                        mapValues,
-                        sb
-                    )
+                    offset =
+                        createUriComponent(
+                            t,
+                            path!!,
+                            values,
+                            offset,
+                            encode,
+                            mapValues,
+                            sb,
+                        )
                 }
 
                 if (notEmpty(query)) {
                     sb.append('?')
-                    offset = createUriComponent(
-                        UriComponent.Type.QUERY_PARAM,
-                        query!!,
-                        values,
-                        offset,
-                        encode,
-                        mapValues,
-                        sb
-                    )
+                    offset =
+                        createUriComponent(
+                            UriComponent.Type.QUERY_PARAM,
+                            query!!,
+                            values,
+                            offset,
+                            encode,
+                            mapValues,
+                            sb,
+                        )
                 }
 
                 if (notEmpty(fragment)) {
@@ -1039,7 +1079,7 @@ class UriTemplate {
                         offset,
                         encode,
                         mapValues,
-                        sb
+                        sb,
                     )
                 }
             }
@@ -1057,7 +1097,7 @@ class UriTemplate {
             valueOffset: Int,
             encode: Boolean,
             mapValues: MutableMap<String, Any>,
-            b: StringBuilder
+            b: StringBuilder,
         ): Int {
             var parsedTemplate = template
 
@@ -1072,8 +1112,10 @@ class UriTemplate {
             class ValuesFromArrayStrategy : TemplateValueStrategy {
                 var offset = valueOffset
 
-                override fun valueFor(templateVariable: String, matchedGroup: String): String? {
-
+                override fun valueFor(
+                    templateVariable: String,
+                    matchedGroup: String,
+                ): String? {
                     var value: Any? = mapValues[templateVariable]
                     if (value == null && offset < values.size) {
                         value = values[offset++]
@@ -1081,7 +1123,7 @@ class UriTemplate {
                     }
                     if (value == null) {
                         throw IllegalArgumentException(
-                            String.format("The template variable '%s' has no value", templateVariable)
+                            String.format("The template variable '%s' has no value", templateVariable),
                         )
                     }
                     return if (encode) {
@@ -1114,9 +1156,8 @@ class UriTemplate {
             type: UriComponent.Type,
             template: String?,
             encode: Boolean,
-            mapValues: Map<String, Any>
+            mapValues: Map<String, Any>,
         ): String? {
-
             if (template == null || template.isEmpty() || template.indexOf('{') == -1) {
                 return template
             }
@@ -1129,8 +1170,10 @@ class UriTemplate {
                 normalizedTemplate,
                 sb,
                 object : TemplateValueStrategy {
-                    override fun valueFor(templateVariable: String, matchedGroup: String): String? {
-
+                    override fun valueFor(
+                        templateVariable: String,
+                        matchedGroup: String,
+                    ): String? {
                         var value: Any? = mapValues[templateVariable]
 
                         if (value != null) {
@@ -1145,15 +1188,15 @@ class UriTemplate {
                                 throw IllegalArgumentException(
                                     String.format(
                                         "The value associated of the template value map for key '%s' is 'null'.",
-                                        templateVariable
-                                    )
+                                        templateVariable,
+                                    ),
                                 )
                             }
 
                             return matchedGroup
                         }
                     }
-                }
+                },
             )
 
             return sb.toString()

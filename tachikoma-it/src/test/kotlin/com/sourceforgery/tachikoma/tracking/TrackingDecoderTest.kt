@@ -11,24 +11,26 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class TrackingDecoderTest : DIAware {
-    override val di = DI {
-        importOnce(testModule(), allowOverride = true)
-    }
+    override val di =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+        }
     val trackingDecoder: TrackingDecoder by instance()
 
     @Test
     fun `should create a tracking url`() {
+        val emailId =
+            EmailId
+                .newBuilder()
+                .setId(1001)
+                .build()
 
-        val emailId = EmailId
-            .newBuilder()
-            .setId(1001)
-            .build()
-
-        val trackingData = UrlTrackingData
-            .newBuilder()
-            .setEmailId(emailId)
-            .setRedirectUrl("http://www.example.com/redirectPath")
-            .build()
+        val trackingData =
+            UrlTrackingData
+                .newBuilder()
+                .setEmailId(emailId)
+                .setRedirectUrl("http://www.example.com/redirectPath")
+                .build()
 
         val url = trackingDecoder.createUrl(trackingData)
 
@@ -37,7 +39,6 @@ class TrackingDecoderTest : DIAware {
 
     @Test
     fun `should decode a tracking url`() {
-
         val trackingDataString = "qgYsqgYDCNIPsgYjaHR0cDovL3d3dy5leGFtcGxlLmNvbS9yZWRpcmVjdFBhdGiyBhTP69ssXUL94-eJ1oLBnOOD6eH-Bg"
 
         val trackingData = trackingDecoder.decodeTrackingData(trackingDataString)

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class HtmlToPlainTextTest {
-
     @Test
     fun `Convert simple html to plain text - simple`() {
         val plainText = getPlainText(simpleHtmlDoc)
@@ -14,8 +13,9 @@ class HtmlToPlainTextTest {
     }
 
     companion object {
-        val simpleHtmlDoc = Jsoup.parse(
-            """
+        val simpleHtmlDoc =
+            Jsoup.parse(
+                """
             <!doctype html><html><head>
   <meta http-equiv="Content-Type" content="text/simpleHtmlDoc; charset=UTF-8">
   <meta name="viewport" content="width=device-width">
@@ -60,8 +60,8 @@ class HtmlToPlainTextTest {
 
 
 <img src="http://example.com:8070/t/qgYGqgYDCNodsgYUXZxYoaar0iLOs-QkYTYkuZMv3HM" height="1" width="1"></body></simpleHtmlDoc>
-            """
-        )
+            """,
+            )
 
         val simpleHtmlText =
             """

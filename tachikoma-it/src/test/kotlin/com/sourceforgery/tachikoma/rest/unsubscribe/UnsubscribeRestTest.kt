@@ -58,26 +58,27 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class UnsubscribeRestTest : DIAware {
-
-    override val di = DI {
-        importOnce(commonModule)
-        importOnce(webModule)
-        importOnce(restModule)
-        bind<Authentication>(overrides = true) with singleton { AuthenticationMock() }
-        importOnce(testModule(), allowOverride = true)
-        bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
-        bind<UserService>() with singleton { UserService(di) }
-        bind<TrackingConfig>() with instance(
-            object : TrackingConfig {
-                override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd".toByteArray()
-                override val baseUrl: URI
-                    get() = URI.create("http://localhost:${server.activeLocalPort()}/")
-            }
-        )
-        val webserverConfigMock: WebServerConfig = mockk()
-        every { webserverConfigMock.overridingClientIpHeader } returns ""
-        bind<WebServerConfig>() with instance(webserverConfigMock)
-    }
+    override val di =
+        DI {
+            importOnce(commonModule)
+            importOnce(webModule)
+            importOnce(restModule)
+            bind<Authentication>(overrides = true) with singleton { AuthenticationMock() }
+            importOnce(testModule(), allowOverride = true)
+            bind<MailDeliveryService>() with singleton { MailDeliveryService(di) }
+            bind<UserService>() with singleton { UserService(di) }
+            bind<TrackingConfig>() with
+                instance(
+                    object : TrackingConfig {
+                        override val linkSignKey = "lk,;sxjdfljkdskljhnfgdskjlhfrjhkl;fdsflijkfgdsjlkfdslkjfjklsd".toByteArray()
+                        override val baseUrl: URI
+                            get() = URI.create("http://localhost:${server.activeLocalPort()}/")
+                    },
+                )
+            val webserverConfigMock: WebServerConfig = mockk()
+            every { webserverConfigMock.overridingClientIpHeader } returns ""
+            bind<WebServerConfig>() with instance(webserverConfigMock)
+        }
 
     val userService: UserService by instance()
     val authenticationDAO: AuthenticationDAO by instance()
@@ -91,13 +92,14 @@ class UnsubscribeRestTest : DIAware {
         val accountDBO = AccountDBO(MailDomain(domain))
         ebeanServer.save(accountDBO)
 
-        val authenticationDBO = AuthenticationDBO(
-            login = domain,
-            encryptedPassword = UUID.randomUUID().toString(),
-            apiToken = UUID.randomUUID().toString(),
-            role = AuthenticationRole.FRONTEND_ADMIN,
-            account = accountDBO
-        )
+        val authenticationDBO =
+            AuthenticationDBO(
+                login = domain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.FRONTEND_ADMIN,
+                account = accountDBO,
+            )
         ebeanServer.save(authenticationDBO)
 
         return authenticationDBO
@@ -105,17 +107,18 @@ class UnsubscribeRestTest : DIAware {
 
     fun createUser(): AuthenticationDBO {
         createAuthentication("example.com")
-        val b4 = AddUserRequest.newBuilder()
-            .setActive(true)
-            .setAddApiToken(false)
-            .setAuthenticationRole(FrontendUserRole.FRONTEND)
-            .setMailDomain("example.com")
-            .setPasswordAuth(
-                PasswordAuth.newBuilder()
-                    .setLogin("foobar")
-                    .setPassword("123")
-            )
-            .build()
+        val b4 =
+            AddUserRequest.newBuilder()
+                .setActive(true)
+                .setAddApiToken(false)
+                .setAuthenticationRole(FrontendUserRole.FRONTEND)
+                .setMailDomain("example.com")
+                .setPasswordAuth(
+                    PasswordAuth.newBuilder()
+                        .setLogin("foobar")
+                        .setPassword("123"),
+                )
+                .build()
         val req = AddUserRequest.parseFrom(b4.toByteArray())
 
         val resp = userService.addFrontendUser(req)
@@ -141,7 +144,6 @@ class UnsubscribeRestTest : DIAware {
     }
 
     fun startServer(): Server {
-
         // Order matters!
         val serverBuilder = Server.builder()
 
@@ -149,10 +151,11 @@ class UnsubscribeRestTest : DIAware {
             serverBuilder.annotatedService("/", restService, exceptionHandler)
         }
 
-        val server = serverBuilder
-            // Grpc must be last
-            .requestTimeout(Duration.ofMinutes(1))
-            .build()
+        val server =
+            serverBuilder
+                // Grpc must be last
+                .requestTimeout(Duration.ofMinutes(1))
+                .build()
         server.start()
 
         return server
@@ -165,34 +168,36 @@ class UnsubscribeRestTest : DIAware {
     private lateinit var server: Server
     private val blockedEmail = Email("recip@example.net")
     private val fromEmail = Email("foo@example.com")
-    private val okHttpClient = OkHttpClient.Builder()
-        .followSslRedirects(true)
-        .followRedirects(true)
-        .callTimeout(Duration.ofSeconds(600))
-        .readTimeout(Duration.ofSeconds(600))
-        .connectTimeout(Duration.ofSeconds(600))
-        .writeTimeout(Duration.ofSeconds(600))
-        .build()
+    private val okHttpClient =
+        OkHttpClient.Builder()
+            .followSslRedirects(true)
+            .followRedirects(true)
+            .callTimeout(Duration.ofSeconds(600))
+            .readTimeout(Duration.ofSeconds(600))
+            .connectTimeout(Duration.ofSeconds(600))
+            .writeTimeout(Duration.ofSeconds(600))
+            .build()
 
     @Before
     fun beforeTest() {
-
         server = startServer()
 
         auth = createUser()
 
         val objectMapper = ObjectMapper()
-        val transaction = EmailSendTransactionDBO(
-            jsonRequest = objectMapper.createObjectNode(),
-            fromEmail = fromEmail,
-            authentication = auth
-        )
-        emailDBO = EmailDBO(
-            recipient = NamedEmail(blockedEmail, "Foobar"),
-            transaction = transaction,
-            messageId = MessageId("2-id@example.com"),
-            autoMailId = AutoMailId("2-id@example.net")
-        )
+        val transaction =
+            EmailSendTransactionDBO(
+                jsonRequest = objectMapper.createObjectNode(),
+                fromEmail = fromEmail,
+                authentication = auth,
+            )
+        emailDBO =
+            EmailDBO(
+                recipient = NamedEmail(blockedEmail, "Foobar"),
+                transaction = transaction,
+                messageId = MessageId("2-id@example.com"),
+                autoMailId = AutoMailId("2-id@example.net"),
+            )
         ebeanServer.save(emailDBO)
 
         unsubscribeOneClickPostUri = mailDeliveryService.createUnsubscribeOneClickPostLink(emailDBO, "")
@@ -206,16 +211,16 @@ class UnsubscribeRestTest : DIAware {
 
     @Test
     fun `unsubscribe email`() {
-
         assertTrue {
-            val request = Request.Builder()
-                .url(unsubscribeOneClickPostUri.toURL())
-                .post(
-                    FormBody.Builder()
-                        .add("List-Unsubscribe", "One-Click")
-                        .build()
-                )
-                .build()
+            val request =
+                Request.Builder()
+                    .url(unsubscribeOneClickPostUri.toURL())
+                    .post(
+                        FormBody.Builder()
+                            .add("List-Unsubscribe", "One-Click")
+                            .build(),
+                    )
+                    .build()
             val response = okHttpClient.newCall(request).execute()
             response.assertSuccess()
             blockedEmailDAO.getBlockedEmails(auth.account)
@@ -225,10 +230,11 @@ class UnsubscribeRestTest : DIAware {
         }
 
         assertTrue {
-            val request = Request.Builder()
-                .url(unsubscribeClickUri.toURL())
-                .get()
-                .build()
+            val request =
+                Request.Builder()
+                    .url(unsubscribeClickUri.toURL())
+                    .get()
+                    .build()
             val response = okHttpClient.newCall(request).execute()
             response.assertSuccess()
             blockedEmailDAO.getBlockedEmails(auth.account)

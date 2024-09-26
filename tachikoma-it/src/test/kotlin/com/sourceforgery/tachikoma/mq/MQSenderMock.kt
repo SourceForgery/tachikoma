@@ -16,15 +16,24 @@ class MQSenderMock(override val di: DI) : MQSender, DIAware {
         jobs.add(jobMessage)
     }
 
-    override fun queueOutgoingEmail(mailDomain: MailDomain, outgoingEmailMessage: OutgoingEmailMessage) {
+    override fun queueOutgoingEmail(
+        mailDomain: MailDomain,
+        outgoingEmailMessage: OutgoingEmailMessage,
+    ) {
         outgoingEmails.add(outgoingEmailMessage)
     }
 
-    override fun queueDeliveryNotification(accountId: AccountId, notificationMessage: DeliveryNotificationMessage) {
+    override fun queueDeliveryNotification(
+        accountId: AccountId,
+        notificationMessage: DeliveryNotificationMessage,
+    ) {
         deliveryNotifications.add(notificationMessage)
     }
 
-    override fun queueIncomingEmailNotification(accountId: AccountId, incomingEmailNotificationMessage: IncomingEmailNotificationMessage) {
+    override fun queueIncomingEmailNotification(
+        accountId: AccountId,
+        incomingEmailNotificationMessage: IncomingEmailNotificationMessage,
+    ) {
         incomingEmails.add(incomingEmailNotificationMessage)
     }
 }

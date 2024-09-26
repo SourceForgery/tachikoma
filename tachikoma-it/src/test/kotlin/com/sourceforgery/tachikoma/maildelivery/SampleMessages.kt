@@ -11,19 +11,21 @@ fun String.homogenize(): String =
 class SampleMessage(
     envelope: String,
     htmlText: String,
-    plainText: String
+    plainText: String,
 ) {
-    val envelope = SampleMessage::class.java.getResourceAsStream("/emails/messages/$envelope")
-        ?.use { it.readAllBytes() }
-        ?: fail("Could not load $envelope")
+    val envelope =
+        SampleMessage::class.java.getResourceAsStream("/emails/messages/$envelope")
+            ?.use { it.readAllBytes() }
+            ?: fail("Could not load $envelope")
     val htmlText = htmlText.homogenize()
     val plainText = plainText.homogenize()
 }
 
-val m1001 = SampleMessage(
-    envelope = "m1001.txt",
-    plainText =
-    """
+val m1001 =
+    SampleMessage(
+        envelope = "m1001.txt",
+        plainText =
+            """
         |Die Hasen und die Frösche
         |
         |Die Hasen klagten einst über ihre mißliche Lage; "wir leben", sprach ein
@@ -39,14 +41,15 @@ val m1001 = SampleMessage(
         |"Halt", rief nun eben dieser Sprecher, "wir wollen das Ersäufen noch ein
         |wenig aufschieben, denn auch uns fürchten, wie ihr seht, einige Tiere,
         |welche also wohl noch unglücklicher sein müssen als wir."
-    """.trimMargin(),
-    htmlText = ""
-)
+            """.trimMargin(),
+        htmlText = "",
+    )
 
-val m1005 = SampleMessage(
-    envelope = "m1005.txt",
-    plainText =
-    """
+val m1005 =
+    SampleMessage(
+        envelope = "m1005.txt",
+        plainText =
+            """
             |[blue ball]
             |
             |Die Hasen und die Frösche
@@ -68,10 +71,9 @@ val m1005 = SampleMessage(
             |[Image]
             |
             |
-    """.trimMargin(),
-
-    htmlText =
-    """
+            """.trimMargin(),
+        htmlText =
+            """
             |<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
             |<html>
             |<img SRC="cid:part1.39235FC5.E71D8178@example.com" ALT="blue ball" height=27 width=27><b></b>
@@ -91,13 +93,14 @@ val m1005 = SampleMessage(
             |<p><img SRC="cid:part2.39235FC5.E71D8178@example.com" height=27 width=27>
             |<br>&nbsp;
             |<br>&nbsp;</html>
-    """.trimMargin()
-)
+            """.trimMargin(),
+    )
 
-val m1006 = SampleMessage(
-    envelope = "m1006.txt",
-    plainText =
-    """
+val m1006 =
+    SampleMessage(
+        envelope = "m1006.txt",
+        plainText =
+            """
         |Die Hasen und die Frösche 
         |
         |Die Hasen klagten einst über ihre mißliche Lage; "wir leben", sprach ein
@@ -112,9 +115,9 @@ val m1006 = SampleMessage(
         |"Halt", rief nun eben dieser Sprecher, "wir wollen das Ersäufen noch ein wenig
         |aufschieben, denn auch uns fürchten, wie ihr seht, einige Tiere, welche also
         |wohl noch unglücklicher sein müssen als wir."
-    """.trimMargin(),
-    htmlText =
-    """
+            """.trimMargin(),
+        htmlText =
+            """
         |<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
         |<html>
         |<img SRC="cid:part1.39236103.1B697A54@example.com" ALT="blue ball" height=27 width=27><b></b>
@@ -132,13 +135,14 @@ val m1006 = SampleMessage(
         |einige Tiere, welche also wohl noch ungl&uuml;cklicher sein m&uuml;ssen
         |als wir."
         |<p><img SRC="cid:part2.39236103.1B697A54@example.com" ALT="red ball" height=27 width=27></html>
-    """.trimMargin()
-)
+            """.trimMargin(),
+    )
 
-val m2008 = SampleMessage(
-    envelope = "m2008.txt",
-    plainText =
-    """
+val m2008 =
+    SampleMessage(
+        envelope = "m2008.txt",
+        plainText =
+            """
         |Die Hasen und die Frösche
         |
         |Die Hasen klagten einst über ihre mißliche Lage; "wir leben", sprach ein Redner, "in steter Furcht vor Menschen und Tieren, eine Beute der Hunde, der Adler, ja fast aller Raubtiere! Unsere stete Angst ist ärger als der Tod selbst. Auf, laßt uns ein für allemal sterben." 
@@ -148,6 +152,6 @@ val m2008 = SampleMessage(
         |"Halt", rief nun eben dieser Sprecher, "wir wollen das Ersäufen noch ein wenig aufschieben, denn auch uns fürchten, wie ihr seht, einige Tiere, welche also wohl noch unglücklicher sein müssen als wir." 
         |
         |2aa5e03a.png2aa5e044.png
-    """.trimMargin(),
-    htmlText = ""
-)
+            """.trimMargin(),
+        htmlText = "",
+    )

@@ -8,11 +8,12 @@ import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.singleton
 
-val restModule = DI.Module("rest") {
-    bind<TrackingRest>() with singleton { TrackingRest(di) }
-    bind<UnsubscribeRest>() with singleton { UnsubscribeRest(di) }
-    bind<AbuseReportingService>() with singleton { AbuseReportingService(di) }
-    bind<RootPage>() with singleton { RootPage(di) }
+val restModule =
+    DI.Module("rest") {
+        bind<TrackingRest>() with singleton { TrackingRest(di) }
+        bind<UnsubscribeRest>() with singleton { UnsubscribeRest(di) }
+        bind<AbuseReportingService>() with singleton { AbuseReportingService(di) }
+        bind<RootPage>() with singleton { RootPage(di) }
 
-    bind<RestExceptionMap>() with singleton { RestExceptionMap(di) }
-}
+        bind<RestExceptionMap>() with singleton { RestExceptionMap(di) }
+    }

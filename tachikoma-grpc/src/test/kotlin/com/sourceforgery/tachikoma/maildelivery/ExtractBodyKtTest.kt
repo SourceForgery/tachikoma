@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.jupiter.api.Test
 
 class ExtractBodyKtTest {
-
     @Test
     fun `extract body 1`() {
         val email =
@@ -56,7 +55,7 @@ class ExtractBodyKtTest {
                 |Phone: +1800555555
                 |GTalk: foobar@example.com
             """.trimMargin(),
-            extractBodyFromPlaintextEmail(email, Email("barfoo@example.net"))
+            extractBodyFromPlaintextEmail(email, Email("barfoo@example.net")),
         )
     }
 
@@ -128,7 +127,7 @@ class ExtractBodyKtTest {
                 |Follow us
                 |( http://www.facebook.com/example )( https://www.instagram.com/example/ )
             """.trimMargin(),
-            extractBodyFromPlaintextEmail(email, Email("foobar@example.net"))
+            extractBodyFromPlaintextEmail(email, Email("foobar@example.net")),
         )
     }
 }

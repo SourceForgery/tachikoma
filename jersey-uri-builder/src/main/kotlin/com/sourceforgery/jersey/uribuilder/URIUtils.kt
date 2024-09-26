@@ -3,9 +3,10 @@ package com.sourceforgery.jersey.uribuilder
 import org.apache.logging.log4j.kotlin.loggerOf
 import java.net.URI
 
-fun URI.withoutPassword(): URI = JerseyUriBuilder(this)
-    .userInfo("REDACTED")
-    .build()
+fun URI.withoutPassword(): URI =
+    JerseyUriBuilder(this)
+        .userInfo("REDACTED")
+        .build()
 
 fun URI.addPort(): URI {
     val port: Int =

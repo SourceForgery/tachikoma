@@ -14,18 +14,21 @@ import java.net.URI
 import java.time.Instant
 
 fun main() {
-    val configuration = object : GrpcClientConfig {
-        override val tachikomaUrl = URI(
-            System.getenv("TACHI_FRONTEND_URI")
-                ?: error("Need to specify env TACHI_FRONTEND_URI")
-        )
-        override val insecure: Boolean
-            get() = true
-        override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
-        override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
-    }
-    val stub = provideClientBuilder(configuration)
-        .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
+    val configuration =
+        object : GrpcClientConfig {
+            override val tachikomaUrl =
+                URI(
+                    System.getenv("TACHI_FRONTEND_URI")
+                        ?: error("Need to specify env TACHI_FRONTEND_URI"),
+                )
+            override val insecure: Boolean
+                get() = true
+            override val clientCert = System.getenv("TACHI_CLIENT_CERT") ?: ""
+            override val clientKey = System.getenv("TACHI_CLIENT_KEY") ?: ""
+        }
+    val stub =
+        provideClientBuilder(configuration)
+            .build(MailDeliveryServiceGrpc.MailDeliveryServiceBlockingStub::class.java)
 
     val template =
         """
@@ -46,10 +49,11 @@ fun main() {
 
     val mailTitle = Value.newBuilder().setStringValue("This is a magic title!").build()
     val mailBody = Value.newBuilder().setStringValue("This is a magic mail body!").build()
-    val listItems = listOf<Value>(
-        Value.newBuilder().setStringValue("Babba").build(),
-        Value.newBuilder().setStringValue("Diddi").build()
-    )
+    val listItems =
+        listOf<Value>(
+            Value.newBuilder().setStringValue("Babba").build(),
+            Value.newBuilder().setStringValue("Diddi").build(),
+        )
 
     val listItemValue = Value.newBuilder().setListValue(Value.newBuilder().listValueBuilder.addAllValues(listItems).build()).build()
 
@@ -57,28 +61,29 @@ fun main() {
 
     val globalVars = Struct.newBuilder().putAllFields(templateVariables).build()
 
-    val outgoingEmail = OutgoingEmail.newBuilder()
-        .setTemplate(
-            TemplateBody.newBuilder()
-                .setTemplatingEngine(TemplateEngine.HANDLEBARS)
-                .setHtmlTemplate(template)
-                .setGlobalVars(globalVars)
-                .setSubject("Test email " + Instant.now())
-        )
-        .addRecipients(
-            EmailRecipient.newBuilder()
-                .setNamedEmail(
-                    NamedEmailAddress.newBuilder()
-                        .setEmail("test@example.com")
-                        .setName("This won't work")
-                )
-        )
-        .setFrom(
-            NamedEmailAddress.newBuilder()
-                .setEmail("test@example.com")
-                .setName("This won't work")
-        )
-        .build()
+    val outgoingEmail =
+        OutgoingEmail.newBuilder()
+            .setTemplate(
+                TemplateBody.newBuilder()
+                    .setTemplatingEngine(TemplateEngine.HANDLEBARS)
+                    .setHtmlTemplate(template)
+                    .setGlobalVars(globalVars)
+                    .setSubject("Test email " + Instant.now()),
+            )
+            .addRecipients(
+                EmailRecipient.newBuilder()
+                    .setNamedEmail(
+                        NamedEmailAddress.newBuilder()
+                            .setEmail("test@example.com")
+                            .setName("This won't work"),
+                    ),
+            )
+            .setFrom(
+                NamedEmailAddress.newBuilder()
+                    .setEmail("test@example.com")
+                    .setName("This won't work"),
+            )
+            .build()
 
     try {
         stub.sendEmail(outgoingEmail).forEach {

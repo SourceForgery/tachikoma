@@ -14,7 +14,6 @@ import javax.persistence.Version
 
 @MappedSuperclass
 abstract class GenericDBO {
-
     @Id
     @Column(columnDefinition = "DECIMAL(20)", name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "unique_id_seq")
@@ -23,8 +22,10 @@ abstract class GenericDBO {
 
     @field:Version
     var version: Long = 0L
+
     @WhenCreated
     var dateCreated: Instant? = null
+
     @WhenModified
     var lastUpdated: Instant? = null
 

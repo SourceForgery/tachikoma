@@ -16,7 +16,6 @@ class IncomingEmailDBO(
     val mailFrom: Email,
     @Column
     val recipient: Email,
-
     // Temporarily writable properties
     @DbJsonB
     @Column
@@ -27,13 +26,12 @@ class IncomingEmailDBO(
     @DbJsonB
     @Column
     var toEmails: List<NamedEmail>,
-
     @Column
     val body: ByteArray,
     @ManyToOne
     val account: AccountDBO,
     @Column
-    val subject: String
+    val subject: String,
 ) : GenericDBO()
 
 val IncomingEmailDBO.id: IncomingEmailId

@@ -10,10 +10,9 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 class EmailDAOImpl(override val di: DI) : EmailDAO, DIAware {
-
     private val database: Database by instance()
-    override fun fetchEmailData(emailMessageId: EmailId) =
-        database.find(EmailDBO::class.java, emailMessageId.emailId)
+
+    override fun fetchEmailData(emailMessageId: EmailId) = database.find(EmailDBO::class.java, emailMessageId.emailId)
 
     override fun fetchEmailData(emailMessageIds: List<EmailId>): List<EmailDBO> {
         return database.find(EmailDBO::class.java)
@@ -24,8 +23,7 @@ class EmailDAOImpl(override val di: DI) : EmailDAO, DIAware {
 
     override fun save(emailDBO: EmailDBO) = database.save(emailDBO)
 
-    override fun getByEmailId(emailId: EmailId) =
-        database.find(EmailDBO::class.java, emailId.emailId)
+    override fun getByEmailId(emailId: EmailId) = database.find(EmailDBO::class.java, emailId.emailId)
 
     override fun getByAutoMailId(autoMailId: AutoMailId) =
         database.find(EmailDBO::class.java)
@@ -33,16 +31,18 @@ class EmailDAOImpl(override val di: DI) : EmailDAO, DIAware {
             .eq("autoMailId", autoMailId.autoMailId)
             .findOne()
 
-    override fun getByQueueId(mtaQueueId: String, recipient: Email) =
-        database.find(EmailDBO::class.java)
-            .where()
-            .eq("mtaQueueId", mtaQueueId)
-            .or()
-            .eq("recipient", recipient.address)
-            .raw("transaction.bcc @> array[?]::text[]", recipient.address)
-            .endOr()
-            .orderBy()
-            .desc("dateCreated")
-            .setMaxRows(1)
-            .findOne()
+    override fun getByQueueId(
+        mtaQueueId: String,
+        recipient: Email,
+    ) = database.find(EmailDBO::class.java)
+        .where()
+        .eq("mtaQueueId", mtaQueueId)
+        .or()
+        .eq("recipient", recipient.address)
+        .raw("transaction.bcc @> array[?]::text[]", recipient.address)
+        .endOr()
+        .orderBy()
+        .desc("dateCreated")
+        .setMaxRows(1)
+        .findOne()
 }

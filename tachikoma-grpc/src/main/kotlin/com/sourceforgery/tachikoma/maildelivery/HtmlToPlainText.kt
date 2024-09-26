@@ -30,7 +30,10 @@ private class FormattingVisitor : NodeVisitor {
     private val accum = StringBuilder() // holds the accumulated text
 
     // hit when the node is first seen
-    override fun head(node: Node, depth: Int) {
+    override fun head(
+        node: Node,
+        depth: Int,
+    ) {
         val name = node.nodeName()
         when (name) {
             "#text" -> append((node as TextNode).text()) // TextNodes carry all user-readable text in the DOM.
@@ -41,7 +44,10 @@ private class FormattingVisitor : NodeVisitor {
     }
 
     // hit when all of the node's children (if any) have been visited
-    override fun tail(node: Node, depth: Int) {
+    override fun tail(
+        node: Node,
+        depth: Int,
+    ) {
         val name = node.nodeName()
         when (name) {
             "br", "dd", "dt", "p", "h1", "h2", "h3", "h4", "h5" ->

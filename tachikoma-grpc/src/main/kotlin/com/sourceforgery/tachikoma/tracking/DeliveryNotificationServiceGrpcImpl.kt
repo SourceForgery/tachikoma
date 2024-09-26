@@ -22,9 +22,8 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class DeliveryNotificationServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : DeliveryNotificationServiceGrpcKt.DeliveryNotificationServiceCoroutineImplBase(), DIAware {
-
     private val deliveryNotificationService: DeliveryNotificationService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
     private val authentication: () -> Authentication by provider()
@@ -43,7 +42,7 @@ internal class DeliveryNotificationServiceGrpcImpl(
                 withKeepAlive(
                     EmailNotificationOrKeepAlive.newBuilder()
                         .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
-                        .build()
+                        .build(),
                 )
                 deliveryNotificationService.notificationStream(
                     request = request,

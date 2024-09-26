@@ -7,5 +7,6 @@ import org.kodein.di.DIAware
 
 class Queries(override val di: DI) : DIAware, Query {
     private val accounts = AccountServiceQueries(di)
+
     fun accounts() = accounts
 }

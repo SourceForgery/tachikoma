@@ -9,7 +9,6 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 class AccountDAOImpl(override val di: DI) : AccountDAO, DIAware {
-
     private val database: Database by instance()
 
     override fun get(mailDomain: MailDomain) =

@@ -25,39 +25,44 @@ import org.kodein.di.singleton
 import java.net.URI
 import java.util.UUID
 
-fun testModule(vararg attributes: TestAttribute) = DI.Module("test") {
-    importOnce(databaseModule)
-    importOnce(decoderModule)
+fun testModule(vararg attributes: TestAttribute) =
+    DI.Module("test") {
+        importOnce(databaseModule)
+        importOnce(decoderModule)
 
-    bind<MQSequenceFactory>() with singleton { MQSequenceFactoryMock(di) }
-    bind<MTAEmailQueueService>() with singleton { MTAEmailQueueService(di) }
-    bind<Clocker>() with singleton { Clocker() }
-    bind<DatabaseTestConfig>() with singleton { DatabaseTestConfig() }
-    bind<MQManager>() with singleton { TestConsumerFactoryImpl() }
+        bind<MQSequenceFactory>() with singleton { MQSequenceFactoryMock(di) }
+        bind<MTAEmailQueueService>() with singleton { MTAEmailQueueService(di) }
+        bind<Clocker>() with singleton { Clocker() }
+        bind<DatabaseTestConfig>() with singleton { DatabaseTestConfig() }
+        bind<MQManager>() with singleton { TestConsumerFactoryImpl() }
 
-    bind<MQSender>() with singleton { MQSenderMock(di) }
-    bind<DAOHelper>() with singleton { DAOHelper(di) }
+        bind<MQSender>() with singleton { MQSenderMock(di) }
+        bind<DAOHelper>() with singleton { DAOHelper(di) }
 
-    bind<MessageIdFactory>() with singleton { MessageIdFactoryMock() }
+        bind<MessageIdFactory>() with singleton { MessageIdFactoryMock() }
 
-    bind<InvokeCounter>(overrides = true) with scoped(DatabaseSessionKodeinScope).singleton {
-        object : InvokeCounter {
-            override fun inc(sql: String?, millis: Long) {
+        bind<InvokeCounter>(overrides = true) with
+            scoped(DatabaseSessionKodeinScope).singleton {
+                object : InvokeCounter {
+                    override fun inc(
+                        sql: String?,
+                        millis: Long,
+                    ) {
+                    }
+                }
             }
+
+        if (TestAttribute.POSTGRESQL in attributes) {
+            bind<DataSourceProvider>(overrides = true) with singleton { PostgresqlEmbeddedDataSourceProvider(di) }
+            importOnce(databaseUpgradesModule)
+        } else {
+            bind<DataSourceProvider>(overrides = true) with singleton { H2DataSourceProvider(di) }
+            bind<H2DatabaseUpgrade>() with singleton { H2DatabaseUpgrade() }
         }
     }
 
-    if (TestAttribute.POSTGRESQL in attributes) {
-        bind<DataSourceProvider>(overrides = true) with singleton { PostgresqlEmbeddedDataSourceProvider(di) }
-        importOnce(databaseUpgradesModule)
-    } else {
-        bind<DataSourceProvider>(overrides = true) with singleton { H2DataSourceProvider(di) }
-        bind<H2DatabaseUpgrade>() with singleton { H2DatabaseUpgrade() }
-    }
-}
-
 enum class TestAttribute {
-    POSTGRESQL
+    POSTGRESQL,
 }
 
 private class DatabaseTestConfig : DatabaseConfig, DebugConfig, TrackingConfig, UnsubscribeConfig {

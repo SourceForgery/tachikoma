@@ -8,5 +8,9 @@ import com.linecorp.armeria.common.RequestContext
 interface IRestExceptionCatcher
 
 interface RestExceptionCatcher<T : Throwable> : IRestExceptionCatcher {
-    fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: T): HttpResponse
+    fun handleException(
+        ctx: RequestContext?,
+        req: HttpRequest?,
+        cause: T,
+    ): HttpResponse
 }

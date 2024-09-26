@@ -13,12 +13,13 @@ import org.kodein.di.DI
 class InvalidOrInsufficientCredentialsCatcher(override val di: DI) :
     GrpcExceptionCatcher<InvalidOrInsufficientCredentialsException>(InvalidOrInsufficientCredentialsException::class.java),
     RestExceptionCatcher<InvalidOrInsufficientCredentialsException> {
+    override fun handleException(
+        ctx: RequestContext?,
+        req: HttpRequest?,
+        cause: InvalidOrInsufficientCredentialsException,
+    ) = HttpResponse.of(FORBIDDEN)
 
-    override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: InvalidOrInsufficientCredentialsException) =
-        HttpResponse.of(FORBIDDEN)
-
-    override fun status(t: InvalidOrInsufficientCredentialsException) =
-        Status.PERMISSION_DENIED.augmentDescription(t.message)
+    override fun status(t: InvalidOrInsufficientCredentialsException) = Status.PERMISSION_DENIED.augmentDescription(t.message)
 
     override fun logError(t: InvalidOrInsufficientCredentialsException) {
         logger.warn { t.message }

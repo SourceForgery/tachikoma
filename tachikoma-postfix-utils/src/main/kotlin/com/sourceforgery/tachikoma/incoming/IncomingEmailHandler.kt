@@ -14,9 +14,8 @@ import java.nio.charset.StandardCharsets
 
 class IncomingEmailHandler(
     private val stub: MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineStub,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) {
-
     fun start(): Job {
         return scope.launch(Dispatchers.IO) {
             SOCKET_PATH.delete()
@@ -33,14 +32,16 @@ class IncomingEmailHandler(
                             val clientSocket = serverSocketChannel.accept()
                             launch {
                                 val socket = clientSocket.socket()
-                                val lmtpServer = LMTPServer(socket) { fromEmailAddress, emailBody, toEmailAddress ->
-                                    val incomingEmailMessage = IncomingEmailMessage.newBuilder()
-                                        .setBody(ByteString.copyFrom(emailBody, StandardCharsets.US_ASCII))
-                                        .setFrom(fromEmailAddress)
-                                        .setEmailAddress(toEmailAddress)
-                                        .build()
-                                    stub.incomingEmail(incomingEmailMessage)
-                                }
+                                val lmtpServer =
+                                    LMTPServer(socket) { fromEmailAddress, emailBody, toEmailAddress ->
+                                        val incomingEmailMessage =
+                                            IncomingEmailMessage.newBuilder()
+                                                .setBody(ByteString.copyFrom(emailBody, StandardCharsets.US_ASCII))
+                                                .setFrom(fromEmailAddress)
+                                                .setEmailAddress(toEmailAddress)
+                                                .build()
+                                        stub.incomingEmail(incomingEmailMessage)
+                                    }
                                 lmtpServer.receiveMail()
                             }
                         }

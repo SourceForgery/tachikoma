@@ -22,9 +22,8 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 class UserServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : UserServiceGrpcKt.UserServiceCoroutineImplBase(), DIAware {
-
     private val userService: UserService by instance()
     private val authentication: () -> Authentication by provider()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
@@ -38,18 +37,20 @@ class UserServiceGrpcImpl(
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
 
-    override fun getFrontendUsers(request: GetUsersRequest): Flow<FrontendUser> = try {
-        val auth = authentication()
-        auth.requireFrontend()
-        userService.getFrontendUsers(auth.mailDomain)
-    } catch (e: Exception) {
-        throw grpcExceptionMap.findAndConvertAndLog(e)
-    }
+    override fun getFrontendUsers(request: GetUsersRequest): Flow<FrontendUser> =
+        try {
+            val auth = authentication()
+            auth.requireFrontend()
+            userService.getFrontendUsers(auth.mailDomain)
+        } catch (e: Exception) {
+            throw grpcExceptionMap.findAndConvertAndLog(e)
+        }
 
     override suspend fun modifyFrontendUser(request: ModifyUserRequest): ModifyUserResponse =
         try {
-            val auth = authenticationDAO.getById(AuthenticationId(request.authId.id))
-                ?: throw NotFoundException()
+            val auth =
+                authenticationDAO.getById(AuthenticationId(request.authId.id))
+                    ?: throw NotFoundException()
             if (auth.id.authenticationId == request.authId.id) {
                 throw IllegalArgumentException("Cannot modify the same account")
             }
@@ -61,8 +62,9 @@ class UserServiceGrpcImpl(
 
     override suspend fun removeUser(request: RemoveUserRequest): RemoveUserResponse =
         try {
-            val auth = authenticationDAO.getById(AuthenticationId(request.userToRemove.id))
-                ?: throw NotFoundException()
+            val auth =
+                authenticationDAO.getById(AuthenticationId(request.userToRemove.id))
+                    ?: throw NotFoundException()
             authentication().requireFrontendAdmin(auth.account.mailDomain)
             userService.removeUser(request)
         } catch (e: Exception) {

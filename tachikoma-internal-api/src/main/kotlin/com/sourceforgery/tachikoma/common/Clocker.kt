@@ -4,9 +4,8 @@ import java.time.Clock
 import java.time.ZoneId
 
 open class Clocker(
-    var clock: Clock = systemUTC()
+    var clock: Clock = systemUTC(),
 ) : Clock() {
-
     override fun withZone(zone: ZoneId) = Clocker(clock.withZone(zone))
 
     override fun getZone() = clock.zone

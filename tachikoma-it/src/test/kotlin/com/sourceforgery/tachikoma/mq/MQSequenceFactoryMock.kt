@@ -23,11 +23,18 @@ class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
     val outgoingEmails = Channel<OutgoingEmailMessage>(UNLIMITED)
     val incomingEmails = Channel<IncomingEmailNotificationMessage>(UNLIMITED)
 
-    override fun listenForDeliveryNotifications(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<DeliveryNotificationMessage> =
+    override fun listenForDeliveryNotifications(
+        authenticationId: AuthenticationId,
+        mailDomain: MailDomain,
+        accountId: AccountId,
+    ): Flow<DeliveryNotificationMessage> =
         deliveryNotifications
             .consumeAsFlow()
 
-    private fun <X : Any> listenOnQueue(queue: BlockingQueue<QueueMessageWrap<X>>, callback: suspend (X) -> Unit): SettableFuture<Unit> {
+    private fun <X : Any> listenOnQueue(
+        queue: BlockingQueue<QueueMessageWrap<X>>,
+        callback: suspend (X) -> Unit,
+    ): SettableFuture<Unit> {
         val future = SettableFuture.create<Unit>()
         executorService.execute {
             generateSequence {
@@ -46,7 +53,10 @@ class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
         return listenOnQueue(jobs, callback)
     }
 
-    override fun <T> listenOnQueue(messageQueue: MessageQueue<T>, callback: suspend (T) -> Unit): ListenableFuture<Unit> {
+    override fun <T> listenOnQueue(
+        messageQueue: MessageQueue<T>,
+        callback: suspend (T) -> Unit,
+    ): ListenableFuture<Unit> {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
@@ -54,7 +64,11 @@ class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
         return outgoingEmails.consumeAsFlow()
     }
 
-    override fun listenForIncomingEmails(authenticationId: AuthenticationId, mailDomain: MailDomain, accountId: AccountId): Flow<IncomingEmailNotificationMessage> {
+    override fun listenForIncomingEmails(
+        authenticationId: AuthenticationId,
+        mailDomain: MailDomain,
+        accountId: AccountId,
+    ): Flow<IncomingEmailNotificationMessage> {
         return incomingEmails.consumeAsFlow()
     }
 

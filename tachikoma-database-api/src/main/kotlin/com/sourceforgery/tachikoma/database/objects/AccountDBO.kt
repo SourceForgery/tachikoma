@@ -9,19 +9,18 @@ import javax.persistence.Entity
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
-@Table(name = "e_account")
-@Entity
 /**
  * This is one account (sender) with it's multiple users
  * Could be called "company" or "organization" responsible for one email domain
  */
+@Table(name = "e_account")
+@Entity
 class AccountDBO(
     // This is the domain allowed in the from field
     @Column(unique = true)
     override val mailDomain: MailDomain,
     override var baseUrl: URI? = null,
 ) : GenericDBO(), Account {
-
     override val id: AccountId
         get() = AccountId(this::dbId.get()!!)
 

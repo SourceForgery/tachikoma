@@ -14,7 +14,7 @@ import kotlin.coroutines.CoroutineContext
 private class RequestContextAwareCoroutineScope(
     coroutineContext: CoroutineContext,
     requestContext: RequestContext?,
-    databaseSessionContext: DatabaseSessionContext
+    databaseSessionContext: DatabaseSessionContext,
 ) : CoroutineScope {
     override val coroutineContext: CoroutineContext =
         coroutineContext +
@@ -32,7 +32,10 @@ private class RequestContextAwareCoroutineScope(
  * Augments the coroutine context of the scope to include the thread local RequestContext.
  * Kodein will just work inside this scope.
  */
-fun CoroutineScope.withRequestContext(requestContext: RequestContext?, databaseSessionContext: DatabaseSessionContext): CoroutineScope {
+fun CoroutineScope.withRequestContext(
+    requestContext: RequestContext?,
+    databaseSessionContext: DatabaseSessionContext,
+): CoroutineScope {
     return RequestContextAwareCoroutineScope(this.coroutineContext, requestContext, databaseSessionContext)
 }
 

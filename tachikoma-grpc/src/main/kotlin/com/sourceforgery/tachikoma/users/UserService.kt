@@ -33,7 +33,7 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 class UserService(
-    override val di: DI
+    override val di: DI,
 ) : DIAware {
     private val accountDAO: AccountDAO by instance()
     private val authenticationDAO: AuthenticationDAO by instance()
@@ -43,22 +43,24 @@ class UserService(
         val role = frontendRole(request.authenticationRole)
         val password: String? = request.passwordAuth.password.emptyToNull()
         val login: String? = request.passwordAuth.login.emptyToNull()
-        val recipientOverride = if (request.hasRecipientOverride() && request.recipientOverride.email.isNotEmpty()) {
-            request.recipientOverride.toEmail()
-        } else {
-            null
-        }
+        val recipientOverride =
+            if (request.hasRecipientOverride() && request.recipientOverride.email.isNotEmpty()) {
+                request.recipientOverride.toEmail()
+            } else {
+                null
+            }
         val account = accountDAO.get(MailDomain(request.mailDomain))!!
 
-        val newAuth = internalCreateUsers.createFrontendAuthentication(
-            role = role,
-            addApiToken = request.addApiToken,
-            login = login,
-            password = password,
-            active = request.active,
-            account = account,
-            recipientOverride = recipientOverride
-        )
+        val newAuth =
+            internalCreateUsers.createFrontendAuthentication(
+                role = role,
+                addApiToken = request.addApiToken,
+                login = login,
+                password = password,
+                active = request.active,
+                account = account,
+                recipientOverride = recipientOverride,
+            )
         return ModifyUserResponse.newBuilder()
             .apply {
                 user = toUser(newAuth)
@@ -74,14 +76,18 @@ class UserService(
             else -> throw IllegalArgumentException("$userRole is not implemented")
         }
 
-    fun modifyFrontendUser(request: ModifyUserRequest, auth: AuthenticationDBO): ModifyUserResponse {
+    fun modifyFrontendUser(
+        request: ModifyUserRequest,
+        auth: AuthenticationDBO,
+    ): ModifyUserResponse {
         val addApiToken = request.apiToken == ApiToken.RESET_API_TOKEN
         if (request.apiToken == ApiToken.REMOVE_API_TOKEN) {
             auth.apiToken = null
         }
         if (request.hasRecipientOverride()) {
-            auth.recipientOverride = request.recipientOverride.email.takeUnless { it.isBlank() }
-                ?.let { Email(it) }
+            auth.recipientOverride =
+                request.recipientOverride.email.takeUnless { it.isBlank() }
+                    ?.let { Email(it) }
         }
         auth.role = frontendRole(request.authenticationRole)
         auth.active = request.active
@@ -91,8 +97,9 @@ class UserService(
 
         if (request.hasNewPassword()) {
             if (auth.login != null) {
-                auth.encryptedPassword = request.newPassword.takeUnless { it.isBlank() }
-                    ?.let { PasswordStorage.createHash(it) }
+                auth.encryptedPassword =
+                    request.newPassword.takeUnless { it.isBlank() }
+                        ?.let { PasswordStorage.createHash(it) }
             } else {
                 throw IllegalArgumentException("Trying to set password when there's no login")
             }

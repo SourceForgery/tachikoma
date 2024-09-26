@@ -11,9 +11,10 @@ class H2DatabaseUpgrade : DatabaseUpgrade {
         connection.createStatement().use {
             it.executeUpdate("CREATE TABLE IF NOT EXISTS database_version (version INTEGER NOT NULL)")
         }
-        val contents = requireNotNull(javaClass.getResourceAsStream("/tachikoma-h2-create-all.sql")).use {
-            it.reader().readText()
-        }
+        val contents =
+            requireNotNull(javaClass.getResourceAsStream("/tachikoma-h2-create-all.sql")).use {
+                it.reader().readText()
+            }
         DdlRunner(false, "h2 upgrade")
             .runAll(contents, connection)
         return newVersion

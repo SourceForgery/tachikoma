@@ -7,7 +7,7 @@ import java.time.Duration
 enum class JobMessageQueue(
     override val delay: Duration = Duration.ZERO,
     override val maxLength: Int? = null,
-    override val nextDestination: MessageQueue<JobMessage>? = null
+    override val nextDestination: MessageQueue<JobMessage>? = null,
 ) : MessageQueue<JobMessage> {
     FAILED_JOBS,
     JOBS(nextDestination = FAILED_JOBS),
@@ -33,18 +33,19 @@ enum class JobMessageQueue(
     }
 }
 
-internal val FAILED_OUTGOING_EMAILS = object : MessageQueue<OutgoingEmailMessage> {
-    override val delay = Duration.ZERO
-    override val maxLength = null
-    override val nextDestination = null
-    override val name = "FAILED_OUTGOING_EMAILS"
-    override val parser: (ByteArray) -> OutgoingEmailMessage = {
-        error("No parser for this")
+internal val FAILED_OUTGOING_EMAILS =
+    object : MessageQueue<OutgoingEmailMessage> {
+        override val delay = Duration.ZERO
+        override val maxLength = null
+        override val nextDestination = null
+        override val name = "FAILED_OUTGOING_EMAILS"
+        override val parser: (ByteArray) -> OutgoingEmailMessage = {
+            error("No parser for this")
+        }
     }
-}
 
 class OutgoingEmailsMessageQueue(
-    mailDomain: MailDomain
+    mailDomain: MailDomain,
 ) : MessageQueue<OutgoingEmailMessage> {
     override val name = "outgoing.$mailDomain"
     override val maxLength = null
@@ -53,19 +54,20 @@ class OutgoingEmailsMessageQueue(
     override val parser: (ByteArray) -> OutgoingEmailMessage = OutgoingEmailMessage::parseFrom
 }
 
-internal val FAILED_DELIVERY_NOTIFICATIONS = object : MessageQueue<DeliveryNotificationMessage> {
-    override val delay = Duration.ZERO
-    override val maxLength = null
-    override val nextDestination = null
-    override val name = "FAILED_DELIVERY_NOTIFICATIONS"
-    override val parser: (ByteArray) -> DeliveryNotificationMessage = {
-        error("No parser for this")
+internal val FAILED_DELIVERY_NOTIFICATIONS =
+    object : MessageQueue<DeliveryNotificationMessage> {
+        override val delay = Duration.ZERO
+        override val maxLength = null
+        override val nextDestination = null
+        override val name = "FAILED_DELIVERY_NOTIFICATIONS"
+        override val parser: (ByteArray) -> DeliveryNotificationMessage = {
+            error("No parser for this")
+        }
     }
-}
 
 class DeliveryNotificationMessageQueue(
     authenticationId: AuthenticationId,
-    override val maxLength: Int? = null
+    override val maxLength: Int? = null,
 ) : MessageQueue<DeliveryNotificationMessage> {
     override val name = "deliverynotifications.$authenticationId"
     override val delay = Duration.ZERO
@@ -73,19 +75,20 @@ class DeliveryNotificationMessageQueue(
     override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
 }
 
-internal val FAILED_INCOMING_EMAIL_NOTIFICATIONS = object : MessageQueue<IncomingEmailNotificationMessage> {
-    override val delay = Duration.ZERO
-    override val maxLength = null
-    override val nextDestination = null
-    override val name = "FAILED_INCOMING_EMAIL_NOTIFICATIONS"
-    override val parser: (ByteArray) -> IncomingEmailNotificationMessage = {
-        error("No parser for this")
+internal val FAILED_INCOMING_EMAIL_NOTIFICATIONS =
+    object : MessageQueue<IncomingEmailNotificationMessage> {
+        override val delay = Duration.ZERO
+        override val maxLength = null
+        override val nextDestination = null
+        override val name = "FAILED_INCOMING_EMAIL_NOTIFICATIONS"
+        override val parser: (ByteArray) -> IncomingEmailNotificationMessage = {
+            error("No parser for this")
+        }
     }
-}
 
 class IncomingEmailNotificationMessageQueue(
     authenticationId: AuthenticationId,
-    override val maxLength: Int? = null
+    override val maxLength: Int? = null,
 ) : MessageQueue<IncomingEmailNotificationMessage> {
     override val name = "incomingemail.$authenticationId"
     override val delay = Duration.ZERO

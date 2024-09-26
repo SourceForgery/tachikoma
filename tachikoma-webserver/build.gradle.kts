@@ -40,8 +40,8 @@ val runLocalServer by tasks.creating(type = JavaExec::class) {
         classpath = project.sourceSets["main"].runtimeClasspath
         jvmArgs(
             listOf(
-                "-DtachikomaConfig=${System.getProperty("user.home")}/.tachikoma.properties"
-            )
+                "-DtachikomaConfig=${System.getProperty("user.home")}/.tachikoma.properties",
+            ),
         )
     }
 }

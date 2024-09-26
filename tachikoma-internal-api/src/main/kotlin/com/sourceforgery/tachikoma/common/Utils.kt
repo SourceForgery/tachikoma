@@ -5,7 +5,10 @@ import java.time.Clock
 import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
 
-inline fun <T : AutoCloseable, R> T.use(closeable: T, block: (T) -> R): R {
+inline fun <T : AutoCloseable, R> T.use(
+    closeable: T,
+    block: (T) -> R,
+): R {
     try {
         return block(closeable)
     } finally {
@@ -13,7 +16,10 @@ inline fun <T : AutoCloseable, R> T.use(closeable: T, block: (T) -> R): R {
     }
 }
 
-inline fun delay(millis: Long, alwaysRun: () -> Unit) {
+inline fun delay(
+    millis: Long,
+    alwaysRun: () -> Unit,
+) {
     try {
         Thread.sleep(millis)
     } finally {
@@ -21,7 +27,10 @@ inline fun delay(millis: Long, alwaysRun: () -> Unit) {
     }
 }
 
-inline fun randomDelay(millis: LongRange, alwaysRun: () -> Unit) {
+inline fun randomDelay(
+    millis: LongRange,
+    alwaysRun: () -> Unit,
+) {
     try {
         val randomMillis = ThreadLocalRandom.current().nextLong(millis.start, millis.endInclusive)
         Thread.sleep(randomMillis)
@@ -36,8 +45,7 @@ fun Instant.toTimestamp() =
         .setNanos(this.nano)
         .build()
 
-fun Timestamp.toInstant() =
-    Instant.ofEpochSecond(this.seconds, this.nanos.toLong())
+fun Timestamp.toInstant() = Instant.ofEpochSecond(this.seconds, this.nanos.toLong())
 
 fun Clock.timestamp() = this.instant().toTimestamp()
 

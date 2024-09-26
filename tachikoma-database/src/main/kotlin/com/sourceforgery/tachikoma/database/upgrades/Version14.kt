@@ -13,8 +13,8 @@ class Version14(override val di: DI) : DatabaseUpgrade, DIAware {
         @Language("PostgreSQL")
         val content =
             """
-                create index idx_e_email_send_transaction_bcc_gin on e_email_send_transaction using gin(bcc);
-                create index idx_e_email_recipient on e_email(recipient);
+            create index idx_e_email_send_transaction_bcc_gin on e_email_send_transaction using gin(bcc);
+            create index idx_e_email_recipient on e_email(recipient);
             """.trimIndent()
 
         DdlRunner(false, javaClass.simpleName)

@@ -33,43 +33,42 @@ import org.kodein.di.provider
 
 internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
     MailDeliveryServiceGrpcKt.MailDeliveryServiceCoroutineImplBase(), DIAware {
-
     private val mailDeliveryService: MailDeliveryService by instance()
     private val incomingEmailService: IncomingEmailService by instance()
     private val authentication: () -> Authentication by provider()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun getIncomingEmails(request: Empty): Flow<IncomingEmail> =
-        streamIncomingEmails(IncomingEmailParameters.getDefaultInstance())
+    override fun getIncomingEmails(request: Empty): Flow<IncomingEmail> = streamIncomingEmails(IncomingEmailParameters.getDefaultInstance())
 
     override fun streamIncomingEmails(request: IncomingEmailParameters) =
         streamIncomingEmailsWithKeepAlive(request)
             .filter { it.hasIncomingEmail() }
             .map { it.incomingEmail }
 
-    override fun streamIncomingEmailsWithKeepAlive(request: IncomingEmailParameters) = channelFlow {
-        val auth = authentication()
-        auth.requireFrontend()
-        LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
-        withKeepAlive(
-            IncomingEmailOrKeepAlive.newBuilder()
-                .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
-                .build()
-        )
-        incomingEmailService.streamIncomingEmails(
-            authenticationId = auth.authenticationId,
-            mailDomain = auth.mailDomain,
-            accountId = auth.accountId,
-            parameters = request
-        ).map {
-            IncomingEmailOrKeepAlive.newBuilder()
-                .setIncomingEmail(it)
-                .build()
-        }.collect {
-            send(it)
-        }
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+    override fun streamIncomingEmailsWithKeepAlive(request: IncomingEmailParameters) =
+        channelFlow {
+            val auth = authentication()
+            auth.requireFrontend()
+            LOGGER.info { "Connected, user ${auth.authenticationId} getting incoming mails from ${auth.mailDomain}" }
+            withKeepAlive(
+                IncomingEmailOrKeepAlive.newBuilder()
+                    .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
+                    .build(),
+            )
+            incomingEmailService.streamIncomingEmails(
+                authenticationId = auth.authenticationId,
+                mailDomain = auth.mailDomain,
+                accountId = auth.accountId,
+                parameters = request,
+            ).map {
+                IncomingEmailOrKeepAlive.newBuilder()
+                    .setIncomingEmail(it)
+                    .build()
+            }.collect {
+                send(it)
+            }
+        }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
     override suspend fun getIncomingEmail(request: GetIncomingEmailRequest): IncomingEmail {
         try {
@@ -78,24 +77,25 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
             return incomingEmailService.getIncomingEmail(
                 incomingEmailId = IncomingEmailId(request.incomingEmailId.id),
                 accountId = auth.accountId,
-                parameters = request.parameters
+                parameters = request.parameters,
             ) ?: throw NotFoundException("No email ${request.incomingEmailId.id} that ${auth.accountId} can access")
         } catch (e: Exception) {
             throw grpcExceptionMap.findAndConvertAndLog(e)
         }
     }
 
-    override fun searchIncomingEmails(request: SearchIncomingEmailsRequest): Flow<IncomingEmail> = flow {
-        val auth = authentication()
-        auth.requireFrontend()
-        emitAll(
-            incomingEmailService.searchIncomingEmails(
-                filter = request.messageFilterList,
-                accountId = auth.accountId,
-                parameters = request.parameters
+    override fun searchIncomingEmails(request: SearchIncomingEmailsRequest): Flow<IncomingEmail> =
+        flow {
+            val auth = authentication()
+            auth.requireFrontend()
+            emitAll(
+                incomingEmailService.searchIncomingEmails(
+                    filter = request.messageFilterList,
+                    accountId = auth.accountId,
+                    parameters = request.parameters,
+                ),
             )
-        )
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+        }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
     override suspend fun searchIncomingEmailsUnary(request: SearchIncomingEmailsRequest): IncomingEmailList {
         val builder = IncomingEmailList.newBuilder()
@@ -104,20 +104,21 @@ internal class MailDeliveryServiceGrpcImpl(override val di: DI) :
         return builder.build()
     }
 
-    override fun sendEmail(request: OutgoingEmail): Flow<EmailQueueStatus> = flow {
-        val auth = authentication()
-        auth.requireFrontend()
-        LOGGER.trace {
-            val recipients = request.recipientsList.joinToString { it.namedEmail.email }
-            "Starting sendEmail from ${request.from.email} to $recipients for AccountId(${auth.accountId})"
-        }
-        emitAll(
-            mailDeliveryService.sendEmail(
-                request = request,
-                authenticationId = auth.authenticationId
+    override fun sendEmail(request: OutgoingEmail): Flow<EmailQueueStatus> =
+        flow {
+            val auth = authentication()
+            auth.requireFrontend()
+            LOGGER.trace {
+                val recipients = request.recipientsList.joinToString { it.namedEmail.email }
+                "Starting sendEmail from ${request.from.email} to $recipients for AccountId(${auth.accountId})"
+            }
+            emitAll(
+                mailDeliveryService.sendEmail(
+                    request = request,
+                    authenticationId = auth.authenticationId,
+                ),
             )
-        )
-    }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
+        }.catch { throw grpcExceptionMap.findAndConvertAndLog(it) }
 
     override suspend fun sendEmailUnary(request: OutgoingEmail): EmailQueueStatusList {
         val builder = EmailQueueStatusList.newBuilder()

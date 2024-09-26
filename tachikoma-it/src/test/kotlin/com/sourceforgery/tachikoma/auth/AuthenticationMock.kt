@@ -33,7 +33,7 @@ class AuthenticationMock : Authentication {
 
     fun from(
         role: AuthenticationRole,
-        mailDomain: MailDomain
+        mailDomain: MailDomain,
     ) {
         this.role = role
         this._mailDomain = mailDomain

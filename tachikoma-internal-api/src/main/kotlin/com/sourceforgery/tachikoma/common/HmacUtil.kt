@@ -7,7 +7,10 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 object HmacUtil {
-    private fun slowEquals(a: CharSequence, b: CharSequence): Boolean {
+    private fun slowEquals(
+        a: CharSequence,
+        b: CharSequence,
+    ): Boolean {
         var diff = a.length xor b.length
         var i = 0
         while (i < a.length && i < b.length) {
@@ -17,11 +20,18 @@ object HmacUtil {
         return diff == 0
     }
 
-    fun hmacSha1(data: ByteArray, key: ByteArray): ByteArray {
+    fun hmacSha1(
+        data: ByteArray,
+        key: ByteArray,
+    ): ByteArray {
         return hmac(data, key, "HmacSHA1")
     }
 
-    fun hmac(data: ByteArray, key: ByteArray, algorithm: String): ByteArray {
+    fun hmac(
+        data: ByteArray,
+        key: ByteArray,
+        algorithm: String,
+    ): ByteArray {
         val signingKey = SecretKeySpec(key, algorithm)
         val mac = Mac.getInstance(algorithm)
         mac.init(signingKey)
@@ -29,8 +39,10 @@ object HmacUtil {
         return mac.doFinal(data)
     }
 
-    fun calculateHmacSha256URLSafeNoPadding(data: ByteArray, key: ByteArray) =
-        hmac(data, key, "HmacSHA256")
+    fun calculateHmacSha256URLSafeNoPadding(
+        data: ByteArray,
+        key: ByteArray,
+    ) = hmac(data, key, "HmacSHA256")
 
     fun calculateMd5(sText: String): String {
         val md5 = MessageDigest.getInstance("MD5")

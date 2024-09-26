@@ -28,20 +28,20 @@ class DAOHelper(override val di: DI) : DIAware {
     private val database: Database by instance()
     private val dbObjectMapper: DBObjectMapper by instance()
 
-    fun createAuthentication(domain: String) =
-        createAuthentication(MailDomain(domain))
+    fun createAuthentication(domain: String) = createAuthentication(MailDomain(domain))
 
     fun createAuthentication(domain: MailDomain): AuthenticationDBO {
         val accountDBO = AccountDBO(domain)
         database.save(accountDBO)
 
-        val authenticationDBO = AuthenticationDBO(
-            login = domain.mailDomain,
-            encryptedPassword = UUID.randomUUID().toString(),
-            apiToken = UUID.randomUUID().toString(),
-            role = AuthenticationRole.BACKEND,
-            account = accountDBO
-        )
+        val authenticationDBO =
+            AuthenticationDBO(
+                login = domain.mailDomain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.BACKEND,
+                account = accountDBO,
+            )
         database.save(authenticationDBO)
 
         return authenticationDBO
@@ -55,32 +55,34 @@ class DAOHelper(override val di: DI) : DIAware {
         dateCreated: Instant? = null,
         tags: Set<String> = emptySet(),
     ): EmailStatusEventDBO {
-
         val outgoingEmail = OutgoingEmail.newBuilder().build()
         val jsonRequest = dbObjectMapper.objectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
-        val email = EmailDBO(
-            recipient = recipient,
-            recipientName = "Mr. Recipient",
-            transaction = EmailSendTransactionDBO(
-                jsonRequest = jsonRequest,
-                fromEmail = from,
-                authentication = authentication,
+        val email =
+            EmailDBO(
+                recipient = recipient,
+                recipientName = "Mr. Recipient",
+                transaction =
+                    EmailSendTransactionDBO(
+                        jsonRequest = jsonRequest,
+                        fromEmail = from,
+                        authentication = authentication,
+                        metaData = emptyMap(),
+                        tags = tags,
+                    ),
+                messageId = MessageId("${UUID.randomUUID()}@example.com"),
+                autoMailId = AutoMailId("${UUID.randomUUID()}@example.net"),
+                mtaQueueId = null,
                 metaData = emptyMap(),
-                tags = tags
-            ),
-            messageId = MessageId("${UUID.randomUUID()}@example.com"),
-            autoMailId = AutoMailId("${UUID.randomUUID()}@example.net"),
-            mtaQueueId = null,
-            metaData = emptyMap()
-        )
+            )
         database.save(email)
 
-        val emailStatusEventDBO = EmailStatusEventDBO(
-            emailStatus = emailStatus,
-            email = email,
-            metaData = StatusEventMetaData()
-        )
+        val emailStatusEventDBO =
+            EmailStatusEventDBO(
+                emailStatus = emailStatus,
+                email = email,
+                metaData = StatusEventMetaData(),
+            )
         database.save(emailStatusEventDBO)
         dateCreated?.also {
             emailStatusEventDBO.dateCreated = it

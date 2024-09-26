@@ -8,6 +8,14 @@ import kotlinx.coroutines.flow.Flow
 
 interface IncomingEmailDAO {
     fun save(incomingEmailDBO: IncomingEmailDBO)
-    fun fetchIncomingEmail(incomingEmailId: IncomingEmailId, accountId: AccountId): IncomingEmailDBO?
-    fun searchIncomingEmails(accountId: AccountId, filter: List<EmailSearchFilterQuery>): Flow<IncomingEmailDBO>
+
+    fun fetchIncomingEmail(
+        incomingEmailId: IncomingEmailId,
+        accountId: AccountId,
+    ): IncomingEmailDBO?
+
+    fun searchIncomingEmails(
+        accountId: AccountId,
+        filter: List<EmailSearchFilterQuery>,
+    ): Flow<IncomingEmailDBO>
 }
