@@ -8,4 +8,5 @@ interface MessageQueue<T> {
     val nextDestination: MessageQueue<T>?
     val name: String
     val parser: (ByteArray) -> T
+    val parserV2: (ByteArray) -> T
 }

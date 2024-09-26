@@ -6,6 +6,12 @@ import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.database.objects.AccountDBO
 import com.sourceforgery.tachikoma.database.objects.BlockedEmailDBO
 import com.sourceforgery.tachikoma.database.objects.EmailStatusEventDBO
+import com.sourceforgery.tachikoma.database.objects.query.QBlockedEmailDBO
+import com.sourceforgery.tachikoma.grpc.frontend.toMQGrpc
+import com.sourceforgery.tachikoma.invoke
+import com.sourceforgery.tachikoma.mq.BlockedEmailAddressEvent
+import com.sourceforgery.tachikoma.mq.MQSender
+import com.sourceforgery.tachikoma.onlyIf
 import io.ebean.Database
 import org.kodein.di.DI
 import org.kodein.di.DIAware
@@ -13,17 +19,17 @@ import org.kodein.di.instance
 
 class BlockedEmailDAOImpl(override val di: DI) : BlockedEmailDAO, DIAware {
     private val database: Database by instance()
+    private val mqSender: MQSender by instance()
 
     override fun getBlockedReason(
         accountDBO: AccountDBO,
         from: Email,
         recipient: Email,
     ): BlockedReason? {
-        return database.find(BlockedEmailDBO::class.java)
-            .where()
-            .eq("account", accountDBO)
-            .eq("fromEmail", from)
-            .eq("recipientEmail", recipient)
+        return QBlockedEmailDBO(database)
+            .account.eq(accountDBO)
+            .fromEmail.eq(from)
+            .recipientEmail.eq(recipient)
             .findOne()
             ?.blockedReason
     }
@@ -32,26 +38,26 @@ class BlockedEmailDAOImpl(override val di: DI) : BlockedEmailDAO, DIAware {
         val from = statusEvent.email.transaction.fromEmail
         val recipient = statusEvent.email.recipient
         val account = statusEvent.email.transaction.authentication.account
-        if (getBlockedReason(account, from, recipient) == null) {
+        val oldBlockReason = getBlockedReason(account, from, recipient)
+        if (oldBlockReason == null) {
+            val blockedReason = toBlockedReason(statusEvent.emailStatus)
             val blockedEmail =
                 BlockedEmailDBO(
                     recipientEmail = recipient,
                     fromEmail = from,
-                    blockedReason = toBlockedReason(statusEvent.emailStatus),
+                    blockedReason = blockedReason,
                     account = account,
                 )
             database.save(blockedEmail)
+            mqSender.queueEmailBlockingNotification(
+                accountId = account.id,
+                (BlockedEmailAddressEvent.newBuilder()) {
+                    fromEmail = from.address
+                    recipientEmail = recipient.address
+                    newReason = blockedReason.toMQGrpc()
+                }.build(),
+            )
         }
-    }
-
-    override fun unblock(statusEventDBO: EmailStatusEventDBO) {
-        database
-            .find(BlockedEmailDBO::class.java)
-            .where()
-            .eq("account", statusEventDBO.email.transaction.authentication.account)
-            .eq("fromEmail", statusEventDBO.email.transaction.fromEmail)
-            .eq("recipientEmail", statusEventDBO.email.recipient)
-            .delete()
     }
 
     override fun unblock(
@@ -59,20 +65,38 @@ class BlockedEmailDAOImpl(override val di: DI) : BlockedEmailDAO, DIAware {
         from: Email?,
         recipient: Email,
     ) {
-        database
-            .find(BlockedEmailDBO::class.java)
-            .where()
-            .raw("fromEmail = ? IS NOT FALSE", from)
-            .eq("account", accountDBO)
-            .eq("recipientEmail", recipient)
+        val unblocked =
+            QBlockedEmailDBO(database)
+                .onlyIf(from != null) {
+                    fromEmail.eq(from)
+                }
+                .account.eq(accountDBO)
+                .recipientEmail.eq(recipient)
+                .findList()
+        QBlockedEmailDBO(database)
+            .onlyIf(from != null) {
+                fromEmail.eq(from)
+            }
+            .account.eq(accountDBO)
+            .recipientEmail.eq(recipient)
             .delete()
+
+        for (blockedEmailDBO in unblocked) {
+            mqSender.queueEmailBlockingNotification(
+                accountId = accountDBO.id,
+                (BlockedEmailAddressEvent.newBuilder()) {
+                    fromEmail = blockedEmailDBO.fromEmail.address
+                    recipientEmail = blockedEmailDBO.recipientEmail.address
+                    newReason = com.sourceforgery.tachikoma.mq.BlockedReason.UNBLOCKED
+                    oldReason = blockedEmailDBO.blockedReason.toMQGrpc()
+                }.build(),
+            )
+        }
     }
 
     override fun getBlockedEmails(accountDBO: AccountDBO): List<BlockedEmailDBO> =
-        database
-            .find(BlockedEmailDBO::class.java)
-            .where()
-            .eq("account", accountDBO)
+        QBlockedEmailDBO(database)
+            .account.eq(accountDBO)
             .findList()
 
     private fun toBlockedReason(emailStatus: EmailStatus): BlockedReason {

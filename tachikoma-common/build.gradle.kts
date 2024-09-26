@@ -8,4 +8,6 @@ dependencies {
     api("com.google.guava:guava")
     api("org.apache.logging.log4j:log4j-api-kotlin")
     api("org.kodein.di:kodein-di")
+
+    compileOnly("com.google.protobuf:protobuf-java")
 }

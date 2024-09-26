@@ -3,13 +3,25 @@ syntax = "proto3";
 option java_multiple_files = true;
 option go_package = "github.com/SourceForgery/tachikoma";
 
+import "com/sourceforgery/tachikoma/mq/emailaddressevents.proto";
 import "google/protobuf/timestamp.proto";
 
 package com.sourceforgery.tachikoma.mq;
 
+
 // All messages that can be queued/broadcasted to the MQ
+message EmailNotificationEvent {
+    google.protobuf.Timestamp creation_timestamp = 1;
+    oneof email_notification {
+        DeliveryNotificationMessage delivery_notification = 2;
+        BlockedEmailAddressEvent blocked_email_address = 3;
+    }
+}
+
+// Old message of this kind may also be on queue directly
 message DeliveryNotificationMessage {
-    google.protobuf.Timestamp creation_timestamp = 101;
+    // Use EmailNotificationEvent. Used for backwards compatibility
+    google.protobuf.Timestamp creation_timestamp = 101 [deprecated = true];
     sint64 email_message_id = 102;
     oneof notification_data {
         MessageDelivered message_delivered = 201;

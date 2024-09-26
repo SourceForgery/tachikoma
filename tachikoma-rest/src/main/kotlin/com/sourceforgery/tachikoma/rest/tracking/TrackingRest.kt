@@ -9,7 +9,6 @@ import com.linecorp.armeria.server.annotation.Header
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Produces
 import com.sourceforgery.tachikoma.common.EmailStatus
-import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -76,7 +75,6 @@ internal class TrackingRest(
 
             val notificationMessageBuilder =
                 DeliveryNotificationMessage.newBuilder()
-                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                     .setEmailMessageId(email.id.emailId)
                     .setMessageOpened(
                         MessageOpened.newBuilder()
@@ -126,7 +124,6 @@ internal class TrackingRest(
 
             val notificationMessageBuilder =
                 DeliveryNotificationMessage.newBuilder()
-                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                     .setEmailMessageId(email.id.emailId)
                     .setMessageClicked(
                         MessageClicked.newBuilder()

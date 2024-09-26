@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.tracking
 
+import com.google.common.hash.Hashing.hmacSha1
 import com.google.protobuf.ByteString
-import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.randomDelay
 import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.grpc.frontend.tracking.UrlSignedMessage
@@ -14,14 +14,17 @@ import java.util.Base64
 class TrackingDecoderImpl(override val di: DI) : TrackingDecoder, DIAware {
     private val trackingConfig: TrackingConfig by instance()
 
-    private val encryptionKey = trackingConfig.linkSignKey
+    @Suppress("UnstableApiUsage")
+    private val trackingHmac by lazy {
+        hmacSha1(trackingConfig.linkSignKey)
+    }
 
     override fun decodeTrackingData(trackingData: String): UrlTrackingData {
         val decoded = Base64.getUrlDecoder().decode(trackingData)!!
         val signedMessage = UrlSignedMessage.parseFrom(decoded)
         val sig = signedMessage.signature
         val toByteArray: ByteArray = sig.toByteArray()
-        if (!toByteArray.contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
+        if (!toByteArray.contentEquals(trackingHmac.hashBytes(signedMessage.message.toByteArray()).asBytes())) {
             randomDelay(LongRange(100, 250)) {
                 throw RuntimeException("Not correct signature")
             }
@@ -31,7 +34,7 @@ class TrackingDecoderImpl(override val di: DI) : TrackingDecoder, DIAware {
 
     override fun createUrl(trackingData: UrlTrackingData): String {
         val parcelled = trackingData.toByteArray()!!
-        val signature = HmacUtil.hmacSha1(parcelled, encryptionKey)
+        val signature = trackingHmac.hashBytes(parcelled).asBytes()
         val signedMessage =
             UrlSignedMessage.newBuilder()
                 .setMessage(ByteString.copyFrom(parcelled))

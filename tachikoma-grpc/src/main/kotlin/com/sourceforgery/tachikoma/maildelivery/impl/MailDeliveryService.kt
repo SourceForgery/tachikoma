@@ -134,7 +134,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
                     Instant.EPOCH
                 }
 
-            transactionManager.coroutineTx {
+            transactionManager.coroutineTx { _ ->
                 emailSendTransactionDAO.save(transaction)
 
                 for (recipient in request.recipientsList) {

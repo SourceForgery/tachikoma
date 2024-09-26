@@ -26,13 +26,6 @@ message RemoveBlockedEmailRequest {
     EmailAddress recipient_email = 102;
 }
 
-// The reason for a blocked email address
-enum BlockedReason {
-    UNSUBSCRIBED = 0;
-    SPAM_MARKED = 1;
-    HARD_BOUNCED = 2;
-}
-
 // A blocked email entry with from and recipient email
 message BlockedEmail {
     // From email address
@@ -40,5 +33,5 @@ message BlockedEmail {
     // Recipient email address
     EmailAddress recipient_email = 102;
     // The blocked reason
-    BlockedReason blocked_reason = 103;
+    com.sourceforgery.tachikoma.grpc.frontend.BlockedReason blocked_reason = 103;
 }

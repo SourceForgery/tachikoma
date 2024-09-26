@@ -20,4 +20,9 @@ interface MQSender {
         accountId: AccountId,
         incomingEmailNotificationMessage: IncomingEmailNotificationMessage,
     )
+
+    fun queueEmailBlockingNotification(
+        accountId: AccountId,
+        emailBlockedMessage: BlockedEmailAddressEvent,
+    )
 }
