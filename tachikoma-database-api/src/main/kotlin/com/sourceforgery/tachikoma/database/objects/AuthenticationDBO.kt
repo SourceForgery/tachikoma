@@ -11,31 +11,27 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
+// One user with credentials. Never delete, but do deactivate
 @Table(name = "e_user")
 @Entity
-// One user with credentials. Never delete, but do deactivate
 class AuthenticationDBO(
     @Column
     var encryptedPassword: String? = null,
-
     @Column(unique = true, name = "username")
     val login: String? = null,
-
     @Column(unique = true)
     @Encrypted
     var apiToken: String? = null,
-
     @Column
     var role: AuthenticationRole,
-
     @ManyToOne(cascade = [CascadeType.ALL])
     val account: AccountDBO,
-
     @Column
-    var recipientOverride: Email? = null
+    var recipientOverride: Email? = null,
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     val emailSendTransactionDBO: List<EmailSendTransactionDBO> = ArrayList()
+
     @Column
     var active = true
 

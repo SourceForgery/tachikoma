@@ -54,51 +54,55 @@ import org.kodein.di.registerContextFinder
 import org.kodein.di.scoped
 import org.kodein.di.singleton
 
-val databaseModule = DI.Module("database") {
-    bind<Database>() with singleton { EbeanServerFactory(di).provide() }
+val databaseModule =
+    DI.Module("database") {
+        bind<Database>() with singleton { EbeanServerFactory(di).provide() }
 
-    importOnce(daoModule)
-    importOnce(facadeModule)
-    bind<InvokeCounter>() with scoped(DatabaseSessionKodeinScope).singleton { LogEverything() }
-    registerContextFinder { threadLocalDatabaseSessionScope.get() ?: error("Not in Database Session scope") }
-    bind<DBObjectMapper>() with singleton { DBObjectMapperImpl }
-    bind<DataSourceProvider>() with singleton { PostgresqlDataSourceProvider(di) }
-    bind<InternalCreateUserService>() with singleton { InternalCreateUserServiceImpl(di) }
-    bind<CreateUsers>() with singleton { CreateUsers(di) }
-    bind<TransactionManager>() with singleton { TransactionManagerImpl(di) }
-}
+        importOnce(daoModule)
+        importOnce(facadeModule)
+        bind<InvokeCounter>() with scoped(DatabaseSessionKodeinScope).singleton { LogEverything() }
+        registerContextFinder { threadLocalDatabaseSessionScope.get() ?: error("Not in Database Session scope") }
+        bind<DBObjectMapper>() with singleton { DBObjectMapperImpl }
+        bind<DataSourceProvider>() with singleton { PostgresqlDataSourceProvider(di) }
+        bind<InternalCreateUserService>() with singleton { InternalCreateUserServiceImpl(di) }
+        bind<CreateUsers>() with singleton { CreateUsers(di) }
+        bind<TransactionManager>() with singleton { TransactionManagerImpl(di) }
+    }
 
-private val daoModule = DI.Module("dao") {
-    bind<AccountDAO>() with singleton { AccountDAOImpl(di) }
-    bind<AuthenticationDAO>() with singleton { AuthenticationDAOImpl(di) }
-    bind<BlockedEmailDAO>() with singleton { BlockedEmailDAOImpl(di) }
-    bind<EmailDAO>() with singleton { EmailDAOImpl(di) }
-    bind<EmailSendTransactionDAO>() with singleton { EmailSendTransactionDAOImpl(di) }
-    bind<EmailStatusEventDAO>() with singleton { EmailStatusEventDAOImpl(di) }
-    bind<IncomingEmailAddressDAO>() with singleton { IncomingEmailAddressDAOImpl(di) }
-    bind<IncomingEmailDAO>() with singleton { IncomingEmailDAOImpl(di) }
-}
+private val daoModule =
+    DI.Module("dao") {
+        bind<AccountDAO>() with singleton { AccountDAOImpl(di) }
+        bind<AuthenticationDAO>() with singleton { AuthenticationDAOImpl(di) }
+        bind<BlockedEmailDAO>() with singleton { BlockedEmailDAOImpl(di) }
+        bind<EmailDAO>() with singleton { EmailDAOImpl(di) }
+        bind<EmailSendTransactionDAO>() with singleton { EmailSendTransactionDAOImpl(di) }
+        bind<EmailStatusEventDAO>() with singleton { EmailStatusEventDAOImpl(di) }
+        bind<IncomingEmailAddressDAO>() with singleton { IncomingEmailAddressDAOImpl(di) }
+        bind<IncomingEmailDAO>() with singleton { IncomingEmailDAOImpl(di) }
+    }
 
-private val facadeModule = DI.Module("facade") {
-    bind<AccountFacadeImpl>() with singleton { AccountFacadeImpl(di) }
-}
+private val facadeModule =
+    DI.Module("facade") {
+        bind<AccountFacadeImpl>() with singleton { AccountFacadeImpl(di) }
+    }
 
-val databaseUpgradesModule = DI.Module("databaseUpgrades") {
-    // NEVER EVER change order or insert elements anywhere but at the end of this list!!
-    // These classes will be run in order before ebean starts
-    bind<Version1>() with provider { Version1() }
-    bind<Version2>() with provider { Version2() }
-    bind<Version3>() with provider { Version3() }
-    bind<Version4>() with provider { Version4() }
-    bind<Version5>() with provider { Version5() }
-    bind<Version6>() with provider { Version6() }
-    bind<Version7>() with provider { Version7() }
-    bind<Version8>() with provider { Version8() }
-    bind<Version9>() with provider { Version9() }
-    bind<Version10>() with provider { Version10() }
-    bind<Version11>() with provider { Version11() }
-    bind<Version12>() with singleton { Version12(di) }
-    bind<Version13>() with singleton { Version13(di) }
-    bind<Version14>() with singleton { Version14(di) }
-    bind<Version15>() with singleton { Version15(di) }
-}
+val databaseUpgradesModule =
+    DI.Module("databaseUpgrades") {
+        // NEVER EVER change order or insert elements anywhere but at the end of this list!!
+        // These classes will be run in order before ebean starts
+        bind<Version1>() with provider { Version1() }
+        bind<Version2>() with provider { Version2() }
+        bind<Version3>() with provider { Version3() }
+        bind<Version4>() with provider { Version4() }
+        bind<Version5>() with provider { Version5() }
+        bind<Version6>() with provider { Version6() }
+        bind<Version7>() with provider { Version7() }
+        bind<Version8>() with provider { Version8() }
+        bind<Version9>() with provider { Version9() }
+        bind<Version10>() with provider { Version10() }
+        bind<Version11>() with provider { Version11() }
+        bind<Version12>() with singleton { Version12(di) }
+        bind<Version13>() with singleton { Version13(di) }
+        bind<Version14>() with singleton { Version14(di) }
+        bind<Version15>() with singleton { Version15(di) }
+    }

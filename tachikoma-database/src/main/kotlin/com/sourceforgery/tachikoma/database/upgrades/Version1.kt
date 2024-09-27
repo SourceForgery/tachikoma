@@ -16,9 +16,10 @@ class Version1 : DatabaseUpgrade {
                     if (resultset.next()) {
                         return resultset.getInt(1)
                     } else {
-                        val content = javaClass.getResourceAsStream("/create-all.sql").use {
-                            it.reader(StandardCharsets.UTF_8).readText()
-                        }
+                        val content =
+                            javaClass.getResourceAsStream("/create-all.sql").use {
+                                it.reader(StandardCharsets.UTF_8).readText()
+                            }
                         DdlRunner(false, "create-all.sql")
                             .runAll(content, connection)
                         return -1

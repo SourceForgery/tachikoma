@@ -6,7 +6,6 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.mq.MQManager
 
 class TestConsumerFactoryImpl : MQManager {
-
     override fun setupAccount(mailDomain: MailDomain) {
         // At the moment, do nothing for tests
     }
@@ -15,7 +14,11 @@ class TestConsumerFactoryImpl : MQManager {
         // At the moment, do nothing for tests
     }
 
-    override fun setupAuthentication(mailDomain: MailDomain, authenticationId: AuthenticationId, accountId: AccountId) {
+    override fun setupAuthentication(
+        mailDomain: MailDomain,
+        authenticationId: AuthenticationId,
+        accountId: AccountId,
+    ) {
         // At the moment, do nothing for tests
     }
 

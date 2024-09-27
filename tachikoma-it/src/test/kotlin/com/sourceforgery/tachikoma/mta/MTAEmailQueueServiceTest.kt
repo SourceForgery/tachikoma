@@ -48,9 +48,10 @@ class MTAEmailQueueServiceTest {
 
     @Before
     fun `create di`() {
-        di = DI {
-            import(testModule())
-        }
+        di =
+            DI {
+                import(testModule())
+            }
         authentication = di.direct.instance()
         mqSequenceFactoryMock = di.direct.instance()
         mqSenderMock = di.direct.instance()
@@ -72,20 +73,22 @@ class MTAEmailQueueServiceTest {
                 .first { it.role == AuthenticationRole.BACKEND }
         authentication.from(authenticationDBO)
 
-        email = EmailDBO(
-            recipient = Email("foo@example.net"),
-            recipientName = "Nobody",
-            messageId = MessageId("sdjklfjklsdfkl@example.com"),
-            autoMailId = AutoMailId("sdjklfjklsdfkl@example.net"),
-            metaData = emptyMap(),
-            transaction = EmailSendTransactionDBO(
-                jsonRequest = JsonNodeFactory.instance.objectNode(),
-                fromEmail = Email("foodsjklff@example.net"),
-                authentication = authenticationDBO,
+        email =
+            EmailDBO(
+                recipient = Email("foo@example.net"),
+                recipientName = "Nobody",
+                messageId = MessageId("sdjklfjklsdfkl@example.com"),
+                autoMailId = AutoMailId("sdjklfjklsdfkl@example.net"),
                 metaData = emptyMap(),
-                tags = emptySet()
+                transaction =
+                    EmailSendTransactionDBO(
+                        jsonRequest = JsonNodeFactory.instance.objectNode(),
+                        fromEmail = Email("foodsjklff@example.net"),
+                        authentication = authenticationDBO,
+                        metaData = emptyMap(),
+                        tags = emptySet(),
+                    ),
             )
-        )
         email.body = "${UUID.randomUUID()}"
         database.save(email)
     }
@@ -96,64 +99,67 @@ class MTAEmailQueueServiceTest {
         val accountDBO = AccountDBO(MailDomain(domain))
         database.save(accountDBO)
 
-        val authenticationDBO = AuthenticationDBO(
-            login = domain,
-            encryptedPassword = UUID.randomUUID().toString(),
-            apiToken = UUID.randomUUID().toString(),
-            role = AuthenticationRole.BACKEND,
-            account = accountDBO
-        )
+        val authenticationDBO =
+            AuthenticationDBO(
+                login = domain,
+                encryptedPassword = UUID.randomUUID().toString(),
+                apiToken = UUID.randomUUID().toString(),
+                role = AuthenticationRole.BACKEND,
+                account = accountDBO,
+            )
         database.save(authenticationDBO)
 
         return authenticationDBO
     }
 
-    fun `Create email test`() = runBlocking {
-        val requests = Channel<MTAQueuedNotification>()
+    fun `Create email test`() =
+        runBlocking {
+            val requests = Channel<MTAQueuedNotification>()
 
-        val notifications = mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
+            val notifications = mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
 
-        mqSequenceFactoryMock.outgoingEmails.send(
-            OutgoingEmailMessage.newBuilder()
-                .setCreationTimestamp(clock.instant().toTimestamp())
-                .setEmailId(email.id.emailId)
-                .build()
-        )
+            mqSequenceFactoryMock.outgoingEmails.send(
+                OutgoingEmailMessage.newBuilder()
+                    .setCreationTimestamp(clock.instant().toTimestamp())
+                    .setEmailId(email.id.emailId)
+                    .build(),
+            )
 
-        val emailMessage = runBlocking {
-            withTimeout(1000L) {
-                notifications.take(1)
-                    .firstOrNull()
-            }
+            val emailMessage =
+                runBlocking {
+                    withTimeout(1000L) {
+                        notifications.take(1)
+                            .firstOrNull()
+                    }
+                }
+            requests.close()
+            assertNotNull(emailMessage)
+            assertEquals(emailMessage.body, email.body)
+            assertEquals(emailMessage.emailAddress, email.recipient.address)
+            assertEquals(emailMessage.emailId, email.id.emailId)
         }
-        requests.close()
-        assertNotNull(emailMessage)
-        assertEquals(emailMessage.body, email.body)
-        assertEquals(emailMessage.emailAddress, email.recipient.address)
-        assertEquals(emailMessage.emailId, email.id.emailId)
-    }
 
-    fun `Receive queue message`() = runBlocking {
+    fun `Receive queue message`() =
+        runBlocking {
+            val requests = Channel<MTAQueuedNotification>()
+            mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
 
-        val requests = Channel<MTAQueuedNotification>()
-        mtaEmailQueueService.getEmails(requests.consumeAsFlow(), authentication.mailDomain)
+            requests.send(
+                MTAQueuedNotification.newBuilder()
+                    .setEmailId(email.id.emailId)
+                    .setQueueId("foobarQueueId")
+                    .setRecipientEmailAddress(email.body!!)
+                    .setSuccess(true)
+                    .build(),
+            )
 
-        requests.send(
-            MTAQueuedNotification.newBuilder()
-                .setEmailId(email.id.emailId)
-                .setQueueId("foobarQueueId")
-                .setRecipientEmailAddress(email.body!!)
-                .setSuccess(true)
-                .build()
-        )
+            requests.close()
 
-        requests.close()
-
-        assertEquals(1, mqSenderMock.deliveryNotifications.size)
-        database.refresh(email)
-        assertEquals("foobarQueueId", email.mtaQueueId)
-        assertEquals(1, mqSenderMock.deliveryNotifications.size)
-        val notification = mqSenderMock.deliveryNotifications.take()
-        assertEquals(email.id.emailId, notification.emailMessageId)
-    }
+            assertEquals(1, mqSenderMock.deliveryNotifications.size)
+            database.refresh(email)
+            assertEquals("foobarQueueId", email.mtaQueueId)
+            assertEquals(1, mqSenderMock.deliveryNotifications.size)
+            val notification = mqSenderMock.deliveryNotifications.take()
+            assertEquals(email.id.emailId, notification.emailMessageId)
+        }
 }

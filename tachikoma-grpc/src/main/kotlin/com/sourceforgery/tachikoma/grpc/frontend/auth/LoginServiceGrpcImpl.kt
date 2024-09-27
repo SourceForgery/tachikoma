@@ -8,7 +8,7 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 class LoginServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : LoginServiceGrpcKt.LoginServiceCoroutineImplBase(), DIAware {
     private val loginService: LoginService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()

@@ -20,7 +20,7 @@ abstract class KodeinAvoidingGrpcExceptionCatcher {
 }
 
 abstract class GrpcExceptionCatcher<in T : Throwable>(
-    clazz: Class<T>
+    clazz: Class<T>,
 ) : DIAware, KodeinAvoidingGrpcExceptionCatcher() {
     private val debugConfig: DebugConfig by instance()
 

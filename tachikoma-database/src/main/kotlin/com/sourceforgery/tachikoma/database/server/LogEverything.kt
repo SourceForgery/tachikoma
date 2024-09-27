@@ -8,16 +8,16 @@ import java.time.Duration
 import java.util.Collections
 
 class LogEverything : InvokeCounter, ScopeCloseable {
-
     var slowThreshold = Duration.ofSeconds(1)!!
 
-    private val loggedQueries = Collections.synchronizedMap(
-        object : LinkedHashMap<String, Long>() {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
-                return size > 200
-            }
-        }
-    )
+    private val loggedQueries =
+        Collections.synchronizedMap(
+            object : LinkedHashMap<String, Long>() {
+                override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
+                    return size > 200
+                }
+            },
+        )
 
     fun dump() {
         if (LOGGER.delegate.isWarnEnabled) {
@@ -28,7 +28,10 @@ class LogEverything : InvokeCounter, ScopeCloseable {
         }
     }
 
-    override fun inc(sql: String?, millis: Long) {
+    override fun inc(
+        sql: String?,
+        millis: Long,
+    ) {
         sql?.let {
             LOGGER.trace { "${millis}ms for $sql" }
             loggedQueries.compute(it) { _, v -> (v ?: 0) + millis }
@@ -47,6 +50,9 @@ class LogEverything : InvokeCounter, ScopeCloseable {
 }
 
 object LogNothing : InvokeCounter {
-    override fun inc(sql: String?, millis: Long) {
+    override fun inc(
+        sql: String?,
+        millis: Long,
+    ) {
     }
 }

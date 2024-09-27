@@ -28,9 +28,10 @@ class TachikomaScopeImpl(override val di: DI) : CoroutineScope, TachikomaScope, 
     private val job: Job = SupervisorJob()
     private val invokeCounterFactory: InvokeCounterFactory by instance()
 
-    private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
-        LOGGER.error(exception) { "Coroutine uncaught exception" }
-    }
+    private val exceptionHandler =
+        CoroutineExceptionHandler { _, exception ->
+            LOGGER.error(exception) { "Coroutine uncaught exception" }
+        }
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default + job + exceptionHandler

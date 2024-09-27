@@ -16,7 +16,10 @@ private val MULTIPLE_EMPTY_LINES = listOf("", "")
  * @param originalText The text
  * @param toEmail the email that was sent to (and which will most likely be in the line looking like `foo@example.com wrote:`)
  */
-fun extractBodyFromPlaintextEmail(originalText: String, toEmail: Email): String {
+fun extractBodyFromPlaintextEmail(
+    originalText: String,
+    toEmail: Email,
+): String {
     val scanner = Scanner(originalText)
     scanner.useDelimiter(ALL_NEWLINES)
     scanner.useLocale(Locale.ENGLISH)
@@ -45,8 +48,11 @@ fun extractBodyFromPlaintextEmail(originalText: String, toEmail: Email): String 
  * @param originalHtml The text
  * @param toEmail the email that was sent to (and which will most likely be in the line looking like `foo@example.com wrote:`)
  */
-fun extractBodyFromHtmlEmail(originalHtml: String, email: Email): String =
+fun extractBodyFromHtmlEmail(
+    originalHtml: String,
+    email: Email,
+): String =
     extractBodyFromPlaintextEmail(
         getPlainText(Jsoup.parse(originalHtml)),
-        email
+        email,
     )

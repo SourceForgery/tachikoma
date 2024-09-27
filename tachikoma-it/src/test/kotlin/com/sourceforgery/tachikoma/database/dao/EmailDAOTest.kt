@@ -28,41 +28,48 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class EmailDAOTest : DIAware {
-    override val di = DI {
-        importOnce(testModule(TestAttribute.POSTGRESQL), allowOverride = true)
-    }
+    override val di =
+        DI {
+            importOnce(testModule(TestAttribute.POSTGRESQL), allowOverride = true)
+        }
 
     val emailDAO: EmailDAO by instance()
     val dbObjectMapper: DBObjectMapper by instance()
     val database: Database by instance()
 
-    val PRINTER = JsonFormat.printer()!!
+    val printer = JsonFormat.printer()!!
 
     @Before
     fun b4() {
         database.find<EmailDBO>().delete()
     }
 
-    fun getEmailDBO(from: Email, recipient: Email, bcc: List<Email> = emptyList()): EmailDBO {
+    fun getEmailDBO(
+        from: Email,
+        recipient: Email,
+        bcc: List<Email> = emptyList(),
+    ): EmailDBO {
         val account = AccountDBO(MailDomain("example.com"))
-        val authentication = AuthenticationDBO(
-            encryptedPassword = null,
-            apiToken = null,
-            role = AuthenticationRole.BACKEND,
-            account = account
-        )
+        val authentication =
+            AuthenticationDBO(
+                encryptedPassword = null,
+                apiToken = null,
+                role = AuthenticationRole.BACKEND,
+                account = account,
+            )
 
         val outgoingEmail = OutgoingEmail.newBuilder().build()
-        val jsonRequest = dbObjectMapper.objectMapper.readValue(PRINTER.print(outgoingEmail)!!, ObjectNode::class.java)!!
+        val jsonRequest = dbObjectMapper.objectMapper.readValue(printer.print(outgoingEmail)!!, ObjectNode::class.java)!!
 
-        val emailSendTransaction = EmailSendTransactionDBO(
-            jsonRequest = jsonRequest,
-            fromEmail = from,
-            authentication = authentication,
-            metaData = emptyMap(),
-            tags = emptySet(),
-            bcc = bcc.map { it.address }
-        )
+        val emailSendTransaction =
+            EmailSendTransactionDBO(
+                jsonRequest = jsonRequest,
+                fromEmail = from,
+                authentication = authentication,
+                metaData = emptyMap(),
+                tags = emptySet(),
+                bcc = bcc.map { it.address },
+            )
 
         return EmailDBO(
             recipient = recipient,
@@ -71,13 +78,12 @@ class EmailDAOTest : DIAware {
             messageId = MessageId("1023@example.com"),
             autoMailId = AutoMailId("1023@example.net"),
             mtaQueueId = null,
-            metaData = emptyMap()
+            metaData = emptyMap(),
         )
     }
 
     @Test
     fun `should be possible to retrieve a saved e-mail`() {
-
         val from = Email("from@example.com")
         val recipient = Email("recipient@example.com")
 

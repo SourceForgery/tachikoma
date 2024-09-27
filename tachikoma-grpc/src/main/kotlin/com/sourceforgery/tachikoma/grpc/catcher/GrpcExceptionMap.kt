@@ -15,22 +15,23 @@ class GrpcExceptionMap(override val di: DI) : DIAware {
     private val catchers by allInstances<KodeinAvoidingGrpcExceptionCatcher>()
     private val map = ConcurrentHashMap<Class<Throwable>, GrpcExceptionCatcher<Throwable>>()
 
-    private val defaultCatcher = object : GrpcExceptionCatcher<Throwable>(Throwable::class.java), DIAware {
-        override val di: DI = this@GrpcExceptionMap.di
+    private val defaultCatcher =
+        object : GrpcExceptionCatcher<Throwable>(Throwable::class.java), DIAware {
+            override val di: DI = this@GrpcExceptionMap.di
 
-        override fun logError(t: Throwable) {
-            if (t is CancellationException) {
-                logger.info { t.message }
-            } else {
-                logger.warn(t) { t.message }
+            override fun logError(t: Throwable) {
+                if (t is CancellationException) {
+                    logger.info { t.message }
+                } else {
+                    logger.warn(t) { t.message }
+                }
+            }
+
+            override fun status(t: Throwable): Status {
+                val stackToString = stackToString(t)
+                return Status.fromThrowable(t).withDescription(stackToString.substring(0, Math.min(stackToString.length, 6000)))
             }
         }
-
-        override fun status(t: Throwable): Status {
-            val stackToString = stackToString(t)
-            return Status.fromThrowable(t).withDescription(stackToString.substring(0, Math.min(stackToString.length, 6000)))
-        }
-    }
 
     fun findCatcher(key: Throwable): GrpcExceptionCatcher<Throwable> {
         try {

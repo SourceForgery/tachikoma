@@ -22,15 +22,20 @@ class RestExceptionMap(override val di: DI) : DIAware {
     private val catchers by allInstances<IRestExceptionCatcher>()
     private val map = ConcurrentHashMap<Class<Throwable>, RestExceptionCatcher<Throwable>>()
 
-    private val defaultCatcher = object : RestExceptionCatcher<Throwable> {
-        override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: Throwable): HttpResponse {
-            return if (debugConfig.sendDebugData) {
-                HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.PLAIN_TEXT_UTF_8, stackToString(cause))
-            } else {
-                HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR)
+    private val defaultCatcher =
+        object : RestExceptionCatcher<Throwable> {
+            override fun handleException(
+                ctx: RequestContext?,
+                req: HttpRequest?,
+                cause: Throwable,
+            ): HttpResponse {
+                return if (debugConfig.sendDebugData) {
+                    HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.PLAIN_TEXT_UTF_8, stackToString(cause))
+                } else {
+                    HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR)
+                }
             }
         }
-    }
 
     private fun stackToString(e: Throwable): String {
         if (debugConfig.sendDebugData) {

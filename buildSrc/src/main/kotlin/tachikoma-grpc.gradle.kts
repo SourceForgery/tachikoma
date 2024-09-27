@@ -20,7 +20,7 @@ val downloadProtocLint: DownloadFileTask = rootProject.tasks.findByName("downloa
     ?: rootProject.tasks.create("downloadProtocLint", DownloadFileTask::class.java) {
         url =
             { URL("https://github.com/ckaznocha/protoc-gen-lint/releases/download/v0.3.0/protoc-gen-lint_$nativePrefix.zip") }
-        outputFile = File(rootProject.buildDir, "protoc-gen-lint")
+        outputFile = file("build/protoc-gen-lint")
         zipFileMatcher = { "protoc-gen-lint" == it.name }
     }
 
@@ -40,8 +40,8 @@ extensions.getByType<IdeaModel>().apply {
     module {
         outputDir = file("build/idea-out")
         testOutputDir = file("build/idea-testout")
-        generatedSourceDirs.add(file("$buildDir/generated/source/proto/main/java/"))
-        generatedSourceDirs.add(file("$buildDir/generated/source/proto/main/grpc/"))
+        generatedSourceDirs.add(file("build/generated/source/proto/main/java/"))
+        generatedSourceDirs.add(file("build/generated/source/proto/main/grpc/"))
 
         // TODO Can this be removed?
         scopes["COMPILE"]!!["plus"]!!.add(configurations["protobuf"])

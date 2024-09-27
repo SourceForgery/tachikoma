@@ -11,9 +11,8 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 internal class GrpcExceptionInterceptor(
-    override val di: DI
+    override val di: DI,
 ) : ServerInterceptor, DIAware {
-
     private val grpcExceptionCatchers: GrpcExceptionMap by instance()
 
     private fun <T> runCaught(method: () -> T): T {
@@ -29,7 +28,11 @@ internal class GrpcExceptionInterceptor(
             .throwIt(e)
     }
 
-    override fun <ReqT, RespT> interceptCall(call: ServerCall<ReqT, RespT>, headers: Metadata, next: ServerCallHandler<ReqT, RespT>): ServerCall.Listener<ReqT> {
+    override fun <ReqT, RespT> interceptCall(
+        call: ServerCall<ReqT, RespT>,
+        headers: Metadata,
+        next: ServerCallHandler<ReqT, RespT>,
+    ): ServerCall.Listener<ReqT> {
         return runCaught {
             val nextCall = next.startCall(call, headers)
             object : ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(nextCall) {

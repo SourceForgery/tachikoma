@@ -20,20 +20,25 @@ class GraphqlSchemaGenerator(override val di: DI) : DIAware {
     private val subscriptions: List<Subscription> by allInstances()
     private val schemaGeneratorHooks: CustomSchemaGeneratorHooks by instance()
 
-    fun generateGraphqlSchema() = toSchema(
-        config = SchemaGeneratorConfig(
-            supportedPackages = listOf(GraphqlSchemaGenerator::class.java.packageName),
-            introspectionEnabled = true,
-            hooks = schemaGeneratorHooks,
-            dataFetcherFactoryProvider = SimpleKotlinDataFetcherFactoryProvider(),
-        ),
-        queries = queries
-            .map { TopLevelObject(it) },
-        mutations = mutations
-            .map { TopLevelObject(it) },
-        subscriptions = subscriptions
-            .map { TopLevelObject(it) },
-    )
+    fun generateGraphqlSchema() =
+        toSchema(
+            config =
+                SchemaGeneratorConfig(
+                    supportedPackages = listOf(GraphqlSchemaGenerator::class.java.packageName),
+                    introspectionEnabled = true,
+                    hooks = schemaGeneratorHooks,
+                    dataFetcherFactoryProvider = SimpleKotlinDataFetcherFactoryProvider(),
+                ),
+            queries =
+                queries
+                    .map { TopLevelObject(it) },
+            mutations =
+                mutations
+                    .map { TopLevelObject(it) },
+            subscriptions =
+                subscriptions
+                    .map { TopLevelObject(it) },
+        )
 
     fun storeSchema(file: File) {
         val graphqlSchema = generateGraphqlSchema()
@@ -50,9 +55,10 @@ class GraphqlSchemaGenerator(override val di: DI) : DIAware {
 
 fun main(args: Array<String>) {
     val outputFile = requireNotNull(args.firstOrNull()) { "Need to specify output file" }
-    val di = DI {
-        importOnce(graphqlApiModule)
-    }
+    val di =
+        DI {
+            importOnce(graphqlApiModule)
+        }
     val generator: GraphqlSchemaGenerator by di.instance()
     generator.storeSchema(File(outputFile))
 }

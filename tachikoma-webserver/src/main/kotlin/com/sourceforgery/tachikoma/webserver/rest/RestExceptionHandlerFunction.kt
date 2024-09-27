@@ -10,12 +10,15 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 class RestExceptionHandlerFunction(
-    override val di: DI
+    override val di: DI,
 ) : ExceptionHandlerFunction, DIAware {
-
     private val restExceptionMap: RestExceptionMap by instance()
 
-    override fun handleException(ctx: ServiceRequestContext, req: HttpRequest, cause: Throwable): HttpResponse {
+    override fun handleException(
+        ctx: ServiceRequestContext,
+        req: HttpRequest,
+        cause: Throwable,
+    ): HttpResponse {
         @Suppress("UNCHECKED_CAST")
         return restExceptionMap.findCatcher(cause::class.java as Class<Throwable>).handleException(ctx, req, cause)
     }

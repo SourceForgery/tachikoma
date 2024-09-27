@@ -32,10 +32,11 @@ class TrackingDecoderImpl(override val di: DI) : TrackingDecoder, DIAware {
     override fun createUrl(trackingData: UrlTrackingData): String {
         val parcelled = trackingData.toByteArray()!!
         val signature = HmacUtil.hmacSha1(parcelled, encryptionKey)
-        val signedMessage = UrlSignedMessage.newBuilder()
-            .setMessage(ByteString.copyFrom(parcelled))
-            .setSignature(ByteString.copyFrom(signature))
-            .build()
+        val signedMessage =
+            UrlSignedMessage.newBuilder()
+                .setMessage(ByteString.copyFrom(parcelled))
+                .setSignature(ByteString.copyFrom(signature))
+                .build()
         return Base64.getUrlEncoder().withoutPadding().encodeToString(signedMessage.toByteArray())
     }
 }

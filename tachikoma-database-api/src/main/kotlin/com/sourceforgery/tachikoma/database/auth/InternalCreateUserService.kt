@@ -8,7 +8,9 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 
 interface InternalCreateUserService {
     fun createAccount(mailDomain: MailDomain): AccountDBO
+
     fun createBackendAuthentication(account: AccountDBO): AuthenticationDBO
+
     fun createFrontendAuthentication(
         account: AccountDBO,
         login: String? = null,
@@ -16,7 +18,7 @@ interface InternalCreateUserService {
         role: AuthenticationRole,
         addApiToken: Boolean,
         active: Boolean = true,
-        recipientOverride: Email? = null
+        recipientOverride: Email? = null,
     ): AuthenticationDBO
 
     fun setApiToken(authenticationDBO: AuthenticationDBO)

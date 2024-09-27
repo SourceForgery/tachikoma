@@ -12,8 +12,8 @@ dependencies {
     api("com.github.breadmoirai:github-release:2.4.1")
 
     val guavaVersion: String by project
-    implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.1")
-    implementation("org.jlleitschuh.gradle:ktlint-gradle:10.2.1")
+    implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
+    implementation("org.jlleitschuh.gradle:ktlint-gradle:12.1.1")
     implementation("io.ebean:ebean-gradle-plugin:13.11.0")
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
@@ -38,8 +38,10 @@ val slf4jVersion: String by project
 val commonsLoggingVersion: String by project
 val commonsLangVersion: String by project
 
-kotlinDslPluginOptions {
-    jvmTarget.set("17")
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 configurations.all {

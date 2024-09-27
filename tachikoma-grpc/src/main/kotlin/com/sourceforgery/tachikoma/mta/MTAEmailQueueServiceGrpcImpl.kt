@@ -16,9 +16,8 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 internal class MTAEmailQueueServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : MTAEmailQueueGrpcKt.MTAEmailQueueCoroutineImplBase(), DIAware {
-
     private val authentication: () -> Authentication by provider()
     private val mtaEmailQueueService: MTAEmailQueueService by instance()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
@@ -28,28 +27,29 @@ internal class MTAEmailQueueServiceGrpcImpl(
             .filter { it.hasEmailMessage() }
             .map { it.emailMessage }
 
-    override fun getEmailsWithKeepAlive(requests: Flow<MTAQueuedNotification>) = channelFlow {
-        try {
-            val auth = authentication()
-            auth.requireBackend()
-            withKeepAlive(
-                EmailMessageOrKeepAlive.newBuilder()
-                    .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
-                    .build()
-            )
-            mtaEmailQueueService.getEmails(requests, auth.mailDomain)
-                .map {
+    override fun getEmailsWithKeepAlive(requests: Flow<MTAQueuedNotification>) =
+        channelFlow {
+            try {
+                val auth = authentication()
+                auth.requireBackend()
+                withKeepAlive(
                     EmailMessageOrKeepAlive.newBuilder()
-                        .setEmailMessage(it)
-                        .build()
-                }
-                .collect {
-                    send(it)
-                }
-        } catch (e: Exception) {
-            throw grpcExceptionMap.findAndConvertAndLog(e)
-        }
-    }.buffer(Channel.RENDEZVOUS)
+                        .setKeepAlive(RandomStringUtils.randomAlphanumeric(1000))
+                        .build(),
+                )
+                mtaEmailQueueService.getEmails(requests, auth.mailDomain)
+                    .map {
+                        EmailMessageOrKeepAlive.newBuilder()
+                            .setEmailMessage(it)
+                            .build()
+                    }
+                    .collect {
+                        send(it)
+                    }
+            } catch (e: Exception) {
+                throw grpcExceptionMap.findAndConvertAndLog(e)
+            }
+        }.buffer(Channel.RENDEZVOUS)
 
     override suspend fun incomingEmail(request: IncomingEmailMessage): MailAcceptanceResult =
         try {

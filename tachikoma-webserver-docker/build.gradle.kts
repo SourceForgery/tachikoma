@@ -2,8 +2,9 @@ plugins {
     `tachikoma-docker`
 }
 
-val tarTask = project(":tachikoma-webserver")
-    .tasks[ApplicationPlugin.TASK_DIST_TAR_NAME]
+val tarTask =
+    project(":tachikoma-webserver")
+        .tasks[ApplicationPlugin.TASK_DIST_TAR_NAME]
 
 val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.DockerTask::class) {
     dependsOn(tarTask)
@@ -25,7 +26,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
         curl -Ss https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -o /usr/bin/cloud_sql_proxy &&
         chmod 0755 /usr/bin/cloud_sql_proxy &&
         echo "LANG=C.UTF-8" > /etc/default/locale
-        """.trimIndent().replace('\n', ' ')
+        """.trimIndent().replace('\n', ' '),
     )
 
     exposePort(8443)
@@ -37,7 +38,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
         """
         sed -r "/(KLogPermitNonKernelFacility|imklog)/d" -i /etc/rsyslog.conf &&
         sed -r "s/\\|(.*)xconsole\$/\\1console/" -i /etc/rsyslog.d/50-default.conf
-        """.trimIndent().replace('\n', ' ')
+        """.trimIndent().replace('\n', ' '),
     )
 
     addFile(file("src/assets/"))
@@ -45,7 +46,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
     addFiles(tarTask.outputs.files) {
         it.replace(
             "^[^/]*".toRegex(),
-            "/opt/tachikoma-webserver"
+            "/opt/tachikoma-webserver",
         )
     }
 
@@ -56,7 +57,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
         useradd webserver &&
         mkdir -p /var/log/tachikoma &&
         chown webserver:root /var/log/tachikoma
-        """.trimIndent().replace('\n', ' ')
+        """.trimIndent().replace('\n', ' '),
     )
 
     push.set(rootProject.provider { rootProject.extensions.extraProperties["dockerPush"] as Boolean })

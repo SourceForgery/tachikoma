@@ -34,50 +34,54 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             LOGGER.warn { "Did not find any email with mtaQueueId: $queueId and associated email $recipient" }
         } else if (email.recipient == recipient) {
             val creationTimestamp = clock.instant()!!
-            val notificationMessageBuilder = DeliveryNotificationMessage
-                .newBuilder()
-                .setCreationTimestamp(creationTimestamp.toTimestamp())
-                .setEmailMessageId(email.id.emailId)
+            val notificationMessageBuilder =
+                DeliveryNotificationMessage
+                    .newBuilder()
+                    .setCreationTimestamp(creationTimestamp.toTimestamp())
+                    .setEmailMessageId(email.id.emailId)
 
-            val status = when (request.status.substring(0, 2)) {
-                "2." -> {
-                    if (!listOf("2.0.0", "2.5.0", "2.6.0").contains(request.status)) {
-                        LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it DELIVERED anyway" }
+            val status =
+                when (request.status.substring(0, 2)) {
+                    "2." -> {
+                        if (!listOf("2.0.0", "2.5.0", "2.6.0").contains(request.status)) {
+                            LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it DELIVERED anyway" }
+                        }
+                        notificationMessageBuilder.messageDelivered = MessageDelivered.getDefaultInstance()
+                        EmailStatus.DELIVERED
                     }
-                    notificationMessageBuilder.messageDelivered = MessageDelivered.getDefaultInstance()
-                    EmailStatus.DELIVERED
-                }
-                "4." -> {
-                    if (!softBounceList.contains(request.status)) {
-                        LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it SOFT_BOUNCED anyway" }
+                    "4." -> {
+                        if (!softBounceList.contains(request.status)) {
+                            LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it SOFT_BOUNCED anyway" }
+                        }
+                        notificationMessageBuilder.messageSoftBounced = MessageSoftBounced.getDefaultInstance()
+                        EmailStatus.SOFT_BOUNCED
                     }
-                    notificationMessageBuilder.messageSoftBounced = MessageSoftBounced.getDefaultInstance()
-                    EmailStatus.SOFT_BOUNCED
-                }
-                "5." -> {
-                    if (!hardBounceList.contains(request.status)) {
-                        LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it HARD_BOUNCED anyway" }
-                    } else if (request.status == "5.7.26") {
-                        LOGGER.fatal { "Email sending broken for messageId = ${email.messageId}. Sending server does not fulfill DMARC requirements! Change your DMARC policy to QUARANTINE or NONE immediately and start debugging!" }
+                    "5." -> {
+                        if (!hardBounceList.contains(request.status)) {
+                            LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, but we set it HARD_BOUNCED anyway" }
+                        } else if (request.status == "5.7.26") {
+                            LOGGER.fatal { "Email sending broken for messageId = ${email.messageId}. Sending server does not fulfill DMARC requirements! Change your DMARC policy to QUARANTINE or NONE immediately and start debugging!" }
+                        }
+                        notificationMessageBuilder.messageHardBounced = MessageHardBounced.getDefaultInstance()
+                        EmailStatus.HARD_BOUNCED
                     }
-                    notificationMessageBuilder.messageHardBounced = MessageHardBounced.getDefaultInstance()
-                    EmailStatus.HARD_BOUNCED
+                    else -> {
+                        LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, not sending event" }
+                        null
+                    }
                 }
-                else -> {
-                    LOGGER.error { "Don't know status code ${request.status} for email with id ${email.id}, not sending event" }
-                    null
-                }
-            }
 
             if (status != null) {
-                val statusEventDBO = EmailStatusEventDBO(
-                    emailStatus = status,
-                    email = email,
-                    metaData = StatusEventMetaData(
-                        mtaStatusCode = request.status,
-                        mtaDiagnosticText = request.diagnoseText
+                val statusEventDBO =
+                    EmailStatusEventDBO(
+                        emailStatus = status,
+                        email = email,
+                        metaData =
+                            StatusEventMetaData(
+                                mtaStatusCode = request.status,
+                                mtaDiagnosticText = request.diagnoseText,
+                            ),
                     )
-                )
                 statusEventDBO.dateCreated = creationTimestamp
                 emailStatusEventDAO.save(statusEventDBO)
                 LOGGER.debug { "Setting status $status for email ${email.messageId}" }
@@ -87,35 +91,64 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
     }
 
     companion object {
-        private val hardBounceList = listOf(
-            "5.0.0", // Generic error
-            "5.1.0", // Blocked by recipient
-            "5.1.1", // Unknown recipient
-            "5.2.0", // Other or undefined mailbox status
-            "5.2.1", // Mailbox disabled, not accepting messages
-            "5.2.2", // Mailbox full
-            "5.4.1", // Spam
-            "5.4.4", // Unable to route??
-            "5.5.0", // Unknown recipient
-            "5.5.1", // User unknown
-            "5.7.1", // Unknown recipient"5.3.0", // Spam
-        )
-        private val softBounceList = listOf(
-            "4.0.0", // Generic soft bounce
-            "4.1.0", // Rate limited
-            "4.1.1", // Unknown user, but retry(sic!)
-            "4.1.8", // Domain is not resolving. This is a most likely a major problem
-            "4.2.0", // Temporarily deferred due to user complaints (SPAM?)
-            "4.2.2", // Mailbox is full
-            "4.3.2", // Less used. System is shutting down/going offline
-            "4.4.1", // Connection busy
-            "4.4.2", // Network connection issue
-            "4.4.3", // Temporary I suppose?
-            "4.4.4", // Delayed message: Email routing issue due to network
-            "4.7.0", // Temporary failure. Could be auth (Exchange) or just snafu (Gmail)
-            "4.7.1", // Temporarily deferred due to user complaints (SPAM?)
-            "4.7.5", // TLS problems
-        )
+        private val hardBounceList =
+            listOf(
+                // Generic error
+                "5.0.0",
+                // Blocked by recipient
+                "5.1.0",
+                // Unknown recipient
+                "5.1.1",
+                // Other or undefined mailbox status
+                "5.2.0",
+                // Mailbox disabled, not accepting messages
+                "5.2.1",
+                // Mailbox full
+                "5.2.2",
+                // Spam
+                "5.3.0",
+                // Spam
+                "5.4.1",
+                // Unable to route??
+                "5.4.4",
+                // Unknown recipient
+                "5.5.0",
+                // User unknown
+                "5.5.1",
+                // Unknown recipient
+                "5.7.1",
+            )
+        private val softBounceList =
+            listOf(
+                // Generic soft bounce
+                "4.0.0",
+                // Rate limited
+                "4.1.0",
+                // Unknown user, but retry(sic!)
+                "4.1.1",
+                // Domain is not resolving. This is a most likely a major problem
+                "4.1.8",
+                // Temporarily deferred due to user complaints (SPAM?)
+                "4.2.0",
+                // Mailbox is full
+                "4.2.2",
+                // Less used. System is shutting down/going offline
+                "4.3.2",
+                // Connection busy
+                "4.4.1",
+                // Network connection issue
+                "4.4.2",
+                // Temporary I suppose?
+                "4.4.3",
+                // Delayed message: Email routing issue due to network
+                "4.4.4",
+                // Temporary failure. Could be auth (Exchange) or just snafu (Gmail)
+                "4.7.0",
+                // Temporarily deferred due to user complaints (SPAM?)
+                "4.7.1",
+                // TLS problems
+                "4.7.5",
+            )
         private val LOGGER = logger()
     }
 }

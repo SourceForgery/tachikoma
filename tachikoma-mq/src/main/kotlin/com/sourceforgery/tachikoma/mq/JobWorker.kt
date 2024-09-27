@@ -13,11 +13,12 @@ class JobWorker(override val di: DI) : DIAware {
     private var future: ListenableFuture<Unit>? = null
 
     fun work() {
-        future = mqSequenceFactory.listenForJobs {
-            withNewDatabaseSessionScopeCtx {
-                val job = jobFactory.getJobClass(it)
-                job.execute(it)
+        future =
+            mqSequenceFactory.listenForJobs {
+                withNewDatabaseSessionScopeCtx {
+                    val job = jobFactory.getJobClass(it)
+                    job.execute(it)
+                }
             }
-        }
     }
 }

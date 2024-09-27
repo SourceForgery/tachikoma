@@ -15,9 +15,8 @@ import org.kodein.di.provider
 import java.net.URI
 
 class AccountServiceGrpcImpl(
-    override val di: DI
+    override val di: DI,
 ) : AccountServiceGrpcKt.AccountServiceCoroutineImplBase(), DIAware {
-
     private val authentication: () -> Authentication by provider()
     private val grpcExceptionMap: GrpcExceptionMap by instance()
     private val accountFacade: AccountFacade by instance()
@@ -29,18 +28,20 @@ class AccountServiceGrpcImpl(
             authentication().requireFrontendAdmin(mailDomain)
             var account = requireNotNull(accountFacade.get(mailDomain)) { "No account with domain $mailDomain" }
             if (request.hasBaseUrl()) {
-                account = accountFacade.modifyAccount(
-                    mailDomain = mailDomain,
-                    baseUrl = request.baseUrl
-                        .takeIf { it.isNotEmpty() }
-                        ?.let { URI(it) }
-                )
+                account =
+                    accountFacade.modifyAccount(
+                        mailDomain = mailDomain,
+                        baseUrl =
+                            request.baseUrl
+                                .takeIf { it.isNotEmpty() }
+                                ?.let { URI(it) },
+                    )
             }
             UpdateSettingsResponse.newBuilder()
                 .setMailDomain(account.mailDomain.mailDomain)
                 .setBaseUrl(
                     (account.baseUrl ?: trackingConfig.baseUrl)
-                        .toASCIIString()
+                        .toASCIIString(),
                 )
                 .build()
         } catch (e: Exception) {

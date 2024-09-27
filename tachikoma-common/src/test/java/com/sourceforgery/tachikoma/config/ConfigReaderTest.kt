@@ -12,9 +12,9 @@ class ConfigReaderTest {
         file.deleteOnExit()
         file.writeText(
             """
-                TEST_THING=foo
-                SQL_URL=https://test@example.com/foo
-            """.trimIndent()
+            TEST_THING=foo
+            SQL_URL=https://test@example.com/foo
+            """.trimIndent(),
         )
         System.setProperty("tachikomaConfig", file.absolutePath)
         assertEquals("foo", Conf.testThing)

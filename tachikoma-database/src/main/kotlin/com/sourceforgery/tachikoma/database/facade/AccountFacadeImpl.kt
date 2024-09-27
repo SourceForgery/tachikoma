@@ -12,7 +12,10 @@ import java.net.URI
 class AccountFacadeImpl(override val di: DI) : AccountFacade, DIAware {
     private val accountDAO: AccountDAO by instance()
 
-    override fun modifyAccount(mailDomain: MailDomain, baseUrl: URI?): Account {
+    override fun modifyAccount(
+        mailDomain: MailDomain,
+        baseUrl: URI?,
+    ): Account {
         val accountDBO = requireNotNull(accountDAO[mailDomain]) { "No account found for $mailDomain" }
         accountDBO.baseUrl = baseUrl
         accountDAO.save(accountDBO)

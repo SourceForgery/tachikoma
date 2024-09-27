@@ -6,7 +6,7 @@ import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 
-private const val maxWidth = 80
+private const val MAX_WIDTH = 80
 
 /**
  * HTML to plain-text. This example program demonstrates the use of jsoup to convert HTML input to lightly-formatted
@@ -30,7 +30,10 @@ private class FormattingVisitor : NodeVisitor {
     private val accum = StringBuilder() // holds the accumulated text
 
     // hit when the node is first seen
-    override fun head(node: Node, depth: Int) {
+    override fun head(
+        node: Node,
+        depth: Int,
+    ) {
         val name = node.nodeName()
         when (name) {
             "#text" -> append((node as TextNode).text()) // TextNodes carry all user-readable text in the DOM.
@@ -41,7 +44,10 @@ private class FormattingVisitor : NodeVisitor {
     }
 
     // hit when all of the node's children (if any) have been visited
-    override fun tail(node: Node, depth: Int) {
+    override fun tail(
+        node: Node,
+        depth: Int,
+    ) {
         val name = node.nodeName()
         when (name) {
             "br", "dd", "dt", "p", "h1", "h2", "h3", "h4", "h5" ->
@@ -61,7 +67,7 @@ private class FormattingVisitor : NodeVisitor {
             return
         }
 
-        if (text.length + width > maxWidth) { // won't fit, needs to wrap
+        if (text.length + width > MAX_WIDTH) { // won't fit, needs to wrap
             val words = text.split("\\s+".toRegex()).dropLastWhile { it.isEmpty() }
             for (i in words.indices) {
                 var word = words[i]
@@ -70,7 +76,7 @@ private class FormattingVisitor : NodeVisitor {
                     // insert a space if not the last word
                     word += " "
                 }
-                if (word.length + width > maxWidth) { // wrap and reset counter
+                if (word.length + width > MAX_WIDTH) { // wrap and reset counter
                     if (accum.isNotEmpty() && accum.last() == ' ') {
                         // If last char was a space, remove it as we are adding a line break
                         accum.deleteCharAt(accum.length - 1)

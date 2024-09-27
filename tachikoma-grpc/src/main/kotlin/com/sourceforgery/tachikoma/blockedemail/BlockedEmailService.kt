@@ -34,7 +34,10 @@ internal class BlockedEmailService(override val di: DI) : DIAware {
             }
     }
 
-    fun removeBlockedEmail(request: RemoveBlockedEmailRequest, authenticationId: AuthenticationId) {
+    fun removeBlockedEmail(
+        request: RemoveBlockedEmailRequest,
+        authenticationId: AuthenticationId,
+    ) {
         val authenticationDBO = authenticationDAO.getActiveById(authenticationId)!!
 
         blockedEmailDAO.unblock(authenticationDBO.account, request.fromEmail.toEmail(), request.recipientEmail.toEmail())

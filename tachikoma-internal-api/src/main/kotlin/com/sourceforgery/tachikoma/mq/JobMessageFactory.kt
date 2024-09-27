@@ -16,7 +16,7 @@ class JobMessageFactory(override val di: DI) : DIAware {
     fun createSendEmailJob(
         requestedSendTime: Instant = Instant.EPOCH,
         emailId: EmailId,
-        mailDomain: MailDomain
+        mailDomain: MailDomain,
     ) = JobMessage.newBuilder()
         .setCreationTimestamp(clock.instant().toTimestamp())
         .setRequestedExecutionTime(requestedSendTime.toTimestamp())
@@ -24,7 +24,7 @@ class JobMessageFactory(override val di: DI) : DIAware {
             SendEmailJob.newBuilder()
                 .setMailDomain(mailDomain.mailDomain)
                 .setEmailId(emailId.emailId)
-                .build()
+                .build(),
         )
         .build()
 }

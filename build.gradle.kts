@@ -21,14 +21,15 @@ val replaceVersion by tasks.registering(Copy::class) {
         val snapshotDockerRepo: String? by project
         val snapshotDockerVersion: String? by project
 
-        val replacements = mutableMapOf(
-            "version" to (snapshotDockerVersion ?: project.version),
-            "dockerRepository" to (snapshotDockerRepo?.trimEnd('/') ?: "sourceforgery"),
-            "currentTime" to Clock.systemUTC().instant().toString()
-        )
+        val replacements =
+            mutableMapOf(
+                "version" to (snapshotDockerVersion ?: project.version),
+                "dockerRepository" to (snapshotDockerRepo?.trimEnd('/') ?: "sourceforgery"),
+                "currentTime" to Clock.systemUTC().instant().toString(),
+            )
         expand(replacements)
     }
-    into("$buildDir/kubernetes/")
+    into("build/kubernetes/")
     includeEmptyDirs = false
 }
 
@@ -44,7 +45,7 @@ tasks.githubRelease {
 }
 
 rootProject.extensions.configure<GithubReleaseExtension> {
-    releaseAssets.from("$buildDir/kubernetes/deployment-webserver.yaml")
+    releaseAssets.from("build/kubernetes/deployment-webserver.yaml")
 }
 
 val publish by tasks.registering {
@@ -110,16 +111,18 @@ if (currentTag.isNotEmpty()) {
     }
 }
 
-val currentBranch = System.getenv("CIRCLE_BRANCH")
-    ?: let {
-        org.eclipse.jgit.internal.storage.file.FileRepository(File(project.rootDir, ".git")).use {
-            it.branch
+val currentBranch =
+    System.getenv("CIRCLE_BRANCH")
+        ?: let {
+            org.eclipse.jgit.internal.storage.file.FileRepository(File(project.rootDir, ".git")).use {
+                it.branch
+            }
         }
+val dockerPushRelease =
+    when {
+        currentBranch == "master" && System.getenv("DOCKER_PUSH")?.toBoolean() == true -> true
+        currentTag.isNotEmpty() -> true
+        else -> false
     }
-val dockerPushRelease = when {
-    currentBranch == "master" && System.getenv("DOCKER_PUSH")?.toBoolean() == true -> true
-    currentTag.isNotEmpty() -> true
-    else -> false
-}
 
 rootProject.extensions.extraProperties["dockerPush"] = dockerPushRelease

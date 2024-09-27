@@ -34,7 +34,10 @@ class CustomSchemaGeneratorHooks(override val di: DI) : SchemaGeneratorHooks, DI
         return kClass.simpleName != "DIAware"
     }
 
-    override fun isValidFunction(kClass: KClass<*>, function: KFunction<*>): Boolean {
+    override fun isValidFunction(
+        kClass: KClass<*>,
+        function: KFunction<*>,
+    ): Boolean {
         // Method without parameters is most likely returning a wrapper
         // function.valueParameters.isNotEmpty() &&
         // Ignore private/internal methods
@@ -45,7 +48,10 @@ class CustomSchemaGeneratorHooks(override val di: DI) : SchemaGeneratorHooks, DI
             function.annotations.none { it is GQLObjectFunction }
     }
 
-    override fun isValidProperty(kClass: KClass<*>, property: KProperty<*>): Boolean {
+    override fun isValidProperty(
+        kClass: KClass<*>,
+        property: KProperty<*>,
+    ): Boolean {
         val returnType = property.returnType.javaType.typeName.removeSuffix("<?>")
         LOGGER.trace { "$returnType !in $ignoredTypes = ${returnType !in ignoredTypes}" }
         return returnType !in ignoredTypes
@@ -56,17 +62,19 @@ class CustomSchemaGeneratorHooks(override val di: DI) : SchemaGeneratorHooks, DI
     }
 
     companion object {
-        private val ignoredMethods = setOf(
-            "equals",
-            "copy",
-        )
+        private val ignoredMethods =
+            setOf(
+                "equals",
+                "copy",
+            )
 
-        private val ignoredTypes = listOf(
-            DIContext::class.java.name,
-            DI::class.java.name,
-            DITrigger::class.java.name,
-        ).map { it.removeSuffix("<?>") }
-            .toSet()
+        private val ignoredTypes =
+            listOf(
+                DIContext::class.java.name,
+                DI::class.java.name,
+                DITrigger::class.java.name,
+            ).map { it.removeSuffix("<?>") }
+                .toSet()
 
         private val LOGGER = logger()
     }

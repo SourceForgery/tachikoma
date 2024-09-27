@@ -11,13 +11,14 @@ import io.grpc.Status
 import org.kodein.di.DI
 
 class NotFoundCatcher(
-    override val di: DI
+    override val di: DI,
 ) : GrpcExceptionCatcher<NotFoundException>(NotFoundException::class.java),
     RestExceptionCatcher<NotFoundException> {
+    override fun handleException(
+        ctx: RequestContext?,
+        req: HttpRequest?,
+        cause: NotFoundException,
+    ) = HttpResponse.of(NOT_FOUND)
 
-    override fun handleException(ctx: RequestContext?, req: HttpRequest?, cause: NotFoundException) =
-        HttpResponse.of(NOT_FOUND)
-
-    override fun status(t: NotFoundException) =
-        Status.NOT_FOUND
+    override fun status(t: NotFoundException) = Status.NOT_FOUND
 }

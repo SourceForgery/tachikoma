@@ -9,9 +9,8 @@ import org.kodein.di.instance
 
 class EmailSendTransactionDAOImpl(override val di: DI) : EmailSendTransactionDAO, DIAware {
     private val database: Database by instance()
-    override fun save(emailSendTransactionDBO: EmailSendTransactionDBO) =
-        database.save(emailSendTransactionDBO)
 
-    override fun get(emailTransactionId: EmailTransactionId): EmailSendTransactionDBO? =
-        database.find(EmailSendTransactionDBO::class.java, emailTransactionId.emailTransactionId)
+    override fun save(emailSendTransactionDBO: EmailSendTransactionDBO) = database.save(emailSendTransactionDBO)
+
+    override fun get(emailTransactionId: EmailTransactionId): EmailSendTransactionDBO? = database.find(EmailSendTransactionDBO::class.java, emailTransactionId.emailTransactionId)
 }

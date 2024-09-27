@@ -45,32 +45,36 @@ internal class DeliveryNotificationService(override val di: DI) : DIAware {
         accountId: AccountId,
         mailDomain: MailDomain,
         includeTags: Set<String>,
-    ): Flow<EmailNotification> = mqSequenceFactory.listenForDeliveryNotifications(
-        authenticationId = authenticationId,
-        mailDomain = mailDomain,
-        accountId = accountId
-    ).mapNotNull { deliveryNotificationMessage: DeliveryNotificationMessage ->
-        val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(deliveryNotificationMessage.emailMessageId))
-        if (emailData == null) {
-            LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
-            return@mapNotNull null
-        }
-
-        if (includeTags.isNotEmpty()) {
-            if (emailData.transaction.tags.intersect(includeTags).isEmpty()) {
+    ): Flow<EmailNotification> =
+        mqSequenceFactory.listenForDeliveryNotifications(
+            authenticationId = authenticationId,
+            mailDomain = mailDomain,
+            accountId = accountId,
+        ).mapNotNull { deliveryNotificationMessage: DeliveryNotificationMessage ->
+            val emailData = emailDAO.fetchEmailData(emailMessageId = EmailId(deliveryNotificationMessage.emailMessageId))
+            if (emailData == null) {
+                LOGGER.error("Got event with non-existing email " + deliveryNotificationMessage.emailMessageId)
                 return@mapNotNull null
             }
-        }
 
-        deliveryNotificationMessage.toEmailNotification(emailData, request)
-    }
+            if (includeTags.isNotEmpty()) {
+                if (emailData.transaction.tags.intersect(includeTags).isEmpty()) {
+                    return@mapNotNull null
+                }
+            }
+
+            deliveryNotificationMessage.toEmailNotification(emailData, request)
+        }
 
     companion object {
         private val LOGGER = logger()
     }
 }
 
-private fun DeliveryNotificationMessage.toEmailNotification(emailData: EmailDBO, request: NotificationStreamParameters): EmailNotification? {
+private fun DeliveryNotificationMessage.toEmailNotification(
+    emailData: EmailDBO,
+    request: NotificationStreamParameters,
+): EmailNotification? {
     return EmailNotification.newBuilder().apply {
         emailId = emailData.id.toGrpcInternal()
         recipientEmailAddress = emailData.recipient.toGrpcInternal()
@@ -115,7 +119,7 @@ fun EmailDBO.toEmailMetrics(): EmailMetrics =
                         .setTimestamp(it.dateCreated!!.toTimestamp())
                         .setUserAgent(it.metaData.userAgent ?: "")
                         .build()
-                }
+                },
         )
         .addAllClicks(
             emailStatusEvents.filter { it.emailStatus == EmailStatus.CLICKED }
@@ -125,17 +129,18 @@ fun EmailDBO.toEmailMetrics(): EmailMetrics =
                         .setTimestamp(it.dateCreated!!.toTimestamp())
                         .setUserAgent(it.metaData.userAgent ?: "")
                         .build()
-                }
+                },
         ).build()
 
 private fun EmailNotification.Builder.setEventData(deliveryNotificationMessage: DeliveryNotificationMessage): Any {
     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
     return when (deliveryNotificationMessage.notificationDataCase) {
         DeliveryNotificationMessage.NotificationDataCase.MESSAGE_CLICKED -> {
-            clickedEvent = ClickedEvent.newBuilder()
-                .setIpAddress(deliveryNotificationMessage.messageClicked.ipAddress)
-                .setClickedUrl(deliveryNotificationMessage.messageClicked.clickedUrl)
-                .build()
+            clickedEvent =
+                ClickedEvent.newBuilder()
+                    .setIpAddress(deliveryNotificationMessage.messageClicked.ipAddress)
+                    .setClickedUrl(deliveryNotificationMessage.messageClicked.clickedUrl)
+                    .build()
         }
         DeliveryNotificationMessage.NotificationDataCase.MESSAGE_HARD_BOUNCED -> {
             hardBouncedEvent = HardBouncedEvent.getDefaultInstance()

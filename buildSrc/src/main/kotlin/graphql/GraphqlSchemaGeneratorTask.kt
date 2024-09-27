@@ -1,10 +1,10 @@
 package graphql
 
-import gradle.kotlin.dsl.accessors._52d8be61b0905822298db08de535ee7b.sourceSets
 import groovy.lang.Closure
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.internal.tasks.DefaultSourceSetContainer
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.OutputFile
@@ -31,7 +31,8 @@ abstract class GraphqlSchemaGeneratorTask : JavaExec() {
 
     @TaskAction
     override fun exec() {
-        val sourceSet = project.sourceSets["main"]
+        val sourceSets = project.extensions.getByName("sourceSets") as DefaultSourceSetContainer
+        val sourceSet = sourceSets["main"]
         classpath(sourceSet.compileClasspath + sourceSet.runtimeClasspath)
         args(schemaOutput.get())
         super.exec()

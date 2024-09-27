@@ -12,9 +12,9 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
+// Represents one call to MailDelivery.sendEmail()
 @Table(name = "e_email_send_transaction")
 @Entity
-// Represents one call to MailDelivery.sendEmail()
 class EmailSendTransactionDBO(
     // Jsonified version of the gRPC coming in through the front end
     // for logging (in JSON because of readability and searching)
@@ -29,8 +29,7 @@ class EmailSendTransactionDBO(
     @DbJsonB
     val metaData: Map<String, String> = emptyMap(),
     @DbArray
-    val tags: Set<String> = emptySet()
-
+    val tags: Set<String> = emptySet(),
 ) : GenericDBO() {
     @OneToMany(cascade = [CascadeType.ALL])
     val emails: List<EmailDBO> = ArrayList()

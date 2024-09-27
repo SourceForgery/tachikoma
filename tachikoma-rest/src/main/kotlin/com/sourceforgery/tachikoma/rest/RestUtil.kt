@@ -7,6 +7,6 @@ import com.linecorp.armeria.common.ResponseHeaders
 
 fun httpRedirect(redirectUrl: String): HttpResponse {
     return HttpResponse.of(
-        ResponseHeaders.of(HttpStatus.TEMPORARY_REDIRECT, HttpHeaderNames.LOCATION, redirectUrl)
+        ResponseHeaders.of(HttpStatus.TEMPORARY_REDIRECT, HttpHeaderNames.LOCATION, redirectUrl),
     )
 }

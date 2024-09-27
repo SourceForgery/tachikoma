@@ -23,47 +23,48 @@ import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 class Main
-internal constructor(
-    private val configuration: Configuration
-) {
+    internal constructor(
+        private val configuration: Configuration,
+    ) {
+        private val tachikomaUrl = configuration.tachikomaUrl
 
-    private val tachikomaUrl = configuration.tachikomaUrl
+        private val coroutineExceptionHandler =
+            CoroutineExceptionHandler { _, exception ->
+                LOGGER.error(exception) { "Coroutine uncaught exception" }
+            }
 
-    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, exception ->
-        LOGGER.error(exception) { "Coroutine uncaught exception" }
-    }
+        private val threadPool =
+            ThreadPoolExecutor(
+                0,
+                10,
+                60L,
+                TimeUnit.SECONDS,
+                SynchronousQueue(),
+            )
 
-    private val threadPool = ThreadPoolExecutor(
-        0,
-        10,
-        60L,
-        TimeUnit.SECONDS,
-        SynchronousQueue(),
-    )
+        private val scope = CoroutineScope(threadPool.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler)
 
-    private val scope = CoroutineScope(threadPool.asCoroutineDispatcher() + SupervisorJob() + coroutineExceptionHandler)
+        fun run() {
+            LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
 
-    fun run() {
-        LOGGER.info { "Connecting to ${tachikomaUrl.withoutPassword()}" }
+            val builder = provideClientBuilder(configuration)
+            runCatching {
+                MailSender(builder.build(MTAEmailQueueCoroutineStub::class.java), scope)
+                    .start()
+                val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueCoroutineStub::class.java), scope)
+                incomingEmail.start()
+                SyslogSniffer(builder.build(MTADeliveryNotificationsCoroutineStub::class.java))
+                    .blockingSniffer()
+            }.onFailure {
+                LOGGER.fatal(it) { "Syslog sniffer died. Dying with it." }
+                exitProcess(1)
+            }
+        }
 
-        val builder = provideClientBuilder(configuration)
-        runCatching {
-            MailSender(builder.build(MTAEmailQueueCoroutineStub::class.java), scope)
-                .start()
-            val incomingEmail = IncomingEmailHandler(builder.build(MTAEmailQueueCoroutineStub::class.java), scope)
-            incomingEmail.start()
-            SyslogSniffer(builder.build(MTADeliveryNotificationsCoroutineStub::class.java))
-                .blockingSniffer()
-        }.onFailure {
-            LOGGER.fatal(it) { "Syslog sniffer died. Dying with it." }
-            exitProcess(1)
+        companion object {
+            private val LOGGER = logger()
         }
     }
-
-    companion object {
-        private val LOGGER = logger()
-    }
-}
 
 fun main() {
     InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE)

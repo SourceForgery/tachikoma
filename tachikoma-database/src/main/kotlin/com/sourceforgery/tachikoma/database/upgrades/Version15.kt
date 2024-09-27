@@ -13,7 +13,7 @@ class Version15(override val di: DI) : DatabaseUpgrade, DIAware {
         @Language("PostgreSQL")
         val content =
             """
-                create index idx_e_email_mta_queue_id on e_email(mta_queue_id);
+            create index idx_e_email_mta_queue_id on e_email(mta_queue_id);
             """.trimIndent()
 
         DdlRunner(false, javaClass.simpleName)

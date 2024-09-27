@@ -7,5 +7,6 @@ import org.kodein.di.DIAware
 
 class Mutations(override val di: DI) : DIAware, Mutation {
     private val accounts = AccountServiceMutations(di)
+
     fun accounts() = accounts
 }

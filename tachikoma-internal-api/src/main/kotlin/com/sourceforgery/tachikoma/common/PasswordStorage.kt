@@ -9,7 +9,6 @@ import javax.crypto.spec.PBEKeySpec
 import kotlin.experimental.xor
 
 object PasswordStorage {
-
     val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA1"
 
     // These constants may be changed without breaking existing hashes.
@@ -59,23 +58,29 @@ object PasswordStorage {
             toBase64(hash)
     }
 
-    fun verifyPassword(password: String, correctHash: String): Boolean {
+    fun verifyPassword(
+        password: String,
+        correctHash: String,
+    ): Boolean {
         return verifyPassword(password.toCharArray(), correctHash)
     }
 
-    fun verifyPassword(password: CharArray, correctHash: String): Boolean {
+    fun verifyPassword(
+        password: CharArray,
+        correctHash: String,
+    ): Boolean {
         // Decode the hash into its parameters
         val params = correctHash.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (params.size != HASH_SECTIONS) {
             throw InvalidHashException(
-                "Fields are missing from the password hash."
+                "Fields are missing from the password hash.",
             )
         }
 
         // Currently, Java only supports SHA1.
         if (params[HASH_ALGORITHM_INDEX] != "sha1") {
             throw CannotPerformOperationException(
-                "Unsupported hash type."
+                "Unsupported hash type.",
             )
         }
 
@@ -85,13 +90,13 @@ object PasswordStorage {
             } catch (ex: NumberFormatException) {
                 throw InvalidHashException(
                     "Could not parse the iteration count as an integer.",
-                    ex
+                    ex,
                 )
             }
 
         if (iterations < 1) {
             throw InvalidHashException(
-                "Invalid number of iterations. Must be >= 1."
+                "Invalid number of iterations. Must be >= 1.",
             )
         }
 
@@ -101,7 +106,7 @@ object PasswordStorage {
             } catch (ex: IllegalArgumentException) {
                 throw InvalidHashException(
                     "Base64 decoding of salt failed.",
-                    ex
+                    ex,
                 )
             }
 
@@ -111,7 +116,7 @@ object PasswordStorage {
             } catch (ex: IllegalArgumentException) {
                 throw InvalidHashException(
                     "Base64 decoding of pbkdf2 output failed.",
-                    ex
+                    ex,
                 )
             }
 
@@ -121,13 +126,13 @@ object PasswordStorage {
             } catch (ex: NumberFormatException) {
                 throw InvalidHashException(
                     "Could not parse the hash size as an integer.",
-                    ex
+                    ex,
                 )
             }
 
         if (storedHashSize != hash.size) {
             throw InvalidHashException(
-                "Hash length doesn't match stored hash length."
+                "Hash length doesn't match stored hash length.",
             )
         }
 
@@ -139,7 +144,10 @@ object PasswordStorage {
         return slowEquals(hash, testHash)
     }
 
-    private fun slowEquals(a: ByteArray, b: ByteArray): Boolean {
+    private fun slowEquals(
+        a: ByteArray,
+        b: ByteArray,
+    ): Boolean {
         var diff = a.size xor b.size
         var i = 0
         while (i < a.size && i < b.size) {
@@ -149,7 +157,12 @@ object PasswordStorage {
         return diff == 0
     }
 
-    private fun pbkdf2(password: CharArray, salt: ByteArray, iterations: Int, bytes: Int): ByteArray {
+    private fun pbkdf2(
+        password: CharArray,
+        salt: ByteArray,
+        iterations: Int,
+        bytes: Int,
+    ): ByteArray {
         try {
             val spec = PBEKeySpec(password, salt, iterations, bytes * 8)
             val skf = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
@@ -157,12 +170,12 @@ object PasswordStorage {
         } catch (ex: NoSuchAlgorithmException) {
             throw CannotPerformOperationException(
                 "Hash algorithm not supported.",
-                ex
+                ex,
             )
         } catch (ex: InvalidKeySpecException) {
             throw CannotPerformOperationException(
                 "Invalid key spec.",
-                ex
+                ex,
             )
         }
     }

@@ -32,11 +32,12 @@ import kotlin.test.assertEquals
 
 class IncomingEmailTest : DIAware {
     private val incomingEmailDAO: IncomingEmailDAO = mockk()
-    override val di = DI {
-        bind<MQSequenceFactoryMock>() with singleton { MQSequenceFactoryMock(di) }
-        bind<IncomingEmailService>() with singleton { IncomingEmailService(di) }
-        bind<IncomingEmailDAO>() with instance(incomingEmailDAO)
-    }
+    override val di =
+        DI {
+            bind<MQSequenceFactoryMock>() with singleton { MQSequenceFactoryMock(di) }
+            bind<IncomingEmailService>() with singleton { IncomingEmailService(di) }
+            bind<IncomingEmailDAO>() with instance(incomingEmailDAO)
+        }
     private val incomingEmailService: IncomingEmailService by instance()
     private val mqSequenceFactoryMock: MQSequenceFactoryMock by instance()
 
@@ -52,18 +53,19 @@ class IncomingEmailTest : DIAware {
         val subject = "Die Hasen und die Frösche (Microsoft Outlook 00)"
         every {
             incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
-        } returns IncomingEmailDBO(
-            body = sample.envelope,
-            account = mockk(),
-            mailFrom = from.address,
-            recipient = to.address,
-            replyToEmails = emptyList(),
-            toEmails = emptyList(),
-            fromEmails = emptyList(),
-            subject = subject
-        ).also {
-            it.setId(incomingEmailId)
-        }
+        } returns
+            IncomingEmailDBO(
+                body = sample.envelope,
+                account = mockk(),
+                mailFrom = from.address,
+                recipient = to.address,
+                replyToEmails = emptyList(),
+                toEmails = emptyList(),
+                fromEmails = emptyList(),
+                subject = subject,
+            ).also {
+                it.setId(incomingEmailId)
+            }
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
@@ -81,18 +83,19 @@ class IncomingEmailTest : DIAware {
 
         every {
             incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
-        } returns IncomingEmailDBO(
-            body = sample.envelope,
-            account = mockk(),
-            mailFrom = from.address,
-            recipient = to.address,
-            replyToEmails = emptyList(),
-            toEmails = emptyList(),
-            fromEmails = emptyList(),
-            subject = subject
-        ).also {
-            it.setId(incomingEmailId)
-        }
+        } returns
+            IncomingEmailDBO(
+                body = sample.envelope,
+                account = mockk(),
+                mailFrom = from.address,
+                recipient = to.address,
+                replyToEmails = emptyList(),
+                toEmails = emptyList(),
+                fromEmails = emptyList(),
+                subject = subject,
+            ).also {
+                it.setId(incomingEmailId)
+            }
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
@@ -112,18 +115,19 @@ class IncomingEmailTest : DIAware {
 
         every {
             incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
-        } returns IncomingEmailDBO(
-            body = sample.envelope,
-            account = mockk(),
-            mailFrom = from.address,
-            recipient = to.address,
-            replyToEmails = emptyList(),
-            toEmails = emptyList(),
-            fromEmails = emptyList(),
-            subject = subject
-        ).also {
-            it.setId(incomingEmailId)
-        }
+        } returns
+            IncomingEmailDBO(
+                body = sample.envelope,
+                account = mockk(),
+                mailFrom = from.address,
+                recipient = to.address,
+                replyToEmails = emptyList(),
+                toEmails = emptyList(),
+                fromEmails = emptyList(),
+                subject = subject,
+            ).also {
+                it.setId(incomingEmailId)
+            }
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
@@ -142,18 +146,19 @@ class IncomingEmailTest : DIAware {
 
         every {
             incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
-        } returns IncomingEmailDBO(
-            body = sample.envelope,
-            account = mockk(),
-            mailFrom = from.address,
-            recipient = to.address,
-            replyToEmails = emptyList(),
-            toEmails = emptyList(),
-            fromEmails = emptyList(),
-            subject = subject
-        ).also {
-            it.setId(incomingEmailId)
-        }
+        } returns
+            IncomingEmailDBO(
+                body = sample.envelope,
+                account = mockk(),
+                mailFrom = from.address,
+                recipient = to.address,
+                replyToEmails = emptyList(),
+                toEmails = emptyList(),
+                fromEmails = emptyList(),
+                subject = subject,
+            ).also {
+                it.setId(incomingEmailId)
+            }
 
         val mess = processIt(incomingEmailId)
         assertEquals(subject, mess.subject)
@@ -165,7 +170,10 @@ class IncomingEmailTest : DIAware {
         assertEquals(sample.plainText, mess.messageTextBody.homogenize())
     }
 
-    fun assertEmail(first: NamedEmail, second: NamedEmailAddress) {
+    fun assertEmail(
+        first: NamedEmail,
+        second: NamedEmailAddress,
+    ) {
         assertEquals(first.address.address, second.email)
         assertEquals(first.name, second.name)
     }
@@ -175,14 +183,14 @@ class IncomingEmailTest : DIAware {
             mqSequenceFactoryMock.incomingEmails.send(
                 IncomingEmailNotificationMessage.newBuilder()
                     .setIncomingEmailMessageId(incomingEmailId.incomingEmailId)
-                    .build()
+                    .build(),
             )
             withTimeout(100000) {
                 incomingEmailService.streamIncomingEmails(
                     parameters = INCLUDE_ALL,
                     accountId = accountId,
                     mailDomain = mailDomain,
-                    authenticationId = authenticationId
+                    authenticationId = authenticationId,
                 ).first()
             }
         }
@@ -194,13 +202,14 @@ class IncomingEmailTest : DIAware {
                 .first()
                 .let { NamedEmail(it.address, it.personal) }
 
-        val INCLUDE_ALL = IncomingEmailParameters
-            .newBuilder()
-            .setIncludeMessageAttachments(true)
-            .setIncludeMessageHeader(true)
-            .setIncludeMessageParsedBodies(true)
-            .setIncludeMessageWholeEnvelope(true)
-            .build()
+        val INCLUDE_ALL =
+            IncomingEmailParameters
+                .newBuilder()
+                .setIncludeMessageAttachments(true)
+                .setIncludeMessageHeader(true)
+                .setIncludeMessageParsedBodies(true)
+                .setIncludeMessageWholeEnvelope(true)
+                .build()
 
         private val from = parseEmail(""""Doug Sauder" <doug@example.com>""")
         private val to = parseEmail(""""Jürgen Schmürgen" <schmuergen@example.com>""")

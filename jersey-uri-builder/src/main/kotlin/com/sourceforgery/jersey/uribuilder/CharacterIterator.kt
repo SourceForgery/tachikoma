@@ -62,7 +62,7 @@ internal class CharacterIterator(
      *
      * @return String which initialized this iterator.
      */
-    val input: String
+    val input: String,
 ) {
     private var pos: Int = 0
 

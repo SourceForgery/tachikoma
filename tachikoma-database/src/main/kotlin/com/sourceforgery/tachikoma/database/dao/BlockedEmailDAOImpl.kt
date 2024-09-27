@@ -12,10 +12,13 @@ import org.kodein.di.DIAware
 import org.kodein.di.instance
 
 class BlockedEmailDAOImpl(override val di: DI) : BlockedEmailDAO, DIAware {
-
     private val database: Database by instance()
 
-    override fun getBlockedReason(accountDBO: AccountDBO, from: Email, recipient: Email): BlockedReason? {
+    override fun getBlockedReason(
+        accountDBO: AccountDBO,
+        from: Email,
+        recipient: Email,
+    ): BlockedReason? {
         return database.find(BlockedEmailDBO::class.java)
             .where()
             .eq("account", accountDBO)
@@ -30,12 +33,13 @@ class BlockedEmailDAOImpl(override val di: DI) : BlockedEmailDAO, DIAware {
         val recipient = statusEvent.email.recipient
         val account = statusEvent.email.transaction.authentication.account
         if (getBlockedReason(account, from, recipient) == null) {
-            val blockedEmail = BlockedEmailDBO(
-                recipientEmail = recipient,
-                fromEmail = from,
-                blockedReason = toBlockedReason(statusEvent.emailStatus),
-                account = account
-            )
+            val blockedEmail =
+                BlockedEmailDBO(
+                    recipientEmail = recipient,
+                    fromEmail = from,
+                    blockedReason = toBlockedReason(statusEvent.emailStatus),
+                    account = account,
+                )
             database.save(blockedEmail)
         }
     }
@@ -50,7 +54,11 @@ class BlockedEmailDAOImpl(override val di: DI) : BlockedEmailDAO, DIAware {
             .delete()
     }
 
-    override fun unblock(accountDBO: AccountDBO, from: Email?, recipient: Email) {
+    override fun unblock(
+        accountDBO: AccountDBO,
+        from: Email?,
+        recipient: Email,
+    ) {
         database
             .find(BlockedEmailDBO::class.java)
             .where()

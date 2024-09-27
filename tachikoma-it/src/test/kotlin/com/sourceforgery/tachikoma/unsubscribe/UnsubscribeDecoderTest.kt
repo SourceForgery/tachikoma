@@ -11,23 +11,25 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class UnsubscribeDecoderTest : DIAware {
-    override val di = DI {
-        importOnce(testModule(), allowOverride = true)
-    }
+    override val di =
+        DI {
+            importOnce(testModule(), allowOverride = true)
+        }
     val unsubscribeDecoder: UnsubscribeDecoder by instance()
 
     @Test
     fun `should create an unsubscribe url`() {
+        val emailId =
+            EmailId
+                .newBuilder()
+                .setId(999)
+                .build()
 
-        val emailId = EmailId
-            .newBuilder()
-            .setId(999)
-            .build()
-
-        val unsubscribeData = UnsubscribeData
-            .newBuilder()
-            .setEmailId(emailId)
-            .build()
+        val unsubscribeData =
+            UnsubscribeData
+                .newBuilder()
+                .setEmailId(emailId)
+                .build()
 
         val url = unsubscribeDecoder.createUrl(unsubscribeData)
 
@@ -36,7 +38,6 @@ class UnsubscribeDecoderTest : DIAware {
 
     @Test
     fun `should decode an unsubscribe url`() {
-
         val unsubscribeDataString = "qgYGqgYDCM4PsgYUlGa_Cd7_XRqsoeZRMZPkrcANRy8"
 
         val unsubscribeData = unsubscribeDecoder.decodeUnsubscribeData(unsubscribeDataString)
