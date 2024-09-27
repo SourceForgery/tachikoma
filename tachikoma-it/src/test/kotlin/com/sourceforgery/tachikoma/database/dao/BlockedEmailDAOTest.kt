@@ -175,7 +175,7 @@ class BlockedEmailDAOTest : DIAware {
 
         assertEquals(BlockedReason.HARD_BOUNCED, blockedEmailDAO.getBlockedReason(getAccount(), from, recipient))
 
-        blockedEmailDAO.unblock(emailStatusEvent)
+        blockedEmailDAO.unblock(getAccount(), from, recipient)
 
         assertEquals(null, blockedEmailDAO.getBlockedReason(getAccount(), from, recipient))
     }

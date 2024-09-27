@@ -1,7 +1,7 @@
 package com.sourceforgery.tachikoma.unsubscribe
 
+import com.google.common.hash.Hashing.hmacSha1
 import com.google.protobuf.ByteString
-import com.sourceforgery.tachikoma.common.HmacUtil
 import com.sourceforgery.tachikoma.common.randomDelay
 import com.sourceforgery.tachikoma.config.TrackingConfig
 import com.sourceforgery.tachikoma.grpc.frontend.unsubscribe.SignedUnsubscribeData
@@ -16,13 +16,16 @@ class UnsubscribeDecoderImpl(
 ) : UnsubscribeDecoder, DIAware {
     private val trackingConfig: TrackingConfig by instance()
 
-    private val encryptionKey = trackingConfig.linkSignKey
+    @Suppress("UnstableApiUsage")
+    private val trackingHmac by lazy {
+        hmacSha1(trackingConfig.linkSignKey)
+    }
 
     override fun decodeUnsubscribeData(unsubscribeData: String): UnsubscribeData {
         val decoded = Base64.getUrlDecoder().decode(unsubscribeData)!!
         val signedMessage = SignedUnsubscribeData.parseFrom(decoded)
         val sig = signedMessage.signature
-        if (!sig.toByteArray()!!.contentEquals(HmacUtil.hmacSha1(signedMessage.message.toByteArray(), encryptionKey))) {
+        if (!sig.toByteArray()!!.contentEquals(trackingHmac.hashBytes(signedMessage.message.toByteArray()).asBytes())) {
             randomDelay(LongRange(100, 250)) {
                 throw RuntimeException("Not correct signature")
             }
@@ -32,7 +35,7 @@ class UnsubscribeDecoderImpl(
 
     override fun createUrl(unsubscribeData: UnsubscribeData): String {
         val parcelled = unsubscribeData.toByteArray()!!
-        val signature = HmacUtil.hmacSha1(parcelled, encryptionKey)
+        val signature = trackingHmac.hashBytes(parcelled).asBytes()
         val signedMessage =
             SignedUnsubscribeData.newBuilder()
                 .setMessage(ByteString.copyFrom(parcelled))

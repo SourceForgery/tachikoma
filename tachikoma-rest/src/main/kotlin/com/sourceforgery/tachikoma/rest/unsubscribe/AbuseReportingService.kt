@@ -12,7 +12,6 @@ import com.linecorp.armeria.server.annotation.Produces
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.NamedEmail
-import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.TransactionManager
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -156,7 +155,7 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
         val auth = reportedEmail.transaction.authentication
         val fromEmail = NamedEmail(Email(auth.account.mailDomain, "abuse"), "Web abuse report")
 
-        transactionManager.coroutineTx {
+        transactionManager.coroutineTx { _ ->
             val subject =
                 "Abuse report about mail($mailId) to ${reportedEmail.recipient} from $reporterName (${reporterEmail ?: ""})"
             val body =
@@ -176,7 +175,6 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
             mimeMessage.setRecipient(Message.RecipientType.TO, receiverAddress)
             mimeMessage.setContent(body, MediaType.PLAIN_TEXT_UTF_8.toString())
 
-            @Suppress("BlockingMethodInNonBlockingContext")
             val bytes = mimeMessage.inputStream.use { it.readAllBytes() }
             val incomingEmailDBO =
                 IncomingEmailDBO(
@@ -205,7 +203,6 @@ class AbuseReportingService(override val di: DI) : RestService, DIAware {
 
             val notificationMessageBuilder =
                 DeliveryNotificationMessage.newBuilder()
-                    .setCreationTimestamp(emailStatusEvent.dateCreated!!.toTimestamp())
                     .setEmailMessageId(reportedEmail.id.emailId)
                     .setMessageReportedAbuse(MessageReportedAbuse.getDefaultInstance())
 
