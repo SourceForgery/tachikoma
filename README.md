@@ -78,7 +78,7 @@ makes it very to ingest into business intelligence databases or use directly fro
 Setting up the different programs necessary to develop (not run)
 it in IntelliJ.
 
-* JDK 17
+* JDK 21
 
 ** Running **
 
