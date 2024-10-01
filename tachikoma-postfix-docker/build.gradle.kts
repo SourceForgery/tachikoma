@@ -25,7 +25,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
         echo "LANG=C.UTF-8" > /etc/default/locale
         """.trimMargin().replace('\n', ' '),
     )
-    runCommand("pip3 install --no-cache-dir honcho==1.0.1")
+    runCommand("pip3 install --break-system-packages --no-cache-dir honcho==1.0.1")
 
     exposePort(25)
 

@@ -20,9 +20,6 @@ dependencies {
     testImplementation("com.expediagroup:graphql-kotlin-ktor-client:$expediagroupGraphqlVersion") {
         exclude("org.jetbrains.kotlinx", "kotlinx-serialization-json")
     }
-    testImplementation("io.ktor:ktor-client-okhttp")
-    testImplementation("io.ktor:ktor-client-logging-jvm")
-    testImplementation("commons-lang:commons-lang:2.6")
 
     testImplementation(project(":tachikoma-backend-api-proto:tachikoma-backend-api-jvm"))
     testImplementation(project(":tachikoma-database"))
@@ -34,22 +31,25 @@ dependencies {
 
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("com.google.guava:guava")
-    testImplementation("com.google.protobuf:protobuf-java-util")
     testImplementation("com.google.protobuf:protobuf-java")
+    testImplementation("com.google.protobuf:protobuf-java-util")
     testImplementation("com.h2database:h2")
+    testImplementation("com.linecorp.armeria:armeria")
+    testImplementation("com.linecorp.armeria:armeria-kotlin")
     testImplementation("com.opentable.components:otj-pg-embedded")
+    testImplementation("com.squareup.okhttp3:okhttp")
+    testImplementation("commons-lang:commons-lang:2.6")
     testImplementation("io.ebean:ebean")
     testImplementation("io.ebean:ebean-ddl-generator")
     testImplementation("io.grpc:grpc-stub")
+    testImplementation("io.ktor:ktor-client-logging-jvm")
+    testImplementation("io.ktor:ktor-client-okhttp")
     testImplementation("io.mockk:mockk")
+    testImplementation("jakarta.mail:jakarta.mail-api")
     testImplementation("org.apache.logging.log4j:log4j-core")
     testImplementation("org.apache.logging.log4j:log4j-jul")
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl")
-    testImplementation("com.linecorp.armeria:armeria")
-    testImplementation("com.linecorp.armeria:armeria-kotlin")
-    testImplementation("com.squareup.okhttp3:okhttp")
     testImplementation("org.jsoup:jsoup")
-    testImplementation("com.sun.mail:jakarta.mail")
 }
 
 graphql {

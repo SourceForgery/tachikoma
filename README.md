@@ -61,7 +61,7 @@ The sending/receiving mail server is postfix because of good security track reco
 
 ***Raison d'être***
 
-When sending emails, it's impossible to build and maintain reputation from cloud server. Having the possibility to have the actual email server
+When sending emails, it's impossible to build and maintain reputation from cloud servers. Having the possibility to have the actual email server
 using ip's from the corporate network without significantly adding attack surface will allow for good reputation building.
 
 Sending emails is hard. Hosted ESPs such as Mandrill and Sendinblue exist because of this, and if you send a lot

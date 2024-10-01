@@ -8,7 +8,7 @@ dependencies {
     implementation("com.linecorp.armeria:armeria")
     implementation("com.linecorp.armeria:armeria-kotlin")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
-    implementation("com.sun.mail:jakarta.mail")
+    implementation("jakarta.mail:jakarta.mail-api")
 
     api(project(":tachikoma-common"))
     api(project(":tachikoma-frontend-api-proto:tachikoma-frontend-api-jvm"))

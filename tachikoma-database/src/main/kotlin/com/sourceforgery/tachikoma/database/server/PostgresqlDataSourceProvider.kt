@@ -36,7 +36,7 @@ class PostgresqlDataSourceProvider(override val di: DI) : DataSourceProvider, DI
         dataSourceConfig.customProperties = customProperties
         dataSourceConfig.driver = "org.postgresql.Driver"
 
-        serverConfig.dataSourceConfig = dataSourceConfig
+        serverConfig.setDataSourceConfig(dataSourceConfig)
 
         serverConfig.databasePlatform = PostgresPlatform()
         serverConfig.isDdlGenerate = false

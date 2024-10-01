@@ -23,7 +23,7 @@ import org.junit.Before
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
-import java.net.URL
+import java.net.URI
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -70,7 +70,7 @@ abstract class AbstractGraphqlTest : DIAware {
             }
         }
         return GraphQLKtorClient(
-            url = URL("http://localhost:${server.activeLocalPort()}/graphql"),
+            url = URI("http://localhost:${server.activeLocalPort()}/graphql").toURL(),
             httpClient = HttpClient(engineFactory = CIO),
             serializer = GraphQLClientJacksonSerializer(),
         )

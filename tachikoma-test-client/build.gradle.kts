@@ -15,6 +15,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core")
     implementation("org.apache.logging.log4j:log4j-jul")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl")
-    implementation("com.sun.mail:jakarta.mail")
+    implementation("jakarta.mail:jakarta.mail-api")
     implementation(project(":jersey-uri-builder"))
 }

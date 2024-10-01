@@ -28,11 +28,12 @@ class EbeanServerFactory(override val di: DI) : DIAware {
     private val dataSourceProvider: DataSourceProvider by instance()
 
     private inner class WrappedServerConfig : io.ebean.config.DatabaseConfig() {
-        override fun setDataSource(originalDataSource: DataSource?) {
+        @Deprecated("don't care")
+        override fun setDataSource(originalDataSource: DataSource?): io.ebean.config.DatabaseConfig {
             originalDataSource
                 ?.also { upgradeDatabase(it) }
 
-            if (databaseConfig.timeDatabaseQueries) {
+            return if (databaseConfig.timeDatabaseQueries) {
                 val loggingDataSource =
                     when (originalDataSource) {
                         null -> null

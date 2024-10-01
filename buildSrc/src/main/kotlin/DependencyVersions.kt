@@ -44,7 +44,6 @@ fun Project.forcedDependencies(): Set<String> {
     val h2Version: String by project
     val jakartaAnnotationsVersion: String by project
     val jakartaMailVersion: String by project
-    val javaxAnnotationApiVersion: String by project
     val jnrUnixsocketVersion: String by project
     val jsoupVersion: String by project
     val jsr305Version: String by project
@@ -74,7 +73,6 @@ fun Project.forcedDependencies(): Set<String> {
         "com.rabbitmq:amqp-client:$amqpClientVersion",
         "com.samskivert:jmustache:$jmustacheVersion",
         "com.squareup:tape:$tapeVersion",
-        "com.sun.mail:jakarta.mail:$jakartaMailVersion",
         "commons-io:commons-io:$commonsIOVersion",
         "commons-lang:commons-lang:$commonsLangVersion",
         "commons-logging:commons-logging:$commonsLoggingVersion",
@@ -82,8 +80,9 @@ fun Project.forcedDependencies(): Set<String> {
         "io.grpc:grpc-kotlin-stub:$grpcKotlinVersion",
         "io.grpc:grpc-stub:$grpcVersion",
         "io.mockk:mockk:$mockkVersion",
+        "jakarta.activation:jakarta.activation-api:2.1.2",
         "jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion",
-        "javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion",
+        "jakarta.mail:jakarta.mail-api:$jakartaMailVersion",
         "net.bytebuddy:byte-buddy:$bytebuddyVersion",
         "net.sf.expectit:expectit-core:$expectItVersion",
         "org.apache.httpcomponents:httpcore:4.4.15",

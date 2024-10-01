@@ -1,7 +1,6 @@
-import recurseTasks
 import se.transmode.gradle.plugins.docker.DockerTask
-import java.io.File
-import java.net.URL
+import java.net.URI
+import java.security.MessageDigest
 
 plugins {
     `base`
@@ -11,7 +10,7 @@ plugins {
 group = "sourceforgery"
 
 val downloadTini by tasks.registering {
-    val tiniUrl = URL("https://github.com/krallin/tini/releases/download/v0.16.1/tini-static-amd64")
+    val tiniUrl = URI("https://github.com/krallin/tini/releases/download/v0.16.1/tini-static-amd64").toURL()
     val tiniChecksum = "d1cb5d71adc01d47e302ea439d70c79bd0864288"
     val tiniBinary = file("build/tini")
     inputs.property("tiniUrl", tiniUrl)
@@ -26,8 +25,8 @@ val downloadTini by tasks.registering {
             }
         }
 
-        val digest = java.security.MessageDigest.getInstance("SHA1").digest(tiniBinary.readBytes())
-        val calculatedChecksum = java.math.BigInteger(1, digest).toString(16)
+        val digest = MessageDigest.getInstance("SHA1").digest(tiniBinary.readBytes())
+        val calculatedChecksum = BigInteger(1, digest).toString(16)
         if (calculatedChecksum != tiniChecksum) {
             throw RuntimeException("Failed to download valid tini. Please remove $tiniBinary and try again $tiniChecksum != $calculatedChecksum")
         }
