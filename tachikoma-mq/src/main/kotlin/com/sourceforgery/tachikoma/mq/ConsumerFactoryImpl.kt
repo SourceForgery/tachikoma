@@ -54,10 +54,10 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         createQueue(FAILED_DELIVERY_NOTIFICATIONS)
         createQueue(FAILED_OUTGOING_EMAILS)
 
-        for (messageQueue in JobMessageQueue.values()) {
+        for (messageQueue in JobMessageQueue.entries) {
             createQueue(messageQueue)
         }
-        for (messageExchange in MessageExchange.values()) {
+        for (messageExchange in MessageExchange.entries) {
             createExchange(messageExchange)
         }
     }
@@ -368,8 +368,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         val LOGGER = logger()
 
         val SORTED_DELAYED_JOB_QUEUE =
-            JobMessageQueue
-                .values()
+            JobMessageQueue.entries
                 .asSequence()
                 .filter { it.nextDestination == JobMessageQueue.JOBS }
                 .sortedByDescending { it.delay }

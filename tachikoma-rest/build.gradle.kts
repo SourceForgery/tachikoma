@@ -5,7 +5,7 @@ plugins {
 dependencies {
     implementation("com.linecorp.armeria:armeria")
     implementation("com.linecorp.armeria:armeria-kotlin")
-    implementation("jakarta.mail:jakarta.mail-api")
+    implementation("com.sun.mail:jakarta.mail")
     implementation("io.grpc:grpc-protobuf")
 
     implementation(project(":tachikoma-internal-api"))

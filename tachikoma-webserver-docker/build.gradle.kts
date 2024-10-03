@@ -2,7 +2,7 @@ plugins {
     `tachikoma-docker`
 }
 
-val tarTask =
+val tarTask: Task =
     project(":tachikoma-webserver")
         .tasks[ApplicationPlugin.TASK_DIST_TAR_NAME]
 

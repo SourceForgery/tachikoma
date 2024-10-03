@@ -20,5 +20,5 @@ class NoAuthorizationCredentialsCatcher(
         cause: NoAuthorizationCredentialsException,
     ) = HttpResponse.of(UNAUTHORIZED)
 
-    override fun status(t: NoAuthorizationCredentialsException) = Status.UNAUTHENTICATED
+    override fun status(t: NoAuthorizationCredentialsException): Status = Status.UNAUTHENTICATED
 }

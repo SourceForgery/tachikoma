@@ -13,7 +13,7 @@ import java.util.Locale
 
 abstract class KodeinAvoidingGrpcExceptionCatcher {
     init {
-        require(this is GrpcExceptionCatcher<*>) {
+        require(GrpcExceptionCatcher::class.java.isAssignableFrom(javaClass)) {
             "Must only subclass ${GrpcExceptionCatcher::class.java.name}"
         }
     }

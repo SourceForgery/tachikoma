@@ -35,7 +35,7 @@ class RemoteIPImpl(override val di: DI) : RemoteIP, DIAware {
             ?.substringBefore(',')
             .takeUnless { it.isNullOrBlank() }
 
-    fun remoteSocket(requestContext: RequestContext) =
+    fun remoteSocket(requestContext: RequestContext): String =
         requestContext.remoteAddress()!!
             .address
             .hostAddress

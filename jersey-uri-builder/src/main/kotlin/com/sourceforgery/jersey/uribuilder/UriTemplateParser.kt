@@ -153,7 +153,7 @@ class UriTemplateParser
             }
 
         init {
-            if (template == null || template.isEmpty()) {
+            if (template.isNullOrEmpty()) {
                 throw IllegalArgumentException("Template is null or has zero length")
             }
             parse(CharacterIterator(template))
@@ -476,6 +476,6 @@ class UriTemplateParser
             /**
              * Default URI template value regexp pattern.
              */
-            val TEMPLATE_VALUE_PATTERN = Pattern.compile("[^/]+")
+            val TEMPLATE_VALUE_PATTERN: Pattern = Pattern.compile("[^/]+")
         }
     }

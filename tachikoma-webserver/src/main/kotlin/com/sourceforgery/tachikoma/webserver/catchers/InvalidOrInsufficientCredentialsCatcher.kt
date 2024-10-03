@@ -19,7 +19,7 @@ class InvalidOrInsufficientCredentialsCatcher(override val di: DI) :
         cause: InvalidOrInsufficientCredentialsException,
     ) = HttpResponse.of(FORBIDDEN)
 
-    override fun status(t: InvalidOrInsufficientCredentialsException) = Status.PERMISSION_DENIED.augmentDescription(t.message)
+    override fun status(t: InvalidOrInsufficientCredentialsException): Status = Status.PERMISSION_DENIED.augmentDescription(t.message)
 
     override fun logError(t: InvalidOrInsufficientCredentialsException) {
         logger.warn { t.message }

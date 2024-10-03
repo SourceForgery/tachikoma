@@ -50,6 +50,7 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-jul")
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl")
     testImplementation("org.jsoup:jsoup")
+    testImplementation("com.sun.mail:jakarta.mail")
 }
 
 graphql {

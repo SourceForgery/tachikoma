@@ -18,7 +18,7 @@ dependencies {
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.42.0")
-    implementation("org.apache.commons:commons-compress:1.21")
+    implementation("org.apache.commons:commons-compress:1.26.0")
     implementation("com.google.guava:guava:$guavaVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
@@ -75,5 +75,7 @@ configure<IdeaModel> {
     module {
         outputDir = file("build/idea-out")
         testOutputDir = file("build/idea-testout")
+        isDownloadSources = true
+        isDownloadJavadoc = true
     }
 }

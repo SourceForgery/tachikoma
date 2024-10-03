@@ -396,7 +396,7 @@ object UriComponent {
     }
 
     private fun initEncodingTables(): Array<BooleanArray> {
-        val tables = arrayOfNulls<BooleanArray>(Type.values().size)
+        val tables = arrayOfNulls<BooleanArray>(Type.entries.size)
         tables[Type.SCHEME.ordinal] = initEncodingTable(SCHEME)
         tables[Type.UNRESERVED.ordinal] = initEncodingTable(UNRESERVED)
         tables[Type.HOST.ordinal] = initEncodingTable(UNRESERVED + SUB_DELIMS)
