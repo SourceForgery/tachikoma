@@ -1,166 +1,164 @@
 package incoming
 
 import (
-	"bytes"
 	"errors"
 	"github.com/SourceForgery/tachikoma/tachikoma-postfix-utils/build/generated/github.com/SourceForgery/tachikoma"
+	"github.com/SourceForgery/tachikoma/tachikoma-postfix-utils/src/common"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"strings"
 	"testing"
 )
 
+type testcase struct {
+	name                   string
+	shouldAccept           bool
+	exchange               string
+	onIncomingMessageError error
+}
+
 func TestHandleConnectionSunnyDay(t *testing.T) {
-	testCases := []struct {
-		name         string
-		input        string
-		expectedLogs []string
-		shouldAccept bool
-	}{
+	testCases := []testcase{
 		{
 			name: "Simple email exchange",
-			input: `LHLO localhost
-MAIL FROM:<sender@example.com>
-RCPT TO:<receiver@example.com>
-DATA
-Hello, this is a test email.
-.
-QUIT
+			exchange: `
+> LHLO localhost
+< 250-localhost
+< 250 SIZE 10240000
+< 250 8BITMIME
+> MAIL FROM:<sender@example.com>
+< 250 OK
+> RCPT TO:<receiver@example.com>
+< 250 OK
+> DATA
+< 354 End data with <CR><LF>.<CR><LF>
+> Hello, this is a test email.
+> .
+< 250 email queued
+> QUIT
+< 221 Bye
 `,
-			expectedLogs: []string{
-				"250-localhost",
-				"250 SIZE 10240000",
-				"250 8BITMIME",
-				"250 OK",
-				"250 OK",
-				"354 End data with <CR><LF>.<CR><LF>",
-				"250 email queued",
-				"221 Bye",
-			},
 			shouldAccept: true,
 		},
 		{
 			name: "Recipient not accepted",
-			input: `LHLO localhost
-MAIL FROM:<sender@example.com>
-RCPT TO:<nonexistent@example.com>
-DATA
-Hello, this is a test email.
-.
-QUIT
+			exchange: `
+> LHLO localhost
+< 250-localhost
+< 250 SIZE 10240000
+< 250 8BITMIME
+> MAIL FROM:<sender@example.com>
+< 250 OK
+> RCPT TO:<nonexistent@example.com>
+< 550 nobody here with that email
+> DATA
+< 354 End data with <CR><LF>.<CR><LF>
+> Hello, this is a test email.
+> .
+< 221 Bye
 `,
-			expectedLogs: []string{
-				"250-localhost",
-				"250 SIZE 10240000",
-				"250 8BITMIME",
-				"250 OK",
-				"250 OK",
-				"354 End data with <CR><LF>.<CR><LF>",
-				"550 nobody here with that email",
-				"221 Bye",
-			},
 			shouldAccept: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			buffer := bytes.Buffer{}
-			rw := &mockReadWriter{Reader: strings.NewReader(tc.input), Writer: &buffer}
-
+			rw := common.NewChannelReadWriteCloser()
+			//goland:noinspection GoUnhandledErrorResult
+			defer rw.Close()
 			server := NewLMTPServer("", func(message *tachikoma.IncomingEmailMessage) (bool, error) {
 				return tc.shouldAccept, nil
 			})
 
-			server.handleConnection(rw)
+			go server.handleConnection(rw)
 
-			for _, expected := range tc.expectedLogs {
-				output := buffer.String()
-				assert.Contains(t, output, expected)
-				buffer.Reset()
-			}
+			testMethod(t, tc, rw)
 		})
 	}
 }
 
+func testMethod(t *testing.T, tc testcase, rw *common.ChannelReadWriteCloser) {
+	for _, s := range strings.Split(tc.exchange, "\n") {
+		if strings.HasPrefix(s, "> ") {
+			rw.GetReadChan() <- strings.TrimPrefix(s, "> ") + "\n"
+		} else if strings.HasPrefix(s, "< ") {
+			expected := strings.TrimPrefix(s, "< ")
+			actual := <-rw.GetWriteChan()
+			assert.Equal(t, expected, actual)
+		} else if strings.TrimSpace(s) != "" {
+			t.Fatalf("unexpected line: %s", s)
+		}
+	}
+}
+
 func TestHandleConnectionEdgeCases(t *testing.T) {
-	testCases := []struct {
-		name                   string
-		input                  string
-		expectedLogs           []string
-		onIncomingMessageError error
-		shouldAccept           bool
-	}{
+	testCases := []testcase{
 		{
 			name: "CRLF End Of Line",
-			input: `LHLO localhost\r
-MAIL FROM:<sender@example.com>\r
-RCPT TO:<receiver@example.com>\r
-DATA\r
-Hello, this is a test email.\r
-.\r
-QUIT\r
+			exchange: `
+> LHLO localhost\r
+< 250-localhost\r
+< 250 SIZE 10240000\r
+< 250 8BITMIME\r
+> MAIL FROM:<sender@example.com>\r
+< 250 OK\r
+> RCPT TO:<receiver@example.com>\r
+< 250 OK\r
+> DATA\r
+< 354 End data with <CR><LF>.<CR><LF>\r
+> Hello, this is a test email.\r
+> .\r
+< 250 email queued\r
+> QUIT\r
+< 221 Bye\r
 `,
-			expectedLogs: []string{
-				"250-localhost",
-				"250 SIZE 10240000",
-				"250 8BITMIME",
-				"250 OK",
-				"250 OK",
-				"354 End data with <CR><LF>.<CR><LF>",
-				"250 email queued",
-				"221 Bye",
-			},
 			shouldAccept: true,
 		},
 		{
 			name: "Connection closes halfway",
-			input: `LHLO localhost
-MAIL FROM:<sender@example.com>
-RCPT TO:<receiver@example.com>
-DATA
-Hello, this is a test email.
-.
+			exchange: `
+> LHLO localhost
+< 250-localhost
+< 250 SIZE 10240000
+< 250 8BITMIME
+> MAIL FROM:<sender@example.com>
+< 250 OK
+> RCPT TO:<receiver@example.com>
+< 250 OK
+> DATA
+< 354 End data with <CR><LF>.<CR><LF>
+> Hello, this is a test email.
+> .
 `,
-			expectedLogs: []string{
-				"250-localhost",
-				"250 SIZE 10240000",
-				"250 8BITMIME",
-				"250 OK",
-				"250 OK",
-				"354 End data with <CR><LF>.<CR><LF>",
-			},
 			shouldAccept: true,
 		},
 		{
 			name: "onIncomingMessage returns error",
-			input: `LHLO localhost
-MAIL FROM:<sender@example.com>
-RCPT TO:<receiver@example.com>
-DATA
-Hello, this is a test email.
-.
-QUIT
+			exchange: `
+> LHLO localhost
+< 250-localhost
+< 250 SIZE 10240000
+< 250 8BITMIME
+> MAIL FROM:<sender@example.com>
+< 250 OK
+> RCPT TO:<receiver@example.com>
+< 250 OK
+> DATA
+< 354 End data with <CR><LF>.<CR><LF>
+> Hello, this is a test email.
+> .
+< 451 Unable to forward email: internal error
+> QUIT
+< 221 Bye
 `,
-			expectedLogs: []string{
-				"250-localhost",
-				"250 SIZE 10240000",
-				"250 8BITMIME",
-				"250 OK",
-				"250 OK",
-				"354 End data with <CR><LF>.<CR><LF>",
-				"451 Unable to forward email: internal error",
-				"221 Bye",
-			},
 			onIncomingMessageError: errors.New("internal error"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			buffer := bytes.Buffer{}
-			rw := &mockReadWriter{Reader: strings.NewReader(tc.input), Writer: &buffer}
-
+			rw := common.NewChannelReadWriteCloser()
+			//goland:noinspection GoUnhandledErrorResult
+			defer rw.Close()
 			server := NewLMTPServer("/tmp/socket", func(message *tachikoma.IncomingEmailMessage) (bool, error) {
 				if tc.onIncomingMessageError != nil {
 					return false, tc.onIncomingMessageError
@@ -168,30 +166,8 @@ QUIT
 				return tc.shouldAccept, nil
 			})
 
-			server.handleConnection(rw)
-
-			for _, expected := range tc.expectedLogs {
-				output := buffer.String()
-				assert.Contains(t, output, expected)
-				buffer.Reset()
-			}
+			go server.handleConnection(rw)
+			testMethod(t, tc, rw)
 		})
 	}
-}
-
-type mockReadWriter struct {
-	Reader io.Reader
-	Writer io.Writer
-}
-
-func (rw *mockReadWriter) Read(p []byte) (n int, err error) {
-	return rw.Reader.Read(p)
-}
-
-func (rw *mockReadWriter) Write(p []byte) (n int, err error) {
-	return rw.Writer.Write(p)
-}
-
-func (rw *mockReadWriter) Close() error {
-	return nil
 }

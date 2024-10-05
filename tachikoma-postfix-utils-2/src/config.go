@@ -14,10 +14,13 @@ import (
 var logger zerolog.Logger
 
 type Config struct {
-	TachikomaURL   *url.URL
-	Insecure       bool
-	ClientCertPath string
-	ClientKeyPath  string
+	TachikomaURL            *url.URL
+	Insecure                bool
+	ClientCertPath          string
+	ClientKeyPath           string
+	IncomingEmailSocketPath string
+	BadgerQueue             string
+	SyslogPath              string
 }
 
 func readConfig(file ...string) *Config {
@@ -47,15 +50,22 @@ func readConfig(file ...string) *Config {
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Error parsing TACHIKOMA_URL: %s", err)
 	}
+
+	incomingEmailSocketPath := getEnvWithDefault("TACHIKOMA_INCOMING_EMAIL_SOCKET_PATH", "/var/run/tachikoma/incoming-email.sock")
+	badgerQueue := getEnvWithDefault("TACHIKOMA_BADGER_QUEUE", "/var/spool/postfix/tachikoma/notification_queue")
+	syslogPath := getEnvWithDefault("TACHIKOMA_SYSLOG_PATH", "/opt/maillog_info")
 	insecure := getEnvAsBool("INSECURE", false)
 	clientCert := getEnv("TACHIKOMA_CLIENT_CERT", false)
 	clientKey := getEnv("TACHIKOMA_CLIENT_KEY", false)
 
 	return &Config{
-		TachikomaURL:   tachikomaURL,
-		Insecure:       insecure,
-		ClientCertPath: clientCert,
-		ClientKeyPath:  clientKey,
+		TachikomaURL:            tachikomaURL,
+		Insecure:                insecure,
+		ClientCertPath:          clientCert,
+		ClientKeyPath:           clientKey,
+		IncomingEmailSocketPath: incomingEmailSocketPath,
+		BadgerQueue:             badgerQueue,
+		SyslogPath:              syslogPath,
 	}
 }
 
@@ -76,4 +86,11 @@ func getEnvAsBool(name string, required bool) bool {
 		logger.Fatal().Msgf("Environment variable %s is not set", name)
 	}
 	return false
+}
+
+func getEnvWithDefault(name string, defaultValue string) string {
+	if value, exists := os.LookupEnv(name); exists {
+		return value
+	}
+	return defaultValue
 }

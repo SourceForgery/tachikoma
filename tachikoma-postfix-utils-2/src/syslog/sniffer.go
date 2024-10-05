@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"github.com/SourceForgery/tachikoma/tachikoma-postfix-utils/build/generated/github.com/SourceForgery/tachikoma"
 	"github.com/SourceForgery/tachikoma/tachikoma-postfix-utils/src/zerlogger"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"io"
 	"os"
 	"strings"
+	"time"
 )
 
 var logger zerolog.Logger
@@ -17,21 +20,29 @@ func init() {
 }
 
 type SyslogSniffer struct {
-	deliverer func(deliveryNotification *tachikoma.DeliveryNotification) error
+	deliverer  func(deliveryNotification *tachikoma.DeliveryNotification) error
+	syslogPath string
 }
 
-func NewSyslogSniffer(deliverer func(deliveryNotification *tachikoma.DeliveryNotification) error) *SyslogSniffer {
-	return &SyslogSniffer{deliverer: deliverer}
+func NewSyslogSniffer(deliverer func(deliveryNotification *tachikoma.DeliveryNotification) error, syslogPath string) *SyslogSniffer {
+	return &SyslogSniffer{deliverer: deliverer,
+		syslogPath: syslogPath}
 }
 
 func (s *SyslogSniffer) Start() {
-	go s.blockingSniffer()
+	go s.retryingBlockingSniffer()
+}
+
+func (s *SyslogSniffer) retryingBlockingSniffer() {
+	for {
+		s.blockingSniffer()
+		logger.Warn().Msg("Restarting syslog sniffer")
+		time.Sleep(500 * time.Millisecond)
+	}
 }
 
 func (s *SyslogSniffer) blockingSniffer() {
-	const socketPath = "/opt/maillog_pipe"
-
-	file, err := os.Open(socketPath)
+	file, err := os.Open(s.syslogPath)
 	if err != nil {
 		logger.Fatal().Msgf("failed to open file: %v", err)
 	}
@@ -41,9 +52,12 @@ func (s *SyslogSniffer) blockingSniffer() {
 	reader := bufio.NewReader(file)
 	for {
 		line, err := reader.ReadString('\n')
-		if err != nil {
-			logger.Fatal().Err(err).Msgf("failed to open file: %s", socketPath)
+		if errors.Is(err, io.EOF) {
+			return
+		} else if err != nil {
+			logger.Fatal().Err(err).Msgf("failed to read file: %s", s.syslogPath)
 		}
+		line = strings.TrimSpace(line)
 
 		notification := parseLine(line)
 		if notification != nil {

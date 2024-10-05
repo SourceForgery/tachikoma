@@ -38,7 +38,7 @@ func NewBadgerQueue(path string) (*BadgerQueue, error) {
 			PrefetchSize:   100,
 			Reverse:        true,
 		})
-		iter.Next()
+		defer iter.Close()
 		if iter.Valid() {
 			highestId, err = btoi(iter.Item().Key())
 			return err
@@ -169,7 +169,7 @@ func btoi(bytes []byte) (result uint64, err error) {
 		return 0, errors.New(fmt.Sprintf("must be exactly 8 bytes, not %d", len(bytes)))
 	}
 	for i := 0; i < 8; i++ {
-		result |= bytes[i] << (i * 8)
+		result |= uint64(bytes[i]) << (i * 8)
 	}
 	return
 }

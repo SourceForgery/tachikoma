@@ -10,6 +10,8 @@ import (
 	"github.com/SourceForgery/tachikoma/tachikoma-postfix-utils/src/lifo"
 	"github.com/SourceForgery/tachikoma/tachikoma-postfix-utils/src/syslog"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -17,10 +19,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
-
-const (
-	incomingEmailSocketPath = "/var/spool/postfix/tachikoma/incoming_tachikoma"
 )
 
 type PostfixUtils struct {
@@ -70,6 +68,7 @@ TACHIKOMA_CLIENT_KEY=/path/to/client.key
 	} else {
 		config = readConfig()
 	}
+	logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 
 	connection, authedContext, err := createConnection(config)
 	if err != nil {
@@ -78,7 +77,7 @@ TACHIKOMA_CLIENT_KEY=/path/to/client.key
 	//goland:noinspection GoUnhandledErrorResult
 	defer connection.Close()
 
-	queue, err := lifo.NewBadgerQueue("/var/spool/postfix/tachikoma/notification_queue")
+	queue, err := lifo.NewBadgerQueue(config.BadgerQueue)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to create queue")
 	}
@@ -92,11 +91,11 @@ TACHIKOMA_CLIENT_KEY=/path/to/client.key
 	}
 	go utils.sendDeliveryNotifications()
 
-	sniffer := syslog.NewSyslogSniffer(utils.queue.Enqueue)
+	sniffer := syslog.NewSyslogSniffer(utils.queue.Enqueue, config.SyslogPath)
 	sniffer.Start()
 
 	handler := incoming.NewIncomingEmailHandler(connection, authedContext)
-	lmtpServer := incoming.NewLMTPServer(incomingEmailSocketPath, handler.Send)
+	lmtpServer := incoming.NewLMTPServer(config.IncomingEmailSocketPath, handler.Send)
 	err = lmtpServer.Listen()
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Couldn't start listening for incoming emails")
