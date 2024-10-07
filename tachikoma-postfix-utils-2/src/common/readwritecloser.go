@@ -35,7 +35,7 @@ func (c *ChannelReadWriteCloser) Write(p []byte) (n int, err error) {
 	}
 
 	data := string(p)
-	lines := strings.Split(data, "\n")
+	lines := strings.Split(data, "\r\n")
 
 	for i, line := range lines {
 		if i == 0 {

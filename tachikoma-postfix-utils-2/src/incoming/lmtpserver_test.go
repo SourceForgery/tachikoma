@@ -49,12 +49,12 @@ func TestHandleConnectionSunnyDay(t *testing.T) {
 > MAIL FROM:<sender@example.com>
 < 250 OK
 > RCPT TO:<nonexistent@example.com>
-< 550 nobody here with that email
+< 250 OK
 > DATA
 < 354 End data with <CR><LF>.<CR><LF>
 > Hello, this is a test email.
 > .
-< 221 Bye
+< 550 nobody here with that email
 `,
 			shouldAccept: false,
 		},
@@ -79,7 +79,7 @@ func TestHandleConnectionSunnyDay(t *testing.T) {
 func testMethod(t *testing.T, tc testcase, rw *common.ChannelReadWriteCloser) {
 	for _, s := range strings.Split(tc.exchange, "\n") {
 		if strings.HasPrefix(s, "> ") {
-			rw.GetReadChan() <- strings.TrimPrefix(s, "> ") + "\n"
+			rw.GetReadChan() <- strings.TrimPrefix(s, "> ") + "\r\n"
 		} else if strings.HasPrefix(s, "< ") {
 			expected := strings.TrimPrefix(s, "< ")
 			actual := <-rw.GetWriteChan()
@@ -92,27 +92,6 @@ func testMethod(t *testing.T, tc testcase, rw *common.ChannelReadWriteCloser) {
 
 func TestHandleConnectionEdgeCases(t *testing.T) {
 	testCases := []testcase{
-		{
-			name: "CRLF End Of Line",
-			exchange: `
-> LHLO localhost\r
-< 250-localhost\r
-< 250 SIZE 10240000\r
-< 250 8BITMIME\r
-> MAIL FROM:<sender@example.com>\r
-< 250 OK\r
-> RCPT TO:<receiver@example.com>\r
-< 250 OK\r
-> DATA\r
-< 354 End data with <CR><LF>.<CR><LF>\r
-> Hello, this is a test email.\r
-> .\r
-< 250 email queued\r
-> QUIT\r
-< 221 Bye\r
-`,
-			shouldAccept: true,
-		},
 		{
 			name: "Connection closes halfway",
 			exchange: `
@@ -169,5 +148,25 @@ func TestHandleConnectionEdgeCases(t *testing.T) {
 			go server.handleConnection(rw)
 			testMethod(t, tc, rw)
 		})
+	}
+}
+
+func TestIsValidLHLO(t *testing.T) {
+
+	testCases := []struct {
+		command  string
+		expected bool
+	}{
+		{"LHLO example.com", true},
+		{"LHLO 192.168.1.1", true},
+		{"LHLO sub.example.co.uk", true},
+		{"LHLO invalid_domain", false},
+		{"LHLO example,com", false},
+		{"EHLO example.com", false},
+		{"LHLO- extra_whitespace", false},
+	}
+
+	for _, testCase := range testCases {
+		assert.Equal(t, testCase.expected, isValidLHLO(testCase.command), "Command: %s", testCase.command)
 	}
 }

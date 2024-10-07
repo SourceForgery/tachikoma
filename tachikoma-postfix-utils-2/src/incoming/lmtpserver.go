@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -44,6 +45,11 @@ func (server *LMTPServer) Listen() error {
 	}
 }
 
+func isValidLHLO(command string) bool {
+	re := regexp.MustCompile(`^LHLO\s+([a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9]\.)*[a-zA-Z]{2,}$`)
+	return re.MatchString(command)
+}
+
 func (server *LMTPServer) handleConnection(rw io.ReadWriteCloser) {
 	//goland:noinspection GoUnhandledErrorResult
 	defer rw.Close()
@@ -53,7 +59,7 @@ func (server *LMTPServer) handleConnection(rw io.ReadWriteCloser) {
 
 	writeLn := func(lines ...string) (err error) {
 		for _, line := range lines {
-			_, err = rw.Write([]byte(line + "\n"))
+			_, err = rw.Write([]byte(line + "\r\n"))
 			if err != nil {
 				return err
 			}
@@ -85,14 +91,18 @@ func (server *LMTPServer) handleConnection(rw io.ReadWriteCloser) {
 				logger.Info().Msgf("Received email: %+v", email)
 				email = &tachikoma.IncomingEmailMessage{}
 			} else {
-				data += line + "\n"
+				data += line + "\r\n"
 			}
 		} else if strings.HasPrefix(line, "LHLO") {
-			err = writeLn(
-				"250-localhost",
-				"250 SIZE 10240000",
-				"250 8BITMIME",
-			)
+			if isValidLHLO(line) {
+				err = writeLn(
+					"250-localhost",
+					"250 SIZE 10240000",
+					"250 8BITMIME",
+				)
+			} else {
+				err = writeLn("501 Syntax error in parameters or arguments")
+			}
 		} else if strings.HasPrefix(line, "MAIL FROM:") {
 			email.From = strings.TrimPrefix(line, "MAIL FROM:")
 			err = writeLn("250 OK")
