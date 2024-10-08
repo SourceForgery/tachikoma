@@ -14,7 +14,7 @@ dependencies {
     val guavaVersion: String by project
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:12.1.1")
-    implementation("io.ebean:ebean-gradle-plugin:15.6.0")
+    implementation("io.ebean:ebean-gradle-plugin:15.6.1")
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.42.0")
