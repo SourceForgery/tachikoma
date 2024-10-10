@@ -6,12 +6,12 @@ import com.sourceforgery.tachikoma.identifiers.AutoMailId
 import com.sourceforgery.tachikoma.identifiers.EmailId
 import com.sourceforgery.tachikoma.identifiers.MessageId
 import io.ebean.annotation.DbJsonB
-import javax.persistence.CascadeType
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.Table
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 
 // Represents a single email to one recipient
 @Entity

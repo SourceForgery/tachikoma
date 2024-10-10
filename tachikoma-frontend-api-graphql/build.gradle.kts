@@ -6,12 +6,12 @@ plugins {
     `tachikoma-kotlin`
 }
 
-val generatorConfiguration by configurations.creating {
+val generatorConfiguration: Configuration by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
 }
 
-val graphqls by configurations.creating {
+val graphqls: Configuration by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false
 }

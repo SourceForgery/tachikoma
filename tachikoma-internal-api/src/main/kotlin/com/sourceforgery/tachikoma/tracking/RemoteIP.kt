@@ -6,4 +6,4 @@ interface RemoteIP {
     val remoteAddress: String
 }
 
-val REMOTE_IP_ATTRIB = AttributeKey.valueOf<String>("remote.ip")
+val REMOTE_IP_ATTRIB: AttributeKey<String> = AttributeKey.valueOf("remote.ip")

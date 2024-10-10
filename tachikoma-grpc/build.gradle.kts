@@ -10,7 +10,7 @@ dependencies {
     implementation("com.linecorp.armeria:armeria")
     implementation("com.linecorp.armeria:armeria-grpc")
     implementation("com.linecorp.armeria:armeria-kotlin")
-    implementation("com.sun.mail:jakarta.mail")
+    implementation("jakarta.mail:jakarta.mail-api")
     implementation("com.samskivert:jmustache")
     implementation("io.grpc:grpc-kotlin-stub")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")

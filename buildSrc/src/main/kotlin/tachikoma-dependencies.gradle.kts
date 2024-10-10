@@ -49,8 +49,6 @@ configurations.all {
             substitute(module("org.slf4j:jul-to-slf4j")).using(module("org.apache.logging.log4j:log4j-jul:$log4j2Version"))
             substitute(module("org.slf4j:slf4j-simple")).using(module("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2Version"))
             substitute(module("com.google.guava:guava-jdk5")).using(module("com.google.guava:guava:$guavaVersion"))
-
-            substitute(module("javax.annotation:javax.annotation-api")).using(module("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion"))
         }
     }
 }
