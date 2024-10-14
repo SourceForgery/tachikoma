@@ -11,7 +11,6 @@ import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.apache.commons.lang.RandomStringUtils
@@ -51,11 +50,6 @@ internal class DeliveryNotificationServiceGrpcImpl(
                     accountId = auth.accountId,
                     includeTags = request.tagsList.toSet(),
                 )
-                    .map {
-                        EmailNotificationOrKeepAlive.newBuilder()
-                            .setEmailNotification(it)
-                            .build()
-                    }
                     .collect {
                         send(it)
                     }

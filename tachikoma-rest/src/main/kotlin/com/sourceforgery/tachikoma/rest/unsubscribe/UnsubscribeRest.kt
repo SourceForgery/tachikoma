@@ -8,7 +8,6 @@ import com.linecorp.armeria.server.annotation.Get
 import com.linecorp.armeria.server.annotation.Param
 import com.linecorp.armeria.server.annotation.Post
 import com.sourceforgery.tachikoma.common.EmailStatus
-import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.coroutines.TachikomaScope
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
@@ -109,7 +108,6 @@ internal class UnsubscribeRest(
         val notificationMessage =
             DeliveryNotificationMessage
                 .newBuilder()
-                .setCreationTimestamp(clock.instant().toTimestamp())
                 .setEmailMessageId(email.id.emailId)
                 .setMessageUnsubscribed(
                     MessageUnsubscribed

@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.mq
 
 import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
+import com.sourceforgery.tachikoma.invoke
 import java.time.Duration
 
 enum class JobMessageQueue(
@@ -27,6 +28,8 @@ enum class JobMessageQueue(
     ;
 
     override val parser: (ByteArray) -> JobMessage = JobMessage::parseFrom
+    override val parserV2: (ByteArray) -> JobMessage
+        get() = parser
 
     init {
         assert(delay == Duration.ZERO || nextDestination != null)
@@ -42,6 +45,8 @@ internal val FAILED_OUTGOING_EMAILS =
         override val parser: (ByteArray) -> OutgoingEmailMessage = {
             error("No parser for this")
         }
+        override val parserV2: (ByteArray) -> OutgoingEmailMessage
+            get() = parser
     }
 
 class OutgoingEmailsMessageQueue(
@@ -52,27 +57,40 @@ class OutgoingEmailsMessageQueue(
     override val delay = Duration.ZERO
     override val nextDestination = FAILED_OUTGOING_EMAILS
     override val parser: (ByteArray) -> OutgoingEmailMessage = OutgoingEmailMessage::parseFrom
+    override val parserV2: (ByteArray) -> OutgoingEmailMessage
+        get() = parser
 }
 
 internal val FAILED_DELIVERY_NOTIFICATIONS =
-    object : MessageQueue<DeliveryNotificationMessage> {
+    object : MessageQueue<EmailNotificationEvent> {
         override val delay = Duration.ZERO
         override val maxLength = null
         override val nextDestination = null
         override val name = "FAILED_DELIVERY_NOTIFICATIONS"
-        override val parser: (ByteArray) -> DeliveryNotificationMessage = {
+        override val parser: (ByteArray) -> EmailNotificationEvent = {
             error("No parser for this")
         }
+        override val parserV2: (ByteArray) -> EmailNotificationEvent
+            get() = parser
     }
 
 class DeliveryNotificationMessageQueue(
     authenticationId: AuthenticationId,
     override val maxLength: Int? = null,
-) : MessageQueue<DeliveryNotificationMessage> {
+) : MessageQueue<EmailNotificationEvent> {
     override val name = "deliverynotifications.$authenticationId"
     override val delay = Duration.ZERO
     override val nextDestination = FAILED_DELIVERY_NOTIFICATIONS
-    override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
+    override val parser: (ByteArray) -> EmailNotificationEvent
+        get() = {
+            val notificationMessage = DeliveryNotificationMessage.parseFrom(it)
+            (EmailNotificationEvent.newBuilder()) {
+                deliveryNotification = notificationMessage
+                @Suppress("DEPRECATION")
+                creationTimestamp = notificationMessage.creationTimestamp
+            }.build()
+        }
+    override val parserV2: (ByteArray) -> EmailNotificationEvent = EmailNotificationEvent::parseFrom
 }
 
 internal val FAILED_INCOMING_EMAIL_NOTIFICATIONS =
@@ -84,6 +102,8 @@ internal val FAILED_INCOMING_EMAIL_NOTIFICATIONS =
         override val parser: (ByteArray) -> IncomingEmailNotificationMessage = {
             error("No parser for this")
         }
+        override val parserV2: (ByteArray) -> IncomingEmailNotificationMessage
+            get() = parser
     }
 
 class IncomingEmailNotificationMessageQueue(
@@ -94,4 +114,6 @@ class IncomingEmailNotificationMessageQueue(
     override val delay = Duration.ZERO
     override val nextDestination = FAILED_INCOMING_EMAIL_NOTIFICATIONS
     override val parser: (ByteArray) -> IncomingEmailNotificationMessage = IncomingEmailNotificationMessage::parseFrom
+    override val parserV2: (ByteArray) -> IncomingEmailNotificationMessage
+        get() = parser
 }

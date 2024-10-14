@@ -6,6 +6,7 @@ option go_package = "github.com/SourceForgery/tachikoma";
 package com.sourceforgery.tachikoma.grpc.frontend.tracking;
 
 import "com/sourceforgery/tachikoma/grpc/frontend/common.proto";
+import "google/protobuf/timestamp.proto";
 
 service DeliveryNotificationService {
     rpc NotificationStreamWithKeepAlive(NotificationStreamParameters) returns (stream EmailNotificationOrKeepAlive);
@@ -32,5 +33,21 @@ message EmailNotificationOrKeepAlive {
     oneof notification_or_keepalive {
         EmailNotification email_notification = 1;
         string keep_alive = 2;
+        EmailAddressNotification email_address_notification = 3;
     }
 }
+
+message EmailAddressNotification {
+    // From email address
+    string from_email = 1;
+    // Recipient email address
+    string recipient_email = 2;
+    google.protobuf.Timestamp timestamp = 3;
+    oneof reason {
+        // The reason of why the block is being blocked
+        com.sourceforgery.tachikoma.grpc.frontend.BlockedReason new_reason = 4;
+        // The reason of why the block was being blocked
+        com.sourceforgery.tachikoma.grpc.frontend.BlockedReason old_reason = 5;
+    }
+}
+

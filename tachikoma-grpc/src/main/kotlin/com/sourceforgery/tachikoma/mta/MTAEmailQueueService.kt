@@ -4,7 +4,6 @@ import com.linecorp.armeria.server.ServiceRequestContext
 import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.common.EmailStatus
 import com.sourceforgery.tachikoma.common.ExtractEmailMetadata
-import com.sourceforgery.tachikoma.common.toTimestamp
 import com.sourceforgery.tachikoma.database.dao.BlockedEmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailDAO
 import com.sourceforgery.tachikoma.database.dao.EmailStatusEventDAO
@@ -63,7 +62,7 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
         @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(blockingDispatcher) {
             requests.collect { value ->
-                if (value == MTAQueuedNotification.getDefaultInstance()) {
+                if (value.equals(MTAQueuedNotification.getDefaultInstance())) {
                     return@collect
                 }
                 val queueId = value.queueId
@@ -93,7 +92,6 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
                         accountId = email.transaction.authentication.account.id,
                         notificationMessage =
                             DeliveryNotificationMessage.newBuilder()
-                                .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
                                 .setEmailMessageId(email.id.emailId)
                                 .setMessageQueued(MessageQueued.getDefaultInstance())
                                 .build(),
@@ -110,7 +108,6 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
                         accountId = email.transaction.authentication.account.id,
                         notificationMessage =
                             DeliveryNotificationMessage.newBuilder()
-                                .setCreationTimestamp(statusDBO.dateCreated!!.toTimestamp())
                                 .setEmailMessageId(email.id.emailId)
                                 .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
                                 .build(),
@@ -206,7 +203,6 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
                     val notificationMessage =
                         DeliveryNotificationMessage
                             .newBuilder()
-                            .setCreationTimestamp(clock.instant().toTimestamp())
                             .setEmailMessageId(email.id.emailId)
                             .setMessageHardBounced(MessageHardBounced.getDefaultInstance())
                             .build()
@@ -234,7 +230,6 @@ class MTAEmailQueueService(override val di: DI) : DIAware {
                     val notificationMessage =
                         DeliveryNotificationMessage
                             .newBuilder()
-                            .setCreationTimestamp(clock.instant().toTimestamp())
                             .setEmailMessageId(email.id.emailId)
                             .setMessageUnsubscribed(MessageUnsubscribed.getDefaultInstance())
                             .build()
