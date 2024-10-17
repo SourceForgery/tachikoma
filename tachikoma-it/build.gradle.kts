@@ -45,12 +45,11 @@ dependencies {
     testImplementation("io.ktor:ktor-client-logging-jvm")
     testImplementation("io.ktor:ktor-client-okhttp")
     testImplementation("io.mockk:mockk")
-    testImplementation("jakarta.mail:jakarta.mail-api")
     testImplementation("org.apache.logging.log4j:log4j-core")
     testImplementation("org.apache.logging.log4j:log4j-jul")
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl")
+    testImplementation("org.eclipse.angus:jakarta.mail")
     testImplementation("org.jsoup:jsoup")
-    testImplementation("com.sun.mail:jakarta.mail")
 }
 
 graphql {

@@ -15,14 +15,13 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.google.guava:guava")
     implementation("io.ebean:ebean")
-//    implementation("io.ebean:ebean-querybean")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 }
 
 val ebeanVersion: String by project
 
 extensions.configure<EnhancePluginExtension> {
-    debugLevel = 10
+//    debugLevel = 10
     kotlin = true
 //    queryBeans = true
     generatorVersion = ebeanVersion
