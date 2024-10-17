@@ -5,12 +5,12 @@ import com.sourceforgery.tachikoma.common.Email
 import com.sourceforgery.tachikoma.identifiers.EmailTransactionId
 import io.ebean.annotation.DbArray
 import io.ebean.annotation.DbJsonB
-import javax.persistence.CascadeType
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.Table
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 
 // Represents one call to MailDelivery.sendEmail()
 @Table(name = "e_email_send_transaction")

@@ -6,7 +6,7 @@ import java.util.Locale
 import java.util.Scanner
 import java.util.regex.Pattern
 
-val ALL_NEWLINES = Pattern.compile("\r*\n\r*")
+val ALL_NEWLINES: Pattern = Pattern.compile("\r*\n\r*")
 
 val EMAIL_DELIMITER = "------"
 private val EMAIL_FROM = "From:"
@@ -46,7 +46,7 @@ fun extractBodyFromPlaintextEmail(
 
 /**
  * @param originalHtml The text
- * @param toEmail the email that was sent to (and which will most likely be in the line looking like `foo@example.com wrote:`)
+ * @param email the email that was sent to (and which will most likely be in the line looking like `foo@example.com wrote:`)
  */
 fun extractBodyFromHtmlEmail(
     originalHtml: String,

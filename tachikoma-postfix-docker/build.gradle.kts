@@ -8,7 +8,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
     dependsOn(tarTask)
     applicationName.set("tachikoma-postfix")
     tagVersion.set(project.provider { project.version.toString() })
-    baseImage.set("ubuntu:22.04")
+    baseImage.set("ubuntu:24.04")
 
     workingDir("/opt")
 
@@ -19,13 +19,13 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
         """
         apt-get update &&
         apt-get -y dist-upgrade &&
-        apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-17-jdk-headless netcat-openbsd net-tools &&
+        apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-21-jdk-headless netcat-openbsd net-tools &&
         apt-get clean &&
         rm -rf /var/cache/apt/ /var/lib/apt/lists/* &&
         echo "LANG=C.UTF-8" > /etc/default/locale
         """.trimMargin().replace('\n', ' '),
     )
-    runCommand("pip3 install --no-cache-dir honcho==1.0.1")
+    runCommand("pip3 install --break-system-packages --no-cache-dir honcho==1.0.1")
 
     exposePort(25)
 

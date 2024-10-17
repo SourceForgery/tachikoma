@@ -21,7 +21,7 @@ class H2DataSourceProvider(override val di: DI) : DataSourceProvider, DIAware {
         dataSourceConfig.username = "sa"
         dataSourceConfig.password = "blank"
 
-        serverConfig.dataSourceConfig = dataSourceConfig
+        serverConfig.setDataSourceConfig(dataSourceConfig)
         serverConfig.databasePlatform = H2Platform()
         serverConfig.isDdlCreateOnly = true
         serverConfig.isDdlGenerate = true

@@ -3,11 +3,11 @@ package com.sourceforgery.tachikoma.database.objects
 import com.sourceforgery.tachikoma.account.Account
 import com.sourceforgery.tachikoma.identifiers.AccountId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 import java.net.URI
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.OneToMany
-import javax.persistence.Table
 
 /**
  * This is one account (sender) with it's multiple users

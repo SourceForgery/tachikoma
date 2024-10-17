@@ -49,7 +49,7 @@ class OutgoingEmailsMessageQueue(
 ) : MessageQueue<OutgoingEmailMessage> {
     override val name = "outgoing.$mailDomain"
     override val maxLength = null
-    override val delay = Duration.ZERO
+    override val delay: Duration = Duration.ZERO
     override val nextDestination = FAILED_OUTGOING_EMAILS
     override val parser: (ByteArray) -> OutgoingEmailMessage = OutgoingEmailMessage::parseFrom
 }
@@ -70,7 +70,7 @@ class DeliveryNotificationMessageQueue(
     override val maxLength: Int? = null,
 ) : MessageQueue<DeliveryNotificationMessage> {
     override val name = "deliverynotifications.$authenticationId"
-    override val delay = Duration.ZERO
+    override val delay: Duration = Duration.ZERO
     override val nextDestination = FAILED_DELIVERY_NOTIFICATIONS
     override val parser: (ByteArray) -> DeliveryNotificationMessage = DeliveryNotificationMessage::parseFrom
 }
@@ -91,7 +91,7 @@ class IncomingEmailNotificationMessageQueue(
     override val maxLength: Int? = null,
 ) : MessageQueue<IncomingEmailNotificationMessage> {
     override val name = "incomingemail.$authenticationId"
-    override val delay = Duration.ZERO
+    override val delay: Duration = Duration.ZERO
     override val nextDestination = FAILED_INCOMING_EMAIL_NOTIFICATIONS
     override val parser: (ByteArray) -> IncomingEmailNotificationMessage = IncomingEmailNotificationMessage::parseFrom
 }
