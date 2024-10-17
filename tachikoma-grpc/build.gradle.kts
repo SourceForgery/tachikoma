@@ -22,4 +22,7 @@ dependencies {
 
     implementation(project(":tachikoma-internal-api"))
     implementation(project(":tachikoma-database-api"))
+
+    testImplementation("com.sun.mail:jakarta.mail")
+    testImplementation("io.mockk:mockk")
 }

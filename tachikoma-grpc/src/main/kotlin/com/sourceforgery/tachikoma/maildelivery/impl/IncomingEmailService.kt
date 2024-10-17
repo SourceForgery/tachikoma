@@ -22,7 +22,6 @@ import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.EmailSearchFilter.FilterCase.RECEIVED_WITHIN
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.HeaderLine
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmail
-import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailAttachment
 import com.sourceforgery.tachikoma.grpc.frontend.maildelivery.IncomingEmailParameters
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpc
 import com.sourceforgery.tachikoma.grpc.frontend.toGrpcInternal
@@ -31,27 +30,20 @@ import com.sourceforgery.tachikoma.identifiers.AuthenticationId
 import com.sourceforgery.tachikoma.identifiers.IncomingEmailId
 import com.sourceforgery.tachikoma.identifiers.MailDomain
 import com.sourceforgery.tachikoma.maildelivery.extractBodyFromPlaintextEmail
-import com.sourceforgery.tachikoma.maildelivery.getPlainText
+import com.sourceforgery.tachikoma.maildelivery.impl.EmailParser.includeAttachments
+import com.sourceforgery.tachikoma.maildelivery.impl.EmailParser.parseBodies
 import com.sourceforgery.tachikoma.mq.MQSequenceFactory
 import com.sourceforgery.tachikoma.onlyIf
-import jakarta.activation.DataHandler
-import jakarta.mail.Multipart
-import jakarta.mail.Part
 import jakarta.mail.Session
-import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import org.apache.logging.log4j.kotlin.logger
-import org.jsoup.Jsoup
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
-import java.nio.charset.Charset
-import java.nio.charset.UnsupportedCharsetException
 import java.time.Instant
 import java.util.Properties
 
@@ -73,7 +65,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
             MimeMessage(session, ByteArrayInputStream(body))
         }
         val parseBodies by lazy {
-            includeParsedBodies(parsedMessage)
+            parsedMessage.parseBodies()
         }
         @Suppress("DEPRECATION")
         return IncomingEmail.newBuilder()
@@ -86,8 +78,8 @@ class IncomingEmailService(override val di: DI) : DIAware {
             .addAllReplyTo(replyToEmails.map { it.toGrpc() })
             .addAllTo(toEmails.map { it.toGrpc() })
             .onlyIf(parameters.includeMessageParsedBodies) {
-                messageHtmlBody = parseBodies.first
-                messageTextBody = parseBodies.second
+                messageHtmlBody = parseBodies.htmlBody
+                messageTextBody = parseBodies.plainTextBody
             }
             .onlyIf(parameters.includeMessageAttachments) {
                 includeAttachments(parsedMessage)
@@ -106,118 +98,9 @@ class IncomingEmailService(override val di: DI) : DIAware {
                 messageWholeEnvelope = ByteString.copyFrom(body)
             }
             .onlyIf(parameters.includeExtractedMessageFromReplyChain) {
-                extractedTextMessageFromReplyChain = extractBodyFromPlaintextEmail(parseBodies.second, recipient)
+                extractedTextMessageFromReplyChain = extractBodyFromPlaintextEmail(parseBodies.plainTextBody, recipient)
             }
             .build()
-    }
-
-    private fun IncomingEmail.Builder.includeAttachments(parsedMessage: MimeMessage) {
-        parsedMessage.unroll { _, _, _ -> true }
-            .map { (_, singleBody) ->
-                IncomingEmailAttachment.newBuilder()
-                    .setContentType(singleBody.contentType)
-                    .addAllHeaders(
-                        singleBody.allHeaders
-                            .asSequence()
-                            .map {
-                                HeaderLine.newBuilder()
-                                    .setName(it.name)
-                                    .setBody(it.value)
-                                    .build()
-                            }.toList(),
-                    )
-                    .setFileName(singleBody.fileName ?: "")
-                    .apply {
-                        when (val content = singleBody.content) {
-                            is String -> dataString = content
-                            is DataHandler -> dataBytes = content.inputStream.use { ByteString.readFrom(it) }
-                            else -> dataBytes = singleBody.inputStream.use { ByteString.readFrom(it) }
-                        }
-                    }
-                    .build()
-            }.forEach {
-                addMessageAttachments(it)
-            }
-    }
-
-    private fun Part.charset() =
-        try {
-            ContentType(contentType).getParameter("charset")
-                ?.let { Charset.forName(it) }
-                ?: Charsets.ISO_8859_1
-        } catch (e: UnsupportedCharsetException) {
-            LOGGER.info { "Detected unsupported charset: $contentType" }
-            Charsets.ISO_8859_1
-        }
-
-    private fun Part.text() =
-        when (val content = content) {
-            is String -> content
-            else ->
-                InputStreamReader(inputStream, charset())
-                    .use { it.readText() }
-        }
-
-    private fun includeParsedBodies(parsedMessage: MimeMessage): Pair<String, String> {
-        val allAlternatives =
-            parsedMessage
-                // Only allows two categories, either:
-                // * the root part, ie the first in every
-                // * in "multipart/alternative"
-                // Caveat: This actually supports multiparts in multiparts,
-                // but I have no idea if the standard does that.
-                .unroll { parent, idx, _ -> idx == 0 || parent.isMultipartAlternative }
-                .map { (_, part) -> part }
-                .toList()
-
-        val messageHtmlBody =
-            allAlternatives
-                .firstOrNull { TEXT_HTML.match(it.contentType) }
-                ?.text()
-                ?: ""
-
-        val messageTextBody =
-            allAlternatives
-                .firstOrNull { TEXT_PLAIN.match(it.contentType) }
-                ?.text()
-                ?: let { messageHtmlBody.stripHtml() }
-        return messageHtmlBody to messageTextBody
-    }
-
-    private val Multipart.isMultipartAlternative: Boolean
-        get() = MULTIPART_ALTERNATIVE.match(contentType)
-
-    private fun Multipart.bodyPartsWithIndex() =
-        (0 until count)
-            .asSequence()
-            .map { it to getBodyPart(it) }
-
-    // Not internal function because Kotlin 1.3.72 w/ coroutine 1.3.6 cannot build it
-    suspend fun SequenceScope<Pair<Int, Part>>.recursive(
-        idx: Int,
-        body: Part,
-        pathSelector: (Multipart, Int, Part) -> Boolean,
-    ) {
-        when (val content = body.content) {
-            is Multipart -> {
-                content.bodyPartsWithIndex()
-                    .filter { (idx, part) -> pathSelector(content, idx, part) }
-                    .forEach { (idx, part) ->
-                        recursive(idx, part, pathSelector)
-                    }
-            }
-            else -> yield(idx to body)
-        }
-    }
-
-    /** Recursively get all bodies (if pathSelector allows it)
-     * @param pathSelector filters both which paths to go down, and what to collect. Ie, if not accepting multiparts,
-     *  the map will only contain the direct children of the Part-receiver.
-     * **/
-    private fun Part.unroll(pathSelector: (Multipart, Int, Part) -> Boolean): Sequence<Pair<Int, Part>> {
-        return sequence {
-            recursive(0, this@unroll, pathSelector)
-        }
     }
 
     fun streamIncomingEmails(
@@ -281,12 +164,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
             FILTER_NOT_SET -> error("Must set filter")
         }
 
-    private fun String.stripHtml(): String = getPlainText(Jsoup.parse(this))
-
     companion object {
-        private val TEXT_HTML = ContentType("text/html")
-        private val TEXT_PLAIN = ContentType("text/plain")
-        private val MULTIPART_ALTERNATIVE = ContentType("multipart/alternative")
         private val LOGGER = logger()
     }
 }

@@ -2,6 +2,7 @@ package com.sourceforgery.tachikoma.maildelivery.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.google.common.annotations.VisibleForTesting
 import com.google.protobuf.Struct
 import com.google.protobuf.util.JsonFormat
 import com.samskivert.mustache.BasicCollector
@@ -310,7 +311,8 @@ class MailDeliveryService(override val di: DI) : DIAware {
         .compile(template)
         .execute(scopes)
 
-    private fun wrapAndPackBody(
+    @VisibleForTesting
+    internal fun wrapAndPackBody(
         request: OutgoingEmail,
         sendAt: Instant,
         htmlBody: String?,
@@ -601,8 +603,14 @@ class MailDeliveryService(override val di: DI) : DIAware {
         val links = doc.select("a[href]")
         for (link in links) {
             val originalUri = link.attr("href")
-            if (originalUri == "*|UNSUB|*") {
-                link.attr("href", unsubscribeUri.toString())
+            val matches = UNSUBSCRIBE_PATTERN.matchEntire(originalUri)
+            if (matches != null) {
+                val group = matches.groupValues[1]
+                if (group.isBlank()) {
+                    link.attr("href", unsubscribeUri.toASCIIString())
+                } else {
+                    link.attr("href", createUnsubscribeOneClickPostLink(email, group).toASCIIString())
+                }
             } else if (originalUri.startsWith("http://") || originalUri.startsWith("https://")) {
                 link.attr(
                     "href",
@@ -654,6 +662,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         private val LOGGER = logger()
         private val PRINTER = JsonFormat.printer()!!
         private val mailDateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss Z (z)")
+        private val UNSUBSCRIBE_PATTERN = Regex("\\*\\|UNSUB(?::(.+?))?\\|\\*")
     }
 }
 

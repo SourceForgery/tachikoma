@@ -74,6 +74,7 @@ fun main() {
     |            <h6>Some footer text</h6>
     |        </div>
     |        <a href="*|UNSUB|*">Unsubscribe from list</a>
+    |        <a href="*|UNSUB:https://example.com/foo|*">Unsubscribe from list</a>
     |    </center>
     |</body>
         """.trimMargin()
