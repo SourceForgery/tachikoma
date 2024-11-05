@@ -1,10 +1,8 @@
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.protobuf
 import com.sourceforgery.tachikoma.buildsrc.DownloadFileTask
 import com.sourceforgery.tachikoma.buildsrc.fixUglyCode
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.io.File
+import java.net.URI
 import java.net.URL
 
 plugins {
@@ -19,7 +17,7 @@ val javaVersion: String by project
 val downloadProtocLint: DownloadFileTask = rootProject.tasks.findByName("downloadProtocLint") as? DownloadFileTask
     ?: rootProject.tasks.create("downloadProtocLint", DownloadFileTask::class.java) {
         url =
-            { URL("https://github.com/ckaznocha/protoc-gen-lint/releases/download/v0.3.0/protoc-gen-lint_$nativePrefix.zip") }
+            { URI("https://github.com/ckaznocha/protoc-gen-lint/releases/download/v0.3.0/protoc-gen-lint_$nativePrefix.zip").toURL() }
         outputFile = file("build/protoc-gen-lint")
         zipFileMatcher = { "protoc-gen-lint" == it.name }
     }
@@ -33,7 +31,7 @@ dependencies {
     implementation(project(":tachikoma-protobuf-annotations"))
     implementation("io.grpc:grpc-stub")
     implementation("io.grpc:grpc-kotlin-stub")
-    implementation("jakarta.annotation:jakarta.annotation-api")
+//    implementation("jakarta.annotation:jakarta.annotation-api")
 }
 
 extensions.getByType<IdeaModel>().apply {

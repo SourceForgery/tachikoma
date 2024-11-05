@@ -44,7 +44,6 @@ fun Project.forcedDependencies(): Set<String> {
     val h2Version: String by project
     val jakartaAnnotationsVersion: String by project
     val jakartaMailVersion: String by project
-    val javaxAnnotationApiVersion: String by project
     val jnrUnixsocketVersion: String by project
     val jsoupVersion: String by project
     val jsr305Version: String by project
@@ -74,7 +73,6 @@ fun Project.forcedDependencies(): Set<String> {
         "com.rabbitmq:amqp-client:$amqpClientVersion",
         "com.samskivert:jmustache:$jmustacheVersion",
         "com.squareup:tape:$tapeVersion",
-        "com.sun.mail:jakarta.mail:$jakartaMailVersion",
         "commons-io:commons-io:$commonsIOVersion",
         "commons-lang:commons-lang:$commonsLangVersion",
         "commons-logging:commons-logging:$commonsLoggingVersion",
@@ -82,12 +80,15 @@ fun Project.forcedDependencies(): Set<String> {
         "io.grpc:grpc-kotlin-stub:$grpcKotlinVersion",
         "io.grpc:grpc-stub:$grpcVersion",
         "io.mockk:mockk:$mockkVersion",
+        "org.eclipse.angus:angus-activation:2.0.2",
+        "jakarta.activation:jakarta.activation-api:2.1.3",
         "jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationsVersion",
-        "javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion",
         "net.bytebuddy:byte-buddy:$bytebuddyVersion",
         "net.sf.expectit:expectit-core:$expectItVersion",
         "org.apache.httpcomponents:httpcore:4.4.15",
         "org.apache.logging.log4j:log4j-api-kotlin:$log4jApiKotlin",
+        "org.checkerframework:checker-qual:3.43.0",
+        "org.eclipse.angus:jakarta.mail:2.0.3",
         "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
         "org.jetbrains.kotlinx:kotlinx-html-jvm:$kotlinxHtmlVersion",
         "org.jetbrains.kotlinx:kotlinx-html:$kotlinxHtmlVersion",

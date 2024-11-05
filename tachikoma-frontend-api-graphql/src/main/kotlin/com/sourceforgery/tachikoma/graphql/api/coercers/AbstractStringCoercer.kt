@@ -32,7 +32,7 @@ abstract class AbstractStringCoercer<I : Any> : GraphqlCoercer<I, String> {
             throw CoercingParseValueException("Got exception while trying to parse '$input' message: ${e.message}", e)
         }
 
-    @Deprecated("Deprecated in Java")
+    @Deprecated("Deprecated in Java", ReplaceWith("toString(dataFetcherResult as I)"))
     @Suppress("UNCHECKED_CAST")
     override fun serialize(dataFetcherResult: Any): String? = toString(dataFetcherResult as I)
 }

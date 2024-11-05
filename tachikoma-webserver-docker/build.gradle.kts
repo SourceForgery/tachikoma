@@ -2,7 +2,7 @@ plugins {
     `tachikoma-docker`
 }
 
-val tarTask =
+val tarTask: Task =
     project(":tachikoma-webserver")
         .tasks[ApplicationPlugin.TASK_DIST_TAR_NAME]
 
@@ -15,7 +15,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
 
-    runCommand("apt-get update && apt-get -y --no-install-recommends install curl rsyslog rsyslog-gnutls less nvi openjdk-17-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*")
+    runCommand("apt-get update && apt-get -y --no-install-recommends install curl rsyslog rsyslog-gnutls less nvi openjdk-21-jdk-headless && apt-get clean && rm -rf /var/lib/apt/lists/*")
 
     runCommand(
         """

@@ -111,7 +111,7 @@ if (currentTag.isNotEmpty()) {
     }
 }
 
-val currentBranch =
+val currentBranch: String =
     System.getenv("CIRCLE_BRANCH")
         ?: let {
             org.eclipse.jgit.internal.storage.file.FileRepository(File(project.rootDir, ".git")).use {

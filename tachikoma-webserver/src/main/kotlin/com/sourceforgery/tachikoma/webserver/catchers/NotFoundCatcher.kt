@@ -20,5 +20,5 @@ class NotFoundCatcher(
         cause: NotFoundException,
     ) = HttpResponse.of(NOT_FOUND)
 
-    override fun status(t: NotFoundException) = Status.NOT_FOUND
+    override fun status(t: NotFoundException): Status = Status.NOT_FOUND
 }
