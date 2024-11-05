@@ -18,16 +18,16 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 
 class MQSequenceFactoryMock(override val di: DI) : MQSequenceFactory, DIAware {
-    val deliveryNotifications = Channel<DeliveryNotificationMessage>(UNLIMITED)
+    val deliveryNotifications = Channel<EmailNotificationEvent>(UNLIMITED)
     val jobs = LinkedBlockingQueue<QueueMessageWrap<JobMessage>>(1)
     val outgoingEmails = Channel<OutgoingEmailMessage>(UNLIMITED)
     val incomingEmails = Channel<IncomingEmailNotificationMessage>(UNLIMITED)
 
-    override fun listenForDeliveryNotifications(
+    override fun listenForDeliveryAndBlockNotifications(
         authenticationId: AuthenticationId,
         mailDomain: MailDomain,
         accountId: AccountId,
-    ): Flow<DeliveryNotificationMessage> =
+    ): Flow<EmailNotificationEvent> =
         deliveryNotifications
             .consumeAsFlow()
 

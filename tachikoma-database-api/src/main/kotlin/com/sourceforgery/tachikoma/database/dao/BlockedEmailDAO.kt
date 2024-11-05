@@ -15,8 +15,6 @@ interface BlockedEmailDAO {
 
     fun block(statusEvent: EmailStatusEventDBO)
 
-    fun unblock(statusEventDBO: EmailStatusEventDBO)
-
     fun unblock(
         accountDBO: AccountDBO,
         from: Email?,

@@ -160,6 +160,6 @@ class MTAEmailQueueServiceTest {
             assertEquals("foobarQueueId", email.mtaQueueId)
             assertEquals(1, mqSenderMock.deliveryNotifications.size)
             val notification = mqSenderMock.deliveryNotifications.take()
-            assertEquals(email.id.emailId, notification.emailMessageId)
+            assertEquals(email.id.emailId, notification.deliveryNotification.emailMessageId)
         }
 }

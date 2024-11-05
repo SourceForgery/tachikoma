@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option go_package = "github.com/SourceForgery/tachikoma";
+
+import "google/protobuf/timestamp.proto";
+
+package com.sourceforgery.tachikoma.mq;
+
+
+message BlockedEmailAddressEvent {
+    // From email address
+    string from_email = 1;
+    // Recipient email address
+    string recipient_email = 2;
+    BlockedReason new_reason = 3;
+    BlockedReason old_reason = 4;
+}
+
+// An email address pair has been blocked
+message EmailBlockedEvent {
+    // From email address
+    string from_email = 1;
+    // Recipient email address
+    string recipient_email = 2;
+    BlockedReason reason = 3;
+}
+
+message EmailUnblockedEvent {
+    // From email address
+    string from_email = 1;
+    // Recipient email address
+    string recipient_email = 2;
+    BlockedReason old_reason = 3;
+}
+
+// The reason for a blocked email address
+enum BlockedReason {
+    UNBLOCKED = 0;
+    UNSUBSCRIBED = 1;
+    SPAM_MARKED = 2;
+    HARD_BOUNCED = 3;
+}

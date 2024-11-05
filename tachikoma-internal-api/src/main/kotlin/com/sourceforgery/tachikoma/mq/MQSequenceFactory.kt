@@ -7,11 +7,11 @@ import com.sourceforgery.tachikoma.identifiers.MailDomain
 import kotlinx.coroutines.flow.Flow
 
 interface MQSequenceFactory {
-    fun listenForDeliveryNotifications(
+    fun listenForDeliveryAndBlockNotifications(
         authenticationId: AuthenticationId,
         mailDomain: MailDomain,
         accountId: AccountId,
-    ): Flow<DeliveryNotificationMessage>
+    ): Flow<EmailNotificationEvent>
 
     fun listenForJobs(callback: suspend (JobMessage) -> Unit): ListenableFuture<Unit>
 
