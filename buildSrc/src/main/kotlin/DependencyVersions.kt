@@ -88,6 +88,7 @@ fun Project.forcedDependencies(): Set<String> {
         "org.apache.httpcomponents:httpcore:4.4.15",
         "org.apache.logging.log4j:log4j-api-kotlin:$log4jApiKotlin",
         "org.checkerframework:checker-qual:3.43.0",
+        "org.curioswitch.curiostack:protobuf-jackson:2.6.0",
         "org.eclipse.angus:jakarta.mail:2.0.3",
         "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
         "org.jetbrains.kotlinx:kotlinx-html-jvm:$kotlinxHtmlVersion",
