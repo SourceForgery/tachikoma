@@ -102,10 +102,10 @@ class ReadListConfig<R, T2>(
     defaultValue: List<T2>,
     private val listClazz: Class<T2>,
 ) : ConfigReader<R, List<T2>>(
-    propertyName = propertyName,
-    defaultValue = defaultValue,
-    clazz = List::class.java as Class<List<T2>>,
-) {
+        propertyName = propertyName,
+        defaultValue = defaultValue,
+        clazz = List::class.java as Class<List<T2>>,
+    ) {
     override fun <T> readConfig(configKey: String): T {
         return ConfigData.getProperty(configKey, defaultValue) {
             (it.split(',').map { convert(listClazz, it) })
@@ -118,10 +118,10 @@ class EncryptionConfig<R, T>(
     defaultValue: T,
     clazz: Class<T>,
 ) : ConfigReader<R, T>(
-    propertyName = propertyName,
-    defaultValue = defaultValue,
-    clazz = clazz,
-) {
+        propertyName = propertyName,
+        defaultValue = defaultValue,
+        clazz = clazz,
+    ) {
     override fun readValue(property: KProperty<*>) =
         super.readValue(property)
             .also {
@@ -174,7 +174,7 @@ private object ConfigData {
                 System.getProperty("tachikomaConfig")
                     ?: System.getenv("TACHIKOMA_CONFIG")
                     ?: (System.getProperty("user.home") + "/.tachikoma.config")
-                )
+            )
                 .let {
                     File(it)
                 }
@@ -195,7 +195,7 @@ private object ConfigData {
         (
             System.getenv(key)
                 ?: properties.getProperty(key)
-            )
+        )
             ?.let { converter(it) }
             ?: default
 }

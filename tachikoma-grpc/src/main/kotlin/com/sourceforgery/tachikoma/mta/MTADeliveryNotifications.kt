@@ -34,6 +34,7 @@ internal class MTADeliveryNotifications(override val di: DI) : DIAware {
             LOGGER.warn { "Did not find any email with mtaQueueId: $queueId and associated email $recipient" }
         } else if (email.recipient == recipient) {
             val creationTimestamp = clock.instant()!!
+
             @Suppress("DEPRECATION")
             val notificationMessageBuilder =
                 DeliveryNotificationMessage
