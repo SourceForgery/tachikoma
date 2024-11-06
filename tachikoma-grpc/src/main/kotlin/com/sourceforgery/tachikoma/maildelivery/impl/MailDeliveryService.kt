@@ -379,7 +379,13 @@ class MailDeliveryService(override val di: DI) : DIAware {
             val plainText = { getPlainText(htmlDoc) }
 
             addBodyPart {
-                setContent(plaintextBody ?: plainText(), "text/plain; charset=utf-8")
+                val textBody =
+                    if (plaintextBody == null) {
+                        plainText()
+                    } else {
+                        replaceLinks(plaintextBody, emailDBO, unsubscribeUri)
+                    }
+                setContent(textBody, "text/plain; charset=utf-8")
                 setHeader("Content-Transfer-Encoding", "quoted-printable")
             }
 
@@ -596,6 +602,21 @@ class MailDeliveryService(override val di: DI) : DIAware {
     }
 
     private fun replaceLinks(
+        plaintextBody: String,
+        email: EmailDBO,
+        unsubscribeUri: URI,
+    ): String {
+        return UNSUBSCRIBE_PATTERN.replace(plaintextBody) {
+            val group = it.groupValues[1]
+            if (group.isBlank()) {
+                unsubscribeUri.toASCIIString()
+            } else {
+                createUnsubscribeOneClickPostLink(email, group).toASCIIString()
+            }
+        }
+    }
+
+    private fun replaceLinks(
         doc: Document,
         email: EmailDBO,
         unsubscribeUri: URI,
@@ -662,7 +683,7 @@ class MailDeliveryService(override val di: DI) : DIAware {
         private val LOGGER = logger()
         private val PRINTER = JsonFormat.printer()!!
         private val mailDateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss Z (z)")
-        private val UNSUBSCRIBE_PATTERN = Regex("\\*\\|UNSUB(?::(.+?))?\\|\\*")
+        private val UNSUBSCRIBE_PATTERN = Regex("""\*\|UNSUB(?::(.+?))?\|\*""")
     }
 }
 

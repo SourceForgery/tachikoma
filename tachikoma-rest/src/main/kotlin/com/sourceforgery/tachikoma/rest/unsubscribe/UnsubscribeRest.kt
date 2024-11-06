@@ -29,13 +29,11 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.direct
 import org.kodein.di.instance
-import java.time.Clock
 import java.util.Optional
 
 internal class UnsubscribeRest(
     override val di: DI,
 ) : RestService, DIAware, TachikomaScope by di.direct.instance() {
-    private val clock: Clock by instance()
     private val mqSender: MQSender by instance()
     private val unsubscribeDecoder: UnsubscribeDecoder by instance()
     private val emailDAO: EmailDAO by instance()

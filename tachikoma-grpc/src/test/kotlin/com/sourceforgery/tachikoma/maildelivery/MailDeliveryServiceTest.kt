@@ -29,6 +29,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.Properties
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 class MailDeliveryServiceTest : DIAware {
@@ -51,7 +52,7 @@ class MailDeliveryServiceTest : DIAware {
     private val unsubscribeDecoder: UnsubscribeDecoder by instance()
 
     @Test
-    fun `replaceLinks test`() {
+    fun `replaceLinks html test`() {
         val emailDBO =
             mockk<EmailDBO> {
                 val emailDBO = this
@@ -87,6 +88,7 @@ class MailDeliveryServiceTest : DIAware {
                 """
                 <a href="http://example.com/1234567890">Link</a>
                 <a href="*|UNSUB:http://example.com/barfoo|*">Link</a>
+                <a href="*|UNSUB:https://example.com|*">Link</a>
                 <a href="*|UNSUB|*">Link</a>
                 """.trimIndent(),
                 "",
@@ -105,6 +107,7 @@ class MailDeliveryServiceTest : DIAware {
                 "http://localhost/c",
                 "http://localhost/unsubscribe",
                 "http://localhost/unsubscribe",
+                "http://localhost/unsubscribe",
             ),
             uris.map {
                 it.substringBeforeLast('/')
@@ -114,11 +117,77 @@ class MailDeliveryServiceTest : DIAware {
             listOf(
                 "http://example.com/1234567890",
                 "http://example.com/barfoo",
+                "https://example.com",
                 "http://example.com/foobar/",
             ),
             uris.map {
                 unsubscribeDecoder.decodeUnsubscribeData(it.substringAfterLast('/')).redirectUrl
             },
+        )
+    }
+
+    @Test
+    fun `replaceLinks plaintext test`() {
+        val emailDBO =
+            mockk<EmailDBO> {
+                val emailDBO = this
+                every { recipient } returns Email("bar@example.com")
+                every { recipientName } returns "Somebody"
+                every { emailDBO getProperty "dbId" } returns 123456789L
+                every { transaction } returns
+                    mockk {
+                        every { fromEmail } returns Email("foo@example.com")
+                        every { authentication } returns
+                            mockk {
+                                val authentication = this
+                                every { account } returns
+                                    mockk {
+                                        every { baseUrl } returns URI.create("http://localhost/")
+                                    }
+                                every { authentication getProperty "dbId" } returns 5678L
+                            }
+                    }
+                every { autoMailId } returns AutoMailId("autoMailId@skldfjkldsf.com")
+                every { messageId } returns MessageId("message-id@example.com")
+            }
+        val wrapAndPackBody =
+            mailDeliveryService.wrapAndPackBody(
+                (OutgoingEmail.newBuilder()).apply {
+                    fromBuilder.apply {
+                        email = "foo@example.com"
+                        name = "Nobody"
+                    }
+                    unsubscribeRedirectUri = "http://example.com/foobar/"
+                }.build(),
+                Instant.now(),
+                "",
+                """
+                [http://example.com/1234567890]
+                [*|UNSUB:http://example.com/barfoo|*]
+                [*|UNSUB:https://example.com|*]
+                [*|UNSUB|*]
+                """.trimIndent(),
+                "",
+                emailDBO,
+            )
+        Email
+        val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), wrapAndPackBody.toByteArray().inputStream())
+        val plaintext = mimeMessage.parseBodies().plainTextBody
+        assertContains(plaintext, "http://localhost/unsubscribe")
+
+        val regex = Regex("""http://localhost/unsubscribe/([^]" ]+)""")
+        val values =
+            regex.findAll(plaintext)
+                .map { it.groupValues[1] }
+                .map { unsubscribeDecoder.decodeUnsubscribeData(it).redirectUrl }
+                .toList()
+        assertEquals(
+            listOf(
+                "http://example.com/barfoo",
+                "https://example.com",
+                "http://example.com/foobar/",
+            ),
+            values,
         )
     }
 }
