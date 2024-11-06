@@ -379,7 +379,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
                 "Processing message, routing key: ${envelope.routingKey}, consumer tag: $consumerTag, body md5: $md5"
             }
             try {
-                callback(body, properties.type.toIntOrNull() ?: 1)
+                callback(body, properties.type?.toIntOrNull() ?: 1)
                 LOGGER.debug { "Acked ${envelope.routingKey}" }
                 channel.basicAck(envelope.deliveryTag, false)
             } catch (e: Exception) {
