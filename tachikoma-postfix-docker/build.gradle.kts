@@ -8,30 +8,31 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
     dependsOn(tarTask)
     applicationName.set("tachikoma-postfix")
     tagVersion.set(project.provider { project.version.toString() })
-    baseImage.set("ubuntu:24.04")
+    baseImage.set("golang:1.23.3-bookworm")
+    runCommand("CGO_ENABLED=0 go install github.com/mattn/goreman@v0.3.16")
 
+    from("ubuntu:24.04", "name")
     workingDir("/opt")
 
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
-    setEnvironment("PYTHONIOENCODING", "utf-8")
 
     runCommand(
         """
         apt-get update &&
         apt-get -y dist-upgrade &&
-        apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls python3-pip python3-pkg-resources less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-21-jdk-headless netcat-openbsd net-tools &&
+        apt-get -y --no-install-recommends install rsyslog rsyslog-gnutls less nvi postfix sasl2-bin opendkim opendkim-tools openjdk-21-jdk-headless netcat-openbsd net-tools &&
         apt-get clean &&
         rm -rf /var/cache/apt/ /var/lib/apt/lists/* &&
         echo "LANG=C.UTF-8" > /etc/default/locale
         """.trimMargin().replace('\n', ' '),
     )
-    runCommand("pip3 install --break-system-packages --no-cache-dir honcho==1.0.1")
 
     exposePort(25)
 
     addFile(file("src/assets/"))
+    copy("/go/bin/goreman", "/usr/local/bin/goreman", "0")
 
-    defaultCommand(listOf("/usr/local/bin/honcho", "start", "-f", "Procfile"))
+    defaultCommand(listOf("/usr/local/bin/goreman", "start"))
 
     runCommand(
         """
