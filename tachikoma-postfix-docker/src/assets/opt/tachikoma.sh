@@ -9,4 +9,14 @@ do
   sleep 0.1
 done
 
+fixPermissions() {
+    # Set correct group on lmtp socket once it exists
+    while ! [ -S /var/spool/postfix/tachikoma/incoming_tachikoma ]
+    do
+      sleep 0.1
+    done
+    chgrp postfix /var/spool/postfix/tachikoma/incoming_tachikoma
+}
+rm /var/spool/postfix/tachikoma/incoming_tachikoma
+fixPermissions &
 su tachikoma -c '/opt/tachikoma-postfix-utils/bin/tachikoma-postfix-utils $TACHIKOMA_CONFIG'

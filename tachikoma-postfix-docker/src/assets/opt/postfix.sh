@@ -90,12 +90,4 @@ if ls /etc/opendkim/domainkeys/*._domainkey.*.private 2>/dev/null | grep -q doma
 fi
 
 service postfix start
-
-# Set correct group on lmtp socket once it exists
-while ! [ -S /var/spool/postfix/tachikoma/incoming_tachikoma ]
-do
-  sleep 0.1
-done
-chgrp postfix /var/spool/postfix/tachikoma/incoming_tachikoma
-
 sleep infinity
