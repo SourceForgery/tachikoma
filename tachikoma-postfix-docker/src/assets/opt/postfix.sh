@@ -1,5 +1,8 @@
 #!/bin/bash -eu
 
+chgrp postdrop -R /var/spool/postfix/public
+chgrp postdrop -R /var/spool/postfix/maildrop
+
 # Make sure rsyslog is started first
 while [ ! -e /dev/log ]
 do
