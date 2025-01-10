@@ -17,6 +17,6 @@ fixPermissions() {
     done
     chgrp postfix /var/spool/postfix/tachikoma/incoming_tachikoma
 }
-rm /var/spool/postfix/tachikoma/incoming_tachikoma
+rm -f /var/spool/postfix/tachikoma/incoming_tachikoma
 fixPermissions &
 su tachikoma -c '/opt/tachikoma-postfix-utils/bin/tachikoma-postfix-utils $TACHIKOMA_CONFIG'
