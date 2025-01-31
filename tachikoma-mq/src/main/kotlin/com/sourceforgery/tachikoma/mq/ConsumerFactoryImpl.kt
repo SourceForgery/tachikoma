@@ -222,6 +222,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
             val consumer =
                 CallbackConsumer(channel) { payload, version ->
                     runBlocking {
+                        LOGGER.info { "Got message on ${messageQueue.name}" }
                         val parsed: T =
                             when (version) {
                                 1 -> messageQueue.parser(payload)
