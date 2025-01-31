@@ -114,6 +114,7 @@ class IncomingEmailService(override val di: DI) : DIAware {
             mailDomain = mailDomain,
             accountId = accountId,
         ).mapNotNull {
+            LOGGER.info { "Got incoming email with id ${it.incomingEmailMessageId} for $authenticationId" }
             val incomingEmailId = IncomingEmailId(it.incomingEmailMessageId)
             val email = incomingEmailDAO.fetchIncomingEmail(incomingEmailId, accountId)
             if (email != null) {
