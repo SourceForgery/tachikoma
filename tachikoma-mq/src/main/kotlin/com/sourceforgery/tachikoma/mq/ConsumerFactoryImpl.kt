@@ -39,16 +39,18 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
 
     @Volatile
     private var thread = 0
-    private val connection: Connection
+    private val sendConnection: Connection
     private val sendChannel: Channel
+    private val connectionFactory =
+        ConnectionFactory().also { connectionFactory ->
+            connectionFactory.setThreadFactory { runnable -> WorkerThread(runnable, ConsumerFactoryImpl::class.java.simpleName + " #" + ++thread) }
+            connectionFactory.isAutomaticRecoveryEnabled = true
+            connectionFactory.setUri(mqConfig.mqUrl)
+        }
 
     init {
-        val connectionFactory = ConnectionFactory()
-        connectionFactory.setThreadFactory { runnable -> WorkerThread(runnable, ConsumerFactoryImpl::class.java.simpleName + " #" + ++thread) }
-        connectionFactory.isAutomaticRecoveryEnabled = true
-        connectionFactory.setUri(mqConfig.mqUrl)
-        connection = connectionFactory.newConnection()
-        sendChannel = connection.createChannel()
+        sendConnection = connectionFactory.newConnection()
+        sendChannel = sendConnection.createChannel()
 
         createQueue(FAILED_INCOMING_EMAIL_NOTIFICATIONS)
         createQueue(FAILED_DELIVERY_NOTIFICATIONS)
@@ -64,7 +66,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
 
     fun close() {
         sendChannel.close()
-        connection.close()
+        sendConnection.close()
     }
 
     private inner class WorkerThread(
@@ -130,7 +132,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
     }
 
     private fun createExchange(messageExchange: MessageExchange) {
-        connection
+        sendConnection
             .createChannel()
             .use { channel ->
                 channel.exchangeDeclare(messageExchange.name, messageExchange.exchangeType, true)
@@ -141,6 +143,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         messageQueue: MessageQueue<T>,
         callback: suspend (T) -> Unit,
     ): ListenableFuture<Unit> {
+        val connection = connectionFactory.newConnection()
         val channel =
             connection
                 .createChannel()!!
@@ -149,11 +152,8 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         future.addListener(
             {
                 LOGGER.info("Closing channel")
-                try {
-                    channel.close()
-                } catch (ignored: Exception) {
-                    // 'tis ok
-                }
+                runCatching { channel.close() }
+                runCatching { connection.close() }
             },
             MoreExecutors.directExecutor(),
         )
@@ -214,6 +214,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
 
     private fun <T> listenOnQueueFlow(messageQueue: MessageQueue<T>): Flow<T> {
         return callbackFlow {
+            val connection = connectionFactory.newConnection()
             val channel =
                 withContext(Dispatchers.IO) {
                     connection
@@ -242,7 +243,8 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
             }
             awaitClose {
                 LOGGER.info { "Closing flow for ${messageQueue.name}" }
-                channel.close()
+                runCatching { channel.close() }
+                runCatching { connection.close() }
             }
         }
     }
@@ -390,7 +392,7 @@ internal class ConsumerFactoryImpl(override val di: DI) : MQSequenceFactory, MQS
         }
     }
 
-    override fun alive() = connection.isOpen
+    override fun alive() = sendConnection.isOpen
 
     companion object {
         val LOGGER = logger()

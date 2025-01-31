@@ -51,7 +51,7 @@ internal class DeliveryNotificationServiceGrpcImpl(
                     includeTags = request.tagsList.toSet(),
                 )
                     .collect {
-                        LOGGER.info { "Sending notification about ${it.emailNotification.emailId} to ${auth.authenticationId}"}
+                        LOGGER.info { "Sending notification about ${it.emailNotification.emailId} to ${auth.authenticationId}" }
                         send(it)
                     }
             } catch (e: Exception) {
