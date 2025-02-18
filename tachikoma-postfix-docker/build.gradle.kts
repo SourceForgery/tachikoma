@@ -8,7 +8,7 @@ val postfixDocker by tasks.registering(se.transmode.gradle.plugins.docker.Docker
     dependsOn(tarTask)
     applicationName.set("tachikoma-postfix")
     tagVersion.set(project.provider { project.version.toString() })
-    baseImage.set("ubuntu:22.04")
+    baseImage.set("ubuntu:24.04")
 
     workingDir("/opt")
 

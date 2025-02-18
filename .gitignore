@@ -1,4 +1,4 @@
-/.idea/
+.idea/
 *.iml
 /.run/
 
@@ -13,3 +13,6 @@ tachikoma-drop-all.sql
 
 *.key
 *.crt
+
+tachikoma-postfix-docker/src/golang/build/
+tachikoma-postfix-docker/src/golang/tachikoma-postfix-utils
