@@ -12,17 +12,16 @@ require (
 )
 
 require (
-	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
+	github.com/golang/protobuf v1.5.4
+	github.com/nsqio/go-diskqueue v1.1.0
 	google.golang.org/protobuf v1.36.4
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 )
 
 require (
-	github.com/google/goterm v0.0.0-20190703233501-fc88cf888a3f // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect

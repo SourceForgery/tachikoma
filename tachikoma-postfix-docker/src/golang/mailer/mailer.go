@@ -1,17 +1,29 @@
 package mailer
 
 import (
+    "bufio"
     "context"
-    "github.com/pkg/errors"
+    "fmt"
     "github.com/rs/zerolog/log"
-    "net/smtp"
+    "google.golang.org/grpc"
+    "net"
+    "net/textproto"
+    "strings"
     "tachikoma-postfix-utils/build/generated/github.com/SourceForgery/tachikoma"
 )
 
 type Mailer struct {
+    queueCLient tachikoma.MTAEmailQueueClient
 }
 
-func (mailer *Mailer) Listen(ctx context.Context, outgoingEmail <-chan tachikoma.EmailMessageOrKeepAlive) {
+func NewMailer(client *grpc.ClientConn) *Mailer {
+    notificationClient := tachikoma.NewMTAEmailQueueClient(client)
+    return &Mailer{
+        queueCLient: notificationClient,
+    }
+}
+
+func (mailer *Mailer) Listen(ctx context.Context, outgoingEmail <-chan tachikoma.EmailMessageOrKeepAlive, notificationChannel chan<- *tachikoma.MTAQueuedNotification) {
     for {
         select {
         case <-ctx.Done():
@@ -23,72 +35,118 @@ func (mailer *Mailer) Listen(ctx context.Context, outgoingEmail <-chan tachikoma
                 return
             }
             if emailMessage := email.GetEmailMessage(); emailMessage != nil {
-                sendEmail, err := mailer.sendEmail(ctx, emailMessage)
-                if err != nil {
-                    return
+                notification := &tachikoma.MTAQueuedNotification{
+                    Success: true,
+                    EmailId: emailMessage.GetEmailId(),
                 }
+                queueId, err := mailer.sendEmail(ctx, emailMessage)
+                if err != nil {
+                    notification.Success = false
+                } else {
+                    notification.QueueId = queueId
+                }
+                notificationChannel <- notification
             }
         }
     }
 }
 
+// sendMail connects to the SMTP server at 'server' (e.g. "smtp.example.com:25"),
+// sends the email from 'sender' to all 'recipients' with the given 'data' as the full message.
+// It returns the queue id (if found) from the DATA command response.
 func (mailer *Mailer) sendEmail(ctx context.Context, emailMessage *tachikoma.EmailMessage) (string, error) {
-
-    client, err := smtp.Dial("localhost:25")
+    conn, err := net.Dial("tcp", "localhost:25")
     if err != nil {
-        return "", errors.Wrap(err, "Failed to connect to localhost:25")
+        return "", fmt.Errorf("failed to dial SMTP server: %v", err)
     }
-    client.R
     //goland:noinspection GoUnhandledErrorResult
-    defer client.Close()
+    defer conn.Close()
 
-    if err = client.Hello("localhost"); err != nil {
-        return "", err
+    tp := textproto.NewConn(conn)
+    //goland:noinspection GoUnhandledErrorResult
+    defer tp.Close()
+
+    if _, msg, err := tp.ReadResponse(220); err != nil {
+        return "", fmt.Errorf("error reading greeting: %v", err)
+    } else {
+        fmt.Printf("Server greeting: %s\n", msg)
     }
 
-    // Set the sender and recipient.
-    if err = client.Mail(emailMessage.From); err != nil {
-        return "", err
+    hostname := "localhost"
+    if err := tp.PrintfLine("EHLO %s", hostname); err != nil {
+        return "", fmt.Errorf("error sending EHLO: %v", err)
+    }
+    if _, msg, err := tp.ReadResponse(250); err != nil {
+        return "", fmt.Errorf("EHLO error: %v", err)
+    } else {
+        fmt.Printf("EHLO response: %s\n", msg)
     }
 
-    if err = client.Rcpt(emailMessage.GetEmailAddress()); err != nil {
-        return "", err
+    if err := tp.PrintfLine("MAIL FROM:<%s>", emailMessage.From); err != nil {
+        return "", fmt.Errorf("error sending MAIL FROM: %v", err)
     }
-    for _, r := range emailMessage.GetBcc() {
-        if err = client.Rcpt(r); err != nil {
-            return "", err
+    if _, msg, err := tp.ReadResponse(250); err != nil {
+        return "", fmt.Errorf("MAIL FROM error: %v", err)
+    } else {
+        fmt.Printf("MAIL FROM response: %s\n", msg)
+    }
+
+    for _, rcpt := range emailMessage.GetBcc() {
+        if err := tp.PrintfLine("RCPT TO:<%s>", rcpt); err != nil {
+            return "", fmt.Errorf("error sending RCPT TO for %s: %v", rcpt, err)
+        }
+        if _, msg, err := tp.ReadResponse(250); err != nil {
+            return "", fmt.Errorf("RCPT TO error for %s: %v", rcpt, err)
+        } else {
+            fmt.Printf("RCPT TO response for %s: %s\n", rcpt, msg)
         }
     }
 
-    _, err = client.Text.Cmd("DATA")
-    if err != nil {
-        return "", err
+    if err := tp.PrintfLine("DATA"); err != nil {
+        return "", fmt.Errorf("error sending DATA command: %v", err)
     }
-    client.Text.DotWriter()
-
-    // Send the email body.
-    wc, err := client.Data()
-    if err != nil {
-        return "", err
-    }
-    _, err = wc.Write([]byte(emailMessage.GetBody()))
-    if err != nil {
-        return "", err
+    if _, msg, err := tp.ReadResponse(354); err != nil {
+        return "", fmt.Errorf("DATA command error: %v", err)
+    } else {
+        fmt.Printf("DATA command response: %s\n", msg)
     }
 
-    err = wc.Close()
-    if err != nil {
-        return "", err
+    scanner := bufio.NewScanner(strings.NewReader(emailMessage.GetBody()))
+    for scanner.Scan() {
+        line := scanner.Text()
+        if strings.HasPrefix(line, ".") {
+            line = "." + line
+        }
+        if err := tp.PrintfLine("%s", line); err != nil {
+            return "", fmt.Errorf("error sending data line: %v", err)
+        }
     }
-    queueId := ""
-    // Get queueId from the rest of the line after 250
-    // The line is regex "^250 .* queued as (.*)$". I want group 1 as queueId
-
-    // Send the QUIT command and close the connection.
-    err = client.Quit()
-    if err != nil {
-        return "", err
+    if err := scanner.Err(); err != nil {
+        return "", fmt.Errorf("scanner error: %v", err)
     }
 
-    return queueId, nil
+    if err := tp.PrintfLine("."); err != nil {
+        return "", fmt.Errorf("error sending DATA termination: %v", err)
+    }
+
+    _, dataResp, err := tp.ReadResponse(250)
+    if err != nil {
+        return "", fmt.Errorf("error after sending DATA: %v", err)
+    }
+    fmt.Printf("DATA final response: %s\n", dataResp)
+
+    // Try to extract the queue id from the response.
+    // Postfix often replies with something like:
+    // "250 2.0.0 Ok: queued as ABC1234"
+    var queueID string
+    if parts := strings.Split(dataResp, "queued as "); len(parts) > 1 {
+        queueID = strings.TrimSpace(parts[1])
+    }
+
+    if err := tp.PrintfLine("QUIT"); err != nil {
+        return queueID, fmt.Errorf("error sending QUIT: %v", err)
+    }
+    _, _, _ = tp.ReadResponse(221)
+
+    return queueID, nil
 }
