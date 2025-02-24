@@ -1,8 +1,10 @@
 package main
 
 import (
+    "context"
     "crypto/tls"
     "encoding/base64"
+    "github.com/golang/protobuf/proto"
     "github.com/jessevdk/go-flags"
     "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
@@ -13,6 +15,9 @@ import (
     "net/url"
     "os"
     "runtime/debug"
+    "tachikoma-postfix-utils/build/generated/github.com/SourceForgery/tachikoma"
+    "tachikoma-postfix-utils/mailer"
+    "tachikoma-postfix-utils/persistedqueue"
     "tachikoma-postfix-utils/syslog"
     "time"
 )
@@ -29,10 +34,11 @@ var args struct {
 
     ManPage string `long:"man-page" description:"Write manpage in groff"`
 
-    TachikomaUrl string `long:"url" env:"TACHIKOMA_URL" required:"true" description:"Tachikoma server URL"`
-    Insecure     bool   `short:"i" long:"insecure" description:"If the server certificate is allowed even if it couldn't be verified'" env:"INSECURE"`
-    ClientCert   string `long:"client-cert" env:"TACHIKOMA_CLIENT_CERT" description:"Base64 encoded client certificate"`
-    ClientKey    string `long:"client-key" env:"TACHIKOMA_CLIENT_KEY" description:"Base64 encoded client key"`
+    TachikomaUrl   string `long:"url" env:"TACHIKOMA_URL" required:"true" description:"Tachikoma server URL"`
+    Insecure       bool   `short:"i" long:"insecure" description:"If the server certificate is allowed even if it couldn't be verified'" env:"INSECURE"`
+    ClientCert     string `long:"client-cert" env:"TACHIKOMA_CLIENT_CERT" description:"Base64 encoded client certificate"`
+    ClientKey      string `long:"client-key" env:"TACHIKOMA_CLIENT_KEY" description:"Base64 encoded client key"`
+    QueueDirectory string `long:"queue-directory" env:"QUEUE_DIRECTORY" description:"Directory to store queue files"`
 }
 
 var logger zerolog.Logger
@@ -121,10 +127,48 @@ func main() {
     //goland:noinspection GoUnhandledErrorResult
     defer conn.Close()
 
-    go func() {
-    }()
+    c := tachikoma.NewMTADeliveryNotificationsClient(conn)
+    ctx, cancelFunc := context.WithCancel(context.Background())
 
-    syslog.Listen()
+    deliverQueue := persistedqueue.NewQueue(
+        "notifications",
+        args.QueueDirectory,
+        func(notification *tachikoma.DeliveryNotification) error {
+            _, err := c.SetDeliveryStatus(ctx, notification)
+            return err
+        },
+        func(notification *tachikoma.DeliveryNotification) ([]byte, error) {
+            return proto.Marshal(notification)
+        },
+        func(data []byte) (*tachikoma.DeliveryNotification, error) {
+            m := &tachikoma.DeliveryNotification{}
+            err := proto.Unmarshal(data, m)
+            return m, err
+        },
+    )
+    go syslog.Listen(deliverQueue.InputChan())
+
+    qnClient := tachikoma.NewMTAEmailQueueClient(conn)
+    keepAlive, err := qnClient.GetEmailsWithKeepAlive(ctx)
+    mtaQueue := persistedqueue.NewQueue(
+        "MTA",
+        args.QueueDirectory,
+        func(notification *tachikoma.MTAQueuedNotification) error {
+            keepAlive.Recv(keepAlive.Recv())
+            return err
+        },
+        func(notification *tachikoma.MTAQueuedNotification) ([]byte, error) {
+            return proto.Marshal(notification)
+        },
+        func(data []byte) (*tachikoma.MTAQueuedNotification, error) {
+            m := &tachikoma.MTAQueuedNotification{}
+            err := proto.Unmarshal(data, m)
+            return m, err
+        },
+    )
+
+    mailer := mailer.NewMailer()
+    go mailer.Listen(ctx)
 }
 
 func createClient() (*grpc.ClientConn, error) {
