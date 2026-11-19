@@ -11,7 +11,7 @@ val webserverDocker by tasks.registering(se.transmode.gradle.plugins.docker.Dock
 
     applicationName.set("tachikoma-webserver")
 
-    baseImage.set("ubuntu:22.04")
+    baseImage.set("ubuntu:24.04")
 
     setEnvironment("DEBIAN_FRONTEND", "noninteractive")
 
